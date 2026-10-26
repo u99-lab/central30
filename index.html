@@ -217,6 +217,24 @@ const css=`
 #c30guest iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}
 #c30guest .hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);z-index:2;padding:8px 14px;border-radius:999px;background:#0d1418e6;border:1px solid #ffffff24;color:#ffd38a;font:600 12px/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center;pointer-events:none}
 #c30guest .wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#a9b9b3;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+#c30chat{position:fixed;z-index:80;top:calc(58px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#eef5f1}
+#c30chat[hidden],#c30chat [hidden]{display:none!important}
+#c30chat .cbtn{position:relative;border-radius:999px;border:1px solid #ffffff2a;background:#0d1418e6;color:#eef5f1;padding:8px 13px;font:600 13px system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer}
+#c30chat .badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ff5a4f;color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center}
+#c30chat .peek{position:absolute;left:0;top:44px;max-width:min(300px,calc(100vw - 24px));padding:7px 11px;border-radius:10px;background:#0d1418f2;border:1px solid #ffffff24;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#c30chat .panel{position:absolute;left:0;top:44px;width:min(330px,calc(100vw - 24px));display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:#0d1418f5;border:1px solid #ffffff2a;box-shadow:0 12px 40px #0009}
+#c30chat .msgs{height:min(220px,40vh);overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:2px}
+#c30chat .m{overflow-wrap:anywhere}
+#c30chat .m b{color:#c5f47c;font-weight:700}
+#c30chat .m.me b{color:#8fd0ff}
+#c30chat .m.sys{color:#93a59f;font-size:12px;font-style:italic}
+#c30chat .quick{display:flex;gap:6px;flex-wrap:wrap}
+#c30chat .quick button{border-radius:999px;border:1px solid #ffffff24;background:#ffffff10;color:#eef5f1;padding:5px 10px;font:600 12px system-ui,sans-serif;cursor:pointer}
+#c30chat .send{display:flex;gap:6px}
+#c30chat input{flex:1;min-width:0;border-radius:9px;border:1px solid #ffffff2a;background:#060b0d;color:#fff;padding:9px 10px;font:14px system-ui,sans-serif}
+#c30chat .send button{border-radius:9px;border:1px solid #c5f47c;background:#c5f47c;color:#142018;padding:9px 12px;font:700 13px system-ui,sans-serif;cursor:pointer}
+#c30chat .warn{color:#ffd38a;font-size:12px;min-height:0}
+#c30chat button:focus-visible,#c30chat input:focus-visible{outline:2px solid #c5f47c;outline-offset:2px}
 .c30-online-chip{white-space:nowrap}
 .c30-online-chip.live{border-color:#c5f47c!important;color:#c5f47c!important}
 `;
@@ -240,7 +258,7 @@ function ui(){
    <div class="row"><button class="main" id="c30play" type="button">Escolher jogo</button><button id="c30close" type="button">Fechar sala</button></div>
   </div>
   <div class="status" id="c30status" role="status"></div>
-  <div class="safe">Só entra quem tiver o código, e cabem até 8 pessoas (tu e mais 7). Dá o código apenas a amigos que conheces. Não há chat.</div>
+  <div class="safe">Só entra quem tiver o código, e cabem até 8 pessoas (tu e mais 7). Dá o código apenas a amigos que conheces. Há um chat só para quem está na sala: nunca escrevas a tua morada, escola, número de telefone ou palavras-passe.</div>
   <div class="row" style="margin-top:14px"><button id="c30hide" type="button">Voltar</button></div>
  </div>`;
  document.body.appendChild(net);
@@ -264,13 +282,73 @@ function ui(){
  $('c30gFull').addEventListener('click',()=>{const el=$('c30guest');(el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el)?.catch?.(()=>{});});
 }
 const toast2=t=>{try{toast(t);}catch{}};
+
+// ---------- Chat da sala ----------
+// Só existe dentro de uma sala. O anfitrião recebe cada mensagem e reenvia-a aos outros.
+const BAD=/\b(merda|caralho|foda[-\s]?se|foda|puta|fdp|cabr[ãa]o|porra|cona|piroca)\b/gi;
+let chatOpen=false,unread=0,peekTimer=null,lastSent=0,myName='Tu';
+function cleanChat(raw){
+ let t=String(raw||'').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,120);
+ if(!t)return {ok:false,why:''};
+ if(/@|https?:|www\.|\.(com|pt|net|org|br|gg|io)\b/i.test(t))return {ok:false,why:'Por segurança, não envies emails nem links.'};
+ if(/(\d[\s.-]?){8,}/.test(t))return {ok:false,why:'Por segurança, não envies números de telefone.'};
+ return {ok:true,text:t.replace(BAD,m=>'*'.repeat(m.length))};
+}
+function chatUI(){
+ const c=document.createElement('div');c.id='c30chat';c.hidden=true;
+ c.innerHTML=`<button class="cbtn" id="c30chatBtn" type="button" aria-expanded="false">💬 Chat<span class="badge" id="c30chatBadge" hidden>0</span></button>
+  <div class="peek" id="c30chatPeek" hidden></div>
+  <div class="panel" id="c30chatPanel" hidden role="dialog" aria-label="Chat da sala">
+   <div class="msgs" id="c30chatMsgs" aria-live="polite"></div>
+   <div class="quick">${['👍','😂','🔥','GG','Boa!','Vamos!'].map(q=>`<button type="button" data-q="${q}">${q}</button>`).join('')}</div>
+   <div class="send"><input id="c30chatInput" maxlength="120" autocomplete="off" placeholder="Escreve uma mensagem…" aria-label="Mensagem"><button id="c30chatSend" type="button">Enviar</button></div>
+   <div class="warn" id="c30chatWarn" role="status"></div>
+  </div>`;
+ document.body.appendChild(c);
+ $('c30chatBtn').addEventListener('click',()=>setChatOpen(!chatOpen));
+ $('c30chatSend').addEventListener('click',()=>sendChat($('c30chatInput').value));
+ $('c30chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendChat(e.target.value);}else if(e.key==='Escape'){setChatOpen(false);}});
+ c.querySelectorAll('.quick button').forEach(b=>b.addEventListener('click',()=>sendChat(b.dataset.q)));
+}
+function setChatOpen(v){
+ chatOpen=v;$('c30chatPanel').hidden=!v;$('c30chatBtn').setAttribute('aria-expanded',String(v));
+ if(v){unread=0;$('c30chatBadge').hidden=true;$('c30chatPeek').hidden=true;const m=$('c30chatMsgs');m.scrollTop=m.scrollHeight;setTimeout(()=>$('c30chatInput').focus(),20);}
+ else{$('c30chatWarn').textContent='';if(role==='guest'){try{$('c30gCtrl').contentWindow.focus();}catch{}}}
+}
+function showChat(from,text,opt={}){
+ const m=$('c30chatMsgs');if(!m)return;
+ const row=document.createElement('div');row.className='m'+(opt.me?' me':'')+(opt.sys?' sys':'');
+ if(opt.sys)row.textContent=text;else{const b=document.createElement('b');b.textContent=from+': ';row.appendChild(b);row.appendChild(document.createTextNode(text));}
+ m.appendChild(row);while(m.children.length>60)m.firstChild.remove();m.scrollTop=m.scrollHeight;
+ if(!chatOpen&&!opt.me){
+  if(!opt.sys){unread++;$('c30chatBadge').textContent=String(Math.min(unread,99));$('c30chatBadge').hidden=false;}
+  const pk=$('c30chatPeek');pk.textContent=opt.sys?text:from+': '+text;pk.hidden=false;clearTimeout(peekTimer);peekTimer=setTimeout(()=>pk.hidden=true,4000);
+ }
+}
+function sendChat(raw){
+ const r=cleanChat(raw);$('c30chatWarn').textContent=r.why||'';
+ if(!r.ok)return;
+ const now=Date.now();if(now-lastSent<700){$('c30chatWarn').textContent='Espera um bocadinho antes de enviar outra.';return;}
+ lastSent=now;$('c30chatInput').value='';
+ showChat('Tu',r.text,{me:true});
+ if(role==='host')broadcastChat({t:'chat',from:'Anfitrião',text:r.text});
+ else if(role==='guest'&&conn&&conn.open)conn.send({t:'chat',text:r.text});
+}
+function broadcastChat(msg,except){for(const g of openGuests())if(g!==except)try{g.conn.send(msg);}catch{}}
+function hostGotChat(g,m){
+ const now=Date.now();if(now-(g.lastChat||0)<600)return;g.lastChat=now;
+ const r=cleanChat(m.text);if(!r.ok)return;
+ showChat(g.name,r.text);broadcastChat({t:'chat',from:g.name,text:r.text},g);
+}
+function chatSys(text,except){showChat('',text,{sys:true});if(role==='host')broadcastChat({t:'chat',sys:true,text},except);}
+function chatVisible(on){const c=$('c30chat');if(!c)return;c.hidden=!on;if(!on){setChatOpen(false);$('c30chatMsgs').textContent='';unread=0;$('c30chatBadge').hidden=true;$('c30chatPeek').hidden=true;}}
 const status=t=>{$('c30status').textContent=t||'';};
 function openPanel(){$('c30net').hidden=false;if(role==='host')showHosting();else showStart();setTimeout(()=>(role==='host'?$('c30close'):$('c30host')).focus(),30);}
 function showStart(){$('c30netStart').hidden=false;$('c30netHost').hidden=true;}
 function showHosting(){$('c30netStart').hidden=true;$('c30netHost').hidden=false;$('c30codeShow').textContent=code;
  const n=openGuests().length;
  $('c30hostInfo').textContent=n?'✅ '+n+(n===1?' amigo está':' amigos estão')+' na sala (cabem até '+MAX_GUESTS+' amigos). Escolhe um jogo e joguem!':'À espera dos teus amigos… (cabem até '+MAX_GUESTS+')';}
-function markLive(on){for(const id of ['c30open','c30openBar']){const b=$(id);if(!b)continue;b.classList.toggle('live',on);b.textContent=on?(role==='host'?'🌐 Sala '+code:'🌐 Online'):'🌐 Online';}}
+function markLive(on){chatVisible(on);for(const id of ['c30open','c30openBar']){const b=$(id);if(!b)continue;b.classList.toggle('live',on);b.textContent=on?(role==='host'?'🌐 Sala '+code:'🌐 Online'):'🌐 Online';}}
 
 function loadPeer(){
  if(window.Peer)return Promise.resolve();
@@ -312,11 +390,11 @@ async function host(){
  peer.on('disconnected',()=>{try{peer&&!peer.destroyed&&peer.reconnect();}catch{}});
  peer.on('connection',c=>{
   if(guests.size>=MAX_GUESTS){c.on('open',()=>{c.send({t:'full'});setTimeout(()=>c.close(),400);});return;}
-  const g={conn:c,call:null,canvas:null,held:new Set(),fire:false,order:++joinOrder,game:undefined,role:null};
+  const g={conn:c,call:null,canvas:null,held:new Set(),fire:false,order:++joinOrder,game:undefined,role:null};g.name='Amigo '+g.order;
   guests.set(c.peer,g);
-  c.on('open',()=>{toast2('Entrou um amigo na sala! 🎮 ('+openGuests().length+' '+(openGuests().length===1?'amigo':'amigos')+')');showHosting();});
-  c.on('data',m=>{if(m&&typeof m==='object')guestInput(g,m);});
-  c.on('close',()=>{if(guests.get(c.peer)!==g)return;releaseGuest(g);if(g.call)try{g.call.close();}catch{}guests.delete(c.peer);if(role==='host'){toast2('Um amigo saiu da sala.');showHosting();}});
+  c.on('open',()=>{toast2('Entrou um amigo na sala! 🎮 ('+openGuests().length+' '+(openGuests().length===1?'amigo':'amigos')+')');showHosting();c.send({t:'you',name:g.name});chatSys(g.name+' entrou na sala.',g);});
+  c.on('data',m=>{if(!m||typeof m!=='object')return;if(m.t==='chat')hostGotChat(g,m);else guestInput(g,m);});
+  c.on('close',()=>{if(guests.get(c.peer)!==g)return;releaseGuest(g);if(g.call)try{g.call.close();}catch{}guests.delete(c.peer);if(role==='host'){toast2('Um amigo saiu da sala.');showHosting();chatSys(g.name+' saiu da sala.');}});
  });
 }
 function pickCanvas(){
@@ -374,6 +452,8 @@ async function join(raw){
 function onGuestData(m){
  if(!m||typeof m!=='object')return;
  if(m.t==='role'){myRole=m.r==='watch'?'watch':'play';const f=$('c30gCtrl');if(f)f.style.visibility=myRole==='watch'?'hidden':'';}
+ if(m.t==='you'&&typeof m.name==='string'){myName=m.name.slice(0,20);chatSys('Entraste na sala como '+myName+'. Sê simpático no chat! 🙂');}
+ if(m.t==='chat'&&typeof m.text==='string'){const r=cleanChat(m.text);if(r.ok){if(m.sys)showChat('',r.text,{sys:true});else showChat(String(m.from||'Amigo').slice(0,20),r.text);}}
  if(m.t==='full'){status('Essa sala está cheia (máximo 8 pessoas).');leave(true);$('c30net').hidden=false;return;}
  if(m.t==='game')setGuestGame(typeof m.id==='string'?m.id:null,String(m.name||''));
  if(m.t==='st'){lastSt=m;try{$('c30gCtrl').contentWindow.C30padApply?.({a:!!m.a,d:!!m.d});}catch{}}
@@ -434,6 +514,7 @@ addEventListener('message',e=>{
  conn.send(e.data.c30remote);
 });
 addEventListener('keydown',e=>{
+ if(e.target&&e.target.closest&&e.target.closest('#c30chat'))return;
  if($('c30guest')&&!$('c30guest').hidden){
   if(/^F\d+$/.test(e.code))return;
   e.preventDefault();e.stopImmediatePropagation();
@@ -442,9 +523,9 @@ addEventListener('keydown',e=>{
   e.stopImmediatePropagation();if(e.key==='Escape')$('c30net').hidden=true;
  }
 },true);
-addEventListener('keyup',e=>{if($('c30guest')&&!$('c30guest').hidden){e.stopImmediatePropagation();if(conn&&conn.open)conn.send({t:'k',c:e.code,d:0});}},true);
+addEventListener('keyup',e=>{if(e.target&&e.target.closest&&e.target.closest('#c30chat'))return;if($('c30guest')&&!$('c30guest').hidden){e.stopImmediatePropagation();if(conn&&conn.open)conn.send({t:'k',c:e.code,d:0});}},true);
 addEventListener('pagehide',()=>leave());
-ui();
+ui();chatUI();
 window.C30online={host,join,leave,state:()=>({role,code,connected:!!(conn&&conn.open),guestGame,guests:role==='host'?openGuests().length:0,myRole})};
 })();
 </script></body></html>
