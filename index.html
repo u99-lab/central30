@@ -213,6 +213,8 @@ const css=`
 #c30net button.main{background:#c5f47c;color:#142018;border-color:#c5f47c}
 #c30net button:focus-visible,#c30guest button:focus-visible,#c30net input:focus-visible{outline:2px solid #c5f47c;outline-offset:2px}
 #c30net input{flex:1;min-width:0;font:700 20px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:4px;text-align:center;padding:10px;border-radius:9px;border:1px solid #ffffff2a;background:#060b0d;color:#fff}
+#c30net select{flex:1;min-width:0;padding:10px;border-radius:9px;border:1px solid #ffffff2a;background:#060b0d;color:#fff;font:600 14px system-ui,sans-serif}
+#c30net .pubnote{margin:8px 0 0;font-size:12px;color:#93a59f}
 #c30net .or{margin:16px 0 10px;color:#6f817b;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
 #c30net .code{font:800 44px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:8px;color:#c5f47c;text-align:center;margin:8px 0 12px;user-select:all}
 #c30net .status{min-height:20px;margin:12px 0 0;color:#ffd38a}
@@ -249,12 +251,12 @@ const css=`
 #c30chat .badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ff5a4f;color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center}
 #c30chat .peek{position:absolute;left:0;top:44px;max-width:min(300px,calc(100vw - 24px));padding:7px 11px;border-radius:10px;background:#0d1418f2;border:1px solid #ffffff24;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 #c30chat .panel{position:absolute;left:0;top:44px;width:min(330px,calc(100vw - 24px));display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:#0d1418f5;border:1px solid #ffffff2a;box-shadow:0 12px 40px #0009}
-#c30chat .msgs{height:min(220px,40vh);overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:2px}
+#c30chat .msgs{height:min(200px,26vh);overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:2px}
 #c30chat .m{overflow-wrap:anywhere}
 #c30chat .m b{color:#c5f47c;font-weight:700}
 #c30chat .m.me b{color:#8fd0ff}
 #c30chat .m.sys{color:#93a59f;font-size:12px;font-style:italic}
-#c30chat .quick{display:flex;gap:6px;flex-wrap:wrap}
+#c30chat .quick{display:flex;gap:6px;flex-wrap:wrap;max-height:min(120px,22vh);overflow-y:auto}
 #c30chat .quick button{border-radius:999px;border:1px solid #ffffff24;background:#ffffff10;color:#eef5f1;padding:5px 10px;font:600 12px system-ui,sans-serif;cursor:pointer}
 #c30chat .send{display:flex;gap:6px}
 #c30chat input{flex:1;min-width:0;border-radius:9px;border:1px solid #ffffff2a;background:#060b0d;color:#fff;padding:9px 10px;font:14px system-ui,sans-serif}
@@ -275,6 +277,9 @@ function ui(){
    <div class="row"><button class="main" id="c30host" type="button">Criar sala</button></div>
    <div class="or">ou entra na sala de um amigo</div>
    <div class="row"><input id="c30code" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="000000" aria-label="Código da sala"><button class="main" id="c30join" type="button">Entrar</button></div>
+   <div class="or">ou joga com qualquer pessoa</div>
+   <div class="row"><select id="c30pubGame" aria-label="Jogo público"></select><button class="main" id="c30pub" type="button">Jogo público</button></div>
+   <p class="pubnote">No jogo público podes jogar com pessoas que não conheces. Por segurança, aí não dá para escrever no chat, só reações rápidas.</p>
   </div>
   <div id="c30netHost" hidden>
    <h2>A tua sala</h2>
@@ -297,6 +302,8 @@ function ui(){
  const ba=document.querySelector('.bar-actions');if(ba)ba.insertBefore(mk('c30openBar','🌐 Online'),ba.firstChild);
  for(const id of ['c30open','c30openBar'])$(id)?.addEventListener('click',openPanel);
  $('c30host').addEventListener('click',host);
+ try{const sel=$('c30pubGame');for(const gm of GAMES){const o=document.createElement('option');o.value=gm.id;o.textContent=gm.name;sel.appendChild(o);}}catch{}
+ $('c30pub').addEventListener('click',()=>publicPlay($('c30pubGame').value));
  $('c30join').addEventListener('click',()=>join($('c30code').value));
  $('c30code').addEventListener('keydown',e=>{if(e.key==='Enter')join($('c30code').value);});
  $('c30code').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);});
@@ -360,6 +367,7 @@ function showChat(from,text,opt={}){
  }
 }
 function sendChat(raw){
+ if(isPublic&&!QUICK.includes(String(raw)))return;
  const r=cleanChat(raw);$('c30chatWarn').textContent=r.why||'';
  if(!r.ok)return;
  const now=Date.now();if(now-lastSent<700){$('c30chatWarn').textContent='Espera um bocadinho antes de enviar outra.';return;}
@@ -368,21 +376,32 @@ function sendChat(raw){
  if(role==='host')broadcastChat({t:'chat',from:'Anfitrião',text:r.text});
  else if(role==='guest'&&conn&&conn.open)conn.send({t:'chat',text:r.text});
 }
+const QUICK_BASE=['👍','😂','🔥','GG','Boa!','Vamos!'];
+// frases prontas para os jogos públicos: dá para conversar sem escrever nada pessoal
+const QUICK_PUBLIC=[...QUICK_BASE,'Olá! 👋','Bom jogo!','Boa jogada!','Outra vez?','Mais uma!','Vou atacar!','Defende!','Passa a bola!','Segue-me!','Espera por mim!','Obrigado!','Desculpa!','Quase!','Que golo! ⚽','Ganhei! 🏆','Perdi 😅','Adeus! 👋'];
+const QUICK=QUICK_PUBLIC;
+function applyChatMode(){
+ const send=document.querySelector('#c30chat .send');if(send)send.hidden=isPublic;
+ const q=document.querySelector('#c30chat .quick');
+ if(q){const list=isPublic?QUICK_PUBLIC:QUICK_BASE;if(q.dataset.mode!==String(isPublic)){q.dataset.mode=String(isPublic);q.textContent='';for(const t of list){const b=document.createElement('button');b.type='button';b.textContent=t;b.addEventListener('click',()=>sendChat(t));q.appendChild(b);}}}
+ const w=$('c30chatWarn');if(w)w.textContent=isPublic?'Jogo público: escolhe uma frase pronta. Para escrever à vontade, joga numa sala privada com amigos.':'';
+}
 function broadcastChat(msg,except){for(const g of openGuests())if(g!==except)try{g.conn.send(msg);}catch{}}
 function hostGotChat(g,m){
  const now=Date.now();if(now-(g.lastChat||0)<600)return;g.lastChat=now;
  const r=cleanChat(m.text);if(!r.ok)return;
+ if(isPublic&&!QUICK.includes(r.text))return;
  showChat(g.name,r.text);broadcastChat({t:'chat',from:g.name,text:r.text},g);
 }
 function chatSys(text,except){showChat('',text,{sys:true});if(role==='host')broadcastChat({t:'chat',sys:true,text},except);}
 function chatVisible(on){const c=$('c30chat');if(!c)return;c.hidden=!on;if(!on){setChatOpen(false);$('c30chatMsgs').textContent='';unread=0;$('c30chatBadge').hidden=true;$('c30chatPeek').hidden=true;}}
 const status=t=>{$('c30status').textContent=t||'';};
-function openPanel(){$('c30net').hidden=false;if(role==='host')showHosting();else showStart();setTimeout(()=>(role==='host'?$('c30close'):$('c30host')).focus(),30);}
+function openPanel(){$('c30net').hidden=false;try{if(active&&role!=='host')$('c30pubGame').value=active.id;}catch{}if(role==='host')showHosting();else showStart();setTimeout(()=>(role==='host'?$('c30close'):$('c30host')).focus(),30);}
 function showStart(){$('c30netStart').hidden=false;$('c30netHost').hidden=true;}
-function showHosting(){$('c30netStart').hidden=true;$('c30netHost').hidden=false;$('c30codeShow').textContent=code;
+function showHosting(){$('c30netStart').hidden=true;$('c30netHost').hidden=false;$('c30codeShow').textContent=isPublic?'PÚBLICA':code;
  const n=openGuests().length;
  $('c30hostInfo').textContent=n?'✅ '+n+(n===1?' amigo está':' amigos estão')+' na sala (cabem até '+MAX_GUESTS+' amigos). Escolhe um jogo e joguem!':'À espera dos teus amigos… (cabem até '+MAX_GUESTS+')';}
-function markLive(on){chatVisible(on);for(const id of ['c30open','c30openBar']){const b=$(id);if(!b)continue;b.classList.toggle('live',on);b.textContent=on?(role==='host'?'🌐 Sala '+code:'🌐 Online'):'🌐 Online';}}
+function markLive(on){chatVisible(on);applyChatMode();for(const id of ['c30open','c30openBar']){const b=$(id);if(!b)continue;b.classList.toggle('live',on);b.textContent=on?(role==='host'?(isPublic?'🌐 Sala pública':'🌐 Sala '+code):'🌐 Online'):'🌐 Online';}}
 
 function loadPeer(){
  if(window.Peer)return Promise.resolve();
@@ -415,24 +434,84 @@ function guestInput(g,m){
  else if(m.t==='p2next'){fwd({t:'p2next'});}
 }
 const openGuests=()=>[...guests.values()].filter(g=>g.conn.open);
+// Cria a sala com este id. Devolve false se o id já estiver ocupado (útil para as salas públicas).
+function hostWith(id,pub){
+ return new Promise(resolve=>{
+  let settled=false;const done=v=>{if(!settled){settled=true;resolve(v);}};
+  peer=new Peer(id,peerOptions());
+  peer.on('open',()=>{role='host';isPublic=!!pub;status('');showHosting();markLive(true);startHostLoop();done(true);});
+  peer.on('error',e=>{
+   if(e.type==='unavailable-id'){try{peer.destroy();}catch{}peer=null;done('taken');return;}
+   if(e.type==='peer-unavailable')return;
+   status(e.type==='network'||e.type==='server-error'||e.type==='socket-error'?offlineMsg:'Houve um problema com a ligação. Tenta outra vez.');done(false);
+  });
+  peer.on('disconnected',()=>{try{peer&&!peer.destroyed&&peer.reconnect();}catch{}});
+  peer.on('connection',c=>{
+   if(guests.size>=MAX_GUESTS){c.on('open',()=>{c.send({t:'full'});setTimeout(()=>c.close(),400);});return;}
+   const g={conn:c,call:null,canvas:null,held:new Set(),fire:false,order:++joinOrder,game:undefined,role:null};g.name=isPublic?'Jogador '+(g.order+1):'Amigo '+g.order;
+   guests.set(c.peer,g);
+   c.on('open',()=>{toast2((isPublic?'Entrou um jogador na sala pública! 🎮 (':'Entrou um amigo na sala! 🎮 (')+openGuests().length+')');showHosting();c.send({t:'you',name:g.name,pub:isPublic});chatSys(g.name+' entrou na sala.',g);});
+   c.on('data',m=>{if(!m||typeof m!=='object')return;if(m.t==='chat')hostGotChat(g,m);else guestInput(g,m);});
+   c.on('close',()=>{if(guests.get(c.peer)!==g)return;releaseGuest(g);if(g.call)try{g.call.close();}catch{}guests.delete(c.peer);if(role==='host'){toast2(g.name+' saiu da sala.');showHosting();chatSys(g.name+' saiu da sala.');}});
+  });
+ });
+}
 async function host(){
  if(peer)leave();
  status('A criar a sala…');
  try{await loadPeer();}catch{status(offlineMsg);return;}
- code=String(Math.floor(100000+Math.random()*900000));
- peer=new Peer(PREFIX+code,peerOptions());
- peer.on('open',()=>{role='host';status('');showHosting();markLive(true);startHostLoop();});
- peer.on('error',e=>{if(e.type==='unavailable-id'){leave();host();return;}if(e.type==='peer-unavailable')return;status(e.type==='network'||e.type==='server-error'||e.type==='socket-error'?offlineMsg:'Houve um problema com a ligação. Tenta outra vez.');});
- peer.on('disconnected',()=>{try{peer&&!peer.destroyed&&peer.reconnect();}catch{}});
- peer.on('connection',c=>{
-  if(guests.size>=MAX_GUESTS){c.on('open',()=>{c.send({t:'full'});setTimeout(()=>c.close(),400);});return;}
-  const g={conn:c,call:null,canvas:null,held:new Set(),fire:false,order:++joinOrder,game:undefined,role:null};g.name='Amigo '+g.order;
-  guests.set(c.peer,g);
-  c.on('open',()=>{toast2('Entrou um amigo na sala! 🎮 ('+openGuests().length+' '+(openGuests().length===1?'amigo':'amigos')+')');showHosting();c.send({t:'you',name:g.name});chatSys(g.name+' entrou na sala.',g);});
-  c.on('data',m=>{if(!m||typeof m!=='object')return;if(m.t==='chat')hostGotChat(g,m);else guestInput(g,m);});
-  c.on('close',()=>{if(guests.get(c.peer)!==g)return;releaseGuest(g);if(g.call)try{g.call.close();}catch{}guests.delete(c.peer);if(role==='host'){toast2('Um amigo saiu da sala.');showHosting();chatSys(g.name+' saiu da sala.');}});
+ for(let tries=0;tries<5;tries++){code=String(Math.floor(100000+Math.random()*900000));const r=await hostWith(PREFIX+code,false);if(r!=='taken')return;}
+}
+// ---------- Jogos públicos ----------
+// Sem servidor de salas próprio: cada jogo tem poucas salas públicas com nomes fixos.
+// Quem procura tenta entrar numa que já exista; se não houver nenhuma livre, cria uma e espera.
+const PUB_SLOTS=4;
+const pubId=(gid,k)=>'central30-publico-'+gid+'-'+k;
+let isPublic=false,pubGame=null;
+function tryConnect(id){
+ return new Promise(resolve=>{
+  let settled=false;const buf=[];
+  const cn=peer.connect(id,{reliable:true});
+  const onErr=e=>{if(e.type==='peer-unavailable'&&String(e.message||'').includes(id))finish(null);};
+  const keep=m=>buf.push(m);
+  const finish=v=>{if(settled)return;settled=true;clearTimeout(t);peer&&peer.off('error',onErr);cn.off('data',keep);if(!v){try{cn.close();}catch{}}resolve(v?{cn,buf}:null);};
+  peer.on('error',onErr);cn.on('data',keep);
+  cn.on('open',()=>setTimeout(()=>finish(buf.some(m=>m&&m.t==='full')?null:true),800));
+  const t=setTimeout(()=>finish(null),8000);
  });
 }
+function guestCall(call){call.answer(undefined,{sdpTransform:sharpSDP});call.on('stream',s=>{const v=$('c30gVideo');v.srcObject=s;const hasAudio=s.getAudioTracks().length>0;v.muted=!hasAudio;v.play().catch(()=>{v.muted=true;v.play().catch(()=>{});});setTimeout(()=>{$('c30gSnd').hidden=!(hasAudio&&v.muted);},400);});if(mediaCall&&mediaCall!==call){try{mediaCall.close();}catch{}}mediaCall=call;}
+function becomeGuest(cn,buf){
+ conn=cn;role='guest';status('');
+ cn.on('data',onGuestData);
+ cn.on('close',()=>{if(role==='guest'){leave();toast2('A sala fechou.');}});
+ openGuest();
+ for(const m of buf)onGuestData(m);
+}
+async function publicPlay(gid){
+ if(!gid)return;
+ if(peer)leave(true);
+ status('A procurar um jogo público…');
+ try{await loadPeer();}catch{status(offlineMsg);return;}
+ peer=new Peer(peerOptions());peer.on('call',guestCall);
+ const opened=await new Promise(res=>{peer.on('open',()=>res(true));peer.on('error',e=>{if(e.type!=='peer-unavailable')res(false);});setTimeout(()=>res(false),10000);});
+ if(!opened){status(offlineMsg);leave(true);return;}
+ for(let k=1;k<=PUB_SLOTS;k++){
+  status('A procurar um jogo público… ('+k+'/'+PUB_SLOTS+')');
+  const r=await tryConnect(pubId(gid,k));
+  if(r){code='pública';isPublic=true;becomeGuest(r.cn,r.buf);return;}
+ }
+ try{peer.destroy();}catch{}peer=null;
+ status('Ainda não há ninguém. A criar uma sala pública e à espera de jogadores…');
+ for(let k=1;k<=PUB_SLOTS;k++){
+  code='pública';
+  const r=await hostWith(pubId(gid,k),true);
+  if(r===false){return;}
+  if(r===true){pubGame=gid;$('c30net').hidden=true;try{launch(gid);}catch{}toast2('Sala pública criada! Começa a jogar: quem procurar este jogo entra contigo.');return;}
+ }
+ status('Os jogos públicos deste jogo estão cheios. Tenta mais tarde ou escolhe outro jogo.');
+}
+
 function pickCanvas(){
  const w=gameWin();let d=null;try{d=w&&w.document;}catch{}if(!d)return null;
  try{if(w.C30p2Canvas&&w.C30p2&&w.C30p2.joined&&w.C30p2.viewing)return w.C30p2Canvas;}catch{}
@@ -485,7 +564,7 @@ async function join(raw){
  code=c;peer=new Peer(peerOptions());
  let notFound=false;
  peer.on('error',e=>{if(e.type==='peer-unavailable'){notFound=true;status('Não encontrei essa sala. Confirma o código e se o teu amigo ainda tem a sala aberta.');}else status(e.type==='network'||e.type==='server-error'||e.type==='socket-error'?offlineMsg:'Houve um problema com a ligação. Tenta outra vez.');if(role!=='guest')leave(true);});
- peer.on('call',call=>{call.answer(undefined,{sdpTransform:sharpSDP});call.on('stream',s=>{const v=$('c30gVideo');v.srcObject=s;const hasAudio=s.getAudioTracks().length>0;v.muted=!hasAudio;v.play().catch(()=>{v.muted=true;v.play().catch(()=>{});});setTimeout(()=>{$('c30gSnd').hidden=!(hasAudio&&v.muted);},400);});if(mediaCall&&mediaCall!==call){try{mediaCall.close();}catch{}}mediaCall=call;});
+ peer.on('call',guestCall);
  peer.on('open',()=>{
   const cn=peer.connect(PREFIX+code,{reliable:true});conn=cn;
   status('A ligar à sala do teu amigo…');
@@ -498,7 +577,7 @@ async function join(raw){
 function onGuestData(m){
  if(!m||typeof m!=='object')return;
  if(m.t==='role'){myRole=m.r==='watch'?'watch':'play';renderOpts();const f=$('c30gCtrl');if(f)f.style.visibility=myRole==='watch'?'hidden':'';}
- if(m.t==='you'&&typeof m.name==='string'){myName=m.name.slice(0,20);chatSys('Entraste na sala como '+myName+'. Sê simpático no chat! 🙂');}
+ if(m.t==='you'&&typeof m.name==='string'){myName=m.name.slice(0,20);isPublic=!!m.pub;applyChatMode();chatSys(isPublic?'Entraste num jogo público como '+myName+'. Aqui conversa-se com frases prontas.':'Entraste na sala como '+myName+'. Sê simpático no chat! 🙂');}
  if(m.t==='chat'&&typeof m.text==='string'){const r=cleanChat(m.text);if(r.ok){if(m.sys)showChat('',r.text,{sys:true});else showChat(String(m.from||'Amigo').slice(0,20),r.text);}}
  if(m.t==='full'){status('Essa sala está cheia (máximo 8 pessoas).');leave(true);$('c30net').hidden=false;return;}
  if(m.t==='game')setGuestGame(typeof m.id==='string'?m.id:null,String(m.name||''));
@@ -556,7 +635,7 @@ function leave(keepPanel){
  try{conn&&conn.close();}catch{}
  if(mediaCall)try{mediaCall.close();}catch{}mediaCall=null;myRole='play';
  try{peer&&peer.destroy();}catch{}
- peer=null;conn=null;role=null;lastGame=undefined;guestGame=null;guestOpt=null;
+ peer=null;conn=null;role=null;lastGame=undefined;guestGame=null;guestOpt=null;isPublic=false;pubGame=null;
  if(ctrlURL){URL.revokeObjectURL(ctrlURL);ctrlURL=null;}
  const f=$('c30gCtrl');if(f)f.removeAttribute('src');const v=$('c30gVideo');if(v)v.srcObject=null;
  $('c30guest').hidden=true;markLive(false);
