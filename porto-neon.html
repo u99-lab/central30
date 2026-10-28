@@ -7614,8 +7614,10 @@ function frame(now) {
 function setPR(pr) { PIXEL_RATIO = pr; renderer.setPixelRatio(pr); composer.setPixelRatio(pr); composer.setSize(innerWidth, innerHeight); }
 
 // ============================================================ MENUS
+let lastPauseAt = 0;
 function pauseGame(p) {
   if (GAME.state === 'menu') return;
+  if (p) lastPauseAt = performance.now();
   if (p) { GAME.state = 'pause'; $('pause').hidden = false; if (AU.ctx) AU.ctx.suspend(); }
   else { GAME.state = 'play'; $('pause').hidden = true; if (AU.ctx) AU.ctx.resume(); if (!TOUCH.used) requestLock(); last = performance.now(); }
 }
@@ -7626,6 +7628,12 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyP' || (e.code === 'Escape' && lockFailed)) { if (GAME.state === 'play') pauseGame(true); else if (GAME.state === 'pause') pauseGame(false); }
 });
 $('pause').addEventListener('click', () => pauseGame(false));
+// hooks for the Central 30 collection (its pause button and Esc key call these)
+window.C30pause = force => {
+  if (GAME.state === 'play') pauseGame(true);
+  else if (GAME.state === 'pause' && !force && performance.now() - lastPauseAt > 300) pauseGame(false);
+};
+window.C30isPaused = () => GAME.state === 'pause';
 $('play').addEventListener('click', () => {
   initAudio();
   // clear menu population around and spawn player at the plaza
