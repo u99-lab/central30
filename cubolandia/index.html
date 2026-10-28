@@ -782,7 +782,7 @@ function settleSpawn(){
 function newWorld(s){
   for(const c of chunks.values())disposeChunkMeshes(c);chunks.clear();
   while(mobs.length)removeMob(0);
-  seed=s;N=makeNoise(seed);edits={};
+  seed=s;N=makeNoise(seed);edits={};placedWater.clear();
   const sp=findSpawn();player.pos.set(sp.x,H,sp.z);player.vel.set(0,0,0);player.fly=false;player.yaw=0;player.pitch=-0.15;
   dayTime=0.07;needSettle=true;dirtySave=true;
   $('#seedLabel').textContent='Semente do mundo: '+seed;
@@ -792,7 +792,7 @@ function newWorld(s){
 const SAVE_KEY='cubolandia-v1';
 function save(){
   if(!dirtySave&&state==='menu')return;
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify({seed,edits,pos:[player.pos.x,player.pos.y,player.pos.z],yaw:player.yaw,pitch:player.pitch,fly:player.fly,time:dayTime,hotbar,slot}));dirtySave=false;}catch(e){}
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify({seed,edits,pos:[player.pos.x,player.pos.y,player.pos.z],yaw:player.yaw,pitch:player.pitch,fly:player.fly,time:dayTime,hotbar,slot,water:[...placedWater].slice(-5000)}));dirtySave=false;}catch(e){}
 }
 function load(){
   try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(s&&typeof s.seed==='number')return s;}catch(e){}
@@ -921,7 +921,9 @@ if(isTouch){
 
 /* ---------- ações ---------- */
 const tmpDir=new THREE.Vector3();
-function raycast(o,dir,maxD){
+const placedWater=new Set();
+const pwKey=(x,y,z)=>x+','+y+','+z;
+function raycast(o,dir,maxD,water){
   let x=Math.floor(o.x),y=Math.floor(o.y),z=Math.floor(o.z);
   const sx=Math.sign(dir.x),sy=Math.sign(dir.y),sz=Math.sign(dir.z);
   const tdx=sx?Math.abs(1/dir.x):Infinity,tdy=sy?Math.abs(1/dir.y):Infinity,tdz=sz?Math.abs(1/dir.z):Infinity;
@@ -929,7 +931,7 @@ function raycast(o,dir,maxD){
   let nx=0,ny=0,nz=0,t=0;
   while(t<=maxD){
     const id=getBlock(x,y,z);
-    if(id&&id!==B.WATER)return{x,y,z,id,nx,ny,nz,t};
+    if(id&&(id!==B.WATER||(water&&placedWater.has(pwKey(x,y,z)))))return{x,y,z,id,nx,ny,nz,t};
     if(tx<ty&&tx<tz){x+=sx;t=tx;tx+=tdx;nx=-sx;ny=0;nz=0;}
     else if(ty<tz){y+=sy;t=ty;ty+=tdy;nx=0;ny=-sy;nz=0;}
     else{z+=sz;t=tz;tz+=tdz;nx=0;ny=0;nz=-sz;}
@@ -953,17 +955,22 @@ let target=null;
 function act(kind){
   if(state!=='playing')return;
   swing=1;
-  const o=eye(),dir=aim(),hit=raycast(o,dir,6),mh=rayMob(o,dir,hit?hit.t:6);
+  const o=eye(),dir=aim(),hit=raycast(o,dir,6,!eyeInWater),mh=rayMob(o,dir,hit?hit.t:6);
   if(kind==='break'){
     if(mh){const m=mh.m;m.vel.x=dir.x*7;m.vel.z=dir.z*7;m.vel.y=5;m.flee=3;m.dir=Math.atan2(dir.x,dir.z);m.flash=0.3;mobSound(m);return;}
     if(!hit||hit.id===B.BEDROCK)return;
-    setBlock(hit.x,hit.y,hit.z,0);burst(hit.x,hit.y,hit.z,hit.id);sndBreak(hit.id);
+    // ao partir um bloco ao lado de água, a água ocupa o espaço (não fica um buraco seco)
+    let fill=0;
+    if(hit.id===B.WATER)placedWater.delete(pwKey(hit.x,hit.y,hit.z));
+    else for(const[a,b,c]of[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1],[0,1,0]]){const n=getBlock(hit.x+a,hit.y+b,hit.z+c);if(n===B.WATER){fill=B.WATER;break;}}
+    setBlock(hit.x,hit.y,hit.z,fill);burst(hit.x,hit.y,hit.z,hit.id);sndBreak(hit.id);
+    if(fill)noise(0.3,600,0.6,0.18);
     const up=getBlock(hit.x,hit.y+1,hit.z);if(KIND[up]===K_PLANT){setBlock(hit.x,hit.y+1,hit.z,0);burst(hit.x,hit.y+1,hit.z,up);}
   } else {
     if(!hit)return;
     const id=hotbar[slot];
     let px=hit.x+hit.nx,py=hit.y+hit.ny,pz=hit.z+hit.nz;
-    if(KIND[hit.id]===K_PLANT){px=hit.x;py=hit.y;pz=hit.z;}
+    if(KIND[hit.id]===K_PLANT||hit.id===B.WATER){px=hit.x;py=hit.y;pz=hit.z;}
     const cur=getBlock(px,py,pz);
     if(cur&&cur!==B.WATER&&KIND[cur]!==K_PLANT)return;
     if(isCollide(id)){
@@ -972,10 +979,10 @@ function act(kind){
       for(const m of mobs)if(px+1>m.pos.x-m.w&&px<m.pos.x+m.w&&py+1>m.pos.y&&py<m.pos.y+m.h&&pz+1>m.pos.z-m.w&&pz<m.pos.z+m.w)return;
     }
     if(KIND[id]===K_PLANT&&!isCollide(getBlock(px,py-1,pz)))return;
-    if(setBlock(px,py,pz,id))sndPlace(id);
+    if(setBlock(px,py,pz,id)){sndPlace(id);const k=pwKey(px,py,pz);if(id===B.WATER)placedWater.add(k);else placedWater.delete(k);}
   }
 }
-function pickBlock(){const hit=raycast(eye(),aim(),6);if(!hit)return;const i=hotbar.indexOf(hit.id);if(i>=0)selectSlot(i);else{hotbar[slot]=hit.id;selectSlot(slot);}}
+function pickBlock(){const hit=raycast(eye(),aim(),6,!eyeInWater);if(!hit)return;const i=hotbar.indexOf(hit.id);if(i>=0)selectSlot(i);else{hotbar[slot]=hit.id;selectSlot(slot);}}
 
 /* ---------- ciclo ---------- */
 const OFFS=[];{const G=R+1.5;for(let dz=-R-2;dz<=R+2;dz++)for(let dx=-R-2;dx<=R+2;dx++){const d2=dx*dx+dz*dz;if(d2<=G*G)OFFS.push([dx,dz,d2]);}OFFS.sort((a,b)=>a[2]-b[2]);}
@@ -1099,7 +1106,7 @@ function frame(now){
     if(playing&&ready)updatePlayer(dt);
     updateCamera();heldPivot.visible=true;
     if(playing||state==='paused'){
-      const hit=raycast(camera.position,aim(),6);target=hit;
+      const hit=raycast(camera.position,aim(),6,!eyeInWater);target=hit;
       if(hit){selBox.visible=true;selBox.position.set(hit.x+0.5,hit.y+0.5,hit.z+0.5);}else selBox.visible=false;
     }
   }
@@ -1129,6 +1136,7 @@ function start(hot){
     player.yaw=s.yaw||0;player.pitch=s.pitch||0;player.fly=!!s.fly;dayTime=typeof s.time==='number'?s.time:0.07;
     if(Array.isArray(s.hotbar)&&s.hotbar.length===9&&s.hotbar.every(i=>BLOCKS[i]&&i>0))hotbar=s.hotbar;
     slot=s.slot|0;
+    if(Array.isArray(s.water))for(const k of s.water)placedWater.add(String(k));
     $('#bPlay').textContent='Continuar mundo';$('#seedLabel').textContent='Semente do mundo: '+seed;
   } else newWorld((Math.random()*1e9)|0);
   if(hot&&hot.pos&&hot.seed===seed){player.pos.set(hot.pos[0],hot.pos[1],hot.pos[2]);player.yaw=hot.yaw;player.pitch=hot.pitch;}
