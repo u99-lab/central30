@@ -821,7 +821,7 @@ pathSeg(-8, 43, 8, 20.5, 4, M.stone);                                          /
 box(M.stone, -6, 0, 13, 120, 0.04, 19.5, { solid: false, s: 3 });              // passeio ao longo da fachada
 box(M.dirt, -26, 0, -22, -6, 0.03, 35, { solid: false, s: 4 });                // terreiro a poente
 box(M.stone, -6, 0, -32, 50, 0.04, 0, { solid: false, s: 3 });                 // pátio interior (atrás do Bloco A)
-box(M.stone, 28, 0, -50, 30, 0.04, -23, { solid: false, s: 3 });               // passagem entre oficinas e Bloco B
+box(M.stone, 24, 0, -50, 30, 0.04, -23, { solid: false, s: 3 });               // passagem entre oficinas e Bloco B
 box(M.stone, 100, 0, -58, 125, 0.04, -24, { solid: false, s: 3 });             // passagem nascente
 box(M.stone, -26, 0, -58, 125, 0.04, -50, { solid: false, s: 3 });             // caminho para o pavilhão
 box(M.recinto, 50, 0, 19.5, 122, 0.05, 90, { solid: false, s: 16 });           // recinto de jogos (cimentado)
@@ -890,10 +890,10 @@ const alaN = Building({
 });
 // Oficinas — corpo baixo de cobertura plana, a noroeste
 const oficinas = Building({
-  name: 'Oficinas', axis: 'x', L0: -20, L1: 28, D0: -33, D1: -23, floors: 1, H: 3.6, cor: 'D1', wallMat: FAC, mapColor: '#cfcac0',
+  name: 'Oficinas', axis: 'x', L0: -20, L1: 24, D0: -33, D1: -23, floors: 1, H: 3.6, cor: 'D1', wallMat: FAC, mapColor: '#cfcac0',
   doors: [{ f: 0, side: 'L1', at: -24.5, w: 2.4 }, { f: 0, side: 'L0', at: -24.5, w: 2.4 }],
   rooms: [[{ n: 'Oficina', label: 'Oficina de Artes', t: 'artes', w: 12, signBg: '#24413a' }, { n: 'Sala de Teatro', t: 'aula', w: 12 },
-  { n: 'O.03', label: 'Sala O.03', t: 'aula', w: 12 }, { n: 'Robótica', label: 'Clube de Robótica', t: 'info', w: 12, signBg: '#3b6e2c' }]]
+  { n: 'O.03', label: 'Sala O.03', t: 'aula', w: 12 }, { n: 'Robótica', label: 'Clube de Robótica', t: 'info', w: 8, signBg: '#3b6e2c' }]]
 });
 // alpendre da entrada (pilares) e nome da escola
 box(M.white, -5, 3.3, 13, 16, 3.6, 19.5, { s: 2, solid: false });
@@ -911,8 +911,9 @@ function bushAt(x, z, s) { const g = new THREE.SphereGeometry(1, 7, 5); _m4.make
   mapRects.push({ x0, z0, x1, z1, c: '#b8a08a' }); mapLabels.push({ t: 'Pavilhão', x: mx, z: -77 });
   const wl = (a, b, c, d, e, f) => { box(M.white, a, 0, c, d, 4, f, { s: 3 }); box(M.brick, a, 4, c, d, H, f, { s: 3 }); };
   wl(x0, 0, z0, x1, 0, z0 + 0.3); wl(x0, 0, z1 - 0.3, x1, 0, z1); wl(x1 - 0.3, 0, z0, x1, 0, z1);
-  wl(x0, 0, z0, x0 + 0.3, 0, -80.5); wl(x0, 0, -77.5, x0 + 0.3, 0, z1);
-  box(M.white, x0, 2.8, -80.5, x0 + 0.3, 4, -77.5, { s: 3 }); box(M.brick, x0, 4, -80.5, x0 + 0.3, H, -77.5, { s: 3 });
+  wl(x0, 0, z0, x0 + 0.3, 0, -85.2); wl(x0, 0, -81.8, x0 + 0.3, 0, z1);
+  box(M.white, x0, 2.8, -85.2, x0 + 0.3, 4, -81.8, { s: 3 }); box(M.brick, x0, 4, -85.2, x0 + 0.3, H, -81.8, { s: 3 });
+  sign('ENTRADA', x0 - 0.02, 3.1, -83.5, 1.6, 0.3, -Math.PI / 2, { bg: '#24413a' });
   for (const z of [z0 - 0.05, z1 + 0.05]) box(M.glass, x0 + 1, 6.4, z - 0.05, x1 - 1, 8.2, z + 0.05, { solid: false, uv: false });
   box(M.wood, x0, 0, z0, x1, 0.04, zs, { solid: false, s: 4 });
   box(M.tile, x0, 0, zs, x1, 0.03, z1, { solid: false, s: 2 });
@@ -947,7 +948,7 @@ function bushAt(x, z, s) { const g = new THREE.SphereGeometry(1, 7, 5); _m4.make
   for (let k = 0; k < 5; k++) cyl(C([0xff8800, 0xffffff, 0x2266cc][k % 3]), 81 + k * 1.1, 1.1, -60.9, 0.2, 0.4, 10, false);
   box(C(0x3a6fd8), 81, 0, -66, 83, 0.3, -64, { uv: false });
   box(M.desk, 89, 0.72, -64, 92, 0.76, -62.5, { s: 1 });
-  sign(['PAVILHÃO GIMNODESPORTIVO'], x0 - 0.02, 5.5, -79, 9, 0.9, -Math.PI / 2, { bg: 'rgba(0,0,0,0)', fg: '#f4f2ec' });
+  sign(['PAVILHÃO GIMNODESPORTIVO'], x0 - 0.02, 5.5, -76, 9, 0.9, -Math.PI / 2, { bg: 'rgba(0,0,0,0)', fg: '#f4f2ec' });
   for (let k = 0; k < 3; k++) box(M.concrete, 68, 0, z0 + 0.3, 90, 0.45 * (k + 1), z0 + 3.6 - k * 1.05, { s: 1 });
   for (let x = 69; x < 90; x += 1.2) for (let k = 0; k < 3; k++) box(k % 2 ? M.chair : M.chairRed, x, 0.45 * (k + 1), z0 + 2.9 - k * 1.05, x + 0.9, 0.45 * (k + 1) + 0.06, z0 + 3.4 - k * 1.05, { solid: false, uv: false });
 })();
@@ -1578,7 +1579,7 @@ puddles.forEach(p => addInter({
 // class seats
 SCHEDULE.forEach(p => {
   if (p.t !== 'aula') return;
-  const at = () => { const r = rooms[p.room]; return p.room === 'Pavilhão' ? pos(75, 1, -79) : pos(r.cx, r.y + 1, r.cz); };
+  const at = () => { const r = rooms[p.room]; return p.room === 'Pavilhão' ? pos(79, 1, -80) : pos(r.cx, r.y + 1, r.cz); };
   addInter({
     at, r: p.room === 'Pavilhão' ? 6 : 5,
     cond: () => !G.attended[p.key] && !G.missed[p.key] && G.t >= p.s - 15 && G.t < p.e && !G.sitting,
@@ -1999,7 +2000,13 @@ function routeVia(t) {
   if (tf > pf) return pf === 0 ? st.base : st.up2;
   return pf >= 2 ? st.down2 : st.down1;
 }
-function targetPos() { return routeVia(targetPos0()); }
+function targetPos() { return routeVia(outdoorVia(targetPos0())); }
+// destinos atrás do Bloco B (pavilhão): a seta leva primeiro à passagem entre as Oficinas e o Bloco B (ou à do lado nascente)
+function outdoorVia(t) {
+  if (!t || t.z > -48 || P.z < -46 || P.feet > 1 || P.x < -20) return t;
+  const wp = P.x < 66 ? pos(27, 1, -38) : pos(112, 1, -38);
+  return Math.hypot(P.x - wp.x, P.z - wp.z) > 2.5 ? wp : pos(wp.x, 1, -52);
+}
 function targetPos0() {
   if (G.sitting) return null;
   const nc = nextClass();
@@ -2007,7 +2014,7 @@ function targetPos0() {
   // during class time (or 10 min before) the class has priority
   if (nc && (G.t >= nc.s - 10 || cp === -1)) {
     const r = rooms[nc.room];
-    return nc.room === 'Pavilhão' ? pos(75, 1, -79) : (r.dx !== undefined ? pos(r.dx, r.y + 1, r.dz) : pos(r.cx, r.y + 1, r.cz));
+    return nc.room === 'Pavilhão' ? pos(79, 1, -80) : (r.dx !== undefined ? pos(r.dx, r.y + 1, r.dz) : pos(r.cx, r.y + 1, r.cz));
   }
   if (G.tracked && active(G.tracked)) { const m = MISSIONS[G.tracked]; return m.steps[m.step].at(); }
   return null;
