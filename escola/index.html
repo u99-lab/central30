@@ -2327,6 +2327,9 @@ $('play').onclick = () => {
     : 'Controlos: WASD mover (em 3.ª pessoa A/D rodam) · ← → rodar · Rato olhar · Shift correr · Espaço saltar · E interagir · C mudar câmara · M mapa · Q mudar missão · Esc pausa (opções)']]);
 };
 $('resume').onclick = () => togglePause();
+// ligação à coleção Central 30 (pausa vinda do menu da coleção)
+window.C30pause = force => { if (!G.started || G.over) return; const want = force === undefined ? !G.paused : !!force; if (want !== G.paused) togglePause(); };
+window.C30isPaused = () => !!G.paused;
 $('again').onclick = () => location.reload();
 
 </script>
