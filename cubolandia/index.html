@@ -31,7 +31,7 @@ body{background:var(--night);color:var(--paper);font-family:var(--mono);font-siz
 #game canvas{display:block;width:100%;height:100%;touch-action:none}
 
 /* HUD */
-#hud{position:fixed;inset:0;pointer-events:none}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:3}
 #crosshair{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);mix-blend-mode:difference}
 #crosshair::before,#crosshair::after{content:"";position:absolute;background:#fff}
 #crosshair::before{left:10px;top:0;width:2px;height:22px}
@@ -51,7 +51,7 @@ body{background:var(--night);color:var(--paper);font-family:var(--mono);font-siz
 #loading{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-family:var(--display);font-size:18px;color:var(--amber);text-shadow:2px 2px 0 #000;pointer-events:none}
 
 /* Ecrãs */
-.screen{position:fixed;inset:0;display:flex;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-bottom,0px));overflow:auto}
+.screen{position:fixed;inset:0;z-index:5;display:flex;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-bottom,0px));overflow:auto}
 #menu{background:linear-gradient(180deg,rgba(18,24,41,0) 0%,rgba(18,24,41,.25) 40%,rgba(18,24,41,.92) 100%);align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap}
 .brand{display:flex;flex-direction:column;gap:14px;max-width:560px;min-width:0}
 .eyebrow{font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
@@ -76,12 +76,13 @@ h1{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(46px,9vw,
 #invgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;width:min(620px,100%)}
 .ib{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;background:rgba(255,255,255,.05);border:2px solid transparent;color:var(--paper);font-family:var(--mono);font-size:15px;line-height:1;cursor:pointer}
 .ib:hover,.ib:focus-visible{border-color:var(--amber);outline:none;background:rgba(240,178,74,.12)}
+.ib.on{border-color:var(--amber);background:rgba(240,178,74,.22)}
 .ib img{width:38px;height:38px;image-rendering:pixelated}
 #invbar{display:flex;gap:4px;flex-wrap:wrap}
 #invbar .slot{width:42px;height:42px}
 
 /* Toque */
-#touch{position:fixed;inset:0;pointer-events:none}
+#touch{position:fixed;inset:0;pointer-events:none;z-index:2}
 #look{position:absolute;inset:0;pointer-events:auto;touch-action:none}
 #joy{position:absolute;left:calc(22px + env(safe-area-inset-left,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));width:132px;height:132px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.22);pointer-events:auto;touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(242,234,216,.35);border:2px solid rgba(255,255,255,.5)}
@@ -145,8 +146,9 @@ body.touch #clock{top:calc(56px + env(safe-area-inset-top,0px))}
   <div class="keys" id="keysDesk">
     <h2>Controlos</h2>
     <kbd>W A S D</kbd><span>andar</span>
-    <kbd>Espaço</kbd><span>saltar · nadar</span>
-    <kbd>Shift</kbd><span>correr · descer a voar</span>
+    <kbd>Espaço</kbd><span>saltar · nadar para cima</span>
+    <kbd>Shift</kbd><span>correr · mergulhar · descer a voar</span>
+    <kbd>Ctrl</kbd><span>nadar ou voar mais depressa</span>
     <kbd>F</kbd><span>voar (ou Espaço duas vezes)</span>
     <kbd>Clique esq.</kbd><span>partir bloco · empurrar animal</span>
     <kbd>Clique dir.</kbd><span>colocar bloco</span>
@@ -171,7 +173,7 @@ body.touch #clock{top:calc(56px + env(safe-area-inset-top,0px))}
 <div id="inv" class="screen" hidden>
   <div class="card">
     <h2>Blocos</h2>
-    <p>Clica num bloco para o pôr no espaço selecionado da barra. E fecha.</p>
+    <p id="invHelp">1. Escolhe um espaço na barra. 2. Toca no bloco que queres lá pôr.</p>
     <div id="invbar"></div>
     <div id="invgrid"></div>
     <button class="btn primary" id="bInvClose">Voltar ao jogo</button>
@@ -628,12 +630,28 @@ function burst(x,y,z,id){
     scene.add(m);parts.push({m,v:new THREE.Vector3((Math.random()-0.5)*3,1.5+Math.random()*2.5,(Math.random()-0.5)*3),life:0.5+Math.random()*0.5});
   }
 }
+const bubbleMat=new THREE.MeshBasicMaterial({color:0xcfe8ff,transparent:true,opacity:0.75});
+const splashMat=new THREE.MeshBasicMaterial({color:0xa8ccff,transparent:true,opacity:0.85});
+function splash(x,y,z,power){
+  for(let i=0;i<10+power*18;i++){const m=new THREE.Mesh(partGeo,splashMat);const a=Math.random()*Math.PI*2,r=Math.random()*0.6;
+    m.position.set(x+Math.cos(a)*r,y,z+Math.sin(a)*r);scene.add(m);
+    parts.push({m,v:new THREE.Vector3(Math.cos(a)*(1+Math.random()*2),3+Math.random()*4*power+2,Math.sin(a)*(1+Math.random()*2)),life:0.6+Math.random()*0.4,shared:true,wet:true,s:0.9});}
+  noise(0.45,620,0.5,0.25+power*0.35);noise(0.25,1800,0.6,0.12);
+}
+function bubble(){
+  const m=new THREE.Mesh(partGeo,bubbleMat);const d=aim();
+  m.position.set(camera.position.x+d.x*0.7+(Math.random()-0.5)*0.5,camera.position.y-0.25+Math.random()*0.2,camera.position.z+d.z*0.7+(Math.random()-0.5)*0.5);
+  scene.add(m);parts.push({m,v:new THREE.Vector3(0,0.9+Math.random()*0.8,0),life:1.4,g:-0.6,shared:true,bub:true,s:0.45+Math.random()*0.35});
+}
 function updateParts(dt){
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;
-    if(p.life<=0){scene.remove(p.m);p.m.material.dispose();parts.splice(i,1);continue;}
-    p.v.y-=18*dt;p.m.position.addScaledVector(p.v,dt);
-    if(isCollide(getBlock(Math.floor(p.m.position.x),Math.floor(p.m.position.y),Math.floor(p.m.position.z)))){p.m.position.y=Math.floor(p.m.position.y)+1.05;p.v.set(p.v.x*0.3,0,p.v.z*0.3);}
-    p.m.scale.setScalar(Math.min(1,p.life*2.5));}
+    if(p.life<=0){scene.remove(p.m);if(!p.shared)p.m.material.dispose();parts.splice(i,1);continue;}
+    p.v.y-=(p.g===undefined?18:p.g)*dt;p.m.position.addScaledVector(p.v,dt);
+    const here=getBlock(Math.floor(p.m.position.x),Math.floor(p.m.position.y),Math.floor(p.m.position.z));
+    if(p.bub){if(here!==B.WATER)p.life=0;p.v.x+=Math.sin(p.life*9+i)*dt*0.6;}
+    else if(isCollide(here)){p.m.position.y=Math.floor(p.m.position.y)+1.05;p.v.set(p.v.x*0.3,0,p.v.z*0.3);}
+    else if(p.wet&&here===B.WATER&&p.v.y<0)p.life=0;
+    p.m.scale.setScalar((p.s||1)*Math.min(1,p.life*2.5));}
 }
 
 /* ---------- som ---------- */
@@ -747,7 +765,7 @@ let state='menu',noLock=false,lockWorked=false,needSettle=false,dirtySave=false,
 let light=1;
 const keys=new Set();
 const touchIn={x:0,y:0,jump:false,brk:false};
-let bob=0,stepAcc=0,lastSpace=0,actT=0;
+let bob=0,stepAcc=0,lastSpace=0,actT=0,climbT=0,wasSwimming=false,swimHintShown=false,bubbleT=0;
 
 function findSpawn(){
   for(let r=0;r<5000;r+=12)for(let a=0;a<12;a++){
@@ -792,13 +810,14 @@ function renderHotbar(){
   hotbar.forEach((id,i)=>{const b=document.createElement('button');b.className='slot'+(i===slot?' on':'');b.innerHTML='<img alt="" src="'+blockIcon(id)+'">';b.setAttribute('aria-label','Espaço '+(i+1)+': '+BLOCKS[id].name);
     b.addEventListener('click',()=>{slot=i;renderHotbar();});ib.appendChild(b);});
   setHeld(hotbar[slot]);
+  document.querySelectorAll('.ib').forEach(b=>b.classList.toggle('on',+b.dataset.id===hotbar[slot]));
 }
 let nameT=0;
 function selectSlot(i){slot=(i+9)%9;renderHotbar();const n=$('#blockname');n.textContent=BLOCKS[hotbar[slot]].name;n.classList.add('show');clearTimeout(nameT);nameT=setTimeout(()=>n.classList.remove('show'),1300);dirtySave=true;}
 let toastT=0;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1500);}
 (()=>{const g=$('#invgrid');for(let id=1;id<BLOCKS.length;id++){const b=document.createElement('button');b.className='ib';b.innerHTML='<img alt="" src="'+blockIcon(id)+'"><span>'+BLOCKS[id].name+'</span>';
-  b.addEventListener('click',()=>{hotbar[slot]=id;renderHotbar();dirtySave=true;});g.appendChild(b);}})();
+  b.dataset.id=id;b.addEventListener('click',()=>{hotbar[slot]=id;renderHotbar();dirtySave=true;$('#invHelp').textContent=BLOCKS[id].name+' está no espaço '+(slot+1)+'. Volta ao jogo para o usar.';});g.appendChild(b);}})();
 
 function show(id,on){$(id).hidden=!on;}
 function setState(s){
@@ -897,7 +916,7 @@ if(isTouch){
   $('#tFly').addEventListener('click',toggleFly);
   $('#tInv').addEventListener('click',openInv);
   $('#tPause').addEventListener('click',()=>setState('paused'));
-  $('#keysDesk').innerHTML='<h2>Controlos</h2><kbd>Joystick</kbd><span>andar</span><kbd>Arrastar</kbd><span>olhar à volta</span><kbd>SALTAR</kbd><span>saltar · nadar · duas vezes para voar</span><kbd>PARTIR</kbd><span>partir o bloco no centro</span><kbd>PÔR</kbd><span>colocar o bloco escolhido</span><kbd>BLOCOS</kbd><span>todos os blocos</span>';
+  $('#keysDesk').innerHTML='<h2>Controlos</h2><kbd>Joystick</kbd><span>andar</span><kbd>Arrastar</kbd><span>olhar à volta</span><kbd>SALTAR</kbd><span>saltar · nadar para cima · duas vezes para voar</span><kbd>Na água</kbd><span>anda para onde olhas; olha para baixo para mergulhar</span><kbd>PARTIR</kbd><span>partir o bloco no centro</span><kbd>PÔR</kbd><span>colocar o bloco escolhido</span><kbd>BLOCOS</kbd><span>todos os blocos</span>';
 }
 
 /* ---------- ações ---------- */
@@ -1008,24 +1027,44 @@ function updatePlayer(dt){
   const jump=keys.has('Space')||touchIn.jump,shift=keys.has('ShiftLeft')||keys.has('ShiftRight'),ctrl=keys.has('ControlLeft');
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
   let wx=fx*f+rx*s,wz=fz*f+rz*s;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
-  const feet=getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y+0.3),Math.floor(player.pos.z));
-  const inWater=feet===B.WATER||getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y+1.0),Math.floor(player.pos.z))===B.WATER;
-  const sprint=(shift||ctrl)&&f>0&&!player.fly;
-  const speed=player.fly?(ctrl?24:11):inWater?2.8:sprint?5.8:4.3;
-  const acc=player.fly?6:player.onGround?14:inWater?5:3.2;
+  const px=Math.floor(player.pos.x),pz=Math.floor(player.pos.z),wAt=dy=>getBlock(px,Math.floor(player.pos.y+dy),pz)===B.WATER;
+  const inWater=wAt(0.3)||wAt(1.0),chestIn=wAt(1.1),headIn=wAt(1.62);
+  const swimming=inWater&&!player.fly;
+  const sprint=(swimming?ctrl:(shift||ctrl))&&f>0&&!player.fly;
+  const speed=player.fly?(ctrl?24:11):swimming?(sprint?5.4:3.4):sprint?5.8:4.3;
+  const acc=player.fly?6:swimming?4:player.onGround?14:3.2;
   const kk=Math.min(1,acc*dt);
-  player.vel.x+=(wx*speed-player.vel.x)*kk;player.vel.z+=(wz*speed-player.vel.z)*kk;
+  // debaixo de água nada-se para onde se olha
+  const along=swimming&&headIn&&f>0&&!jump&&!shift;
+  const hk=along?Math.max(0.3,Math.cos(player.pitch)):1;
+  player.vel.x+=(wx*speed*hk-player.vel.x)*kk;player.vel.z+=(wz*speed*hk-player.vel.z)*kk;
   if(player.fly){const vy=(jump?1:0)-(shift?1:0);player.vel.y+=(vy*speed*0.8-player.vel.y)*Math.min(1,8*dt);}
-  else if(inWater){player.vel.y-=11*dt;if(jump)player.vel.y=Math.min(player.vel.y+32*dt,3.6);player.vel.y=Math.max(player.vel.y,-3.2);}
+  else if(swimming){
+    let ty;
+    if(jump)ty=3.8;                                  // nadar para cima
+    else if(shift)ty=-3.8;                           // mergulhar
+    else if(along)ty=Math.sin(player.pitch)*speed;   // seguir o olhar
+    else ty=headIn?1.5:chestIn?Math.sin(performance.now()/500)*0.25:-3; // flutuar à superfície
+    player.vel.y+=(ty-player.vel.y)*Math.min(1,5*dt);
+  }
   else{player.vel.y-=28*dt;player.vel.y=Math.max(player.vel.y,-55);if(jump&&player.onGround)player.vel.y=8.6;}
+  if(climbT>0){climbT-=dt;player.vel.y=Math.max(player.vel.y,6.5);}
   const wasGround=player.onGround,fallV=player.vel.y;
   const hit=moveBody(player,dt);
-  if(hit&&inWater&&jump&&!player.fly)player.vel.y=5;
+  // sair da água para a margem: basta nadar contra ela
+  if(hit&&swimming&&f>0&&!headIn)climbT=0.32;
+  if(swimming&&!wasSwimming){
+    if(fallV<-5){splash(player.pos.x,player.pos.y+0.6,player.pos.z,Math.min(1,-fallV/20));}
+    if(!swimHintShown){swimHintShown=true;toast(isTouch?'A nadar: SALTAR sobe, olha para baixo para mergulhar':'A nadar: Espaço sobe, Shift mergulha');}
+  }
+  wasSwimming=swimming;
   if(player.fly&&player.onGround&&shift){player.fly=false;$('#tFly').classList.remove('on');toast('Modo voo: desligado');}
   if(!wasGround&&player.onGround&&fallV<-9)sndStep(getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y-0.5),Math.floor(player.pos.z)));
   if(player.pos.y<-30){settleSpawn();}
+  if(headIn){bubbleT-=dt;if(bubbleT<=0){bubbleT=0.35+Math.random()*0.5;bubble();if(Math.random()<0.4)bubble();}}
   const hs=Math.hypot(player.vel.x,player.vel.z);
-  if(player.onGround&&hs>0.5){bob+=hs*dt*2.2;stepAcc+=hs*dt;if(stepAcc>2.1){stepAcc=0;sndStep(getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y-0.5),Math.floor(player.pos.z)));}}
+  if(swimming&&hs>0.6){bob+=hs*dt*0.6;stepAcc+=hs*dt;if(stepAcc>1.7){stepAcc=0;noise(0.22,headIn?320:520,0.6,headIn?0.1:0.16);}}
+  else if(player.onGround&&hs>0.5){bob+=hs*dt*2.2;stepAcc+=hs*dt;if(stepAcc>2.1){stepAcc=0;sndStep(getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y-0.5),Math.floor(player.pos.z)));}}
   else bob*=0.9;
   // repetir partir/colocar ao manter carregado
   for(const b of[0,2]){const held_=b===0?(mouseDown[0]||touchIn.brk):mouseDown[2];if(held_){repeatT[b]-=dt;if(repeatT[b]<=0){repeatT[b]=0.22;act(b===0?'break':'place');}}}
@@ -1098,6 +1137,15 @@ function start(hot){
   setState('menu');
   requestAnimationFrame(t=>{last=t;frame(t);});
 }
+// Ligação à Central 30 (quando o jogo corre dentro da coleção)
+window.C30isPaused=()=>state==='paused'||state==='inventory';
+window.C30save=save;
+window.C30pause=force=>{
+  if(state==='inventory'){closeInv();return;}
+  const want=force===undefined?state==='playing':!!force;
+  if(want&&state==='playing'){setState('paused');if(document.pointerLockElement)document.exitPointerLock();}
+  else if(!want&&state==='paused'&&(isTouch||noLock))setState('playing');
+};
 window.claude?.hot?.snapshot?.(()=>({seed,pos:[player.pos.x,player.pos.y,player.pos.z],yaw:player.yaw,pitch:player.pitch}));
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 })();
