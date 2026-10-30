@@ -777,7 +777,7 @@ function makeMob(type,x,y,z){
     w=0.42;h=1.25;
   }
   g.add(head);scene.add(g);
-  const m={type,g,legs,head,arms:m_arms,hp:type==='zombie'?20:8,attackT:0,burn:0,pos:new THREE.Vector3(x,y,z),vel:new THREE.Vector3(),w,h,onGround:false,dir:Math.random()*6.28,walking:false,timer:0,flee:0,phase:0,flash:0,yaw:0,soundT:3+Math.random()*10};
+  const m={type,g,legs,head,arms:m_arms,hp:type==='zombie'?20:8,attackT:0,burn:0,under:0,converting:0,drowned:false,pos:new THREE.Vector3(x,y,z),vel:new THREE.Vector3(),w,h,onGround:false,dir:Math.random()*6.28,walking:false,timer:0,flee:0,phase:0,flash:0,yaw:0,soundT:3+Math.random()*10};
   m.yaw=m.dir;mobs.push(m);return m;
 }
 function removeMob(i){const m=mobs[i];scene.remove(m.g);m.g.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});mobs.splice(i,1);}
@@ -802,17 +802,32 @@ function updateMobs(dt){
       if(m.arms)m.arms.forEach(a=>a.rotation.x*=0.9);
       // de dia, ao ar livre, os zombies ardem
       const top=chunks.get(ckey(Math.floor(m.pos.x/16),Math.floor(m.pos.z/16)))?.top[(Math.floor(m.pos.x)&15)+(Math.floor(m.pos.z)&15)*16]??99;
-      if(light>0.7&&top<m.pos.y){m.burn+=dt;if(Math.random()<dt*12)smoke(m.pos.x,m.pos.y+1+Math.random(),m.pos.z);
+      if(light>0.7&&top<m.pos.y&&getBlock(Math.floor(m.pos.x),Math.floor(m.pos.y+0.5),Math.floor(m.pos.z))!==B.WATER){m.burn+=dt;if(Math.random()<dt*12)smoke(m.pos.x,m.pos.y+1+Math.random(),m.pos.z);
         if(m.burn>3){poof(m);removeMob(i);continue;}}
     }
-    const sp=m.flee>0?3.4:chase?2.5:1.1,walk=m.walking||m.flee>0||chase;
+    // água: o zombie afunda e anda devagar pelo fundo; o afogado nada atrás de ti
+    const mx=Math.floor(m.pos.x),mz=Math.floor(m.pos.z);
+    const inW=getBlock(mx,Math.floor(m.pos.y+0.5),mz)===B.WATER;
+    let sp=m.flee>0?3.4:chase?2.5:1.1;
+    if(zombie&&inW)sp=m.drowned?2.3:0.8;
+    const walk=m.walking||m.flee>0||chase;
     // evita água e quedas grandes
     if(walk&&!chase&&m.onGround){const ax=Math.floor(m.pos.x+Math.sin(m.dir)*0.9),az=Math.floor(m.pos.z+Math.cos(m.dir)*0.9),fy=Math.floor(m.pos.y);
       const below=getBlock(ax,fy-1,az);if(below===B.WATER||(below===0&&getBlock(ax,fy-2,az)===0&&!isCollide(getBlock(ax,fy,az)))){m.dir+=Math.PI*(0.6+Math.random()*0.8);}}
-    const tvx=walk?Math.sin(m.dir)*sp:0,tvz=walk?Math.cos(m.dir)*sp:0,k=Math.min(1,(m.onGround?8:1.5)*dt);
+    const tvx=walk?Math.sin(m.dir)*sp:0,tvz=walk?Math.cos(m.dir)*sp:0,k=Math.min(1,(m.onGround?8:inW?4:1.5)*dt);
     m.vel.x+=(tvx-m.vel.x)*k;m.vel.z+=(tvz-m.vel.z)*k;
-    const inW=getBlock(Math.floor(m.pos.x),Math.floor(m.pos.y+0.5),Math.floor(m.pos.z))===B.WATER;
-    if(inW)m.vel.y=Math.min(m.vel.y+22*dt,2.2);else m.vel.y-=28*dt;
+    if(zombie){
+      // 30 s com a cabeça debaixo de água: treme 15 s e transforma-se num afogado
+      const headW=getBlock(mx,Math.floor(m.pos.y+1.6),mz)===B.WATER;
+      if(headW)m.under+=dt;else if(!m.converting)m.under=Math.max(0,m.under-dt);
+      if(!m.drowned&&(m.under>30||m.converting>0)){m.converting+=dt;m.g.rotation.z=Math.sin(performance.now()/25)*0.06;
+        if(m.converting>15){m.converting=0;m.under=0;m.g.rotation.z=0;becomeDrowned(m);}}
+      if(inW){
+        if(m.drowned){const ty=chase?Math.max(-2.5,Math.min(2.5,(pp.y+0.4-m.pos.y)*2)):(headW?0.5:-0.6);m.vel.y+=(ty-m.vel.y)*Math.min(1,4*dt);}
+        else m.vel.y=Math.max(m.vel.y-9*dt,-2.2);
+      } else m.vel.y-=28*dt;
+    }
+    else if(inW)m.vel.y=Math.min(m.vel.y+22*dt,2.2);else m.vel.y-=28*dt;
     const hit=moveBody(m,dt);
     if(hit&&m.onGround&&walk)m.vel.y=7.6;
     let dy=m.dir-m.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));m.yaw+=dy*Math.min(1,6*dt);
@@ -843,6 +858,12 @@ function updateMobs(dt){
   }
 }
 let spawnT=2,zombieT=3;
+const DROWN_COL={0x5d9a4a:0x4d8f86,0x2f8f9d:0x3f6a5c,0x3b3f8c:0x6c5b3a};
+function becomeDrowned(m){
+  m.drowned=true;m.hp=20;
+  m.g.traverse(o=>{if(o.isMesh){const c=DROWN_COL[o.material.color.getHex()];if(c!==undefined)o.material.color.setHex(c);}});
+  tone(120,70,0.9,0.14,'sawtooth',4);noise(0.5,400,0.6,0.2);
+}
 function poof(m){for(let k=0;k<3;k++)burst(Math.floor(m.pos.x),Math.floor(m.pos.y+k*0.6),Math.floor(m.pos.z),m.type==='zombie'?B.GRASS:B.WOOL_W);noise(0.3,900,0.6,0.25);}
 const smokeMat=new THREE.MeshBasicMaterial({color:0x444444,transparent:true,opacity:0.7});
 function smoke(x,y,z){const m=new THREE.Mesh(partGeo,smokeMat);m.position.set(x+(Math.random()-0.5)*0.6,y,z+(Math.random()-0.5)*0.6);scene.add(m);parts.push({m,v:new THREE.Vector3((Math.random()-0.5)*0.4,1.2,(Math.random()-0.5)*0.4),life:0.9,g:-0.5,shared:true,s:1.4});}
