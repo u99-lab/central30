@@ -1099,7 +1099,7 @@ function act(kind){
       else{m.flee=3;m.dir=Math.atan2(dir.x,dir.z);mobSound(m);}
       return;}
     if(!hit||hit.id===B.BEDROCK)return;
-    if(hit.id===B.TNT){ignite(hit.x,hit.y,hit.z,3);return;}
+    if(hit.id===B.TNT){ignite(hit.x,hit.y,hit.z,2.5);return;}
     // ao partir um bloco ao lado de água, a água ocupa o espaço (não fica um buraco seco)
     let fill=0;
     if(hit.id===B.WATER)placedWater.delete(pwKey(hit.x,hit.y,hit.z));
@@ -1279,7 +1279,8 @@ function updateCamera(){
 let fps=0,fpsAcc=0,fpsN=0,last=performance.now(),saveT=0,wTime=0;
 function frame(now){
   requestAnimationFrame(frame);
-  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  // o rastilho da TNT conta o tempo real, mesmo quando o aparelho mostra poucas imagens por segundo
+  const rawDt=Math.min(0.25,(now-last)/1000),dt=Math.min(0.05,rawDt);last=now;
   fpsAcc+=dt;fpsN++;if(fpsAcc>0.5){fps=Math.round(fpsN/fpsAcc);fpsAcc=0;fpsN=0;}
   const playing=state==='playing';
   updateChunks(playing?6:16);
@@ -1302,7 +1303,7 @@ function frame(now){
       if(hit){selBox.visible=true;selBox.position.set(hit.x+0.5,hit.y+0.5,hit.z+0.5);}else selBox.visible=false;
     }
   }
-  if(ready&&state!=='paused'&&state!=='inventory'&&state!=='dead'){updateMobs(dt);updatePrimed(dt);}
+  if(ready&&state!=='paused'&&state!=='inventory'&&state!=='dead'){updateMobs(dt);updatePrimed(rawDt);}
   shakeT=Math.max(0,shakeT-dt);
   updateParts(dt);
   updateSky(dt);
