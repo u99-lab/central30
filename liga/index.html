@@ -184,7 +184,7 @@ h1 span{color:var(--flood);display:inline-block;transform:skewX(-8deg)}
       <div><div class="lbl">Duração</div><div id="lenSeg" class="seg"></div></div>
     </div>
     <button id="playBtn" class="cta">Jogar</button>
-    <p class="how" style="margin:0">Com bola: <b>Passe</b> segue a direção do joystick, mantém <b>Rematar</b> para carregar a força. Força a mais manda a bola por cima da barra. Sem bola: <b>Trocar</b> muda de jogador e <b>Carrinho</b> tenta roubar. Um passe longo com defesa no caminho sai pelo ar. Um defesa parado fica de pernas abertas: acerta no meio e fazes uma cueca.</p>
+    <p class="how" style="margin:0">Com bola: <b>Passe</b> segue a direção do joystick, mantém <b>Rematar</b> para carregar a força. Força a mais manda a bola por cima da barra. Sem bola: <b>Trocar</b> muda de jogador e <b>Carrinho</b> tenta roubar. Um passe longo com defesa no caminho sai pelo ar.</p>
   </div>
 </section>
 
@@ -362,33 +362,26 @@ function shoot(p,power,aim){
 }
 function startSlide(p,dir){p.slide=.34;p.sdx=dir.x;p.sdy=dir.y;p.slideCd=1.1;p.slideHit=false;p.fx=dir.x;p.fy=dir.y;sfxSlide();}
 /* Pernas: a bola choca contra os pés dos jogadores */
-const BR_SIM=4.2,FOOT_R=1.8,LEG_HIP=2.4,LEG_WIDE=7.4;
-function stance(p){if(p.slide>0||p.role==='GK'&&ball.owner===p)return LEG_HIP;const sp=Math.hypot(p.vx,p.vy);return LEG_HIP+(LEG_WIDE-LEG_HIP)*clamp(1.25-sp/120,0,1);}
+const BR_SIM=4.2,FOOT_R=1.8,LEG_HIP=2.4;
 function feet(p){
   let a,b;
   if(p.slide>0){a=b=-1;}
   else{const sp=Math.hypot(p.vx,p.vy),amp=Math.min(1,sp/110)*.85,s=Math.sin(p.anim*1.35);a=s*amp;b=-s*amp;}
-  const rx=p.fy,ry=-p.fx,half=stance(p);
-  return [[-1,a],[1,b]].map(([sd,rot])=>{const fw=-Math.sin(rot)*12*Math.cos(Math.asin(Math.min(1,(half-LEG_HIP)/12)));return {x:p.x+rx*half*sd+p.fx*fw,y:p.y+ry*half*sd+p.fy*fw};});
+  const rx=p.fy,ry=-p.fx;
+  return [[-1,a],[1,b]].map(([sd,rot])=>{const fw=-Math.sin(rot)*12;return {x:p.x+rx*LEG_HIP*sd+p.fx*fw,y:p.y+ry*LEG_HIP*sd+p.fy*fw};});
 }
 function legCollide(){
   if(ball.owner||ball.z>8)return;
   const lim=BR_SIM+FOOT_R;
   for(const p of G.players){
     if(p===ball.lastKicker&&G.clock-(ball.kickT||0)<.25)continue;
-    if(Math.abs(p.x-ball.x)>22||Math.abs(p.y-ball.y)>22){p.lastAlong=null;continue;}
-    const fs=feet(p),mx=(fs[0].x+fs[1].x)/2,my=(fs[0].y+fs[1].y)/2;
-    const along=(ball.x-mx)*p.fx+(ball.y-my)*p.fy,lat=Math.abs((ball.x-mx)*p.fy-(ball.y-my)*p.fx);
-    if(p.lastAlong!=null&&p.lastAlong*along<0&&lat<stance(p)-lim+.5&&!p.lastHit&&ball.lastKicker&&ball.lastKicker.team!==p.team){
-      if(G.human===0){toast('CUECA!');roarSmall();}
-    }
-    p.lastAlong=along;p.lastHit=false;
-    for(const f of fs){
+    if(Math.abs(p.x-ball.x)>22||Math.abs(p.y-ball.y)>22)continue;
+    for(const f of feet(p)){
       const dx=ball.x-f.x,dy=ball.y-f.y,d=Math.hypot(dx,dy);
       if(d>0&&d<lim){
         const nx=dx/d,ny=dy/d,vn=ball.vx*nx+ball.vy*ny;
         if(vn<0){ball.vx-=1.55*vn*nx;ball.vy-=1.55*vn*ny;ball.vx+=randn()*15;ball.vy+=randn()*15;sfxKick(Math.min(.5,-vn/400));}
-        ball.x=f.x+nx*lim;ball.y=f.y+ny*lim;ball.target=null;ball.shot=false;ball.lastTeam=p.team;p.lastHit=true;p.lastAlong=null;
+        ball.x=f.x+nx*lim;ball.y=f.y+ny*lim;ball.target=null;ball.shot=false;ball.lastTeam=p.team;
       }
     }
   }
@@ -577,10 +570,7 @@ function integrate(p,dt){
   p.x=clamp(p.x+p.vx*dt,-12,W+12);p.y=clamp(p.y+p.vy*dt,-12,H+12);
   if(p.role==='GK'){p.x=clamp(p.x,W/2-BOXW,W/2+BOXW);p.y=p.team===0?clamp(p.y,H-BOXD,H-4):clamp(p.y,4,BOXD);}
   const sp=Math.hypot(p.vx,p.vy);
-  const bdx=ball.x-p.x,bdy=ball.y-p.y,bd=Math.hypot(bdx,bdy)||1;
-  const incoming=!ball.owner&&ball.z<10&&bd<55&&(ball.vx*-bdx+ball.vy*-bdy)/bd>120&&p.slide<=0;
-  if(incoming){const k=Math.min(1,dt*14);p.fx+=(bdx/bd-p.fx)*k;p.fy+=(bdy/bd-p.fy)*k;const fl=Math.hypot(p.fx,p.fy)||1;p.fx/=fl;p.fy/=fl;}
-  else if(sp>15&&p.slide<=0&&!(p.role==='GK'&&ball.owner===p)){p.fx=p.vx/sp;p.fy=p.vy/sp;}
+  if(sp>15&&p.slide<=0&&!(p.role==='GK'&&ball.owner===p)){p.fx=p.vx/sp;p.fy=p.vy/sp;}
   else if(sp<15&&ball.owner!==p){const bx=ball.x-p.x,by=ball.y-p.y,bl=Math.hypot(bx,by)||1,k=Math.min(1,dt*5);p.fx+=(bx/bl-p.fx)*k;p.fy+=(by/bl-p.fy)*k;const fl=Math.hypot(p.fx,p.fy)||1;p.fx/=fl;p.fy/=fl;}
   p.anim+=sp*dt*.09;
 }
@@ -630,7 +620,6 @@ function pickups(){
       else if(ball.lastTeam===p.team&&!ball.shot)ctl=clamp(1.4-sp/500,.3,1);
       else ctl=clamp(1.25-sp/420,.12,.95)*(.7+p.skill*.4)*(p.team===G.human?1:Math.min(1.1,.8+.2*G.teams[p.team].react));
       if(Math.random()<ctl)gain(p);
-      else if(sp>120&&(ball.vx*p.fx+ball.vy*p.fy)<-.5*sp){p.touchCd=.4;}
       else{ball.vx=ball.vx*.45+randn()*80;ball.vy=ball.vy*.45+randn()*80;ball.vz=Math.random()*80;ball.lastTeam=p.team;ball.target=null;ball.shot=false;p.touchCd=.35;sfxKick(.3);}
       return;
     }
@@ -833,7 +822,6 @@ function whistle(n=1,short){
     o.connect(g).connect(master);o.start(t);lfo.start(t);o.stop(t+dur+.02);lfo.stop(t+dur+.02);
   }
 }
-function roarSmall(){if(!live())return;const s=AC.createBufferSource();s.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=900;f.Q.value=.7;const g=AC.createGain(),t=AC.currentTime;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.3,t+.15);g.gain.exponentialRampToValueAtTime(.001,t+1.4);s.connect(f).connect(g).connect(master);s.start(t,Math.random());s.stop(t+1.5);}
 function roar(){
   if(!live())return;
   const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=750;f.Q.value=.6;const g=AC.createGain(),t=AC.currentTime;
@@ -1252,8 +1240,7 @@ function poseOf(p,t){
   else if(p.role==='GK'&&ball.owner===p){aL=aR=-1.35;}
   else if(G.goalAnim>0&&p.team===G.goalTeam&&p.role!=='GK'){aLz=-2.6;aRz=2.6;m.g.position.y=Math.abs(Math.sin(t*9+p.idx))*4;}
   else if(p.stun>0){m.g.rotation.x=.25;}
-  const lo=Math.asin(Math.min(1,(stance(p)-LEG_HIP)/12));
-  m.legs[0].rotation.set(lL,0,-lo);m.legs[1].rotation.set(lR,0,lo);
+  m.legs[0].rotation.x=lL;m.legs[1].rotation.x=lR;
   m.arms[0].rotation.set(aL,0,aLz);m.arms[1].rotation.set(aR,0,aRz);
   m.body.position.y=12+(sp>20?Math.abs(s)*.8:0);
 }
