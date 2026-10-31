@@ -223,6 +223,7 @@ h1 span{color:var(--flood);display:inline-block;transform:skewX(-8deg)}
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
+window.C30me=()=>{try{return G&&G.ctrl&&G.ctrl.m&&G.ctrl.m.g;}catch(e){return null;}};
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const rand=(a,b)=>a+Math.random()*(b-a);
 const randn=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};

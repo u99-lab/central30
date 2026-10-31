@@ -493,7 +493,7 @@ function newGame(){
      book:false,phone:false,gloves:false,mop:false,won:false,quizTries:0,
      phase:0,stage:'go',timer:DAY[0].dur,clockT:0,grades:{},atrasos:0,avisos:0,meal:null,match:null,lateNow:false,inClass:null};
   player={x:38.5*TS,y:35.5*TS,vx:0,vy:0,fx:0,fy:-1,freeze:0,spd:0,shirt:'#ffcf3f',hair:'#2b1a0e',skin:'#e7b791',pants:'#24324a'};
-  player.mesh=makeChar(player);player.mesh.rotation.y=Math.PI;world.add(player.mesh);
+  player.mesh=makeChar(player);window.C30me=()=>player.mesh;player.mesh.rotation.y=Math.PI;world.add(player.mesh);
   player.ballM=new THREE.Mesh(G.sph,ballMat());player.ballM.scale.setScalar(.15);player.ballM.position.set(.32,.5,.05);player.ballM.visible=false;player.mesh.add(player.ballM);
   player.mopM=new THREE.Group();const st=new THREE.Mesh(G.box,lam('#8a6a3a'));st.scale.set(.04,1.1,.04);st.position.y=.55;player.mopM.add(st);
   const hd=new THREE.Mesh(G.box,lam('#e8e8e8'));hd.scale.set(.32,.08,.12);player.mopM.add(hd);player.mopM.position.set(-.33,0,.3);player.mopM.rotation.x=.35;player.mopM.visible=false;player.mesh.add(player.mopM);
