@@ -331,7 +331,7 @@ function bestPass(p,dir){
 
 /* ---------- Actions ---------- */
 function kick(p,ang,spd,vz,target){
-  ball.owner=null;ball.vx=Math.cos(ang)*spd;ball.vy=Math.sin(ang)*spd;ball.vz=vz||0;if(vz>0)ball.z=Math.max(ball.z,1);
+  ball.owner=null;ball.kickT=G.clock;ball.vx=Math.cos(ang)*spd;ball.vy=Math.sin(ang)*spd;ball.vz=vz||0;if(vz>0)ball.z=Math.max(ball.z,1);
   ball.target=target||null;ball.lastTeam=p.team;ball.lastKicker=p;ball.shot=false;
   p.touchCd=.28;p.fx=Math.cos(ang);p.fy=Math.sin(ang);
   sfxKick(Math.min(1,spd/650));
@@ -361,6 +361,31 @@ function shoot(p,power,aim){
   gk.alert=(.1+(1-gk.skill)*.35)/G.teams[gk.team].react;
 }
 function startSlide(p,dir){p.slide=.34;p.sdx=dir.x;p.sdy=dir.y;p.slideCd=1.1;p.slideHit=false;p.fx=dir.x;p.fy=dir.y;sfxSlide();}
+/* Pernas: a bola choca contra os pés dos jogadores */
+const BR_SIM=4.2,FOOT_R=1.8,LEG_HIP=2.4;
+function feet(p){
+  let a,b;
+  if(p.slide>0){a=b=-1;}
+  else{const sp=Math.hypot(p.vx,p.vy),amp=Math.min(1,sp/110)*.85,s=Math.sin(p.anim*1.35);a=s*amp;b=-s*amp;}
+  const rx=p.fy,ry=-p.fx;
+  return [[-1,a],[1,b]].map(([sd,rot])=>{const fw=-Math.sin(rot)*12;return {x:p.x+rx*LEG_HIP*sd+p.fx*fw,y:p.y+ry*LEG_HIP*sd+p.fy*fw};});
+}
+function legCollide(){
+  if(ball.owner||ball.z>8)return;
+  const lim=BR_SIM+FOOT_R;
+  for(const p of G.players){
+    if(p===ball.lastKicker&&G.clock-(ball.kickT||0)<.25)continue;
+    if(Math.abs(p.x-ball.x)>22||Math.abs(p.y-ball.y)>22)continue;
+    for(const f of feet(p)){
+      const dx=ball.x-f.x,dy=ball.y-f.y,d=Math.hypot(dx,dy);
+      if(d>0&&d<lim){
+        const nx=dx/d,ny=dy/d,vn=ball.vx*nx+ball.vy*ny;
+        if(vn<0){ball.vx-=1.55*vn*nx;ball.vy-=1.55*vn*ny;ball.vx+=randn()*15;ball.vy+=randn()*15;sfxKick(Math.min(.5,-vn/400));}
+        ball.x=f.x+nx*lim;ball.y=f.y+ny*lim;ball.target=null;ball.shot=false;ball.lastTeam=p.team;
+      }
+    }
+  }
+}
 function gain(p){
   ball.owner=p;ball.target=null;ball.shot=false;ball.lastTeam=p.team;ball.lastKicker=p;ball.z=0;ball.vz=0;p.protect=.35;
   if(p.role==='GK'){p.hold=G.human===0&&p.team===0?3.5:rand(1,1.4);p.protect=99;}
@@ -613,6 +638,7 @@ function updateBall(dt){
     ball.vx*=f;ball.vy*=f;
     if(!air){const sp=Math.hypot(ball.vx,ball.vy);if(sp>0){const ns=Math.max(0,sp-22*dt);ball.vx*=ns/sp;ball.vy*=ns/sp;}}
     if(ball.target&&Math.hypot(ball.vx,ball.vy)<30)ball.target=null;
+    legCollide();
     pickups();
   }
   ball.rot+=Math.hypot(ball.vx,ball.vy)*dt*.12;
