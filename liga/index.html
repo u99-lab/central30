@@ -370,21 +370,34 @@ function feet(p){
   const rx=p.fy,ry=-p.fx;
   return [[-1,a],[1,b]].map(([sd,rot])=>{const fw=-Math.sin(rot)*12;return {x:p.x+rx*LEG_HIP*sd+p.fx*fw,y:p.y+ry*LEG_HIP*sd+p.fy*fw};});
 }
+function segPoint(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;let t=l2?((px-ax)*dx+(py-ay)*dy)/l2:0;t=t<0?0:t>1?1:t;return {x:ax+dx*t,y:ay+dy*t};}
 function legCollide(){
-  if(ball.owner||ball.z>8)return;
-  const lim=BR_SIM+FOOT_R;
+  if(ball.owner||ball.z>8)return false;
+  const lim=BR_SIM+FOOT_R;let hitAny=false;
   for(const p of G.players){
     if(p===ball.lastKicker&&G.clock-(ball.kickT||0)<.25)continue;
-    if(Math.abs(p.x-ball.x)>22||Math.abs(p.y-ball.y)>22)continue;
-    for(const f of feet(p)){
-      const dx=ball.x-f.x,dy=ball.y-f.y,d=Math.hypot(dx,dy);
-      if(d>0&&d<lim){
-        const nx=dx/d,ny=dy/d,vn=ball.vx*nx+ball.vy*ny;
-        if(vn<0){ball.vx-=1.55*vn*nx;ball.vy-=1.55*vn*ny;ball.vx+=randn()*15;ball.vy+=randn()*15;sfxKick(Math.min(.5,-vn/400));}
-        ball.x=f.x+nx*lim;ball.y=f.y+ny*lim;ball.target=null;ball.shot=false;ball.lastTeam=p.team;
-      }
+    if(Math.abs(p.x-ball.x)>26||Math.abs(p.y-ball.y)>26)continue;
+    const [fl,fr]=feet(p),rx=p.fy,ry=-p.fx;
+    const hl={x:p.x-rx*LEG_HIP,y:p.y-ry*LEG_HIP},hr={x:p.x+rx*LEG_HIP,y:p.y+ry*LEG_HIP};
+    // pernas sólidas: anca-pé de cada perna, as duas ancas e os dois pés ligados
+    const segs=[[hl,fl],[hr,fr],[hl,hr],[fl,fr]];
+    const cx=(hl.x+hr.x+fl.x+fr.x)/4,cy=(hl.y+hr.y+fl.y+fr.y)/4;
+    let bounced=false;
+    for(let it=0;it<4;it++){
+      let best=null,bd=lim;
+      for(const [A,B] of segs){const c=segPoint(ball.x,ball.y,A.x,A.y,B.x,B.y),d=Math.hypot(ball.x-c.x,ball.y-c.y);if(d<bd){bd=d;best=c;}}
+      if(!best)break;
+      // empurra sempre para fora do corpo (a partir do centro das pernas), nunca para dentro
+      let nx=ball.x-best.x,ny=ball.y-best.y,d=Math.hypot(nx,ny);
+      const ox=ball.x-cx,oy=ball.y-cy;
+      if(d<1e-3||nx*ox+ny*oy<0){nx=ox;ny=oy;d=Math.hypot(nx,ny);if(d<1e-3){nx=-ball.vx;ny=-ball.vy;d=Math.hypot(nx,ny)||1;}}
+      nx/=d;ny/=d;
+      const vn=ball.vx*nx+ball.vy*ny;
+      if(vn<0&&!bounced){bounced=true;ball.vx-=1.55*vn*nx;ball.vy-=1.55*vn*ny;ball.vx+=randn()*15;ball.vy+=randn()*15;sfxKick(Math.min(.5,-vn/400));}
+      ball.x=best.x+nx*(lim+.05);ball.y=best.y+ny*(lim+.05);ball.target=null;ball.shot=false;ball.lastTeam=p.team;hitAny=true;
     }
   }
+  return hitAny;
 }
 function gain(p){
   ball.owner=p;ball.target=null;ball.shot=false;ball.lastTeam=p.team;ball.lastKicker=p;ball.z=0;ball.vz=0;p.protect=.35;
@@ -632,13 +645,12 @@ function updateBall(dt){
     ball.x+=(bx-ball.x)*k;ball.y+=(by-ball.y)*k;ball.vx=o.vx;ball.vy=o.vy;ball.z=0;ball.vz=0;
     G.stats.poss[o.team]+=dt;ball.lastTeam=o.team;
   }else{
-    ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+    {const n=Math.max(1,Math.ceil(Math.hypot(ball.vx,ball.vy)*dt/2.5));for(let i=0;i<n;i++){ball.x+=ball.vx*dt/n;ball.y+=ball.vy*dt/n;legCollide();}}
     zPhys(dt);
     const air=ball.z>2,f=air?Math.exp(-.12*dt):Math.exp(-.85*dt);
     ball.vx*=f;ball.vy*=f;
     if(!air){const sp=Math.hypot(ball.vx,ball.vy);if(sp>0){const ns=Math.max(0,sp-22*dt);ball.vx*=ns/sp;ball.vy*=ns/sp;}}
     if(ball.target&&Math.hypot(ball.vx,ball.vy)<30)ball.target=null;
-    legCollide();
     pickups();
   }
   ball.rot+=Math.hypot(ball.vx,ball.vy)*dt*.12;
