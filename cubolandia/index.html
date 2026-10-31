@@ -620,7 +620,7 @@ function setBlock(x,y,z,id){
   if(y<1||y>=H)return false;
   const cx=Math.floor(x/16),cz=Math.floor(z/16),k=ckey(cx,cz),c=chunks.get(k);if(!c)return false;
   const lx=x-cx*16,lz=z-cz*16,i=lx+lz*16+y*256,old=c.d[i];
-  c.d[i]=id;(edits[k]||(edits[k]={}))[i]=id;dirtySave=true;
+  c.d[i]=id;(edits[k]||(edits[k]={}))[i]=id;dirtySave=true;netQueue(x,y,z,id);
   if(id)c.maxY=Math.max(c.maxY,Math.min(H-1,y+1));
   calcTop(c,lx,lz);
   const lit=EMIT[id]||EMIT[old];
@@ -929,11 +929,25 @@ function respawn(){
 }
 function setSurvival(on){survival=on;const t='Zombies à noite: '+(on?'ligados':'desligados');for(const id of['#bZombies','#bZombies2']){$(id).textContent=t;$(id).setAttribute('aria-pressed',String(on));}
   if(!on){hp=20;}renderHearts();dirtySave=true;}
+// Nunca começar dentro da terra: põe o jogador em cima do bloco mais alto à volta dos pés,
+// com espaço livre para o corpo e para a cabeça.
 function settleSpawn(){
-  const x=Math.floor(player.pos.x),z=Math.floor(player.pos.z);
-  for(let y=H-1;y>0;y--){const id=getBlock(x,y,z);if(isCollide(id)||id===B.WATER){player.pos.y=y+1;break;}}
-  player.vel.set(0,0,0);
+  const x0=Math.floor(player.pos.x-player.w),x1=Math.floor(player.pos.x+player.w-1e-6),z0=Math.floor(player.pos.z-player.w),z1=Math.floor(player.pos.z+player.w-1e-6);
+  let top=-1;
+  for(let z=z0;z<=z1;z++)for(let x=x0;x<=x1;x++)for(let y=H-1;y>0;y--){const id=getBlock(x,y,z);if(isCollide(id)||id===B.WATER){if(y>top)top=y;break;}}
+  if(top>=0)player.pos.y=top+1;
+  for(let i=0;i<H&&bodyHits(player);i++)player.pos.y=Math.floor(player.pos.y)+1;
+  player.vel.set(0,0,0);spawnGuard=4;
 }
+// Se o corpo ou os olhos ficarem dentro de blocos, sobe de uma vez até ao espaço livre mais próximo.
+function unstick(){
+  const eyeIn=()=>isCollide(getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y+1.62),Math.floor(player.pos.z)));
+  if(!bodyHits(player)&&!eyeIn())return false;
+  const y0=player.pos.y;
+  for(let i=0;i<H;i++){player.pos.y=Math.floor(y0)+1+i;if(player.pos.y>=H-2)break;if(!bodyHits(player)&&!eyeIn()){player.vel.y=Math.max(0,player.vel.y);return true;}}
+  settleSpawn();return true;
+}
+let spawnGuard=0;
 function newWorld(s){
   for(const c of chunks.values())disposeChunkMeshes(c);chunks.clear();
   while(mobs.length)removeMob(0);
@@ -1155,7 +1169,7 @@ function ignite(x,y,z,fuse,raw){
 }
 function setRaw(x,y,z,id,touched){
   if(y<1||y>=H)return;const cx=Math.floor(x/16),cz=Math.floor(z/16),k=ckey(cx,cz),c=chunks.get(k);if(!c)return;
-  const lx=x-cx*16,lz=z-cz*16,i=lx+lz*16+y*256;c.d[i]=id;(edits[k]||(edits[k]={}))[i]=id;dirtySave=true;
+  const lx=x-cx*16,lz=z-cz*16,i=lx+lz*16+y*256;c.d[i]=id;(edits[k]||(edits[k]={}))[i]=id;dirtySave=true;netQueue(x,y,z,id);
   placedWater.delete(pwKey(x,y,z));touched.set(k,c);(c._cols||(c._cols=new Set())).add(lx+lz*16);
 }
 function explode(px,py,pz){
@@ -1309,7 +1323,8 @@ function frame(now){
   const ready=pc&&pc.meshed;
   $('#loading').hidden=!!ready;
   if(ready&&needSettle){settleSpawn();needSettle=false;}
-  if(ready&&!needSettle&&bodyHits(player)&&!player.fly){player.pos.y=Math.floor(player.pos.y)+1;}
+  if(ready&&!needSettle&&spawnGuard>0){spawnGuard-=dt;if(playing&&(bodyHits(player)||player.pos.y<0))settleSpawn(),spawnGuard=Math.max(spawnGuard,1);}
+  if(ready&&!needSettle&&!player.fly)unstick();
   if(state!=='paused'&&state!=='inventory'&&state!=='dead')dayTime=(dayTime+dt/DAY_LEN)%1;
   if(state==='menu'){
     const t=now/1000;
@@ -1342,6 +1357,47 @@ addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.a
 document.addEventListener('visibilitychange',()=>{if(document.hidden){save();if(state==='playing'&&(isTouch||noLock))setState('paused');}});
 addEventListener('pagehide',save);
 
+/* ---------- online: construir juntos ----------
+   Numa sala da Central 30, todos ficam com o mundo do dono da sala e cada bloco posto/partido aparece aos outros. */
+var netApplying=false,netQ=[],netSynced=false,netAsk=0;
+function netQueue(x,y,z,id){if(!netApplying&&window.C30net&&window.C30net.room&&netQ.length<20000)netQ.push([x,y,z,id]);}
+function netApply(list){
+  const touched=new Map();
+  for(const it of list){
+    if(!Array.isArray(it)||it.length!==4)continue;
+    const x=it[0]|0,y=it[1]|0,z=it[2]|0,id=it[3]|0;if(y<1||y>=H||(id!==0&&!BLOCKS[id]))continue;
+    const cx=Math.floor(x/16),cz=Math.floor(z/16),k=ckey(cx,cz),c=chunks.get(k),lx=x-cx*16,lz=z-cz*16,i=lx+lz*16+y*256;
+    (edits[k]||(edits[k]={}))[i]=id;dirtySave=true;
+    const pk=pwKey(x,y,z);if(id===B.WATER)placedWater.add(pk);else placedWater.delete(pk);
+    if(c){c.d[i]=id;if(id)c.maxY=Math.max(c.maxY,Math.min(H-1,y+1));touched.set(k,c);(c._cols||(c._cols=new Set())).add(lx+lz*16);}
+  }
+  const redo=new Set();
+  for(const[,c]of touched){for(const ci of c._cols)calcTop(c,ci&15,ci>>4);c._cols=null;calcLights(c);for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)redo.add(ckey(c.cx+dx,c.cz+dz));}
+  for(const k of redo){const n=chunks.get(k);if(n&&n.meshed&&neighborsReady(n.cx,n.cz))buildChunkMesh(n);}
+}
+function netWorld(ev){
+  if(typeof ev.seed!=='number'||!ev.edits||typeof ev.edits!=='object')return;
+  netSynced=true;
+  if(ev.seed!==seed)newWorld(ev.seed);
+  for(const c of chunks.values())disposeChunkMeshes(c);chunks.clear();
+  const ed={};for(const k in ev.edits){if(!/^-?\d+,-?\d+$/.test(k))continue;const src=ev.edits[k],dst={};for(const i in src){const n=+i,id=src[i]|0;if(n>=0&&n<16*16*H&&(id===0||BLOCKS[id]))dst[n]=id;}ed[k]=dst;}
+  edits=ed;placedWater.clear();if(Array.isArray(ev.water))for(const k of ev.water.slice(0,50000))placedWater.add(String(k));
+  dirtySave=true;toast('Mundo da sala carregado: estás a construir com os teus amigos!');
+}
+if(window.C30net){
+  window.C30net.on(ev=>{
+    if(!ev)return;
+    if(ev.t==='__status'){if(!window.C30net.room)netSynced=false;netAsk=0;return;}
+    if(ev.t==='bs'&&Array.isArray(ev.list)){netApplying=true;try{netApply(ev.list.slice(0,20000));}finally{netApplying=false;}}
+    else if(ev.t==='need'){if(window.C30net.host)window.C30net.send({t:'world',seed,edits,water:[...placedWater]});}
+    else if(ev.t==='world'&&!window.C30net.host){netApplying=true;try{netWorld(ev);}finally{netApplying=false;}}
+  });
+  setInterval(()=>{
+    const N=window.C30net;if(!N.room){netQ.length=0;return;}
+    if(netQ.length)N.send({t:'bs',list:netQ.splice(0,4000)});
+    const now=Date.now();if(!N.host&&!netSynced&&now-netAsk>2500){netAsk=now;N.send({t:'need'});}
+  },120);
+}
 /* ---------- arranque ---------- */
 function start(hot){
   const s=load();
