@@ -400,6 +400,36 @@ function legCollide(){
   }
   return hitAny;
 }
+/* Sem cuecas com a bola dominada: se a bola que um jogador leva toca nas pernas de um adversário
+   (parado ou a fazer carrinho), ressalta e solta-se — nunca passa por entre as pernas. */
+function legsDist(p){
+  const [fl,fr]=feet(p),rx=p.fy,ry=-p.fx;
+  const hl={x:p.x-rx*LEG_HIP,y:p.y-ry*LEG_HIP},hr={x:p.x+rx*LEG_HIP,y:p.y+ry*LEG_HIP};
+  let best=null,bd=1e9;
+  for(const [A,B] of [[hl,fl],[hr,fr],[hl,hr],[fl,fr]]){const c=segPoint(ball.x,ball.y,A.x,A.y,B.x,B.y),d=Math.hypot(ball.x-c.x,ball.y-c.y);if(d<bd){bd=d;best=c;}}
+  return {d:bd,c:best,cx:(hl.x+hr.x+fl.x+fr.x)/4,cy:(hl.y+hr.y+fl.y+fr.y)/4};
+}
+function ownedLegBlock(){
+  const o=ball.owner;if(!o||o.role==='GK'||ball.z>8)return;
+  const lim=BR_SIM+FOOT_R;
+  for(const q of G.teams[1-o.team].players){
+    if(q.role==='GK'||q.stun>0&&q.slide<=0)continue;
+    if(Math.abs(q.x-ball.x)>26||Math.abs(q.y-ball.y)>26)continue;
+    const L=legsDist(q);if(L.d>=lim)continue;
+    // empurra a bola para fora das pernas (do centro das pernas para a bola) e solta-a
+    let nx=ball.x-L.c.x,ny=ball.y-L.c.y,d=Math.hypot(nx,ny);const ox=ball.x-L.cx,oy=ball.y-L.cy;
+    if(d<1e-3||nx*ox+ny*oy<0){nx=ox;ny=oy;d=Math.hypot(nx,ny);if(d<1e-3){nx=-o.fx;ny=-o.fy;d=1;}}
+    nx/=d;ny/=d;
+    const sp=Math.hypot(o.vx,o.vy),push=110+sp*.35+(q.slide>0?90:0);
+    ball.owner=null;o.touchCd=.35;o.protect=0;
+    ball.x=L.c.x+nx*(lim+.1);ball.y=L.c.y+ny*(lim+.1);
+    ball.vx=nx*push+(q.slide>0?q.sdx*60:0)+randn()*20;ball.vy=ny*push+(q.slide>0?q.sdy*60:0)+randn()*20;
+    ball.lastTeam=q.team;ball.lastKicker=q;ball.kickT=G.clock;ball.target=null;ball.shot=false;
+    sfxKick(.3);
+    if(q.slide>0&&G.human===0&&q.team===0)toast('Cortado!');
+    return;
+  }
+}
 function gain(p){
   ball.owner=p;ball.target=null;ball.shot=false;ball.lastTeam=p.team;ball.lastKicker=p;ball.z=0;ball.vz=0;p.protect=.35;
   if(p.role==='GK'){p.hold=G.human===0&&p.team===0?3.5:rand(1,1.4);p.protect=99;}
@@ -776,6 +806,7 @@ function stepPlay(dt){
   for(const p of G.players){integrate(p,dt);slideCheck(p);}
   separate();
   updateBall(dt);
+  ownedLegBlock();
   tackles();
   checkBounds();
 }
