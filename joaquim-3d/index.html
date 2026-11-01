@@ -146,7 +146,7 @@ h1 em{font-style:normal;color:var(--accent);display:block}
   <div class="card">
     <div class="eyebrow">Pavilhão · Intervalo grande</div>
     <h1 id="endTitle">Vitória!</h1>
-    <div class="score" id="endScore">7ºA 0 – 0 8ºB</div>
+    <div class="score" id="endScore">7ºB 0 – 0 8ºB</div>
     <p class="lead" id="endText"></p>
     <div class="row"><button class="btn" id="cont" hidden>Continuar o dia</button><button class="btn" id="again">Jogar outra vez</button><button class="btn ghost" id="restart">Recomeçar a história</button></div>
   </div>
@@ -154,7 +154,7 @@ h1 em{font-style:normal;color:var(--accent);display:block}
 
 <section id="report" class="screen gut" hidden>
   <div class="card">
-    <div class="eyebrow">Boletim do dia · 7ºA · Escola Secundária Dr. Joaquim de Carvalho</div>
+    <div class="eyebrow">Boletim do dia · 7ºB · Escola Secundária Dr. Joaquim de Carvalho</div>
     <h1 id="repTitle">Fim do dia</h1>
     <table class="rep"><tbody id="repBody"></tbody></table>
     <p class="lead" id="repText"></p>
@@ -707,7 +707,7 @@ function talk(n){
     const miss=[];if(!Q.ball)miss.push('a bola');if(Q.team.size<4)miss.push(`mais ${4-Q.team.size} jogador${4-Q.team.size>1?'es':''}`);if(wetLeft()>0)miss.push('o chão seco');
     if(Q.won){say([[N,'Ok, ok... ganharam. Mas para a semana há desforra!']]);break}
     if(DAY[Q.phase].id!=='jogo'){say([[N,Q.phase<2?'O jogo é no intervalo grande, às 10h20. Até lá preparem-se... e vão às aulas!':'Já jogámos hoje. Para a semana há desforra!']]);break}
-    if(miss.length){say([[N,'Então, 7ºA? Querem jogar? Ainda vos falta '+miss.join(', ')+'.'],[N,'Com o chão assim alguém parte uma perna.']]);break}
+    if(miss.length){say([[N,'Então, 7ºB? Querem jogar? Ainda vos falta '+miss.join(', ')+'.'],[N,'Com o chão assim alguém parte uma perna.']]);break}
     say([[N,'Chão seco, cinco jogadores e bola. Afinal sempre vieram!'],{who:N,text:'Dois minutos, quem marcar mais ganha. Prontos?',choices:[{t:'Bora! Apita, Rui!',fn:()=>startMatch(true)},{t:'Espera, ainda não.',fn:()=>{}}]}]);
     break;}
   default:{const L=['Que chuva! O meu ténis está encharcado.','Tens teste de Matemática hoje? Eu tenho...','Disseram que há jogo no pavilhão. É verdade?','Se correres nas poças vais de rabo ao chão, já vi três hoje.','O bar hoje tem pastéis de nata acabadinhos.'];
@@ -811,7 +811,7 @@ function startClass(d){
   const t=npc(d.tid);t.x=r.teacher[0]*TS;t.y=r.teacher[1]*TS;t.fx=0;t.fy=1;t.teaching=true;
   player.x=r.seat[0]*TS;player.y=r.seat[1]*TS;player.fx=0;player.fy=-1;player.vx=player.vy=0;player.seated=true;
   camPos.set(r.board[0]+.4,2.55,Math.min(r.seat[1]+2.3,10.6));camLook.set(r.board[0],1.05,r.board[1]);
-  say([[t.name,Q.lateNow?`Chegaste ${Math.max(1,Math.round(-Q.timer/4))} minutos atrasado! Fica com falta de atraso. Senta-te.`:'Bom dia, 7ºA! Sentem-se, por favor.'],[t.name,d.intro]],()=>runClassQuiz(d));
+  say([[t.name,Q.lateNow?`Chegaste ${Math.max(1,Math.round(-Q.timer/4))} minutos atrasado! Fica com falta de atraso. Senta-te.`:'Bom dia, 7ºB! Sentem-se, por favor.'],[t.name,d.intro]],()=>runClassQuiz(d));
 }
 function runClassQuiz(d){
   QZ={d,qs:genQs(d.id),i:0,right:0,t:15,lock:false};
@@ -860,14 +860,14 @@ function showReport(){
   const g=Q.grades,subs=[['Matemática','mat'],['Português','pt'],['Inglês','ing'],['Educação Física','ef']];
   const cls=v=>v>=14?'good':v>=10?'meh':'bad';
   let rows=subs.map(([n,id])=>`<tr><td>${n}</td><td class="${cls(g[id]??0)}">${g[id]??'—'} val.</td></tr>`).join('');
-  const m=Q.match;rows+=`<tr><td>Jogo 7ºA vs 8ºB</td><td class="${m&&m[0]>m[1]?'good':'bad'}">${m?m[0]+' – '+m[1]:'—'}</td></tr>`;
+  const m=Q.match;rows+=`<tr><td>Jogo 7ºB vs 8ºB</td><td class="${m&&m[0]>m[1]?'good':'bad'}">${m?m[0]+' – '+m[1]:'—'}</td></tr>`;
   rows+=`<tr><td>Faltas de atraso</td><td class="${Q.atrasos?'bad':'good'}">${Q.atrasos}</td></tr>`;
   rows+=`<tr><td>Avisos por correr nos corredores</td><td class="${Q.avisos?'meh':'good'}">${Q.avisos}</td></tr>`;
   rows+=`<tr><td>Almoço</td><td>${Q.meal||'—'}</td></tr>`;
   $('repBody').innerHTML=rows;
   const vals=subs.map(([,id])=>g[id]??0),avg=vals.reduce((a,b)=>a+b,0)/vals.length;
   $('repTitle').textContent=avg>=16?'Dia de quadro de honra!':avg>=10?'Dia positivo!':'Dia para esquecer...';
-  $('repText').textContent=`Média do dia: ${avg.toFixed(1)} valores. `+(avg>=16?'Os professores estão orgulhosos e o 7ºA fala do jogo até amanhã.':avg>=10?'Passaste o dia sem grandes sustos. Amanhã há mais.':'Amanhã é um novo dia. Estuda um bocadinho e chega a horas!')+' Lá fora continua a chover.';
+  $('repText').textContent=`Média do dia: ${avg.toFixed(1)} valores. `+(avg>=16?'Os professores estão orgulhosos e o 7ºB fala do jogo até amanhã.':avg>=10?'Passaste o dia sem grandes sustos. Amanhã há mais.':'Amanhã é um novo dia. Estuda um bocadinho e chega a horas!')+' Lá fora continua a chover.';
   $('report').hidden=false;
 }
 
@@ -1090,7 +1090,7 @@ function buildMatchScene(){
   [[15.6,3,-6.5,48,6,.4],[15.6,3,26,48,6,.4],[-7,3,9.4,.4,6,33],[38.2,3,9.4,.4,6,33]].forEach(([x,y,z,a,b,c])=>{const w=new THREE.Mesh(G.box,wm);w.scale.set(a,b,c);w.position.set(x,y,z);w.receiveShadow=true;mscene.add(w)});
   const band=new THREE.Mesh(G.box,lam('#ffcf3f'));band.scale.set(48,.5,.45);band.position.set(15.6,2.3,-6.5);mscene.add(band);
   for(let k=0;k<6;k++){const wn=new THREE.Mesh(G.box,new THREE.MeshBasicMaterial({color:0x5b6f86}));wn.scale.set(3,1.4,.45);wn.position.set(-2+k*7,4.4,-6.5);mscene.add(wn)}
-  const ban=textSprite('7ºA vs 8ºB · INTERVALO GRANDE',{bg:'#152433',fg:'#ffcf3f',size:2.2});ban.position.set(15.6,3.4,-6);mscene.add(ban);
+  const ban=textSprite('7ºB vs 8ºB · INTERVALO GRANDE',{bg:'#152433',fg:'#ffcf3f',size:2.2});ban.position.set(15.6,3.4,-6);mscene.add(ban);
   fans=[];const r=mulberry(3);
   for(let s=0;s<3;s++){const st=new THREE.Mesh(G.box,lam(['#8a929a','#7b838b','#6c747c'][s]));st.scale.set(30,.45*(s+1),1.1);st.position.set(15.6,.225*(s+1),-1.9-s*1.1);st.receiveShadow=true;st.castShadow=true;mscene.add(st);
     for(let k=0;k<11;k++){if(r()<.25)continue;const o={shirt:['#ffcf3f','#d6453d','#2f6fd6','#f1ede0','#2d8a4e','#e84393'][Math.floor(r()*6)],hair:['#111','#5a3416','#d9b056','#7a2f12'][Math.floor(r()*4)],skin:['#f0c9a5','#a8714f','#e7b48e','#8d5a3b'][Math.floor(r()*4)],long:r()<.4};
@@ -1277,7 +1277,7 @@ function updateMatch(){
 function goal(team){
   if(M.pen){M.ball.owner=null;M.ball.vx*=.2;M.ball.vy*=.2;if(M.pen.live)penResult(team===0);else{M.pending='pen';M.pause=60}return}
   M.score[team]++;sfx.goal();M.cheer=team===0?150:40;
-  msg(team===0?'GOLOOO DO 7ºA!':'Golo do 8ºB...',150);
+  msg(team===0?'GOLOOO DO 7ºB!':'Golo do 8ºB...',150);
   const p=project((team===0?CW:0)*K,1,300*K);
   for(let k=0;k<(team===0?90:30);k++)conf.push({x:p.x,y:p.y,vx:rnd(-6,6),vy:rnd(-9,-2),g:.25,c:team===0?['#ffcf3f','#fff','#63d48f','#5aa0e6'][k%4]:'#d6453d',r:rnd(0,6),life:rnd(60,120)});
   M.ball.owner=null;M.ball.vx*=.2;M.ball.vy*=.2;M.pending=1-team;M.pause=130;
@@ -1289,8 +1289,8 @@ function endMatch(){
   if(M.story){if(win)Q.won=true;Q.match=[a,c]}
   $('cont').hidden=!M.story;$('restart').hidden=!!M.story;
   $('endTitle').textContent=win?'Vitória!':'Derrota...';
-  $('endScore').textContent=`7ºA ${a} – ${c} 8ºB`;
-  $('endText').textContent=win?'O 7ºA ganhou no pavilhão da Joaquim de Carvalho enquanto lá fora continuava a chover. O Rui jura que foi tudo táctica dele. Para a semana há desforra.':'O 8ºB levou a melhor desta vez. A Marta diz que foram as luvas molhadas. Pede a desforra e tenta outra vez.';
+  $('endScore').textContent=`7ºB ${a} – ${c} 8ºB`;
+  $('endText').textContent=win?'O 7ºB ganhou no pavilhão da Joaquim de Carvalho enquanto lá fora continuava a chover. O Rui jura que foi tudo táctica dele. Para a semana há desforra.':'O 8ºB levou a melhor desta vez. A Marta diz que foram as luvas molhadas. Pede a desforra e tenta outra vez.';
   $('again').textContent=win?'Jogar outra vez':'Pedir desforra';
   $('end').hidden=false;
   if(win){M.cheer=100000;for(let k=0;k<180;k++)conf.push({x:Math.random()*W,y:-Math.random()*H,vx:rnd(-1,1),vy:rnd(1,3),g:0,c:['#ffcf3f','#63d48f','#fff','#5aa0e6'][k%4],r:rnd(0,6),life:1e9,loop:true})}
@@ -1329,7 +1329,7 @@ function drawMatchUI(){
     u.font='bold 15px "Atkinson Hyperlegible",sans-serif';u.fillStyle='#9fb1c2';u.fillText(`Remate ${Math.min(M.pen.shots+1,5)}/5`,bx+bw*.84,by+22)}
   else{
   u.fillStyle='#ffcf3f';u.fillRect(bx,by,6,42);u.fillStyle='#d6453d';u.fillRect(bx+bw-6,by,6,42);
-  u.fillStyle='#f1ede0';u.font='15px "Bungee",sans-serif';u.fillText('7ºA',bx+bw*.16,by+22);u.fillText('8ºB',bx+bw*.84,by+22);
+  u.fillStyle='#f1ede0';u.font='15px "Bungee",sans-serif';u.fillText('7ºB',bx+bw*.16,by+22);u.fillText('8ºB',bx+bw*.84,by+22);
   u.font='22px "Bungee",sans-serif';u.fillText(`${M.score[0]} – ${M.score[1]}`,bx+bw*.42,by+22);
   u.font='bold 15px "Atkinson Hyperlegible",sans-serif';u.fillStyle=M.golden?'#ffcf3f':'#9fb1c2';u.fillText(M.golden?'OURO':`${mm}:${ss}`,bx+bw*.64,by+22);}
   if(M.msgT>0){u.globalAlpha=Math.min(1,M.msgT/20);u.font=`${W<560?24:42}px "Bungee",sans-serif`;u.fillStyle='#1b1404';u.fillText(M.msg,W/2+3,H*.32+3);u.fillStyle='#ffcf3f';u.fillText(M.msg,W/2,H*.32);u.globalAlpha=1}

@@ -157,7 +157,7 @@ kbd { display: inline-block; background: var(--acc); color: #111; border-radius:
   <h1>Um Dia na <span>Joaquim de Carvalho</span></h1>
   <div class="sub">Escola Secundária Dr. Joaquim de Carvalho · Tavarede, Figueira da Foz</div>
   <div class="info panel">
-    Estás no <b>7.º A</b>. Passa um dia inteiro na escola: <b>4 aulas</b> (Matemática, Português, Educação Física e Físico-Química) com <b>intervalos</b> e <b>almoço</b> pelo meio.<br>
+    Estás no <b>7.º B</b>. Passa um dia inteiro na escola: <b>4 aulas</b> (Matemática, Português, Educação Física e Físico-Química) com <b>intervalos</b> e <b>almoço</b> pelo meio.<br>
     Em cada pausa aparecem <b>missões</b> — o campo de futebol está encharcado e só podes jogar depois de ires buscar o material para tirar a água!<br>
     Chega a tempo às aulas (senão levas falta), responde às perguntas dos professores, desafia o Rui no <b>basquetebol</b> e procura os <b>8 cromos</b> escondidos. Podes sair pelo portão e passear pelo bairro de Tavarede.<br><br>
     <span id="ctrls"><b>WASD</b> mover (em 3.ª pessoa, <b>A/D</b> rodam a personagem) · <b>← →</b> rodar · <b>Rato</b> olhar · <b>Shift</b> correr · <b>Espaço</b> saltar · <b>E</b> interagir · <b>F / clique</b> chutar ou lançar · <b>C</b> mudar câmara · <b>M</b> mapa · <b>Q</b> mudar missão · <b>Esc</b> pausa e opções</span>
@@ -1678,7 +1678,7 @@ function startClass(p) {
     return { q: q[0], opts };
   });
   quiz = { p, qs, i: 0, right: 0, prof };
-  const intro = late ? [[prof, 'Chegaste atrasado! Senta-te depressa.']] : [[prof, `Bom dia, 7.º A! Vamos começar a aula de ${p.subj}.`]];
+  const intro = late ? [[prof, 'Chegaste atrasado! Senta-te depressa.']] : [[prof, `Bom dia, 7.º B! Vamos começar a aula de ${p.subj}.`]];
   if (late) G.pts -= Math.min(30, Math.round((G.t - p.s) / 3) * 2 + 4);
   say(intro, () => showQuestion());
 }
