@@ -95,6 +95,7 @@ h1{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(46px,9vw,
 #tJump{right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));width:76px;height:76px;border-radius:50%}
 #tBreak{right:calc(112px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 #tPlace{right:calc(112px + env(safe-area-inset-right,0px));bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+#tDown{right:calc(30px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));width:64px;height:58px;font-size:12px}
 #tFly{right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(184px + env(safe-area-inset-bottom,0px));width:76px;height:44px}
 #tInv{right:calc(84px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));width:56px;height:40px}
 #tPause{right:calc(16px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));width:56px;height:40px}
@@ -130,6 +131,7 @@ body.touch #clock{top:calc(56px + env(safe-area-inset-top,0px))}
   <div id="look"></div>
   <div id="joy"><div id="knob"></div></div>
   <button class="tb" id="tJump" aria-label="Saltar">SALTAR</button>
+  <button class="tb" id="tDown" aria-label="Descer e mergulhar">DESCER</button>
   <button class="tb" id="tBreak" aria-label="Partir">PARTIR</button>
   <button class="tb" id="tPlace" aria-label="Colocar">PÔR</button>
   <button class="tb" id="tFly" aria-label="Voar">VOAR</button>
@@ -453,7 +455,6 @@ function genChunk(cx,cz){
       const r=hash2(wx,wz,seed+11);
       if(r<(bi==='forest'?0.2:0.11))d[above]=B.TALLGRASS;
       else if(r<(bi==='forest'?0.23:0.135))d[above]=hash2(wx,wz,seed+12)<0.5?B.ROSE:B.DANDELION;
-      else if(r>0.996&&bi==='plains')d[above]=B.PUMPKIN;
     } else if(bi==='desert'&&d[si]===B.SAND&&h>SEA+1&&hash2(wx,wz,seed+13)<0.006){
       const ch=1+(hash2(wx,wz,seed+14)*3|0);for(let k=1;k<=ch;k++)put(lx,h+k,lz,B.CACTUS);
     }
@@ -890,13 +891,13 @@ function moveBody(b,dt){
 
 /* ---------- jogador ---------- */
 const player={pos:new THREE.Vector3(0.5,60,0.5),vel:new THREE.Vector3(),w:0.3,h:1.8,onGround:false,fly:false,yaw:0,pitch:-0.15};
-let hotbar=[1,2,3,4,6,5,27,28,30],slot=0;
+let hotbar=[1,2,3,4,6,5,27,28,10],slot=0;
 let survival=true,dead=false,hp=20,sinceHurt=99,regenT=0,shakeT=0,spawnPoint=null;
 let dayTime=0.07;const DAY_LEN=900;
 let state='menu',noLock=false,lockWorked=false,needSettle=false,dirtySave=false,showDebug=false;
 let light=1;
 const keys=new Set();
-const touchIn={x:0,y:0,jump:false,brk:false};
+const touchIn={x:0,y:0,jump:false,brk:false,down:false};
 let bob=0,stepAcc=0,lastSpace=0,actT=0,climbT=0,wasSwimming=false,swimHintShown=false,bubbleT=0;
 
 function findSpawn(){
@@ -985,7 +986,7 @@ let nameT=0;
 function selectSlot(i){slot=(i+9)%9;renderHotbar();const n=$('#blockname');n.textContent=BLOCKS[hotbar[slot]].name;n.classList.add('show');clearTimeout(nameT);nameT=setTimeout(()=>n.classList.remove('show'),1300);dirtySave=true;}
 let toastT=0;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1500);}
-(()=>{const g=$('#invgrid');for(let id=1;id<BLOCKS.length;id++){const b=document.createElement('button');b.className='ib';b.innerHTML='<img alt="" src="'+blockIcon(id)+'"><span>'+BLOCKS[id].name+'</span>';
+(()=>{const g=$('#invgrid');for(let id=1;id<BLOCKS.length;id++){if(id===B.PUMPKIN||id===B.JACK)continue;const b=document.createElement('button');b.className='ib';b.innerHTML='<img alt="" src="'+blockIcon(id)+'"><span>'+BLOCKS[id].name+'</span>';
   b.dataset.id=id;b.addEventListener('click',()=>{hotbar[slot]=id;renderHotbar();dirtySave=true;$('#invHelp').textContent=BLOCKS[id].name+' está no espaço '+(slot+1)+'. Volta ao jogo para o usar.';});g.appendChild(b);}})();
 
 function show(id,on){$(id).hidden=!on;}
@@ -994,7 +995,7 @@ function setState(s){
   show('#menu',s==='menu');show('#pause',s==='paused');show('#inv',s==='inventory');show('#dead',s==='dead');
   show('#hud',s!=='menu');
   show('#touch',isTouch&&s==='playing');
-  if(s!=='playing'){keys.clear();mouseDown[0]=mouseDown[2]=false;touchIn.x=touchIn.y=0;touchIn.jump=touchIn.brk=false;}
+  if(s!=='playing'){keys.clear();mouseDown[0]=mouseDown[2]=false;touchIn.x=touchIn.y=0;touchIn.jump=touchIn.brk=touchIn.down=false;}
   if(s==='paused'||s==='menu')save();
 }
 function resume(){
@@ -1085,10 +1086,11 @@ if(isTouch){
   hold($('#tJump'),()=>{touchIn.jump=true;const t=performance.now();if(t-lastSpace<300)toggleFly();lastSpace=t;},()=>touchIn.jump=false);
   hold($('#tBreak'),()=>{touchIn.brk=true;repeatT[0]=0.3;act('break');},()=>touchIn.brk=false);
   hold($('#tPlace'),()=>act('place'));
+  hold($('#tDown'),()=>{touchIn.down=true;},()=>{touchIn.down=false;});
   $('#tFly').addEventListener('click',toggleFly);
   $('#tInv').addEventListener('click',openInv);
   $('#tPause').addEventListener('click',()=>setState('paused'));
-  $('#keysDesk').innerHTML='<h2>Controlos</h2><kbd>Joystick</kbd><span>andar</span><kbd>Arrastar</kbd><span>olhar à volta</span><kbd>SALTAR</kbd><span>saltar · nadar para cima · duas vezes para voar</span><kbd>Na água</kbd><span>anda para onde olhas; olha para baixo para mergulhar</span><kbd>PARTIR</kbd><span>partir o bloco no centro</span><kbd>PÔR</kbd><span>colocar o bloco escolhido</span><kbd>BLOCOS</kbd><span>todos os blocos</span><kbd>TNT</kbd><span>parte-a para acender e afasta-te</span><kbd>Zombies</kbd><span>aparecem à noite; toca PARTIR para lhes bater</span>';
+  $('#keysDesk').innerHTML='<h2>Controlos</h2><kbd>Joystick</kbd><span>andar</span><kbd>Arrastar</kbd><span>olhar à volta</span><kbd>DESCER</kbd><span>mergulhar na água · descer a voar</span><kbd>SALTAR</kbd><span>saltar · nadar para cima · duas vezes para voar</span><kbd>Na água</kbd><span>anda para onde olhas; olha para baixo para mergulhar</span><kbd>PARTIR</kbd><span>partir o bloco no centro</span><kbd>PÔR</kbd><span>colocar o bloco escolhido</span><kbd>BLOCOS</kbd><span>todos os blocos</span><kbd>TNT</kbd><span>parte-a para acender e afasta-te</span><kbd>Zombies</kbd><span>aparecem à noite; toca PARTIR para lhes bater</span>';
 }
 
 /* ---------- ações ---------- */
@@ -1255,7 +1257,7 @@ function updatePlayer(dt){
   if(keys.has('KeyD'))s+=1;if(keys.has('KeyA'))s-=1;
   if(keys.has('ArrowLeft'))player.yaw+=2.2*dt;if(keys.has('ArrowRight'))player.yaw-=2.2*dt;
   if(isTouch){f-=touchIn.y;s+=touchIn.x;}
-  const jump=keys.has('Space')||touchIn.jump,shift=keys.has('ShiftLeft')||keys.has('ShiftRight'),ctrl=keys.has('ControlLeft');
+  const jump=keys.has('Space')||touchIn.jump,shift=keys.has('ShiftLeft')||keys.has('ShiftRight')||touchIn.down,ctrl=keys.has('ControlLeft');
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
   let wx=fx*f+rx*s,wz=fz*f+rz*s;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
   const px=Math.floor(player.pos.x),pz=Math.floor(player.pos.z),wAt=dy=>getBlock(px,Math.floor(player.pos.y+dy),pz)===B.WATER;
@@ -1405,7 +1407,7 @@ function start(hot){
     seed=s.seed;N=makeNoise(seed);edits=s.edits||{};
     if(Array.isArray(s.pos))player.pos.set(s.pos[0],s.pos[1],s.pos[2]);
     player.yaw=s.yaw||0;player.pitch=s.pitch||0;player.fly=!!s.fly;dayTime=typeof s.time==='number'?s.time:0.07;
-    if(Array.isArray(s.hotbar)&&s.hotbar.length===9&&s.hotbar.every(i=>BLOCKS[i]&&i>0))hotbar=s.hotbar;
+    if(Array.isArray(s.hotbar)&&s.hotbar.length===9&&s.hotbar.every(i=>BLOCKS[i]&&i>0))hotbar=s.hotbar.map(i=>i===B.PUMPKIN||i===B.JACK?B.GLASS:i);
     slot=s.slot|0;
     if(Array.isArray(s.water))for(const k of s.water)placedWater.add(String(k));
     if(typeof s.survival==='boolean')survival=s.survival;if(typeof s.hp==='number'&&s.hp>0)hp=Math.min(20,s.hp);
