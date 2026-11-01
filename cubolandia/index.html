@@ -1289,7 +1289,7 @@ function updatePlayer(dt){
   if(hit&&swimming&&f>0&&!headIn)climbT=0.32;
   if(swimming&&!wasSwimming){
     if(fallV<-5){splash(player.pos.x,player.pos.y+0.6,player.pos.z,Math.min(1,-fallV/20));}
-    if(!swimHintShown){swimHintShown=true;toast(isTouch?'A nadar: SALTAR sobe, olha para baixo para mergulhar':'A nadar: Espaço sobe, Shift mergulha');}
+    if(!swimHintShown){swimHintShown=true;toast(isTouch?'A nadar: SALTAR sobe, DESCER mergulha (ou olha para baixo e anda)':'A nadar: Espaço sobe, Shift mergulha');}
   }
   wasSwimming=swimming;
   if(player.fly&&player.onGround&&shift){player.fly=false;$('#tFly').classList.remove('on');toast('Modo voo: desligado');}
