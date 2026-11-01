@@ -157,7 +157,7 @@ kbd { display: inline-block; background: var(--acc); color: #111; border-radius:
   <h1>Um Dia na <span>Joaquim de Carvalho</span></h1>
   <div class="sub">Escola Secundária Dr. Joaquim de Carvalho · Tavarede, Figueira da Foz</div>
   <div class="info panel">
-    Passa um dia inteiro na escola: <b>4 aulas</b> (Matemática, Português, Educação Física e Físico-Química) com <b>intervalos</b> e <b>almoço</b> pelo meio.<br>
+    Estás no <b>7.º A</b>. Passa um dia inteiro na escola: <b>4 aulas</b> (Matemática, Português, Educação Física e Físico-Química) com <b>intervalos</b> e <b>almoço</b> pelo meio.<br>
     Em cada pausa aparecem <b>missões</b> — o campo de futebol está encharcado e só podes jogar depois de ires buscar o material para tirar a água!<br>
     Chega a tempo às aulas (senão levas falta), responde às perguntas dos professores, desafia o Rui no <b>basquetebol</b> e procura os <b>8 cromos</b> escondidos. Podes sair pelo portão e passear pelo bairro de Tavarede.<br><br>
     <span id="ctrls"><b>WASD</b> mover (em 3.ª pessoa, <b>A/D</b> rodam a personagem) · <b>← →</b> rodar · <b>Rato</b> olhar · <b>Shift</b> correr · <b>Espaço</b> saltar · <b>E</b> interagir · <b>F / clique</b> chutar ou lançar · <b>C</b> mudar câmara · <b>M</b> mapa · <b>Q</b> mudar missão · <b>Esc</b> pausa e opções</span>
@@ -1646,19 +1646,26 @@ function talk(id) {
 //  Quiz / classes
 // ===================================================================
 const QUIZ = {
-  mat: [['Qual é a derivada de f(x) = x²?', '2x', 'x', 'x²/2', '2'], ['Resolve: 2x + 6 = 14', 'x = 4', 'x = 3', 'x = 10', 'x = 8'], ['Quanto é sen(90°)?', '1', '0', '0,5', '−1'],
-  ['Quanto é log₁₀(1000)?', '3', '10', '100', '30'], ['Triângulo retângulo com catetos 3 e 4. A hipotenusa mede…', '5', '7', '6', '12'], ['Quanto é 15% de 200?', '30', '15', '20', '35'],
-  ['Qual é o declive da reta y = −3x + 2?', '−3', '2', '3', '−2'], ['A soma dos ângulos internos de um triângulo é…', '180°', '360°', '90°', '270°']],
-  pt: [['Quem escreveu "Os Lusíadas"?', 'Luís de Camões', 'Fernando Pessoa', 'Eça de Queirós', 'Almeida Garrett'], ['Qual destes NÃO é heterónimo de Fernando Pessoa?', 'Cesário Verde', 'Alberto Caeiro', 'Ricardo Reis', 'Álvaro de Campos'],
-  ['"Os Maias" foi escrito por…', 'Eça de Queirós', 'Camilo Castelo Branco', 'José Saramago', 'Gil Vicente'], ['Qual é o sujeito em "O Tiago marcou um golo"?', 'O Tiago', 'marcou', 'um golo', 'golo'],
-  ['"Chorava rios de lágrimas" é uma…', 'Hipérbole', 'Metáfora', 'Personificação', 'Anáfora'], ['Em que ano ganhou José Saramago o Nobel?', '1998', '1988', '2008', '1974'],
-  ['Gil Vicente escreveu…', 'Auto da Barca do Inferno', 'Mensagem', 'Amor de Perdição', 'Frei Luís de Sousa'], ['Quantos cantos tem "Os Lusíadas"?', '10', '12', '8', '9']],
+  // perguntas do 7.º ano
+  mat: [['Quanto é (−7) + 12?', '5', '−5', '19', '−19'], ['Quanto é (−4) × (−6)?', '24', '−24', '10', '−10'], ['Resolve: 3x + 5 = 20', 'x = 5', 'x = 15', 'x = 8', 'x = 3'],
+  ['Quanto é 2³?', '8', '6', '9', '5'], ['Qual é a raiz quadrada de 81?', '9', '8', '18', '40,5'], ['Num triângulo, dois ângulos medem 50° e 60°. O terceiro mede…', '70°', '90°', '250°', '60°'],
+  ['3 bilhetes custam 12 €. Quanto custam 5 bilhetes?', '20 €', '15 €', '17 €', '24 €'], ['Qual é o próximo termo: 4, 7, 10, 13, …?', '16', '15', '17', '19'],
+  ['Qual destes números é o menor?', '−8', '−3', '0', '2'], ['Quanto é (−20) : 4?', '−5', '5', '−16', '−80'], ['A soma dos ângulos internos de um quadrilátero é…', '360°', '180°', '90°', '540°'],
+  ['Qual é a raiz cúbica de 27?', '3', '9', '6', '13,5']],
+  pt: [['Em "A Inês leu um livro", qual é o sujeito?', 'A Inês', 'leu', 'um livro', 'livro'], ['Que figura de estilo há em "as estrelas dançavam no céu"?', 'Personificação', 'Comparação', 'Hipérbole', 'Anáfora'],
+  ['Que figura de estilo há em "forte como um touro"?', 'Comparação', 'Metáfora', 'Personificação', 'Enumeração'], ['"Guarda-chuva" é uma palavra…', 'composta', 'derivada', 'simples', 'primitiva'],
+  ['Qual destas palavras é um verbo?', 'correr', 'rápido', 'casa', 'ontem'], ['Que tipo de frase é "Fecha a porta, por favor."?', 'imperativa', 'interrogativa', 'exclamativa', 'declarativa'],
+  ['"O Cavaleiro da Dinamarca" foi escrito por…', 'Sophia de Mello Breyner Andresen', 'Luís de Camões', 'José Saramago', 'Eça de Queirós'],
+  ['Em "Nós jogámos à bola", o verbo está no…', 'pretérito perfeito', 'presente', 'futuro', 'condicional'], ['Um texto escrito em versos e estrofes é um texto…', 'poético', 'narrativo', 'dramático', 'expositivo'],
+  ['Qual é o plural de "pão"?', 'pães', 'pãos', 'pões', 'pãoes']],
   ef: [['Quantos jogadores tem uma equipa de futebol em campo?', '11', '10', '12', '9'], ['Um cesto de fora da linha dos 3 pontos vale…', '3 pontos', '2 pontos', '4 pontos', '1 ponto'],
-  ['No voleibol, quantos toques pode a equipa dar antes de passar a bola?', '3', '2', '4', '5'], ['Quanto dura um jogo de futebol (sem prolongamento)?', '90 minutos', '80 minutos', '100 minutos', '60 minutos'],
+  ['No voleibol, quantos toques pode a equipa dar antes de passar a bola?', '3', '2', '4', '5'], ['Quantos jogadores tem uma equipa de futsal em campo?', '5', '6', '7', '11'],
   ['Antes do exercício físico deves fazer…', 'Aquecimento', 'Uma refeição pesada', 'Nada', 'Uma sesta'], ['Quantos jogadores tem uma equipa de andebol em campo?', '7', '6', '5', '11']],
-  fq: [['Qual é o símbolo químico do sódio?', 'Na', 'So', 'S', 'Sd'], ['Ao nível do mar, a água ferve a…', '100 °C', '90 °C', '0 °C', '120 °C'], ['Qual é a unidade SI de força?', 'Newton', 'Joule', 'Watt', 'Pascal'],
-  ['A fórmula química da água é…', 'H₂O', 'CO₂', 'O₂', 'H₂O₂'], ['O pH de uma solução neutra (25 °C) é…', '7', '0', '14', '1'], ['A aceleração da gravidade na Terra é cerca de…', '9,8 m/s²', '98 m/s²', '1 m/s²', '3,0 m/s²'],
-  ['Qual destes é um gás nobre?', 'Hélio', 'Oxigénio', 'Azoto', 'Hidrogénio']]
+  fq: [['Qual é o planeta mais próximo do Sol?', 'Mercúrio', 'Vénus', 'Marte', 'Terra'], ['Qual é a estrela do Sistema Solar?', 'O Sol', 'A Lua', 'Júpiter', 'A Estrela Polar'],
+  ['O ano-luz é uma unidade de…', 'distância', 'tempo', 'massa', 'velocidade'], ['Água com sal dissolvido é…', 'uma mistura homogénea', 'uma substância', 'uma mistura heterogénea', 'um elemento'],
+  ['A passagem de líquido a gasoso chama-se…', 'vaporização', 'fusão', 'solidificação', 'condensação'], ['Ao nível do mar, a água pura ferve a…', '100 °C', '90 °C', '0 °C', '120 °C'],
+  ['Qual destas é uma fonte de energia renovável?', 'O vento', 'O petróleo', 'O carvão', 'O gás natural'], ['Areia misturada com água é…', 'uma mistura heterogénea', 'uma mistura homogénea', 'uma substância', 'uma solução'],
+  ['Para separar a areia da água podemos usar a…', 'filtração', 'destilação', 'evaporação', 'magnetização'], ['A Terra demora cerca de quanto tempo a dar uma volta ao Sol?', '1 ano', '1 dia', '1 mês', '10 anos']]
 };
 let quiz = null;
 function startClass(p) {
@@ -1671,7 +1678,7 @@ function startClass(p) {
     return { q: q[0], opts };
   });
   quiz = { p, qs, i: 0, right: 0, prof };
-  const intro = late ? [[prof, 'Chegaste atrasado! Senta-te depressa.']] : [[prof, `Bom dia, turma! Vamos começar a aula de ${p.subj}.`]];
+  const intro = late ? [[prof, 'Chegaste atrasado! Senta-te depressa.']] : [[prof, `Bom dia, 7.º A! Vamos começar a aula de ${p.subj}.`]];
   if (late) G.pts -= Math.min(30, Math.round((G.t - p.s) / 3) * 2 + 4);
   say(intro, () => showQuestion());
 }

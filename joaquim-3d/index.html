@@ -130,7 +130,7 @@ h1 em{font-style:normal;color:var(--accent);display:block}
   <div class="card">
     <div class="eyebrow">Escola Secundária Dr. Joaquim de Carvalho · Figueira da Foz</div>
     <h1>Joaquim <em>de Carvalho <span class="tag3d">3D</span></em></h1>
-    <p class="lead">Um dia inteiro de aulas, e choveu a noite toda. Chega a horas e faz os mini-testes de Matemática, Português e Inglês. No intervalo grande há jogo contra o 12ºB no pavilhão, mas primeiro tens de tratar de tudo. Depois vem o almoço na cantina, os penáltis em Educação Física e, no fim, o boletim do dia.</p>
+    <p class="lead">Um dia inteiro de aulas, e choveu a noite toda. Chega a horas e faz os mini-testes de Matemática, Português e Inglês. No intervalo grande há jogo contra o 8ºB no pavilhão, mas primeiro tens de tratar de tudo. Depois vem o almoço na cantina, os penáltis em Educação Física e, no fim, o boletim do dia.</p>
     <div class="keys">
       <div><b>WASD / Setas</b>andar (Shift para correr)</div>
       <div><b>E / Espaço</b>falar · no jogo: chutar (segura para carregar)</div>
@@ -146,7 +146,7 @@ h1 em{font-style:normal;color:var(--accent);display:block}
   <div class="card">
     <div class="eyebrow">Pavilhão · Intervalo grande</div>
     <h1 id="endTitle">Vitória!</h1>
-    <div class="score" id="endScore">11ºA 0 – 0 12ºB</div>
+    <div class="score" id="endScore">7ºA 0 – 0 8ºB</div>
     <p class="lead" id="endText"></p>
     <div class="row"><button class="btn" id="cont" hidden>Continuar o dia</button><button class="btn" id="again">Jogar outra vez</button><button class="btn ghost" id="restart">Recomeçar a história</button></div>
   </div>
@@ -154,7 +154,7 @@ h1 em{font-style:normal;color:var(--accent);display:block}
 
 <section id="report" class="screen gut" hidden>
   <div class="card">
-    <div class="eyebrow">Boletim do dia · 11ºA · Escola Secundária Dr. Joaquim de Carvalho</div>
+    <div class="eyebrow">Boletim do dia · 7ºA · Escola Secundária Dr. Joaquim de Carvalho</div>
     <h1 id="repTitle">Fim do dia</h1>
     <table class="rep"><tbody id="repBody"></tbody></table>
     <p class="lead" id="repText"></p>
@@ -458,10 +458,10 @@ function updateRain(cx,cz,dt,op){
 // ================= HORÁRIO DO DIA =================
 const DAY=[
   {id:'mat',kind:'class',from:'08:15',start:'08:30',dur:90,subj:'Matemática',label:'Matemática · Sala 2',where:'a Sala 2 (Bloco A)',room:'sala2',tid:'costa',color:'#2f6fd6',
-    intro:'Hoje há mini-teste de cálculo. Cinco perguntas, quinze segundos cada. Calculadoras na mochila!'},
+    intro:'Hoje há mini-teste do 7.º ano: números inteiros, equações e proporcionalidade. Cinco perguntas, quinze segundos cada. Calculadoras na mochila!'},
   {id:'pt',kind:'class',from:'09:20',start:'09:30',dur:75,subj:'Português',label:'Português · Sala 1',where:'a Sala 1 (Bloco A)',room:'sala1',tid:'henriques',color:'#c0392b',
-    intro:'Vamos rever gramática e literatura. Quem leu Os Maias? Ninguém? Pois...'},
-  {id:'jogo',kind:'free',start:'10:20',label:'Intervalo grande · jogo vs 12ºB'},
+    intro:'Vamos rever a gramática do 7.º ano. E quem já leu "O Cavaleiro da Dinamarca"? Ninguém? Pois...'},
+  {id:'jogo',kind:'free',start:'10:20',label:'Intervalo grande · jogo vs 8ºB'},
   {id:'almoco',kind:'lunch',start:'12:00',label:'Almoço · Cantina'},
   {id:'ing',kind:'class',from:'13:20',start:'13:30',dur:75,subj:'Inglês',label:'Inglês · Biblioteca',where:'a Biblioteca',room:'bib',tid:'sofia',color:'#2d8a4e',
     intro:"Good afternoon, class! Today's topic: rainy days. Let's go!"},
@@ -509,7 +509,7 @@ function newGame(){
     P('marta','Marta',24,28,'#2d8a4e','#7a2f12','#f2c7a4',{long:true}),
     P('armando','Sr. Armando',6,30,'#5b4a3a','#cfcfcf','#d8a780'),
     P('costa','Prof.ª Costa',12,8,'#3b3b6b','#6b3a1a','#ecc29e',{patrol:[12.5*TS,18.5*TS],dir:1,cool:0,long:true}),
-    P('capitao','Capitão do 12ºB',50,30,'#d6453d','#111','#b7825c'),
+    P('capitao','Capitão do 8ºB',50,30,'#d6453d','#111','#b7825c'),
     P('henriques','Prof. Henriques (Português)',7,2,'#7d5a44','#555','#e3b994'),
     P('sofia','Teacher Sofia (Inglês)',28,2,'#2d8a4e','#c98a3a','#f0c9a5',{long:true}),
     P('lurdes','D. Lurdes (cantina)',44,2,'#f1ede0','#3a2a1a','#e0b18c',{long:true,pants:'#f1ede0'}),
@@ -586,7 +586,7 @@ function footList0(){
     {t:'Abre a porta do pavilhão',done:Q.door},
     {t:`Junta a equipa (${Q.team.size}/4)`,done:Q.team.size>=4,sub},
     {t:`Seca os pingos do pavilhão (${PUD.length-wetLeft()}/${PUD.length})`,done:wetLeft()===0,sub:Q.mop?'Pisa as poças com a esfregona':'Pede a esfregona ao Sr. Armando (arrecadação)'},
-    {t:'Desafia o capitão do 12ºB e ganha o jogo',done:Q.won},
+    {t:'Desafia o capitão do 8ºB e ganha o jogo',done:Q.won},
   ];
 }
 $('missions').onclick=()=>$('missions').classList.toggle('min');
@@ -644,7 +644,7 @@ function talk(n){
   case 'rui':
     if(!Q.rui){say([[N,'Ei! Já viste o campo lá fora? Choveu a noite toda, aquilo está um pântano.'],
       [N,'E eu escorreguei numa poça logo à entrada. Torci o pé, por isso hoje sou o treinador.'],
-      [N,'O 12ºB desafiou-nos para um jogo no intervalo grande. No pavilhão, que é o único sítio seco.'],
+      [N,'O 8ºB desafiou-nos para um jogo no intervalo grande. No pavilhão, que é o único sítio seco.'],
       [N,'Precisamos de três coisas: a bola, a chave do pavilhão e mais quatro jogadores. O Tiago, a Inês, o Bruno e a Marta.'],
       [N,'A bola foi confiscada pelo Prof. Marques, está na sala dos professores. A chave está com a D. Graça. Bora!']],
       ()=>{Q.rui=true;sfx.ok();toast('Nova missão: recuperar a bola')});}
@@ -707,7 +707,7 @@ function talk(n){
     const miss=[];if(!Q.ball)miss.push('a bola');if(Q.team.size<4)miss.push(`mais ${4-Q.team.size} jogador${4-Q.team.size>1?'es':''}`);if(wetLeft()>0)miss.push('o chão seco');
     if(Q.won){say([[N,'Ok, ok... ganharam. Mas para a semana há desforra!']]);break}
     if(DAY[Q.phase].id!=='jogo'){say([[N,Q.phase<2?'O jogo é no intervalo grande, às 10h20. Até lá preparem-se... e vão às aulas!':'Já jogámos hoje. Para a semana há desforra!']]);break}
-    if(miss.length){say([[N,'Então, 11ºA? Querem jogar? Ainda vos falta '+miss.join(', ')+'.'],[N,'Com o chão assim alguém parte uma perna.']]);break}
+    if(miss.length){say([[N,'Então, 7ºA? Querem jogar? Ainda vos falta '+miss.join(', ')+'.'],[N,'Com o chão assim alguém parte uma perna.']]);break}
     say([[N,'Chão seco, cinco jogadores e bola. Afinal sempre vieram!'],{who:N,text:'Dois minutos, quem marcar mais ganha. Prontos?',choices:[{t:'Bora! Apita, Rui!',fn:()=>startMatch(true)},{t:'Espera, ainda não.',fn:()=>{}}]}]);
     break;}
   default:{const L=['Que chuva! O meu ténis está encharcado.','Tens teste de Matemática hoje? Eu tenho...','Disseram que há jogo no pavilhão. É verdade?','Se correres nas poças vais de rabo ao chão, já vi três hoje.','O bar hoje tem pastéis de nata acabadinhos.'];
@@ -716,7 +716,7 @@ function talk(n){
 }
 function eat(p){Q.meal=p;sfx.ok();
   say([['D. Lurdes',`Aqui tens: ${p}, com sopa e fruta. Bom apetite!`],['Tu','(Sentas-te com a equipa. O Rui ainda está a falar do jogo.)'],
-    ['Inês',Q.match&&Q.match[0]>Q.match[1]?'Ainda não acredito que ganhámos ao 12ºB!':'Para a próxima ganhamos ao 12ºB, vais ver.'],['Rui','À tarde há Inglês e depois Educação Física. Hoje há penáltis!']],()=>advancePhase());}
+    ['Inês',Q.match&&Q.match[0]>Q.match[1]?'Ainda não acredito que ganhámos ao 8ºB!':'Para a próxima ganhamos ao 8ºB, vais ver.'],['Rui','À tarde há Inglês e depois Educação Física. Hoje há penáltis!']],()=>advancePhase());}
 function recruit(id){Q.team.add(id);sfx.ok();toast(`${npc(id).name} juntou-se à equipa! (${Q.team.size}/4)`);updateHUD()}
 function nextTarget(){
   const d=DAY[Q.phase];if(!d||mode==='class')return null;
@@ -747,7 +747,7 @@ function footTarget(){
   }
   if(!Q.mop)return at('armando','Pede a esfregona ao Sr. Armando, na arrecadação.');
   const w=PUD.find(p=>p.wet>0);if(w)return{x:(w.i+.5)*TS,y:(w.j+.5)*TS,hint:'Seca as poças do pavilhão: passa-lhes por cima com a esfregona.'};
-  if(!Q.won)return at('capitao','Está tudo pronto! Fala com o capitão do 12ºB no pavilhão.');
+  if(!Q.won)return at('capitao','Está tudo pronto! Fala com o capitão do 8ºB no pavilhão.');
   return null;
 }
 
@@ -758,36 +758,48 @@ function mkQ(q,c,w,pre='',suf=''){
   let k=1;while(ws.length<3&&typeof c==='number'){const v=c+k++;if(!seen.has(String(v))){seen.add(String(v));ws.push(v)}}
   const opts=shuffle([c,...ws.slice(0,3)]).map(v=>pre+v+suf);return{q,opts,a:opts.indexOf(pre+c+suf)}}
 function genMat(){
+  // Matemática do 7.º ano: números inteiros, potências, raízes, equações do 1.º grau, proporcionalidade direta, ângulos, áreas
   const gens=[
-    ()=>{const a=ri(6,15),b=ri(3,12);return mkQ(`Quanto é ${a} × ${b}?`,a*b,[a*b+a,a*b-b,a*b+10])},
-    ()=>{const x=ri(2,9),a=ri(2,5),b=ri(1,12);return mkQ(`Resolve: ${a}x + ${b} = ${a*x+b}`,x,[x+1,x-1,x+2],'x = ')},
-    ()=>{const p=[10,20,25,50][ri(0,3)],n=[80,120,160,200,240][ri(0,4)];const c=n*p/100;return mkQ(`Quanto é ${p}% de ${n}?`,c,[c+10,c*2,c/2+5])},
-    ()=>{const n=ri(3,8);return mkQ(`Quanto é 2 elevado a ${n}?`,2**n,[2*n,2**(n+1),2**n-2])},
-    ()=>{const k=ri(6,15);return mkQ(`Qual é a raiz quadrada de ${k*k}?`,k,[k+1,k-1,k*2])},
-    ()=>mkQ('A Figueira fica a 45 km de Coimbra. A 90 km/h, quantos minutos demora a viagem?',30,[45,20,40]),
-    ()=>{const a=ri(3,9),b=ri(2,6);return mkQ(`Um retângulo tem ${a} cm por ${b} cm. Qual é a área?`,a*b,[2*(a+b),a+b,a*b+a],'',' cm²')},
+    ()=>{const a=ri(2,9),b=ri(3,12);return mkQ(`Quanto é (−${a}) + ${b}?`,b-a,[b+a,a-b,-(a+b)])},
+    ()=>{const a=ri(2,9),b=ri(2,9);return mkQ(`Quanto é (−${a}) × (−${b})?`,a*b,[-a*b,a+b,-(a+b)])},
+    ()=>{const a=ri(2,9),b=ri(2,6);return mkQ(`Quanto é (−${a*b}) : ${b}?`,-a,[a,-a*b,b-a])},
+    ()=>{const a=ri(3,9),b=ri(1,8),c=a+b;return mkQ(`Quanto é ${b} − ${c}?`,-a,[a,-c,b-a+2])},
+    ()=>{const x=ri(2,9),a=ri(2,5),b=ri(1,12);return mkQ(`Resolve a equação: ${a}x + ${b} = ${a*x+b}`,x,[x+1,x-1,a*x],'x = ')},
+    ()=>{const x=ri(2,9),b=ri(1,9);return mkQ(`Resolve a equação: x − ${b} = ${x-b}`,x,[x-2*b,b,x+1],'x = ')},
+    ()=>{const k=[2,3,4,5][ri(0,3)],a=ri(2,6),b=a*k,c=ri(7,12);return mkQ(`${a} cadernos custam ${b} €. Quanto custam ${c} cadernos (proporcionalidade direta)?`,c*k,[c*k+k,c+b-a,c*k-2],'',' €')},
+    ()=>{const n=ri(2,4),b=[2,3,10][ri(0,2)];return mkQ(`Quanto é ${b} elevado a ${n}?`,b**n,[b*n,b**(n+1),b+n])},
+    ()=>{const k=ri(4,13);return mkQ(`Qual é a raiz quadrada de ${k*k}?`,k,[k+1,k-1,k*2])},
+    ()=>{const k=ri(2,5);return mkQ(`Qual é a raiz cúbica de ${k*k*k}?`,k,[k*k,k+1,3*k])},
+    ()=>{const a=ri(35,80),b=ri(30,70);return mkQ(`Num triângulo, dois ângulos medem ${a}° e ${b}°. Quanto mede o terceiro?`,180-a-b,[360-a-b,180-a,180-b],'','°')},
+    ()=>{const b=ri(4,12),h=ri(3,9)*2;return mkQ(`Um triângulo tem ${b} cm de base e ${h} cm de altura. Qual é a área?`,b*h/2,[b*h,b+h,b*h/4],'',' cm²')},
+    ()=>{const a=ri(2,7),d=ri(2,5);return mkQ(`Qual é o próximo termo da sequência ${a}, ${a+d}, ${a+2*d}, ${a+3*d}, …?`,a+4*d,[a+5*d,a+3*d+1,a*4])},
   ];
   return shuffle(gens).slice(0,5).map(g=>g());
 }
 const BANK={
-  pt:[['Quem escreveu "Os Maias"?','Eça de Queirós',['Luís de Camões','Fernando Pessoa','José Saramago']],
-    ['Quem escreveu "Os Lusíadas"?','Luís de Camões',['Eça de Queirós','Gil Vicente','Almeida Garrett']],
-    ['Qual destas frases está correta?','Houve muitos problemas.',['Houveram muitos problemas.','Haviam muitos problemas.','Houveram-se muitos problemas.']],
-    ['Qual é a forma correta?','Com certeza',['Concerteza','Comcerteza','Con certeza']],
-    ['Em "Ele correu rapidamente", a palavra "rapidamente" é um…','advérbio',['adjetivo','verbo','nome']],
-    ['Alberto Caeiro, Ricardo Reis e Álvaro de Campos são heterónimos de…','Fernando Pessoa',['Eça de Queirós','Camões','Cesário Verde']],
+  pt:[['Em "O Rui joga futsal", qual é o sujeito?','O Rui',['joga','futsal','joga futsal']],
+    ['Que figura de estilo há em "o vento cantava nas árvores"?','Personificação',['Comparação','Hipérbole','Enumeração']],
+    ['Que figura de estilo há em "rápido como um raio"?','Comparação',['Metáfora','Personificação','Anáfora']],
+    ['A palavra "guarda-chuva" é uma palavra…','composta',['derivada','simples','primitiva']],
+    ['Em "Eu estudei muito", o verbo está no…','pretérito perfeito',['presente','futuro','pretérito imperfeito']],
+    ['Qual destas palavras é um adjetivo?','molhado',['chuva','correr','depressa']],
+    ['"O Cavaleiro da Dinamarca" foi escrito por…','Sophia de Mello Breyner Andresen',['Luís de Camões','José Saramago','Eça de Queirós']],
+    ['Que tipo de frase é "Que chuva tão forte!"?','exclamativa',['interrogativa','declarativa','imperativa']],
     ['Qual é o plural de "cidadão"?','cidadãos',['cidadões','cidadães','cidadãoes']],
-    ['Em "o chão molhado", a palavra "molhado" é um…','adjetivo',['advérbio','pronome','determinante']],
-    ['Que figura de estilo há em "chove a potes"?','Hipérbole',['Aliteração','Ironia','Anáfora']]],
+    ['Em "Ele correu rapidamente", "rapidamente" é um…','advérbio',['adjetivo','verbo','nome']],
+    ['Qual é a forma correta?','Com certeza',['Concerteza','Comcerteza','Con certeza']],
+    ['Um texto que conta uma história com narrador e personagens é um texto…','narrativo',['poético','dramático','argumentativo']]],
   ing:[['How do you say "chão molhado" in English?','wet floor',['wild floor','wet flower','water flow']],
     ['Past simple of "go":','went',['goed','gone','goes']],
-    ['"It\'s raining cats and dogs" means…','It\'s raining a lot',['Animals are falling','It\'s sunny','It stopped raining']],
     ['Choose the correct sentence:','She doesn\'t like football.',['She don\'t like football.','She not likes football.','She doesn\'t likes football.']],
     ['What is "guarda-chuva" in English?','umbrella',['raincoat','rainbow','puddle']],
-    ['"Poça" in English is…','puddle',['pool','pudding','pond']],
     ['Plural of "child":','children',['childs','childrens','childes']],
     ['"I ___ to school every day."','go',['goes','going','gone']],
-    ['What is "intervalo" (at school) in English?','break',['interval','pause','brake']]],
+    ['"There ___ two books on the table."','are',['is','am','be']],
+    ['Comparative of "big":','bigger',['more big','biger','biggest']],
+    ['"Yesterday I ___ football."','played',['play','playing','plays']],
+    ['What is "intervalo" (at school) in English?','break',['interval','pause','brake']],
+    ['"What time is it?" – "It\'s half past seven" means…','7:30',['7:15','6:30','7:45']]],
 };
 function genQs(id){return id==='mat'?genMat():shuffle(BANK[id]).slice(0,5).map(([q,c,w])=>mkQ(q,c,w))}
 let QZ=null;
@@ -799,7 +811,7 @@ function startClass(d){
   const t=npc(d.tid);t.x=r.teacher[0]*TS;t.y=r.teacher[1]*TS;t.fx=0;t.fy=1;t.teaching=true;
   player.x=r.seat[0]*TS;player.y=r.seat[1]*TS;player.fx=0;player.fy=-1;player.vx=player.vy=0;player.seated=true;
   camPos.set(r.board[0]+.4,2.55,Math.min(r.seat[1]+2.3,10.6));camLook.set(r.board[0],1.05,r.board[1]);
-  say([[t.name,Q.lateNow?`Chegaste ${Math.max(1,Math.round(-Q.timer/4))} minutos atrasado! Fica com falta de atraso. Senta-te.`:'Bom dia, 11ºA! Sentem-se, por favor.'],[t.name,d.intro]],()=>runClassQuiz(d));
+  say([[t.name,Q.lateNow?`Chegaste ${Math.max(1,Math.round(-Q.timer/4))} minutos atrasado! Fica com falta de atraso. Senta-te.`:'Bom dia, 7ºA! Sentem-se, por favor.'],[t.name,d.intro]],()=>runClassQuiz(d));
 }
 function runClassQuiz(d){
   QZ={d,qs:genQs(d.id),i:0,right:0,t:15,lock:false};
@@ -830,7 +842,7 @@ function advancePhase(){
   Q.phase++;Q.clockT=0;const d=DAY[Q.phase];if(!d)return;
   if(d.kind==='class'||d.kind==='pe'){Q.stage='go';Q.timer=d.dur;toast(`Intervalo! A seguir: ${d.subj} às ${d.start}`)}
   else if(d.kind==='free'){Q.stage='free';toast('TRIIIM! Intervalo grande!');
-    say([['Rui',Q.rui?'Intervalo grande! Bora preparar o jogo contra o 12ºB!':'Ei! Intervalo grande! Anda cá ao pátio, tenho uma coisa para te dizer.']])}
+    say([['Rui',Q.rui?'Intervalo grande! Bora preparar o jogo contra o 8ºB!':'Ei! Intervalo grande! Anda cá ao pátio, tenho uma coisa para te dizer.']])}
   else if(d.kind==='lunch'){Q.stage='lunch';toast('Hora de almoço! Vai à cantina')}
   else if(d.kind==='end'){Q.stage='end';sfx.bell();setTimeout(showReport,600)}
   if(d.kind==='pe'){const m=npc('marques');m.x=50.5*TS;m.y=21.5*TS;m.fx=-1;m.fy=0}
@@ -840,7 +852,7 @@ function startPE(d){
   Q.stage='inpe';Q.lateNow=Q.timer<=0;if(Q.lateNow)Q.atrasos++;player.vx=player.vy=0;
   const N='Prof. Marques';
   say([[N,Q.lateNow?'Atrasado para Educação Física? Falta de atraso. Vai equipar-te, rápido!':'Muito bem, todos equipados! O chão já está seco graças a vocês.'],
-    [N,'Hoje são penáltis. Cinco remates contra o Gonçalo, guarda-redes do 12ºB, que veio ajudar. Cada golo vale 4 valores.'],
+    [N,'Hoje são penáltis. Cinco remates contra o Gonçalo, guarda-redes do 8ºB, que veio ajudar. Cada golo vale 4 valores.'],
     [N,'Aponta com as setas e segura o remate para chutar com mais força. Força!']],()=>startPenalties());
 }
 function showReport(){
@@ -848,14 +860,14 @@ function showReport(){
   const g=Q.grades,subs=[['Matemática','mat'],['Português','pt'],['Inglês','ing'],['Educação Física','ef']];
   const cls=v=>v>=14?'good':v>=10?'meh':'bad';
   let rows=subs.map(([n,id])=>`<tr><td>${n}</td><td class="${cls(g[id]??0)}">${g[id]??'—'} val.</td></tr>`).join('');
-  const m=Q.match;rows+=`<tr><td>Jogo 11ºA vs 12ºB</td><td class="${m&&m[0]>m[1]?'good':'bad'}">${m?m[0]+' – '+m[1]:'—'}</td></tr>`;
+  const m=Q.match;rows+=`<tr><td>Jogo 7ºA vs 8ºB</td><td class="${m&&m[0]>m[1]?'good':'bad'}">${m?m[0]+' – '+m[1]:'—'}</td></tr>`;
   rows+=`<tr><td>Faltas de atraso</td><td class="${Q.atrasos?'bad':'good'}">${Q.atrasos}</td></tr>`;
   rows+=`<tr><td>Avisos por correr nos corredores</td><td class="${Q.avisos?'meh':'good'}">${Q.avisos}</td></tr>`;
   rows+=`<tr><td>Almoço</td><td>${Q.meal||'—'}</td></tr>`;
   $('repBody').innerHTML=rows;
   const vals=subs.map(([,id])=>g[id]??0),avg=vals.reduce((a,b)=>a+b,0)/vals.length;
   $('repTitle').textContent=avg>=16?'Dia de quadro de honra!':avg>=10?'Dia positivo!':'Dia para esquecer...';
-  $('repText').textContent=`Média do dia: ${avg.toFixed(1)} valores. `+(avg>=16?'Os professores estão orgulhosos e o 11ºA fala do jogo até amanhã.':avg>=10?'Passaste o dia sem grandes sustos. Amanhã há mais.':'Amanhã é um novo dia. Estuda um bocadinho e chega a horas!')+' Lá fora continua a chover.';
+  $('repText').textContent=`Média do dia: ${avg.toFixed(1)} valores. `+(avg>=16?'Os professores estão orgulhosos e o 7ºA fala do jogo até amanhã.':avg>=10?'Passaste o dia sem grandes sustos. Amanhã há mais.':'Amanhã é um novo dia. Estuda um bocadinho e chega a horas!')+' Lá fora continua a chover.';
   $('report').hidden=false;
 }
 
@@ -968,7 +980,7 @@ function updateExplore(){
     updateHUD();}}
   if(Q.mop){for(const p of PUD){if(p.wet>0&&Math.abs(P.x-(p.i+.5)*TS)<22&&Math.abs(P.y-(p.j+.5)*TS)<22){
     p.wet-=sp>.3?.018:.006;if(Math.random()<.2)ripple(P.x/TS+rnd(-.3,.3),P.y/TS+rnd(-.3,.3),.3,1.4);
-    if(p.wet<=0){p.wet=0;set(p.i,p.j,'P');sfx.splash();toast(wetLeft()?`Poça seca! Faltam ${wetLeft()}`:'Pavilhão seco! Vai falar com o capitão do 12ºB');updateHUD()}}}}
+    if(p.wet<=0){p.wet=0;set(p.i,p.j,'P');sfx.splash();toast(wetLeft()?`Poça seca! Faltam ${wetLeft()}`:'Pavilhão seco! Vai falar com o capitão do 8ºB');updateHUD()}}}}
   for(const n of npcs){
     n.spd=0;if(n.talkT>0)n.talkT--;
     if(n.patrol){if(!(dlgOn&&n.talkT>0)){const tx=n.dir>0?n.patrol[1]:n.patrol[0];const dx=tx-n.x;if(Math.abs(dx)<2)n.dir*=-1;else{n.x+=Math.sign(dx)*1.1;n.fx=Math.sign(dx);n.fy=0;n.spd=1.1}}
@@ -1078,7 +1090,7 @@ function buildMatchScene(){
   [[15.6,3,-6.5,48,6,.4],[15.6,3,26,48,6,.4],[-7,3,9.4,.4,6,33],[38.2,3,9.4,.4,6,33]].forEach(([x,y,z,a,b,c])=>{const w=new THREE.Mesh(G.box,wm);w.scale.set(a,b,c);w.position.set(x,y,z);w.receiveShadow=true;mscene.add(w)});
   const band=new THREE.Mesh(G.box,lam('#ffcf3f'));band.scale.set(48,.5,.45);band.position.set(15.6,2.3,-6.5);mscene.add(band);
   for(let k=0;k<6;k++){const wn=new THREE.Mesh(G.box,new THREE.MeshBasicMaterial({color:0x5b6f86}));wn.scale.set(3,1.4,.45);wn.position.set(-2+k*7,4.4,-6.5);mscene.add(wn)}
-  const ban=textSprite('11ºA vs 12ºB · INTERVALO GRANDE',{bg:'#152433',fg:'#ffcf3f',size:2.2});ban.position.set(15.6,3.4,-6);mscene.add(ban);
+  const ban=textSprite('7ºA vs 8ºB · INTERVALO GRANDE',{bg:'#152433',fg:'#ffcf3f',size:2.2});ban.position.set(15.6,3.4,-6);mscene.add(ban);
   fans=[];const r=mulberry(3);
   for(let s=0;s<3;s++){const st=new THREE.Mesh(G.box,lam(['#8a929a','#7b838b','#6c747c'][s]));st.scale.set(30,.45*(s+1),1.1);st.position.set(15.6,.225*(s+1),-1.9-s*1.1);st.receiveShadow=true;st.castShadow=true;mscene.add(st);
     for(let k=0;k<11;k++){if(r()<.25)continue;const o={shirt:['#ffcf3f','#d6453d','#2f6fd6','#f1ede0','#2d8a4e','#e84393'][Math.floor(r()*6)],hair:['#111','#5a3416','#d9b056','#7a2f12'][Math.floor(r()*4)],skin:['#f0c9a5','#a8714f','#e7b48e','#8d5a3b'][Math.floor(r()*4)],long:r()<.4};
@@ -1265,7 +1277,7 @@ function updateMatch(){
 function goal(team){
   if(M.pen){M.ball.owner=null;M.ball.vx*=.2;M.ball.vy*=.2;if(M.pen.live)penResult(team===0);else{M.pending='pen';M.pause=60}return}
   M.score[team]++;sfx.goal();M.cheer=team===0?150:40;
-  msg(team===0?'GOLOOO DO 11ºA!':'Golo do 12ºB...',150);
+  msg(team===0?'GOLOOO DO 7ºA!':'Golo do 8ºB...',150);
   const p=project((team===0?CW:0)*K,1,300*K);
   for(let k=0;k<(team===0?90:30);k++)conf.push({x:p.x,y:p.y,vx:rnd(-6,6),vy:rnd(-9,-2),g:.25,c:team===0?['#ffcf3f','#fff','#63d48f','#5aa0e6'][k%4]:'#d6453d',r:rnd(0,6),life:rnd(60,120)});
   M.ball.owner=null;M.ball.vx*=.2;M.ball.vy*=.2;M.pending=1-team;M.pause=130;
@@ -1277,8 +1289,8 @@ function endMatch(){
   if(M.story){if(win)Q.won=true;Q.match=[a,c]}
   $('cont').hidden=!M.story;$('restart').hidden=!!M.story;
   $('endTitle').textContent=win?'Vitória!':'Derrota...';
-  $('endScore').textContent=`11ºA ${a} – ${c} 12ºB`;
-  $('endText').textContent=win?'O 11ºA ganhou no pavilhão da Joaquim de Carvalho enquanto lá fora continuava a chover. O Rui jura que foi tudo táctica dele. Para a semana há desforra.':'O 12ºB levou a melhor desta vez. A Marta diz que foram as luvas molhadas. Pede a desforra e tenta outra vez.';
+  $('endScore').textContent=`7ºA ${a} – ${c} 8ºB`;
+  $('endText').textContent=win?'O 7ºA ganhou no pavilhão da Joaquim de Carvalho enquanto lá fora continuava a chover. O Rui jura que foi tudo táctica dele. Para a semana há desforra.':'O 8ºB levou a melhor desta vez. A Marta diz que foram as luvas molhadas. Pede a desforra e tenta outra vez.';
   $('again').textContent=win?'Jogar outra vez':'Pedir desforra';
   $('end').hidden=false;
   if(win){M.cheer=100000;for(let k=0;k<180;k++)conf.push({x:Math.random()*W,y:-Math.random()*H,vx:rnd(-1,1),vy:rnd(1,3),g:0,c:['#ffcf3f','#63d48f','#fff','#5aa0e6'][k%4],r:rnd(0,6),life:1e9,loop:true})}
@@ -1317,7 +1329,7 @@ function drawMatchUI(){
     u.font='bold 15px "Atkinson Hyperlegible",sans-serif';u.fillStyle='#9fb1c2';u.fillText(`Remate ${Math.min(M.pen.shots+1,5)}/5`,bx+bw*.84,by+22)}
   else{
   u.fillStyle='#ffcf3f';u.fillRect(bx,by,6,42);u.fillStyle='#d6453d';u.fillRect(bx+bw-6,by,6,42);
-  u.fillStyle='#f1ede0';u.font='15px "Bungee",sans-serif';u.fillText('11ºA',bx+bw*.16,by+22);u.fillText('12ºB',bx+bw*.84,by+22);
+  u.fillStyle='#f1ede0';u.font='15px "Bungee",sans-serif';u.fillText('7ºA',bx+bw*.16,by+22);u.fillText('8ºB',bx+bw*.84,by+22);
   u.font='22px "Bungee",sans-serif';u.fillText(`${M.score[0]} – ${M.score[1]}`,bx+bw*.42,by+22);
   u.font='bold 15px "Atkinson Hyperlegible",sans-serif';u.fillStyle=M.golden?'#ffcf3f':'#9fb1c2';u.fillText(M.golden?'OURO':`${mm}:${ss}`,bx+bw*.64,by+22);}
   if(M.msgT>0){u.globalAlpha=Math.min(1,M.msgT/20);u.font=`${W<560?24:42}px "Bungee",sans-serif`;u.fillStyle='#1b1404';u.fillText(M.msg,W/2+3,H*.32+3);u.fillStyle='#ffcf3f';u.fillText(M.msg,W/2,H*.32);u.globalAlpha=1}
