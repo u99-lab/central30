@@ -1740,7 +1740,11 @@ function updateBall(dt) {
   const want = clamp(b.x < FIELD.cx ? b.z : cz, cz - 0.6, cz + 0.6);
   k.position.z += clamp(want - k.position.z, -1.7 * dt, 1.7 * dt);
   animPerson(k, Math.abs(want - k.position.z) > 0.05 ? 2 : 0, dt);
-  if (Math.abs(b.x - k.position.x) < 0.6 && Math.abs(b.z - k.position.z) < 0.4 && b.y < 1.8 && v.x < 0) {
+  // sem cuecas: a bola que passa pelo guarda-redes (pernas incluídas) bate nele, mesmo que vá rápida
+  const kpx = b.x - v.x * dt;
+  const crossed = (kpx >= k.position.x - 0.35 && b.x <= k.position.x + 0.35) || Math.abs(b.x - k.position.x) < 0.6;
+  if (crossed && Math.abs(b.z - k.position.z) < (b.y < 0.9 ? 0.62 : 0.5) && b.y < 1.8 && v.x < 0) {
+    b.x = k.position.x + 0.62;
     v.x = Math.abs(v.x) * 0.5 + 3; v.z += (Math.random() - 0.5) * 6; sfx.kick(); toast('Grande defesa do Rafa! 🧤');
   }
   // goal / out

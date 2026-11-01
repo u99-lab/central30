@@ -1254,7 +1254,18 @@ function updateMatch(){
     if(b.y>GY1&&b.y<GY2){if(b.x>CW+2){goal(0);return}if(b.x<-2){goal(1);return}}
     b.x=clamp(b.x,-6,CW+6);
   }else{
-    b.x+=b.vx;b.y+=b.vy;b.vx*=.983;b.vy*=.983;
+    // sem cuecas: a bola rápida bate no corpo de quem estiver no caminho (verifica o percurso todo deste passo)
+    {const x0=b.x,y0=b.y,x1=b.x+b.vx,y1=b.y+b.vy,sp=Math.hypot(b.vx,b.vy);
+     if(sp>=4)for(const p of M.players){if(p.role==='gk'||p.cd>0)continue;
+      const dx=x1-x0,dy=y1-y0,l2=dx*dx+dy*dy||1;let t=((p.x-x0)*dx+(p.y-y0)*dy)/l2;t=t<0?0:t>1?1:t;
+      const cx=x0+dx*t,cy=y0+dy*t,d=Math.hypot(cx-p.x,cy-p.y);if(d>=11)continue;
+      let nx=cx-p.x,ny=cy-p.y,nl=Math.hypot(nx,ny);if(nl<1e-3){nx=-b.vx;ny=-b.vy;nl=Math.hypot(nx,ny)||1;}nx/=nl;ny/=nl;
+      const vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=1.6*vn*nx;b.vy-=1.6*vn*ny;}b.vx*=.55;b.vy*=.55;
+      b.x=p.x+nx*12;b.y=p.y+ny*12;b.last=p.team;b.gk=null;sfx.kick(.25);
+      if(sp<9){b.owner=p;p.hold=0;p.prot=p.human?22:14;}
+      break;}}
+    if(b.owner){const o=b.owner;b.x=o.x+o.fx*16;b.y=o.y+o.fy*16;b.vx=o.vx;b.vy=o.vy;}else{
+    b.x+=b.vx;b.y+=b.vy;b.vx*=.983;b.vy*=.983;}
     if(b.y<7){b.y=7;b.vy=Math.abs(b.vy)*.7}if(b.y>CH-7){b.y=CH-7;b.vy=-Math.abs(b.vy)*.7}
     const inMouth=b.y>GY1&&b.y<GY2;
     if(b.x<7){if(inMouth){if(b.x<-8){goal(1);return}}else{b.x=7;b.vx=Math.abs(b.vx)*.7}}
@@ -1270,6 +1281,10 @@ function updateMatch(){
     }
   }else{
     const o=b.owner;
+    // a bola levada não passa por dentro de um adversário: bate-lhe e solta-se
+    for(const p of M.players){if(p.team===o.team||p.cd>0||p.role==='gk')continue;const d=dist(p,b);
+      if(d<10){let nx=b.x-p.x,ny=b.y-p.y,nl=Math.hypot(nx,ny);if(nl<1e-3){nx=-o.fx;ny=-o.fy;nl=1;}nx/=nl;ny/=nl;
+        b.owner=null;o.cd=22;b.x=p.x+nx*12;b.y=p.y+ny*12;b.vx=nx*3.2+o.vx*.3;b.vy=ny*3.2+o.vy*.3;b.last=p.team;sfx.kick(.25);return;}}
     if(o.prot<=0)for(const p of M.players){if(p.team===o.team||p.human||p.cd>0)continue;
       if(dist(p,b)<20&&Math.random()<(o.human?.04:.06)){b.owner=p;p.prot=20;o.cd=30;break}}
   }
