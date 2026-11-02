@@ -413,7 +413,7 @@ function ownedLegBlock(){
   const o=ball.owner;if(!o||o.role==='GK'||ball.z>8)return;
   const lim=BR_SIM+FOOT_R;
   for(const q of G.teams[1-o.team].players){
-    if(q.role==='GK'||q.stun>0&&q.slide<=0)continue;
+    if(q.role==='GK'||(q===ball.prevOwner&&G.clock-(ball.gainT||0)<.6))continue;
     if(Math.abs(q.x-ball.x)>26||Math.abs(q.y-ball.y)>26)continue;
     const L=legsDist(q);if(L.d>=lim)continue;
     // empurra a bola para fora das pernas (do centro das pernas para a bola) e solta-a
@@ -431,6 +431,7 @@ function ownedLegBlock(){
   }
 }
 function gain(p){
+  ball.prevOwner=ball.owner||ball.lastKicker;ball.gainT=G.clock;
   ball.owner=p;ball.target=null;ball.shot=false;ball.lastTeam=p.team;ball.lastKicker=p;ball.z=0;ball.vz=0;p.protect=.35;
   if(p.role==='GK'){p.hold=G.human===0&&p.team===0?3.5:rand(1,1.4);p.protect=99;}
 }

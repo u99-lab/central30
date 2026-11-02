@@ -1256,7 +1256,7 @@ function updateMatch(){
   }else{
     // sem cuecas: a bola rápida bate no corpo de quem estiver no caminho (verifica o percurso todo deste passo)
     {const x0=b.x,y0=b.y,x1=b.x+b.vx,y1=b.y+b.vy,sp=Math.hypot(b.vx,b.vy);
-     if(sp>=4)for(const p of M.players){if(p.role==='gk'||p.cd>0)continue;
+     if(sp>=4)for(const p of M.players){if(p.cd>0||(p.role==='gk'&&b.gk!==p))continue;
       const dx=x1-x0,dy=y1-y0,l2=dx*dx+dy*dy||1;let t=((p.x-x0)*dx+(p.y-y0)*dy)/l2;t=t<0?0:t>1?1:t;
       const cx=x0+dx*t,cy=y0+dy*t,d=Math.hypot(cx-p.x,cy-p.y);if(d>=11)continue;
       let nx=cx-p.x,ny=cy-p.y,nl=Math.hypot(nx,ny);if(nl<1e-3){nx=-b.vx;ny=-b.vy;nl=Math.hypot(nx,ny)||1;}nx/=nl;ny/=nl;

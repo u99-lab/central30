@@ -809,7 +809,7 @@ function stepBall(dt){
     const fx=sp>.3?Math.cos(f):Math.cos(o.face),fz=sp>.3?Math.sin(f):Math.sin(o.face);
     const tx=o.x+fx*.62,tz=o.z+fz*.62;b.x+=(tx-b.x)*Math.min(1,dt*14);b.z+=(tz-b.z)*Math.min(1,dt*14);b.y=BR;b.vx=o.vx;b.vz=o.vz;b.vy=0;
     // sem cuecas: a bola levada não passa por dentro de um adversário — bate-lhe e solta-se
-    for(const q of M.players){if(q.team===o.team||q.stun>0)continue;const dx=b.x-q.x,dz=b.z-q.z,d=Math.hypot(dx,dz);
+    for(const q of M.players){if(q.team===o.team||(q.stun>0&&q.cd>0))continue;const dx=b.x-q.x,dz=b.z-q.z,d=Math.hypot(dx,dz);
       if(d<.48){const nx=d>1e-3?dx/d:-fx,nz=d>1e-3?dz/d:-fz;b.owner=null;o.cd=.4;b.x=q.x+nx*.5;b.z=q.z+nz*.5;b.vx=nx*4+o.vx*.3;b.vz=nz*4+o.vz*.3;b.last=q.team;b.lastTouch=q;sfx('kick',.2);break;}}
     return;}
   const px=b.x,pz=b.z;
