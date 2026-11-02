@@ -646,8 +646,21 @@ function stepBall(dt){
   const b=M.ball;
   if(b.owner){const o=b.owner,f=Math.atan2(o.vz,o.vx),sp=Math.hypot(o.vx,o.vz);
     const fx=sp>.3?Math.cos(f):Math.cos(o.face),fz=sp>.3?Math.sin(f):Math.sin(o.face);
-    const tx=o.x+fx*.62,tz=o.z+fz*.62;b.x+=(tx-b.x)*Math.min(1,dt*14);b.z+=(tz-b.z)*Math.min(1,dt*14);b.y=BR;b.vx=o.vx;b.vz=o.vz;b.vy=0;return;}
+    const tx=o.x+fx*.62,tz=o.z+fz*.62;b.x+=(tx-b.x)*Math.min(1,dt*14);b.z+=(tz-b.z)*Math.min(1,dt*14);b.y=BR;b.vx=o.vx;b.vz=o.vz;b.vy=0;
+    // sem cuecas: a bola levada não passa por dentro de um adversário — bate-lhe e solta-se
+    for(const q of M.players){if(q.team===o.team||q.stun>0)continue;const dx=b.x-q.x,dz=b.z-q.z,d=Math.hypot(dx,dz);
+      if(d<.48){const nx=d>1e-3?dx/d:-fx,nz=d>1e-3?dz/d:-fz;b.owner=null;o.cd=.4;b.x=q.x+nx*.5;b.z=q.z+nz*.5;b.vx=nx*4+o.vx*.3;b.vz=nz*4+o.vz*.3;b.last=q.team;b.lastTouch=q;sfx('kick',.2);break;}}
+    return;}
+  const px=b.x,pz=b.z;
   b.vy-=9.8*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
+  // sem cuecas: a bola solta bate no corpo/pernas de quem está no caminho (verifica o percurso deste passo)
+  if(b.y<1.4){const sx=b.x-px,sz=b.z-pz,l2=sx*sx+sz*sz||1e-9;
+    for(const q of M.players){if(q===b.lastTouch&&q.cd>0)continue;
+      let t=((q.x-px)*sx+(q.z-pz)*sz)/l2;t=t<0?0:t>1?1:t;const cx=px+sx*t,cz=pz+sz*t,d=Math.hypot(cx-q.x,cz-q.z);if(d>=.42)continue;
+      if(q.cd<=0&&q.stun<=0&&!(q.role==='GK'&&b.shot&&b.shot.team!==q.team))continue; // quem pode dominar fica para o domínio (pickups)
+      let nx=cx-q.x,nz=cz-q.z,nl=Math.hypot(nx,nz);if(nl<1e-3){nx=-b.vx;nz=-b.vz;nl=Math.hypot(nx,nz)||1;}nx/=nl;nz/=nl;
+      const vn=b.vx*nx+b.vz*nz;if(vn<0){b.vx-=1.6*vn*nx;b.vz-=1.6*vn*nz;}b.vx*=.55;b.vz*=.55;
+      b.x=q.x+nx*.45;b.z=q.z+nz*.45;b.last=q.team;b.lastTouch=q;sfx('kick',.2);break;}}
   if(b.y<BR){b.y=BR;if(b.vy<-1.5)b.vy=-b.vy*.48;else b.vy=0;}
   const onG=b.y<=BR+.01,fr=onG?Math.exp(-1.15*dt):Math.exp(-.12*dt);b.vx*=fr;b.vz*=fr;
   // postes e barra
@@ -687,7 +700,9 @@ function pickups(){
       b.owner=best;b.shot=null;b.last=best.team;best.cd=.3;banner('DEFESA!',900);sfx('kick',.3);best.hold=1.1;return;}
     return;}
   // receções: bola muito rápida é mais difícil de dominar
-  if(bs>21&&best.role!=='GK'&&Math.random()<.5){b.vx*=.5;b.vz*=.5;best.cd=.25;return;}
+  if(bs>21&&best.role!=='GK'&&Math.random()<.5){ // bola muito rápida: ressalta no jogador (não passa por ele)
+    let nx=b.x-best.x,nz=b.z-best.z,nl=Math.hypot(nx,nz);if(nl<1e-3){nx=-b.vx;nz=-b.vz;nl=Math.hypot(nx,nz)||1;}nx/=nl;nz/=nl;
+    const vn=b.vx*nx+b.vz*nz;if(vn<0){b.vx-=1.6*vn*nx;b.vz-=1.6*vn*nz;}b.vx*=.5;b.vz*=.5;b.x=best.x+nx*.5;b.z=best.z+nz*.5;best.cd=.25;b.last=best.team;b.lastTouch=best;sfx('kick',.3);return;}
   b.owner=best;b.shot=null;b.last=best.team;best.cd=.2;
   if(best.team===0)setCtrl(best);
 }
