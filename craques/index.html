@@ -84,6 +84,17 @@ h2{margin:0 0 10px;font-size:20px}
 .bracket .t+.t{border-top:1px solid var(--line)}
 .bracket .champ{display:grid;place-items:center;text-align:center;font-size:40px;min-height:120px;background:linear-gradient(160deg,#3a2a06,#121b2e);border:1px solid #f5c54266;border-radius:14px}
 .bracket .champ b{display:block;font-size:13px;margin-top:4px}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;grid-column:1/-1}
+.gtab{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.gtab.mine{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.gtab h3{margin:0 0 4px;font-size:13px;color:var(--mut);letter-spacing:1px}
+.gtab table{width:100%;border-collapse:collapse;font-size:12px}
+.gtab th{color:var(--mut);font-weight:600;text-align:left;padding:2px 3px}
+.gtab td{padding:3px;white-space:nowrap}
+.gtab td:nth-child(2){max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.gtab td i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.gtab tr.q td:first-child{color:var(--acc);font-weight:900}
+.gtab tr.me td{color:var(--acc);font-weight:800}
 /* ---------- pacotes ---------- */
 .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .pack{border-radius:18px;padding:18px;text-align:center;border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -311,7 +322,7 @@ function refreshTop(){
   $('collCount').textContent=new Set(S.owned).size+' cartas';
   $('record').textContent=`${S.w}V · ${S.d}E · ${S.l}D`;
   $('tourLine').textContent=S.cups?`🏆 ${S.cups} ${S.cups===1?'torneio ganho':'torneios ganhos'}`:'';
-  $('tourSub').textContent=S.tour&&!S.tour.done?'A decorrer: '+ROUND_PT[S.tour.round]:'Oitavos, quartos, meias e final';
+  $('tourSub').textContent=S.tour&&S.tour.phase&&!S.tour.done?'A decorrer: '+(S.tour.phase==='groups'?'jornada '+(S.tour.jor+1)+' de 6':ROUND_PT[S.tour.round]):'6 jornadas, oitavos, quartos, meias e final';
 }
 
 /* =========================================================
@@ -341,7 +352,15 @@ const CLUBS=[
   {n:'Real Tempestade',s:'RTE',c1:'#212121',c2:'#ffd600',ovr:87},{n:'Lendas XI',s:'LEN',c1:'#6a1b9a',c2:'#ffffff',ovr:91},
   {n:'Corsários FC',s:'COR',c1:'#37474f',c2:'#ff7043',ovr:61},{n:'Gigantes do Vale',s:'GVA',c1:'#558b2f',c2:'#fff59d',ovr:69},
   {n:'Cometas SC',s:'COM',c1:'#0277bd',c2:'#e1f5fe',ovr:73},{n:'Fénix Atlético',s:'FEN',c1:'#bf360c',c2:'#ffcc80',ovr:77},
-  {n:'Trovão United',s:'TRO',c1:'#283593',c2:'#ffee58',ovr:85}];
+  {n:'Trovão United',s:'TRO',c1:'#283593',c2:'#ffee58',ovr:85},
+  {n:'Lobos da Serra',s:'LOB',c1:'#5d4037',c2:'#d7ccc8',ovr:57},{n:'Atlético Pinhal',s:'PIN',c1:'#1b5e20',c2:'#c8e6c9',ovr:58},
+  {n:'Salamandras FC',s:'SAL',c1:'#e65100',c2:'#000000',ovr:60},{n:'Falcões SC',s:'FAL',c1:'#455a64',c2:'#ffffff',ovr:62},
+  {n:'Tubarões United',s:'TUB',c1:'#01579b',c2:'#b3e5fc',ovr:64},{n:'Panteras Negras',s:'PAN',c1:'#111111',c2:'#e91e63',ovr:65},
+  {n:'Cobras do Rio',s:'COB',c1:'#33691e',c2:'#ffeb3b',ovr:66},{n:'Mosqueteiros AC',s:'MOS',c1:'#880e4f',c2:'#f8bbd0',ovr:68},
+  {n:'Piratas da Costa',s:'PIR',c1:'#263238',c2:'#ff5252',ovr:70},{n:'Vikings do Norte',s:'VIK',c1:'#3e2723',c2:'#90caf9',ovr:72},
+  {n:'Samurais FC',s:'SAM',c1:'#b71c1c',c2:'#fafafa',ovr:74},{n:'Gladiadores SC',s:'GLA',c1:'#ffa000',c2:'#3e2723',ovr:76},
+  {n:'Navegantes AC',s:'NAV',c1:'#0d47a1',c2:'#ffffff',ovr:78},{n:'Tornado SC',s:'TOR',c1:'#546e7a',c2:'#ffeb3b',ovr:80},
+  {n:'Ciclone United',s:'CIC',c1:'#00695c',c2:'#ffffff',ovr:82},{n:'Granito FC',s:'GRA',c1:'#424242',c2:'#ffab00',ovr:84}];
 CLUBS.sort((a,b)=>a.ovr-b.ovr);
 function clubSquad(club){
   const used=new Set();
@@ -361,12 +380,39 @@ const myShort=()=>myName().replace(/[^A-Za-zÀ-ÿ]/g,'').slice(0,3).toUpperCase(
 const teamName=t=>t==='me'?myName():CLUBS[t].n;
 const teamColor=t=>t==='me'?'#2b6cff':CLUBS[t].c1;
 const teamOvrOf=t=>t==='me'?teamOVR(S.squad):CLUBS[t].ovr;
+// 32 equipas: 8 grupos de 4 (6 jornadas, ida e volta), os 2 primeiros de cada grupo vão aos oitavos
+const GL='ABCDEFGH';
+const RR=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]],[[1,0],[3,2]],[[2,0],[3,1]],[[3,0],[2,1]]];
 function newTour(){
-  const ids=CLUBS.map((c,i)=>i).sort(()=>Math.random()-.5).slice(0,15);ids.splice(Math.floor(Math.random()*16),0,'me');
-  S.tour={R:[ids],round:0,done:false,lost:false,last:null};save();
+  const ids=CLUBS.map((c,i)=>i).sort(()=>Math.random()-.5).slice(0,31);ids.splice(Math.floor(Math.random()*32),0,'me');
+  const groups=[];for(let g=0;g<8;g++)groups.push(ids.slice(g*4,g*4+4));
+  const tab={};for(const t of ids)tab[t]={j:0,v:0,e:0,d:0,gm:0,gs:0,pts:0};
+  S.tour={phase:'groups',groups,tab,jor:0,res:[],R:[],round:0,done:false,lost:false};save();
+}
+function poisson(l){let L=Math.exp(-l),k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
+function simScore(a,b){const d=(teamOvrOf(a)-teamOvrOf(b))/22;return [poisson(clamp(1.35*Math.exp(d),.25,4)),poisson(clamp(1.35*Math.exp(-d),.25,4))];}
+function addResult(a,b,ga,gb){const T=S.tour,A=T.tab[a],B=T.tab[b];A.j++;B.j++;A.gm+=ga;A.gs+=gb;B.gm+=gb;B.gs+=ga;
+  if(ga>gb){A.v++;B.d++;A.pts+=3;}else if(ga<gb){B.v++;A.d++;B.pts+=3;}else{A.e++;B.e++;A.pts++;B.pts++;}}
+function groupTable(g){const T=S.tour;return T.groups[g].slice().sort((x,y)=>{const a=T.tab[x],b=T.tab[y];return b.pts-a.pts||(b.gm-b.gs)-(a.gm-a.gs)||b.gm-a.gm||teamOvrOf(y)-teamOvrOf(x);});}
+const myGroup=()=>S.tour.groups.findIndex(g=>g.includes('me'));
+function myGroupOpp(){const T=S.tour,g=T.groups[myGroup()],i=g.indexOf('me');for(const [x,y] of RR[T.jor]){if(x===i)return g[y];if(y===i)return g[x];}return null;}
+// joga a jornada: o teu resultado + os outros jogos simulados
+function finishJornada(myGoals,oppGoals){
+  const T=S.tour,mg=myGroup();
+  for(let g=0;g<8;g++){const G=T.groups[g];for(const [x,y] of RR[T.jor]){const a=G[x],b=G[y];
+    if(g===mg&&(a==='me'||b==='me')){if(a==='me')addResult(a,b,myGoals,oppGoals);else addResult(a,b,oppGoals,myGoals);continue;}
+    const [ga,gb]=simScore(a,b);addResult(a,b,ga,gb);}}
+  T.jor++;
+  if(T.jor>=6){
+    const tops=[];for(let g=0;g<8;g++){const t=groupTable(g);tops.push([t[0],t[1]]);}
+    const pairs=[[0,1],[2,3],[4,5],[6,7],[1,0],[3,2],[5,4],[7,6]];const R0=[];for(const [x,y] of pairs){R0.push(tops[x][0],tops[y][1]);}
+    T.R=[R0];T.round=0;T.phase='ko';
+    if(!R0.includes('me')){T.done=true;T.lost=true;T.outGroups=true;}
+  }
+  save();
 }
 function simWin(a,b){const p=1/(1+Math.exp(-(teamOvrOf(a)-teamOvrOf(b))/6));return Math.random()<p?a:b;}
-function myOpponent(){const T=S.tour,r=T.R[T.round],i=r.indexOf('me');if(i<0)return null;return r[i^1];}
+function myOpponent(){const T=S.tour;if(T.phase==='groups')return myGroupOpp();const r=T.R[T.round],i=r.indexOf('me');if(i<0)return null;return r[i^1];}
 function advanceTour(myWin){
   const T=S.tour,r=T.R[T.round],next=[];
   for(let i=0;i<r.length;i+=2){const a=r[i],b=r[i+1];next.push(a==='me'||b==='me'?(myWin?'me':(a==='me'?b:a)):simWin(a,b));}
@@ -375,8 +421,19 @@ function advanceTour(myWin){
   else if(T.round===4){T.done=true;}
   save();
 }
+function renderGroups(){
+  const T=S.tour,mg=myGroup();
+  const tbl=g=>{const rows=groupTable(g).map((t,i)=>{const r=T.tab[t];return `<tr class="${t==='me'?'me':''}${i<2?' q':''}"><td>${i+1}</td><td><i style="background:${teamColor(t)}"></i>${teamName(t)}</td><td>${r.j}</td><td>${r.v}</td><td>${r.e}</td><td>${r.d}</td><td>${r.gm}:${r.gs}</td><td><b>${r.pts}</b></td></tr>`;}).join('');
+    return `<div class="gtab${g===mg?' mine':''}"><h3>Grupo ${GL[g]}</h3><table><tr><th>#</th><th>Equipa</th><th>J</th><th>V</th><th>E</th><th>D</th><th>G</th><th>P</th></tr>${rows}</table></div>`;};
+  const order=[mg,...[0,1,2,3,4,5,6,7].filter(g=>g!==mg)];
+  $('bracket').innerHTML=`<div class="groups">${order.map(tbl).join('')}</div>`;
+  const opp=myGroupOpp();
+  $('tourInfo').innerHTML=`<b>Fase de grupos · Jornada ${T.jor+1} de 6</b> — ${myName()} vs ${CLUBS[opp].n} (OVR ${CLUBS[opp].ovr}). Os 2 primeiros de cada grupo passam aos oitavos.`;
+  $('tourPlay').hidden=false;$('tourPlay').textContent='Jogar jornada '+(T.jor+1);
+}
 function renderTour(){
-  if(!S.tour)newTour();
+  if(!S.tour||!S.tour.phase)newTour();
+  if(S.tour.phase==='groups'){renderGroups();return;}
   const T=S.tour,cols=[];
   for(let k=0;k<4;k++){
     const r=T.R[k];let html=`<div class="col"><h3>${['Oitavos','Quartos','Meias','Final'][k]}</h3>`;
@@ -391,7 +448,7 @@ function renderTour(){
   cols.push(`<div class="col"><h3>Campeão</h3><div class="champ">🏆<b>${champ!=null?teamName(champ):'?'}</b></div></div>`);
   $('bracket').innerHTML=cols.join('');
   const opp=T.done?null:myOpponent();
-  $('tourInfo').textContent=T.done?(T.lost?`Foste eliminado ${ROUND_NOS[T.round-1]}. Tenta outra vez!`:'🏆 Ganhaste o torneio!'):`${ROUND_PT[T.round]}: ${myName()} vs ${CLUBS[opp].n} (OVR ${CLUBS[opp].ovr}). Em caso de empate há penáltis.`;
+  $('tourInfo').textContent=T.done?(T.lost?(T.outGroups?'Ficaste fora dos 2 primeiros do grupo. Tenta outra vez!':`Foste eliminado ${ROUND_NOS[T.round-1]}. Tenta outra vez!`):'🏆 Ganhaste o torneio!'):`${ROUND_PT[T.round]}: ${myName()} vs ${CLUBS[opp].n} (OVR ${CLUBS[opp].ovr}). Em caso de empate há penáltis.`;
   $('tourPlay').hidden=T.done;$('tourPlay').textContent=T.done?'':'Jogar '+ROUND_PT[T.round].toLowerCase();
 }
 $('tourPlay').onclick=()=>{const o=myOpponent();if(o!=null)startMatch(o,true);};
@@ -563,7 +620,7 @@ function startMatch(ci,tour){
   if(teams[1].c1.toLowerCase()==='#2b6cff')teams[0].c1='#e53935';
   // remove jogadores antigos
   if(M)for(const p of M.players)scene.remove(p.mesh);
-  M={ci,tour:!!tour,teams,players:[],ball:{x:0,y:BR,z:0,vx:0,vy:0,vz:0,owner:null,last:0,shot:null,lastTouch:null},score:[0,0],time:0,dur:240,state:'kickoff',stateT:0,kickTeam:0,ctrl:null,paused:false,switchCd:0,shotId:0,stats:{shots:[0,0]}};
+  M={half:1,ci,tour:!!tour,teams,players:[],ball:{x:0,y:BR,z:0,vx:0,vy:0,vz:0,owner:null,last:0,shot:null,lastTouch:null},score:[0,0],time:0,dur:240,state:'kickoff',stateT:0,kickTeam:0,ctrl:null,paused:false,switchCd:0,shotId:0,stats:{shots:[0,0]}};
   teams.forEach((t,ti)=>{t.ids.forEach((id,i)=>{const card=DB[id],b=BASE[i];const mesh=makeMan(t.c1,t.c2,card,i===0?1:i+1,b.r==='GK');scene.add(mesh);
     M.players.push({team:ti,i,card,st:statsOf(card),role:b.r,base:b,x:0,z:0,vx:0,vz:0,face:ti?Math.PI:0,mesh,cd:0,tackleCd:0,stun:0,run:0,recv:0});});});
   $('hn1').textContent=teams[0].short;$('hn2').textContent=teams[1].short;$('hc1').style.background=teams[0].c1;$('hc2').style.background=teams[1].c1;
@@ -574,10 +631,10 @@ function startMatch(ci,tour){
   kickoff(0);sfx('whistle');
   last=performance.now();if(!running){running=true;requestAnimationFrame(loop);}
 }
-const side=t=>t===0?1:-1; // direção de ataque
+const side=t=>(t===0?1:-1)*(M&&M.half===2?-1:1); // direção de ataque (as equipas trocam de campo ao intervalo)
 function kickoff(team){
   const b=M.ball;Object.assign(b,{x:0,y:BR,z:0,vx:0,vy:0,vz:0,owner:null,shot:null});
-  for(const p of M.players){const s=side(p.team);p.x=p.base.x*s*(p.role==='GK'?1:.92);p.z=p.base.z*(p.team?-1:1);p.vx=p.vz=0;p.face=p.team?Math.PI:0;p.stun=0;p.cd=0;}
+  for(const p of M.players){const s=side(p.team);p.x=p.base.x*s*(p.role==='GK'?1:.92);p.z=p.base.z*(p.team?-1:1);p.vx=p.vz=0;p.face=s>0?0:Math.PI;p.stun=0;p.slide=0;p.cd=0;}
   const tk=M.players.find(p=>p.team===team&&p.i===9);tk.x=-side(team)*.6;tk.z=0;
   const mate=M.players.find(p=>p.team===team&&p.i===10);mate.x=-side(team)*1;mate.z=4;
   b.owner=tk;M.kickTeam=team;M.state='kickoff';M.stateT=1.2;
@@ -653,14 +710,25 @@ function slideStep(p,dt){
 }
 
 // ----- IA -----
+// Posições: equipa espalhada em linhas e na largura; ponta de lança sempre lá à frente
 function targetPos(p){
   const b=M.ball,s=side(p.team),own=b.owner&&b.owner.team===p.team;
   if(p.role==='GK'){const gx=-s*(HL-1.2);return {x:gx,z:clamp(b.z*.25,-GW+.6,GW-.6)};}
-  const bx=b.x*s; // posição da bola do ponto de vista desta equipa (ataque = +)
-  let tx=p.base.x+bx*.55+(own?9:-2)+(p.role==='ATT'?(own?6:2):0);
-  if(p.role==='DEF')tx=Math.min(tx,bx-4+(own?0:-3));
-  tx=clamp(tx,-HL+4,HL-6);
-  let tz=p.base.z*(p.team?-1:1)*(own?1.05:.85)+(b.z-p.base.z*(p.team?-1:1))*.28;
+  const bx=b.x*s,bz=b.z,baseZ=p.base.z*(p.team?-1:1);
+  let tx,tz;
+  if(p.role==='DEF'){ // linha de 4: sobe com a bola mas fica sempre atrás dela; laterais abertos
+    tx=clamp(p.base.x+8+bx*.5+(own?8:0),-HL+6,own?8:bx-5);
+    tz=baseZ*(Math.abs(baseZ)>15?(own?1.2:1):1)+(bz-baseZ)*.12;
+  }else if(p.role==='MID'){ // meio-campo entre a defesa e o ataque, espalhado na largura
+    tx=clamp(p.base.x+10+bx*.55+(own?9:0),-HL+14,HL-20);
+    tz=baseZ*(own?1.3:1.05)+(bz-baseZ)*.18;
+  }else if(p.i===9){ // ponta de lança: no meio, lá à frente; a defender espera perto do meio-campo
+    tx=own?clamp(Math.max(bx+10,24),0,HL-9):clamp(bx*.3+4,-2,14);
+    tz=clamp(bz*.3,-9,9);
+  }else{ // extremos: abertos junto às linhas
+    tx=own?clamp(bx+5,-5,HL-12):clamp(p.base.x+8+bx*.4,-12,16);
+    tz=Math.sign(baseZ||1)*(own?27:21);
+  }
   return {x:tx*s,z:clamp(tz,-HW+2,HW-2)};
 }
 function moveTo(p,tx,tz,spd,dt){
@@ -811,10 +879,10 @@ function pickups(){
 function rules(){
   const b=M.ball;
   // golo
-  for(const s of [-1,1]){if(Math.sign(b.x)===s&&Math.abs(b.x)>HL+BR&&Math.abs(b.z)<GW&&b.y<GH){goal(s>0?0:1);return;}}
+  for(const s of [-1,1]){if(Math.sign(b.x)===s&&Math.abs(b.x)>HL+BR&&Math.abs(b.z)<GW&&b.y<GH){goal(side(0)===s?0:1);return;}}
   // fora de campo
   if(Math.abs(b.z)>HW+BR&&!b.owner){restart('lat',b.last===0?1:0,b.x,Math.sign(b.z)*(HW-.5));return;}
-  if(Math.abs(b.x)>HL+BR&&!b.owner){const s=Math.sign(b.x),def=s>0?1:0;
+  if(Math.abs(b.x)>HL+BR&&!b.owner){const s=Math.sign(b.x),def=side(0)===s?1:0;
     if(b.last===def)restart('canto',1-def,s*(HL-.6),Math.sign(b.z||1)*(HW-.6));else restart('baliza',def,s*(HL-5.5),0);return;}
   if(b.owner&&(Math.abs(b.owner.z)>HW+.3||Math.abs(b.owner.x)>HL+.3)){const o=b.owner;b.owner=null;b.x=o.x;b.z=o.z;b.last=o.team;}
 }
@@ -857,6 +925,16 @@ function endMatch(){
   $('mEnd').hidden=false;
 }
 function endTourMatch(a,c,club){
+  if(S.tour.phase==='groups'){
+    const res=a>c?'w':a===c?'d':'l';S[res]++;const jor=S.tour.jor;
+    const coins=(res==='w'?350:res==='d'?150:80)+a*50;S.coins+=coins;
+    finishJornada(a,c);
+    const T=S.tour,pos=groupTable(myGroup()).indexOf('me')+1;
+    $('endRes').textContent=a+' - '+c;$('endAgain').hidden=true;$('endOk').textContent='Continuar';
+    $('endTitle').textContent=(res==='w'?'Vitória':res==='d'?'Empate':'Derrota')+' · Jornada '+(jor+1);
+    $('endTxt').textContent=T.phase==='ko'?(T.R[0].includes('me')?`Passaste aos oitavos de final! (${pos}.º do grupo) · 🪙 ${coins}`:`Ficaste em ${pos}.º no grupo e não passaste. · 🪙 ${coins}`):`Estás em ${pos}.º no grupo ${GL[myGroup()]}. · 🪙 ${coins}`;
+    M.champion=false;save();$('mEnd').hidden=false;return;
+  }
   let pens=null,win=a>c;if(a===c){pens=shootout();win=pens[0]>pens[1];}
   const T=S.tour,round=T.round;const res=win?'w':(a===c?'d':'l');S[res]++;
   let coins=win?400*(round+1)+a*60:150;
@@ -916,7 +994,7 @@ function leaveMatch(){
   document.body.classList.remove('playing');const wasTour=M&&M.tour;if(M){M.state='off';}show(wasTour?'sTour':'sHome');
 }
 $('endOk').onclick=()=>{if(M&&M.champion&&M.state!=='ceremony'){startCeremony();return;}leaveMatch();};$('endAgain').onclick=()=>{$('mEnd').hidden=true;startMatch(M.ci);};
-$('pauseBtn').onclick=()=>pause(true);$('resume').onclick=()=>pause(false);$('quit').onclick=()=>{S.l++;if(M&&M.tour&&S.tour&&!S.tour.done){advanceTour(false);}save();leaveMatch();};
+$('pauseBtn').onclick=()=>pause(true);$('resume').onclick=()=>pause(false);$('quit').onclick=()=>{S.l++;if(M&&M.tour&&S.tour&&!S.tour.done){if(S.tour.phase==='groups')finishJornada(0,3);else advanceTour(false);}save();leaveMatch();};
 function pause(v){if(!M||M.state==='end'||M.state==='off'||M.state==='ceremony')return;M.paused=v;$('mPause').hidden=!v;}
 window.C30pause=f=>{if(!M||M.state==='off')return;pause(typeof f==='boolean'?f:!M.paused);};window.C30isPaused=()=>!!(M&&M.paused);
 
@@ -930,8 +1008,8 @@ function loop(now){
   readKeys();
   if(!M.paused&&M.state!=='end'&&M.state!=='ceremony'){
     M.switchCd-=dt;
-    if(M.state==='play'){M.time+=dt;if(M.time>=M.dur){endMatch();}}
-    else{M.stateT-=dt;if(M.stateT<=0){if(M.state==='goal')kickoff(M.kickTeam);else M.state='play';}}
+    if(M.state==='play'){M.time+=dt;if(M.half===1&&M.time>=M.dur/2){M.state='half';M.stateT=3;sfx('whistle');banner('INTERVALO',2600);}else if(M.time>=M.dur){endMatch();}}
+    else{M.stateT-=dt;if(M.stateT<=0){if(M.state==='goal')kickoff(M.kickTeam);else if(M.state==='half'){M.half=2;kickoff(1);sfx('whistle');banner('2.ª PARTE',1200,true);}else M.state='play';}}
     // passo físico em 2 sub-passos (bola rápida não atravessa)
     for(let k=0;k<2;k++){const h=dt/2;stepPlayers(h);stepBall(h);if(M.state==='play'){pickups();rules();if(M.state!=='play')break;}}
     // auto-troca quando o adversário tem a bola e o meu jogador está longe
