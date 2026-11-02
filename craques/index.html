@@ -166,8 +166,9 @@ h2{margin:0 0 10px;font-size:20px}
         <button class="tile" id="goPacks"><i>🎁</i><b>Pacotes</b><span>Abre pacotes de cartas</span></button>
         <button class="tile" id="goColl"><i>🗂️</i><b>Coleção</b><span id="collCount">0 cartas</span></button>
         <button class="tile" id="goHelp"><i>🎮</i><b>Controlos</b><span>PC e iPad</span></button>
+        <button class="tile" id="goSet" style="grid-column:1/-1;min-height:70px"><i style="font-size:22px">⚙️</i><b>Definições</b><span>Guardar progresso</span></button>
       </div>
-      <div class="teamline"><span id="record">0V · 0E · 0D</span><span>·</span><span>Progresso guardado neste aparelho</span></div>
+      <div class="teamline"><span id="record">0V · 0E · 0D</span><span>·</span><span id="keepLine">Modo sem memória: ao recarregar começa do zero</span></div>
     </div>
   </div>
 </section>
@@ -205,6 +206,11 @@ h2{margin:0 0 10px;font-size:20px}
 
 <div class="modal" id="mPause" hidden><div class="box"><h2>Pausa</h2><div class="row"><button class="btn" id="resume">Continuar</button><button class="btn ghost" id="quit">Desistir</button></div><div class="keys" id="keysPause"></div></div></div>
 <div class="modal" id="mEnd" hidden><div class="box"><h2 id="endTitle">Fim do jogo</h2><div class="res" id="endRes">0 - 0</div><div id="endTxt" style="color:var(--mut)"></div><div class="row"><button class="btn" id="endOk">Continuar</button><button class="btn ghost" id="endAgain">Desforra</button></div></div></div>
+<div class="modal" id="mSet" hidden><div class="box"><h2>Definições</h2>
+  <p style="color:var(--mut);margin:4px 0 12px">Guardar o progresso (moedas, cartas e equipa) neste aparelho?</p>
+  <div class="toolbar" style="justify-content:center"><button id="keepYes">Sim</button><button id="keepNo">Não</button></div>
+  <p style="color:var(--mut);font-size:13px">Com "Não", cada vez que abres ou recarregas a página começas do zero.</p>
+  <div class="row"><button class="btn" id="setOk">Fechar</button></div></div></div>
 <div class="modal" id="mHelp" hidden><div class="box"><h2>Controlos</h2><div class="keys" id="keysHelp"></div><div class="row"><button class="btn" id="helpOk">Percebi</button></div></div></div>
 <div id="toast"></div>
 <div id="rotate">🔄<br>Roda o aparelho para jogar na horizontal</div>
@@ -278,8 +284,18 @@ function starter(){
   for(const r in need)owned.push(...by(r).slice(0,need[r]).map(c=>c.id));
   return {coins:2500,owned,squad:[],w:0,d:0,l:0,beaten:[]};
 }
-function load(){try{S=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch{S=null;}if(!S||!Array.isArray(S.owned)){S=starter();}if(!S.squad||S.squad.length!==11)autoBest();save();}
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch{}}
+// Guardar progresso: escolha nas Definições (por defeito NÃO — ao recarregar começa do zero)
+const KEEP_KEY='craques3d.keep';
+let keep=false;try{keep=localStorage.getItem(KEEP_KEY)==='1';}catch{}
+function load(){
+  if(keep){try{S=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch{S=null;}}
+  else{try{localStorage.removeItem(SAVE_KEY);}catch{}S=null;}
+  if(!S||!Array.isArray(S.owned))S=starter();
+  if(!S.squad||S.squad.length!==11)autoBest();save();
+}
+function save(){if(!keep)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch{}}
+function setKeep(v){keep=!!v;try{localStorage.setItem(KEEP_KEY,keep?'1':'0');if(!keep)localStorage.removeItem(SAVE_KEY);}catch{}save();paintKeep();toast(keep?'Progresso: a guardar neste aparelho':'Modo sem memória: ao recarregar começa do zero');}
+function paintKeep(){const y=document.getElementById('keepYes'),n=document.getElementById('keepNo');if(y){y.classList.toggle('on',keep);n.classList.toggle('on',!keep);}const t=document.getElementById('keepLine');if(t)t.textContent=keep?'Progresso guardado neste aparelho':'Modo sem memória: ao recarregar começa do zero';}
 function autoBest(){
   const used=new Set();S.squad=SLOTS.map(sl=>{const c=S.owned.map(i=>DB[i]).filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>b.ovr-a.ovr)[0];if(c){used.add(c.id);return c.id;}return null;});
 }
@@ -307,7 +323,8 @@ const KEYS_HTML=`<b style="grid-column:1/-1;color:var(--txt)">PC</b>
 <kbd>Joystick</kbd><span>Lado esquerdo do ecrã</span><kbd>REMATE</kbd><span>Manter e largar · a defender: desarme</span>
 <kbd>PASSE</kbd><span>Passe · a defender: trocar</span><kbd>PASSE LONGO</kbd><span>Bola em profundidade</span>`;
 $('keysHelp').innerHTML=KEYS_HTML;$('keysPause').innerHTML=KEYS_HTML;
-$('goHelp').onclick=()=>$('mHelp').hidden=false;$('helpOk').onclick=()=>$('mHelp').hidden=true;
+$('goHelp').onclick=()=>$('mHelp').hidden=false;
+$('goSet').onclick=()=>{paintKeep();$('mSet').hidden=false;};$('setOk').onclick=()=>$('mSet').hidden=true;$('keepYes').onclick=()=>setKeep(true);$('keepNo').onclick=()=>setKeep(false);$('helpOk').onclick=()=>$('mHelp').hidden=true;
 
 /* ---------- clubes adversários (inventados) ---------- */
 const CLUBS=[
@@ -836,7 +853,7 @@ setInterval(()=>{if(!M||M.state==='off'||!isTouch)return;const mine=M.ball.owner
 /* =========================================================
    ARRANQUE
    ========================================================= */
-load();show('sHome');
+load();show('sHome');paintKeep();
 window.CRAQUES={get M(){return M},get S(){return S},DB};
 })();
 </script>
