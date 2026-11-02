@@ -201,7 +201,7 @@ h2{margin:0 0 10px;font-size:20px}
 
 <!-- EQUIPA -->
 <section class="screen" id="sSquad" hidden>
-  <div class="top"><button class="back" data-back>← Voltar</button><h2 style="margin:0">A tua equipa · 4-3-3</h2><div class="spacer"></div><span class="pill">⭐ OVR <span class="ovrTxt">0</span></span><button class="btn ghost" id="autoBest">Melhor equipa</button></div>
+  <div class="top"><button class="back" data-back>← Voltar</button><h2 style="margin:0">Equipa · 4-3-3</h2><label class="pill" style="gap:8px">Nome <input id="teamNameIn" maxlength="18" autocomplete="off" style="background:#0006;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:4px 8px;font:700 14px system-ui;width:150px"></label><div class="spacer"></div><span class="pill">⭐ OVR <span class="ovrTxt">0</span></span><button class="btn ghost" id="autoBest">Melhor equipa</button></div>
   <div class="squad">
     <div class="pitch" id="pitch"></div>
     <div class="side"><h2 id="pickTitle">Toca num lugar do campo</h2><div class="grid" id="pickList"></div></div>
@@ -356,7 +356,9 @@ function renderClubs(){
 /* ---------- torneio (16 equipas: oitavos → final) ---------- */
 const ROUND_PT=['Oitavos de final','Quartos de final','Meias-finais','Final','Campeão'];
 const ROUND_NOS=['nos oitavos de final','nos quartos de final','nas meias-finais','na final'];
-const teamName=t=>t==='me'?'A tua equipa':CLUBS[t].n;
+const myName=()=>S.teamName||'Craques FC';
+const myShort=()=>myName().replace(/[^A-Za-zÀ-ÿ]/g,'').slice(0,3).toUpperCase()||'EU';
+const teamName=t=>t==='me'?myName():CLUBS[t].n;
 const teamColor=t=>t==='me'?'#2b6cff':CLUBS[t].c1;
 const teamOvrOf=t=>t==='me'?teamOVR(S.squad):CLUBS[t].ovr;
 function newTour(){
@@ -389,7 +391,7 @@ function renderTour(){
   cols.push(`<div class="col"><h3>Campeão</h3><div class="champ">🏆<b>${champ!=null?teamName(champ):'?'}</b></div></div>`);
   $('bracket').innerHTML=cols.join('');
   const opp=T.done?null:myOpponent();
-  $('tourInfo').textContent=T.done?(T.lost?`Foste eliminado ${ROUND_NOS[T.round-1]}. Tenta outra vez!`:'🏆 Ganhaste o torneio!'):`${ROUND_PT[T.round]}: A tua equipa vs ${CLUBS[opp].n} (OVR ${CLUBS[opp].ovr}). Em caso de empate há penáltis.`;
+  $('tourInfo').textContent=T.done?(T.lost?`Foste eliminado ${ROUND_NOS[T.round-1]}. Tenta outra vez!`:'🏆 Ganhaste o torneio!'):`${ROUND_PT[T.round]}: ${myName()} vs ${CLUBS[opp].n} (OVR ${CLUBS[opp].ovr}). Em caso de empate há penáltis.`;
   $('tourPlay').hidden=T.done;$('tourPlay').textContent=T.done?'':'Jogar '+ROUND_PT[T.round].toLowerCase();
 }
 $('tourPlay').onclick=()=>{const o=myOpponent();if(o!=null)startMatch(o,true);};
@@ -398,6 +400,7 @@ $('tourNew').onclick=()=>{if(S.tour&&!S.tour.done&&!confirm('Começar um torneio
 /* ---------- equipa ---------- */
 let selSlot=null;
 function renderSquad(){
+  $('teamNameIn').value=myName();
   const p=$('pitch');p.innerHTML='';
   SLOTS.forEach((sl,i)=>{const d=document.createElement('div');d.className='slot'+(selSlot===i?' sel':'');d.style.left=sl.x+'%';d.style.top=sl.y+'%';
     const id=S.squad[i];d.innerHTML=id!=null?cardHTML(DB[id],{sm:true}):`<div class="empty">${sl.role}</div>`;
@@ -409,6 +412,7 @@ function renderSquad(){
   lst.innerHTML=cs.map(c=>{const inSq=S.squad.includes(c.id);return `<div style="opacity:${inSq&&S.squad[selSlot]!==c.id?.45:1}">${cardHTML(c,{sm:true})}</div>`;}).join('')||'<p style="color:var(--mut)">Não tens cartas desta posição. Abre pacotes!</p>';
   lst.querySelectorAll('[data-card]').forEach(e=>e.onclick=()=>{const id=+e.dataset.card;const other=S.squad.indexOf(id);if(other>=0)S.squad[other]=S.squad[selSlot];S.squad[selSlot]=id;save();refreshTop();renderSquad();});
 }
+$('teamNameIn').addEventListener('change',e=>{const v=e.target.value.replace(/[<>]/g,'').trim().slice(0,18);S.teamName=v||'Craques FC';e.target.value=S.teamName;save();toast('Nome da equipa: '+S.teamName);});
 $('autoBest').onclick=()=>{autoBest();save();refreshTop();renderSquad();toast('Melhor equipa escolhida!');};
 /* ---------- pacotes ---------- */
 const PACKS=[
@@ -555,7 +559,7 @@ function startMatch(ci,tour){
   if(S.squad.some(x=>x==null)){toast('Faltam jogadores na equipa');show('sSquad');return;}
   if(!renderer)initGL();
   const club=CLUBS[ci];
-  const teams=[{name:'EU',short:'EU',c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:clubSquad(club)}];
+  const teams=[{name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:clubSquad(club)}];
   if(teams[1].c1.toLowerCase()==='#2b6cff')teams[0].c1='#e53935';
   // remove jogadores antigos
   if(M)for(const p of M.players)scene.remove(p.mesh);
@@ -900,7 +904,7 @@ function drawCeremony(dt){
   for(const m of confetti){m.position.y-=m.userData.v*dt;m.position.x+=Math.sin(t*2+m.userData.s)*dt*.6;m.rotation.x+=dt*m.userData.s;m.rotation.y+=dt*2;if(m.position.y<0)m.position.y=rnd(8,14);}
   const a=t*.25;camera.position.set(Math.sin(a)*9,3.2,Math.cos(a)*9+1);camera.lookAt(0,1.7,.5);
   renderer.render(scene,camera);
-  if(t>7&&!M.cerDone){M.cerDone=true;$('endTitle').textContent='🏆 Campeões do torneio!';$('endTxt').textContent='A tua equipa levantou a taça. Vê o quadro do torneio ou começa outro.';$('endOk').textContent='Continuar';$('mEnd').hidden=false;}
+  if(t>7&&!M.cerDone){M.cerDone=true;$('endTitle').textContent='🏆 Campeões do torneio!';$('endTxt').textContent=myName()+' levantou a taça. Vê o quadro do torneio ou começa outro.';$('endOk').textContent='Continuar';$('mEnd').hidden=false;}
 }
 function endCeremony(){
   if(trophy)trophy.visible=false;if(confetti)for(const m of confetti)m.visible=false;
@@ -966,7 +970,7 @@ function draw(dt){
    CONTROLOS
    ========================================================= */
 const keys={};
-addEventListener('keydown',e=>{if(e.repeat)return;keys[e.code]=true;
+addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(e.repeat)return;keys[e.code]=true;
   if(!M||M.state==='off')return;
   if(e.code==='Escape'||e.code==='KeyP')pause(!M.paused);
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
