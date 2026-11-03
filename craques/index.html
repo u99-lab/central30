@@ -659,10 +659,11 @@ function kickBall(p,dx,dz,speed,lift){
 }
 function doShoot(p,power,aimZ){
   const s=side(p.team),gx=s*HL;
-  const acc=p.st.sho/100,err=(1-acc)*3.2*(.6+power);
+  const acc=p.st.sho/100,d0=p.team===1?Math.hypot(gx-p.x,p.z):0,farK=d0>30?1+(d0-30)/12:1; // de muito longe: menos certeiro e mais lento
+  const err=(1-acc)*3.2*(.6+power)*farK+(d0>30?(d0-30)*.06:0);
   let tz=clamp(aimZ!=null?aimZ:(Math.random()<.5?-1:1)*rnd(1.2,3.1),-GW+.3,GW-.3)+rnd(-err,err);
   const dx=gx-p.x,dz=tz-p.z,d=Math.hypot(dx,dz);
-  const spd=17+power*15+acc*3;
+  const spd=(17+power*15+acc*3)*(d0>30?Math.max(.75,1-(d0-30)*.008):1);
   const t=d/spd;const ty=clamp(rnd(.3,1.9)+power*.6-(1-acc)*.2+rnd(-err,err)*.35,.15,3.2);
   kickBall(p,dx,dz,spd,(ty-BR+4.9*t*t)/t*.62);
   M.ball.shot={team:p.team,id:++M.shotId,checked:false,dist:d};M.stats.shots[p.team]++;
@@ -819,8 +820,9 @@ function stepBall(dt){
     for(const q of M.players){if(q.team===o.team||(q.stun>0&&q.cd>0))continue;const dx=b.x-q.x,dz=b.z-q.z,d=Math.hypot(dx,dz);
       if(d<.48){const nx=d>1e-3?dx/d:-fx,nz=d>1e-3?dz/d:-fz;b.owner=null;o.cd=.4;b.x=q.x+nx*.5;b.z=q.z+nz*.5;b.vx=nx*4+o.vx*.3;b.vz=nz*4+o.vz*.3;b.last=q.team;b.lastTouch=q;sfx('kick',.2);break;}}
     return;}
-  const px=b.x,pz=b.z;
+  const px=b.x,pz=b.z,py=b.y;
   b.vy-=9.8*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
+  gkDive(px,pz,py);if(b.owner)return;
   // sem cuecas: a bola solta bate no corpo/pernas de quem está no caminho (verifica o percurso deste passo)
   if(b.y<2.3){const sx=b.x-px,sz=b.z-pz,l2=sx*sx+sz*sz||1e-9;
     for(const q of M.players){if(q===b.lastTouch&&q.cd>0)continue;if(b.y>(q.role==='GK'?2.3:1.8))continue;
@@ -862,6 +864,29 @@ function stepPlayers(dt){
   // separação entre jogadores
   const P=M.players;for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const a=P[i],c=P[j],dx=c.x-a.x,dz=c.z-a.z,d=Math.hypot(dx,dz);if(d>0&&d<.8){const k=(.8-d)/2;a.x-=dx/d*k;a.z-=dz/d*k;c.x+=dx/d*k;c.z+=dz/d*k;}}
 }
+function gkSaveChance(gk,bs,far){
+  if(gk.team===0){const fb=far>22?.4:far>16?.28:far>11?.12:0;return clamp(.5+(gk.st.gk-60)/70-(bs-20)/45+fb,.25,.95);} // o teu GR
+  const fb=far>22?.15:far>16?.08:0; // GR adversário: defende bastante menos
+  return clamp(.22+(gk.st.gk-60)/90-(bs-20)/40+fb-(M.tour?.06:0),.06,.6);
+}
+// mergulho: quando o remate passa pela linha do guarda-redes, ele atira-se (mais alcance nos remates de longe)
+function gkDive(px,pz,py){
+  const b=M.ball;if(!b.shot||b.shot.checked||b.owner)return;
+  for(const g of M.players){if(g.role!=='GK'||g.team!==0||g.team===b.shot.team||g.stun>0)continue; // só o teu GR mergulha
+    if((px-g.x)*(b.x-g.x)>0)continue; // ainda não passou pela linha dele
+    const t=(g.x-px)/((b.x-px)||1e-9),zc=pz+(b.z-pz)*t,yc=py+(b.y-py)*t,far=b.shot.dist||0;
+    const reach=1.6+(far>16?1.3:far>11?.7:.2);
+    if(yc>2.5||Math.abs(zc-g.z)>reach)continue;
+    b.shot.checked=true;
+    const bs=Math.hypot(b.vx,b.vz),ch=gkSaveChance(g,bs,far)*(Math.abs(zc-g.z)>1.6?.85:1);
+    if(Math.random()<ch){
+      g.z=clamp(zc,-GW,GW);b.x=g.x+side(g.team)*.5;b.z=g.z;
+      if(bs>21&&Math.random()<.55){b.vx=side(g.team)*Math.abs(b.vx)*.3;b.vz=rnd(-8,8);b.vy=rnd(2,4);g.cd=.6;b.last=g.team;b.lastTouch=g;b.shot=null;}
+      else{b.owner=g;b.vx=b.vy=b.vz=0;b.y=BR;g.hold=1.1;g.cd=.3;b.last=g.team;b.lastTouch=g;b.shot=null;}
+      banner('DEFESA!',900);sfx('kick',.35);
+    }
+    return;}
+}
 function pickups(){
   const b=M.ball;if(b.owner||b.y>2.4)return;
   const bs=Math.hypot(b.vx,b.vz);
@@ -871,8 +896,7 @@ function pickups(){
   if(!best)return;
   // remate a caminho da baliza: o guarda-redes tenta defender
   if(best.role==='GK'&&b.shot&&b.shot.team!==best.team){
-    const far=b.shot.dist||0,farBonus=far>22?.4:far>16?.28:far>11?.12:0;
-    const save=clamp(.38+(best.st.gk-60)/70-(bs-20)/45+farBonus+(best.team===0?.1:0)-(best.team===1?(M.tour?.12:.06):0),.1,best.team===0?.95:.9);
+    const save=gkSaveChance(best,bs,b.shot.dist||0);
     if(b.shot.checked)return;b.shot.checked=true;
     if(Math.random()<save){if(bs>22&&Math.random()<.5){b.vx=-b.vx*.35;b.vz=rnd(-8,8);b.vy=rnd(2,4);best.cd=.6;b.last=best.team;banner('DEFESA!',900);sfx('kick',.4);return;}
       b.owner=best;b.shot=null;b.last=best.team;best.cd=.3;banner('DEFESA!',900);sfx('kick',.3);best.hold=1.1;return;}
