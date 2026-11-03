@@ -364,10 +364,15 @@ const CLUBS=[
 CLUBS.sort((a,b)=>a.ovr-b.ovr);
 for(const c of CLUBS)c.ovr-=5; // adversários um pouco mais fáceis
 const AI_EASE=t=>t===1?(M&&M.tour?.65:.8):1; // a equipa adversária remata e desarma menos (ainda menos no torneio)
-function clubSquad(club){
-  const used=new Set();
-  return SLOTS.map(sl=>{const pool=DB.filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>Math.abs(a.ovr-club.ovr)-Math.abs(b.ovr-club.ovr));const c=pool[Math.floor(Math.random()*Math.min(5,pool.length))];used.add(c.id);return c.id;});
+// Plantel de cada clube: sempre o mesmo, e o OVR mostrado é a média real desse plantel (igual dentro e fora de campo)
+function squadFor(target,seed){
+  const used=new Set(),h=id=>((id+1)*2654435761+(seed|0)*40503)%997;
+  return SLOTS.map(sl=>{const pool=DB.filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>Math.abs(a.ovr-target)-Math.abs(b.ovr-target)||h(a.id)-h(b.id));const c=pool[0];used.add(c.id);return c.id;});
 }
+CLUBS.forEach((c,i)=>{c.ids=squadFor(c.ovr,i+1);c.ovr=teamOVR(c.ids);});
+function clubSquad(club){return club.ids?club.ids.slice():squadFor(club.ovr,7);}
+// no torneio o adversário entra com um plantel mais fraco (no máximo +3 que a tua equipa); o OVR mostrado é o desse plantel
+function tourSquad(ci){const c=CLUBS[ci],t=Math.min(c.ovr-8,teamOVR(S.squad)+3);const ids=t>=c.ovr?c.ids.slice():squadFor(t,ci+1);return {ids,ovr:teamOVR(ids)};}
 function renderClubs(){
   const my=teamOVR(S.squad);
   $('clubList').innerHTML=CLUBS.map((c,i)=>{const diff=c.ovr-my;const st=diff<=-8?'★☆☆':diff<=4?'★★☆':'★★★';const reward=Math.round(300+c.ovr*12);
@@ -430,7 +435,7 @@ function renderGroups(){
   const order=[mg,...[0,1,2,3,4,5,6,7].filter(g=>g!==mg)];
   $('bracket').innerHTML=`<div class="groups">${order.map(tbl).join('')}</div>`;
   const opp=myGroupOpp();
-  $('tourInfo').innerHTML=`<b>Fase de grupos · Jornada ${T.jor+1} de 6</b> — ${myName()} vs ${CLUBS[opp].n} (OVR ${CLUBS[opp].ovr}). Os 2 primeiros de cada grupo passam aos oitavos.`;
+  $('tourInfo').innerHTML=`<b>Fase de grupos · Jornada ${T.jor+1} de 6</b> — ${myName()} vs ${CLUBS[opp].n} (OVR ${tourSquad(opp).ovr}). Os 2 primeiros de cada grupo passam aos oitavos.`;
   $('tourPlay').hidden=false;$('tourPlay').textContent='Jogar jornada '+(T.jor+1);
 }
 function renderTour(){
@@ -450,7 +455,7 @@ function renderTour(){
   cols.push(`<div class="col"><h3>Campeão</h3><div class="champ">🏆<b>${champ!=null?teamName(champ):'?'}</b></div></div>`);
   $('bracket').innerHTML=cols.join('');
   const opp=T.done?null:myOpponent();
-  $('tourInfo').textContent=T.done?(T.lost?(T.outGroups?'Ficaste fora dos 2 primeiros do grupo. Tenta outra vez!':`Foste eliminado ${ROUND_NOS[T.round-1]}. Tenta outra vez!`):'🏆 Ganhaste o torneio!'):`${ROUND_PT[T.round]}: ${myName()} vs ${CLUBS[opp].n} (OVR ${CLUBS[opp].ovr}). Em caso de empate há penáltis.`;
+  $('tourInfo').textContent=T.done?(T.lost?(T.outGroups?'Ficaste fora dos 2 primeiros do grupo. Tenta outra vez!':`Foste eliminado ${ROUND_NOS[T.round-1]}. Tenta outra vez!`):'🏆 Ganhaste o torneio!'):`${ROUND_PT[T.round]}: ${myName()} vs ${CLUBS[opp].n} (OVR ${tourSquad(opp).ovr}). Em caso de empate há penáltis.`;
   $('tourPlay').hidden=T.done;$('tourPlay').textContent=T.done?'':'Jogar '+ROUND_PT[T.round].toLowerCase();
 }
 $('tourPlay').onclick=()=>{const o=myOpponent();if(o!=null)startMatch(o,true);};
@@ -618,7 +623,7 @@ function startMatch(ci,tour){
   if(S.squad.some(x=>x==null)){toast('Faltam jogadores na equipa');show('sSquad');return;}
   if(!renderer)initGL();
   const club=CLUBS[ci];
-  const teams=[{name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:clubSquad(tour?Object.assign({},club,{ovr:Math.min(club.ovr-8,teamOVR(S.squad)+3)}):club)}]; // no torneio, o adversário põe em campo jogadores mais fracos (no máximo +3 que a tua equipa)
+  const teams=[{name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:tour?tourSquad(ci).ids:clubSquad(club)}];
   if(teams[1].c1.toLowerCase()==='#2b6cff')teams[0].c1='#e53935';
   // remove jogadores antigos
   if(M)for(const p of M.players)scene.remove(p.mesh);
@@ -660,7 +665,7 @@ function doShoot(p,power,aimZ){
   const spd=17+power*15+acc*3;
   const t=d/spd;const ty=clamp(rnd(.3,1.9)+power*.6-(1-acc)*.2+rnd(-err,err)*.35,.15,3.2);
   kickBall(p,dx,dz,spd,(ty-BR+4.9*t*t)/t*.62);
-  M.ball.shot={team:p.team,id:++M.shotId,checked:false};M.stats.shots[p.team]++;
+  M.ball.shot={team:p.team,id:++M.shotId,checked:false,dist:d};M.stats.shots[p.team]++;
 }
 function passTarget(p,dirx,dirz,long){
   let best=null,bs=-1e9;const s=side(p.team);
@@ -781,7 +786,7 @@ function aiKeeper(p,dt){
   const inBox=Math.abs(b.x-gx)<16&&Math.abs(b.z)<20;
   if(!b.owner&&inBox&&Math.hypot(b.vx,b.vz)<9&&b.y<1.2){moveTo(p,b.x,b.z,speedOf(p,true),dt);return;}
   let tz=clamp(b.z*.35,-GW+.5,GW-.5);
-  if(b.shot&&b.shot.team!==p.team&&Math.abs(b.vx)>1){const t=(gx-b.x)/b.vx;if(t>0&&t<2)tz=clamp(b.z+b.vz*t,-GW,GW);}
+  if(b.shot&&b.shot.team!==p.team&&Math.abs(b.vx)>1){const t=(gx-b.x)/b.vx;if(t>0&&t<3.5)tz=clamp(b.z+b.vz*t,-GW,GW);}
   moveTo(p,gx+s*Math.min(3,Math.abs(b.x-gx)*.06),tz,speedOf(p,true)*1.1,dt);
 }
 // ----- controlo humano -----
@@ -866,7 +871,8 @@ function pickups(){
   if(!best)return;
   // remate a caminho da baliza: o guarda-redes tenta defender
   if(best.role==='GK'&&b.shot&&b.shot.team!==best.team){
-    const save=clamp(.38+(best.st.gk-60)/70-(bs-20)/45-(best.team===1?(M.tour?.12:.06):0),.1,.9);
+    const far=b.shot.dist||0,farBonus=far>22?.4:far>16?.28:far>11?.12:0;
+    const save=clamp(.38+(best.st.gk-60)/70-(bs-20)/45+farBonus+(best.team===0?.1:0)-(best.team===1?(M.tour?.12:.06):0),.1,best.team===0?.95:.9);
     if(b.shot.checked)return;b.shot.checked=true;
     if(Math.random()<save){if(bs>22&&Math.random()<.5){b.vx=-b.vx*.35;b.vz=rnd(-8,8);b.vy=rnd(2,4);best.cd=.6;b.last=best.team;banner('DEFESA!',900);sfx('kick',.4);return;}
       b.owner=best;b.shot=null;b.last=best.team;best.cd=.3;banner('DEFESA!',900);sfx('kick',.3);best.hold=1.1;return;}
@@ -1016,6 +1022,7 @@ function loop(now){
     for(let k=0;k<2;k++){const h=dt/2;stepPlayers(h);stepBall(h);if(M.state==='play'){pickups();rules();if(M.state!=='play')break;}}
     // auto-troca quando o adversário tem a bola e o meu jogador está longe
     const b=M.ball;
+    if(b.owner&&b.owner.team===1&&M.ctrl&&M.ctrl.role==='GK'){const n=nearest(0,b.x,b.z);if(n){setCtrl(n);M.switchCd=.6;}}
     if(b.owner&&b.owner.team===1&&M.switchCd<=0){const n=nearest(0,b.x,b.z);if(n&&n!==M.ctrl&&dist(M.ctrl,b)>dist(n,b)+6){setCtrl(n);M.switchCd=1;}}
     if(!b.owner&&M.switchCd<=0&&M.ctrl){const n=nearest(0,b.x,b.z);if(n&&n!==M.ctrl&&dist(M.ctrl,b)>dist(n,b)+10){setCtrl(n);M.switchCd=1.2;}}
     updateHud();
