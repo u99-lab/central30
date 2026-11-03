@@ -363,7 +363,7 @@ const CLUBS=[
   {n:'Ciclone United',s:'CIC',c1:'#00695c',c2:'#ffffff',ovr:82},{n:'Granito FC',s:'GRA',c1:'#424242',c2:'#ffab00',ovr:84}];
 CLUBS.sort((a,b)=>a.ovr-b.ovr);
 for(const c of CLUBS)c.ovr-=5; // adversários um pouco mais fáceis
-const AI_EASE=t=>t===1?.8:1; // a equipa adversária remata e desarma um pouco menos
+const AI_EASE=t=>t===1?(M&&M.tour?.65:.8):1; // a equipa adversária remata e desarma menos (ainda menos no torneio)
 function clubSquad(club){
   const used=new Set();
   return SLOTS.map(sl=>{const pool=DB.filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>Math.abs(a.ovr-club.ovr)-Math.abs(b.ovr-club.ovr));const c=pool[Math.floor(Math.random()*Math.min(5,pool.length))];used.add(c.id);return c.id;});
@@ -618,7 +618,7 @@ function startMatch(ci,tour){
   if(S.squad.some(x=>x==null)){toast('Faltam jogadores na equipa');show('sSquad');return;}
   if(!renderer)initGL();
   const club=CLUBS[ci];
-  const teams=[{name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:clubSquad(club)}];
+  const teams=[{name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:clubSquad(tour?Object.assign({},club,{ovr:Math.min(club.ovr-8,teamOVR(S.squad)+3)}):club)}]; // no torneio, o adversário põe em campo jogadores mais fracos (no máximo +3 que a tua equipa)
   if(teams[1].c1.toLowerCase()==='#2b6cff')teams[0].c1='#e53935';
   // remove jogadores antigos
   if(M)for(const p of M.players)scene.remove(p.mesh);
@@ -866,7 +866,7 @@ function pickups(){
   if(!best)return;
   // remate a caminho da baliza: o guarda-redes tenta defender
   if(best.role==='GK'&&b.shot&&b.shot.team!==best.team){
-    const save=clamp(.38+(best.st.gk-60)/70-(bs-20)/45-(best.team===1?.06:0),.12,.9);
+    const save=clamp(.38+(best.st.gk-60)/70-(bs-20)/45-(best.team===1?(M.tour?.12:.06):0),.1,.9);
     if(b.shot.checked)return;b.shot.checked=true;
     if(Math.random()<save){if(bs>22&&Math.random()<.5){b.vx=-b.vx*.35;b.vz=rnd(-8,8);b.vy=rnd(2,4);best.cd=.6;b.last=best.team;banner('DEFESA!',900);sfx('kick',.4);return;}
       b.owner=best;b.shot=null;b.last=best.team;best.cd=.3;banner('DEFESA!',900);sfx('kick',.3);best.hold=1.1;return;}
@@ -909,7 +909,7 @@ function updateHud(){
 function shootout(){ // penáltis simulados: 5 para cada lado e morte súbita
   const k0=M.players.filter(p=>p.team===0&&p.role!=='GK').sort((x,y)=>y.st.sho-x.st.sho),k1=M.players.filter(p=>p.team===1&&p.role!=='GK').sort((x,y)=>y.st.sho-x.st.sho);
   const g0=M.players.find(p=>p.team===0&&p.role==='GK'),g1=M.players.find(p=>p.team===1&&p.role==='GK');
-  const pen=(k,g)=>Math.random()<clamp(.72+(k.st.sho-g.st.gk)/220,.5,.9);
+  const pen=(k,g)=>Math.random()<clamp(.72+(k.st.sho-g.st.gk)/220+(k.team===0?.1:-.08),.45,.95);
   let a=0,b=0;for(let i=0;i<5;i++){if(pen(k0[i%10],g1))a++;if(pen(k1[i%10],g0))b++;}
   let i=5;while(a===b&&i<30){const x=pen(k0[i%10],g1),y=pen(k1[i%10],g0);a+=x;b+=y;i++;}
   return [a,b];
