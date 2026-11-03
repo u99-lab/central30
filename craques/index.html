@@ -362,6 +362,8 @@ const CLUBS=[
   {n:'Navegantes AC',s:'NAV',c1:'#0d47a1',c2:'#ffffff',ovr:78},{n:'Tornado SC',s:'TOR',c1:'#546e7a',c2:'#ffeb3b',ovr:80},
   {n:'Ciclone United',s:'CIC',c1:'#00695c',c2:'#ffffff',ovr:82},{n:'Granito FC',s:'GRA',c1:'#424242',c2:'#ffab00',ovr:84}];
 CLUBS.sort((a,b)=>a.ovr-b.ovr);
+for(const c of CLUBS)c.ovr-=5; // adversários um pouco mais fáceis
+const AI_EASE=t=>t===1?.8:1; // a equipa adversária remata e desarma um pouco menos
 function clubSquad(club){
   const used=new Set();
   return SLOTS.map(sl=>{const pool=DB.filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>Math.abs(a.ovr-club.ovr)-Math.abs(b.ovr-club.ovr));const c=pool[Math.floor(Math.random()*Math.min(5,pool.length))];used.add(c.id);return c.id;});
@@ -744,7 +746,7 @@ function aiCarrier(p,dt){
   let press=99,presser=null;for(const o of M.players){if(o.team===p.team)continue;const d=dist(o,p);if(d<press){press=d;presser=o;}}
   if(p.think<=0){p.think=rnd(.18,.35);
     const skill=(M.teams[p.team].ovrBias||1);
-    if(dg<24&&Math.abs(p.z)<20&&Math.random()<(dg<16?.55:.18)*skill){doShoot(p,clamp(rnd(.45,.95),0,1),null);return;}
+    if(dg<24&&Math.abs(p.z)<20&&Math.random()<(dg<16?.55:.18)*skill*AI_EASE(p.team)){doShoot(p,clamp(rnd(.45,.95),0,1),null);return;}
     if(press<3.2&&Math.random()<.55){if(doPass(p,s,0,false))return;}
     if(Math.random()<.05){if(doPass(p,s,0,Math.random()<.4))return;}
   }
@@ -764,8 +766,8 @@ function aiPlayer(p,dt){
   if(!own&&(chasers[0]===p||(chasers[1]===p&&b.owner))){
     const tx=b.owner?b.owner.x+b.owner.vx*.25:b.x+b.vx*.25,tz=b.owner?b.owner.z+b.owner.vz*.25:b.z+b.vz*.25;
     moveTo(p,tx,tz,speedOf(p,dist(p,b)<12),dt);
-    if(b.owner&&b.owner.team!==p.team&&p===chasers[0]){const d=dist(p,b.owner);if(d>2&&d<4.2&&Math.random()<dt*.5){startSlide(p,b.owner.x+b.owner.vx*.3-p.x,b.owner.z+b.owner.vz*.3-p.z);return;}}
-    if(b.owner&&b.owner.team!==p.team&&dist(p,b.owner)<1.6&&Math.random()<dt*1.6*(p===chasers[0]?1:.5))tryTackle(p,false);
+    if(b.owner&&b.owner.team!==p.team&&p===chasers[0]){const d=dist(p,b.owner);if(d>2&&d<4.2&&Math.random()<dt*.5*AI_EASE(p.team)){startSlide(p,b.owner.x+b.owner.vx*.3-p.x,b.owner.z+b.owner.vz*.3-p.z);return;}}
+    if(b.owner&&b.owner.team!==p.team&&dist(p,b.owner)<1.6&&Math.random()<dt*1.6*(p===chasers[0]?1:.5)*AI_EASE(p.team))tryTackle(p,false);
     return;}
   const t=targetPos(p);moveTo(p,t.x,t.z,speedOf(p,false)*.85,dt);
 }
@@ -864,7 +866,7 @@ function pickups(){
   if(!best)return;
   // remate a caminho da baliza: o guarda-redes tenta defender
   if(best.role==='GK'&&b.shot&&b.shot.team!==best.team){
-    const save=clamp(.38+(best.st.gk-60)/70-(bs-20)/45,.12,.9);
+    const save=clamp(.38+(best.st.gk-60)/70-(bs-20)/45-(best.team===1?.06:0),.12,.9);
     if(b.shot.checked)return;b.shot.checked=true;
     if(Math.random()<save){if(bs>22&&Math.random()<.5){b.vx=-b.vx*.35;b.vz=rnd(-8,8);b.vy=rnd(2,4);best.cd=.6;b.last=best.team;banner('DEFESA!',900);sfx('kick',.4);return;}
       b.owner=best;b.shot=null;b.last=best.team;best.cd=.3;banner('DEFESA!',900);sfx('kick',.3);best.hold=1.1;return;}
