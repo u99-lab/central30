@@ -310,8 +310,10 @@ function starter(){
   for(const r in need)owned.push(...by(r).slice(0,need[r]).map(c=>c.id));
   return {coins:2500,owned,squad:[],w:0,d:0,l:0,beaten:[]};
 }
-function load(){try{S=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch{S=null;}if(!S||!Array.isArray(S.owned))S=starter();if(!S.squad||S.squad.length!==11)autoBest();save();}
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch{}}
+// Dentro da Central guarda conforme o 'Guardar dados' da Central; fora dela (link direto) começa sempre do zero
+const IN_CENTRAL=window.parent!==window&&!!window.__C30_STORAGE__;
+function load(){if(!IN_CENTRAL){try{localStorage.removeItem(SAVE_KEY);}catch{}S=null;}else{try{S=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch{S=null;}}if(!S||!Array.isArray(S.owned))S=starter();if(!S.squad||S.squad.length!==11)autoBest();save();}
+function save(){if(!IN_CENTRAL)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch{}}
 function autoBest(){
   const used=new Set();S.squad=SLOTS.map(sl=>{const c=S.owned.map(i=>DB[i]).filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>b.ovr-a.ovr)[0];if(c){used.add(c.id);return c.id;}return null;});
 }
