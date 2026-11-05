@@ -226,7 +226,7 @@ const COLORS=['#ff8a3d','#4fb6ff','#c5f47c','#ff5fa2','#ffd84d','#a98bff','#3de0
 const BLOCKED_MSG='Encontrei a sala, mas a rede bloqueou a ligação entre os dois aparelhos. Experimenta: os dois no Chrome, outra rede Wi-Fi ou os dados móveis do telemóvel.';
 const offlineMsg='O jogo online só funciona no site da Central 30 ('+SITE+') e com internet.';
 const rid=n=>{const a=new Uint32Array(n);crypto.getRandomValues(a);return Array.from(a,x=>'abcdefghijkmnpqrstuvwxyz23456789'[x%32]).join('');};
-const myId=(()=>{try{let v=sessionStorage.getItem('c30.netId');if(!v||!/^[a-z2-9]{10}$/.test(v)){v=rid(10);sessionStorage.setItem('c30.netId',v);}return v;}catch{return rid(10);}})(),startedAt=Date.now();
+const myId=(()=>{try{let v=localStorage.getItem('c30dev.id');if(!v||!/^[a-z2-9]{10}$/.test(v)){v=rid(10);localStorage.setItem('c30dev.id',v);}return v;}catch{try{let v=sessionStorage.getItem('c30.netId');if(!v){v=rid(10);sessionStorage.setItem('c30.netId',v);}return v;}catch{return rid(10);}}})(),startedAt=Date.now();
 let myName=(()=>{try{const v=sessionStorage.getItem('c30.netName');if(v&&/^[\p{L}\p{N} _-]{2,16}$/u.test(v))return v;}catch{}return 'Jogador '+String(1000+Math.floor(Math.random()*9000));})();
 const gameName=id=>{try{return (GAMES.find(g=>g.id===id)||{}).name||id;}catch{return id;}};
 const curGame=()=>{try{return active?active.id:null;}catch{return null;}};
