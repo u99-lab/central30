@@ -65,18 +65,18 @@ body{background:radial-gradient(1100px 480px at 85% -8%,#c5f47c14,transparent),#
 <button type="submit" style="width:100%;padding:12px;border:0;border-radius:12px;background:#c5f47c;color:#142018;font:800 16px system-ui;cursor:pointer">Entrar</button>
 </form></div>
 <script>
-// Palavra-passe para entrar na Central (só se guarda o resumo; depois de acertar uma vez, este aparelho não volta a pedir)
+// Palavra-passe para entrar na Central: pedida sempre que o site abre (no site só fica o resumo SHA-256)
 (function(){var H='27b28511b0560198ec8c7b1347d9f128cf6f00644fce8ae6b4304f0c26ecba42',g=document.getElementById('c30gate');
- try{if(localStorage.getItem('c30.pass')===H){g.remove();return;}}catch(e){}
+ try{localStorage.removeItem('c30.pass');}catch(e){} // pede sempre que o site abre
  document.documentElement.style.overflow='hidden';
  var inp=document.getElementById('c30gatePw'),msg=document.getElementById('c30gateMsg');setTimeout(function(){inp.focus();},50);
  ['keydown','keyup','keypress'].forEach(function(t){g.addEventListener(t,function(e){e.stopPropagation();});});
  document.getElementById('c30gateForm').addEventListener('submit',function(e){e.preventDefault();
-  var v=inp.value.trim();if(!v){msg.textContent='Escreve a palavra-passe.';return;}
+  var v=inp.value.replace(/\s+/g,'').toLowerCase(); // ignora espaços e maiúsculas (o teclado do iPad põe a 1.ª letra em maiúscula)if(!v){msg.textContent='Escreve a palavra-passe.';return;}
   if(!(window.crypto&&crypto.subtle)){msg.textContent='Este navegador não consegue verificar a palavra-passe.';return;}
   crypto.subtle.digest('SHA-256',new TextEncoder().encode('central30:'+v)).then(function(b){
    var x=Array.from(new Uint8Array(b)).map(function(n){return n.toString(16).padStart(2,'0');}).join('');
-   if(x===H){try{localStorage.setItem('c30.pass',H);}catch(e){}g.remove();document.documentElement.style.overflow='';}
+   if(x===H){g.remove();document.documentElement.style.overflow='';}
    else{msg.textContent='Palavra-passe errada. Tenta outra vez.';inp.value='';inp.focus();}
   });
  });
