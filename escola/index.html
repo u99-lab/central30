@@ -177,7 +177,7 @@ kbd { display: inline-block; background: var(--acc); color: #111; border-radius:
 </div>
 <div id="dialog" class="panel"><span id="dwho"></span><div id="dtext"></div><div class="cont">E / clique para continuar ▸</div></div>
 <div id="quiz"><div class="card"><div id="qtitle"></div><div id="qtext"></div><div id="qopts"></div><div class="small" style="color:#555;text-shadow:none">Teclas 1–4 ou clica na resposta</div></div></div>
-<div id="bigmap"><div class="t">Mapa da escola (M para fechar)</div><canvas id="bigc"></canvas></div>
+<div id="bigmap"><div class="t">Mapa (M fecha) · <span style="color:#ffd84a">●</span> número = piso · ↑↓ = escadas</div><canvas id="bigc"></canvas></div>
 <div id="clickhint" class="panel">🖱️ Clica no ecrã para controlar a câmara</div>
 <div id="touch"><div id="joy"><div id="knob"></div></div>
   <div class="tbtn" id="tE">E</div><div class="tbtn" id="tP">II</div><div class="tbtn" id="tQ">Missão</div><div class="tbtn" id="tC">📷</div><div class="tbtn" id="tK">⚽</div><div class="tbtn" id="tJ">⤒</div><div class="tbtn" id="tR">Correr</div><div class="tbtn" id="tM">Mapa</div></div>
@@ -1353,8 +1353,16 @@ function itemMesh(kind) {
 }
 const ITEM_NAMES = { copias: '📄 Cópias do teste', basket: '🏀 Bola de basquete', livro: '📕 Os Lusíadas', chave: '🔑 Chave da arrecadação', rodo: '🧹 Rodo', balde: '🪣 Balde', senha: '🎫 Senha de almoço', tosta: '🥪 Tosta mista', bola: '⚽ Bola', dinheiro: '🪙 2 €' };
 
-const marker = new THREE.Mesh(new THREE.OctahedronGeometry(0.35), new THREE.MeshBasicMaterial({ color: 0xffd84a, depthTest: false, transparent: true, opacity: 0.9 }));
+const marker = new THREE.Mesh(new THREE.OctahedronGeometry(0.35), new THREE.MeshBasicMaterial({ color: 0xffd84a, transparent: true, opacity: 0.95 }));
 marker.renderOrder = 999; scene.add(marker);
+// etiqueta por baixo do losango a dizer o que é (ex.: "Sala 1.04 · Piso 1" ou "Escadas ↑ Piso 1")
+let markerTxt = '', markerLbl = null;
+function setMarkerLabel(txt) {
+  if (txt === markerTxt) return; markerTxt = txt;
+  if (markerLbl) { marker.remove(markerLbl); markerLbl.material.map.dispose(); markerLbl.material.dispose(); }
+  const c = textCanvas(txt, 1024, 128, { bg: 'rgba(0,0,0,0.6)', fg: '#ffd84a', size: 64 }); const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding;
+  markerLbl = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false, transparent: true })); markerLbl.renderOrder = 1000; markerLbl.position.y = -0.75; markerLbl.scale.set(2.4, 0.3, 1); marker.add(markerLbl);
+}
 
 // puddles on the field (and some decorative ones)
 const puddles = [];
@@ -2003,9 +2011,15 @@ const MS = 3; mapCanvas.width = (MAP.x1 - MAP.x0) * MS; mapCanvas.height = (MAP.
 const mini = $('mini').getContext('2d');
 const big = $('bigc'); big.width = mapCanvas.width; big.height = mapCanvas.height;
 const bigc = big.getContext('2d');
-function drawMarkers(g, toX, toZ, s) {
-  const tgt = targetPos();
-  if (tgt) { g.fillStyle = '#ffd84a'; g.strokeStyle = '#000'; g.beginPath(); g.arc(toX(tgt.x), toZ(tgt.z), 6 * s, 0, 7); g.fill(); g.stroke(); }
+function tgtDot(g, x, y, s, I) {
+  const other = I && I.ff !== I.pf && !I.stairs; // destino noutro piso (sem escadas pelo meio): ponto oco
+  g.lineWidth = 2 * s; g.strokeStyle = '#000'; g.fillStyle = other ? 'rgba(255,216,74,.35)' : '#ffd84a';
+  g.beginPath(); g.arc(x, y, 8 * s, 0, 7); g.fill(); g.stroke();
+  if (I) { g.fillStyle = '#000'; g.font = `bold ${10 * s}px Arial`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(I.stairs ? (I.ff > I.pf ? '↑' : '↓') : String(I.ff), x, y + 0.5); }
+}
+function drawMarkers(g, toX, toZ, s, noTgt) {
+  const tgt = noTgt ? null : targetPos();
+  if (tgt) { const I = targetInfo(); tgtDot(g, toX(tgt.x), toZ(tgt.z), s, I); if (I && s > 1) { const txt = targetLabel(I); g.font = 'bold 26px Arial'; g.textAlign = 'center'; g.textBaseline = 'bottom'; g.lineWidth = 5; g.strokeStyle = '#000'; g.strokeText(txt, toX(tgt.x), toZ(tgt.z) - 18); g.fillStyle = '#ffd84a'; g.fillText(txt, toX(tgt.x), toZ(tgt.z) - 18); } }
   g.save(); g.translate(toX(P.x), toZ(P.z)); g.rotate(-P.yaw);
   g.fillStyle = '#ff3b3b'; g.strokeStyle = '#fff'; g.lineWidth = 2;
   g.beginPath(); g.moveTo(0, -9 * s); g.lineTo(6 * s, 7 * s); g.lineTo(0, 3 * s); g.lineTo(-6 * s, 7 * s); g.closePath(); g.fill(); g.stroke(); g.restore();
@@ -2021,10 +2035,10 @@ function drawMini() {
   if (tgt) {
     let tx = toX(tgt.x), tz = toZ(tgt.z); const dx = tx - W / 2, dz = tz - W / 2, d = Math.hypot(dx, dz);
     if (d > W / 2 - 10) { tx = W / 2 + dx / d * (W / 2 - 10); tz = W / 2 + dz / d * (W / 2 - 10); }
-    mini.fillStyle = '#ffd84a'; mini.strokeStyle = '#000'; mini.lineWidth = 2; mini.beginPath(); mini.arc(tx, tz, 6, 0, 7); mini.fill(); mini.stroke();
+    tgtDot(mini, tx, tz, 1, targetInfo());
   }
   mini.restore();
-  drawMarkers(mini, () => W / 2, () => W / 2, 1); // player only (target drawn above)
+  drawMarkers(mini, () => W / 2, () => W / 2, 1, true); // player only (target drawn above)
 }
 function drawBig() {
   bigc.drawImage(mapCanvas, 0, 0);
@@ -2060,6 +2074,24 @@ function targetPos0() {
   return null;
 }
 function floorName(y) { return y < 1.5 ? 'Piso 0' : y < 5 ? 'Piso 1' : 'Piso 2'; }
+function floorOf(y) { return y < 1.5 ? 0 : y < 5 ? 1 : 2; }
+function targetName() {
+  if (G.sitting) return '';
+  const nc = nextClass(), cp = currentPeriod();
+  if (nc && (G.t >= nc.s - 10 || cp === -1)) return /^\d/.test(nc.room) ? 'Sala ' + nc.room : nc.room;
+  if (G.tracked && active(G.tracked)) return MISSIONS[G.tracked].title.replace(/^\S+\s/, '');
+  return '';
+}
+// { t: ponto para onde a seta aponta agora, fin: destino final, ff: piso do destino, pf: o teu piso, stairs: true se a seta aponta para as escadas }
+function targetInfo() {
+  const fin = outdoorVia(targetPos0()); if (!fin) return null;
+  const t = routeVia(fin), ff = floorOf(fin.y - 1), pf = floorOf(P.feet);
+  return { t, fin, ff, pf, stairs: t !== fin && ff !== pf, name: targetName() };
+}
+function targetLabel(I) {
+  if (I.stairs) return `${I.ff > I.pf ? '↑' : '↓'} Escadas para o Piso ${I.ff}`;
+  return (I.name ? I.name + ' · ' : '') + 'Piso ' + I.ff;
+}
 
 function updateHUD() {
   const cp = currentPeriod();
@@ -2100,9 +2132,12 @@ function updateHUD() {
     const ang = Math.atan2(dx, -dz) + P.yaw;
     $('compass').style.display = 'block';
     $('carrow').style.transform = `rotate(${ang}rad)`;
-    const dy = tgt.y - 1 - P.feet;
-    $('cdist').textContent = `${Math.round(d)} m` + (dy > 2 ? ' · sobe ↑' : dy < -2 ? ' · desce ↓' : '');
-    marker.visible = true; marker.position.set(tgt.x, tgt.y + 1.6 + Math.sin(perfNow * 3) * 0.15, tgt.z); marker.rotation.y += 0.03;
+    const I = targetInfo();
+    $('cdist').textContent = `${Math.round(d)} m · ` + (I ? (I.ff === I.pf ? `Piso ${I.ff} (o teu)` : `Piso ${I.ff} ${I.ff > I.pf ? '↑ sobe' : '↓ desce'}`) : '');
+    // o losango só aparece no teu piso (ou nas escadas que te levam lá), para não confundir com os outros andares
+    const tf = floorOf(tgt.y - 1), same = tf === floorOf(P.feet) || Math.abs(tgt.y - 1 - P.feet) < 2.2;
+    marker.visible = same; if (I) setMarkerLabel(targetLabel(I));
+    marker.position.set(tgt.x, tgt.y + 1.6 + Math.sin(perfNow * 3) * 0.15, tgt.z); marker.rotation.y += 0.03;
   } else { $('compass').style.display = 'none'; marker.visible = false; }
 }
 
