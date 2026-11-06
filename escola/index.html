@@ -2,6 +2,30 @@
 <html lang="pt">
 <head>
 <script>
+// Palavra-passe no link direto: se este aparelho já entrou na Central, abre logo; senão pede a palavra-passe deste jogo
+// (a da Central também serve). Dentro da Central nunca pede. No site só ficam os resumos SHA-256.
+(function(){if(window.__C30_STORAGE__)return;var LS=null;try{LS=window.localStorage;}catch(e){}
+ var CH='27b28511b0560198ec8c7b1347d9f128cf6f00644fce8ae6b4304f0c26ecba42',GH='15bbe7b03695b87c2cbee5bfb6d5cb8a6e41d6c8db01ff73ab894dd3ea4e9453',GK='c30.gpass.escola';
+ try{if(LS&&(LS.getItem('c30.pass2')===CH||LS.getItem(GK)===GH))return;}catch(e){}
+ function show(){
+  var g=document.createElement('div');g.id='c30gate';g.setAttribute('style','position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:#0b0f12;color:#eef3ee;font:16px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;padding:20px');
+  g.innerHTML='<form style="width:min(360px,100%);text-align:center;background:#121a1f;border:1px solid #ffffff22;border-radius:18px;padding:26px 22px;box-shadow:0 20px 60px #0009" autocomplete="off"><h1 style="margin:0 0 6px;font-size:22px">Escola</h1><p style="margin:0 0 16px;color:#9fb0aa">Escreve a palavra-passe deste jogo para entrar.</p><input type="password" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="32" aria-label="Palavra-passe" style="width:100%;box-sizing:border-box;text-align:center;font:700 22px ui-monospace,monospace;letter-spacing:3px;padding:12px;border-radius:12px;border:1px solid #ffffff2a;background:#060b0d;color:#fff"><div class="m" style="min-height:22px;margin:10px 0 4px;color:#ff8a80;font-size:14px"></div><button type="submit" style="width:100%;padding:12px;border:0;border-radius:12px;background:#c5f47c;color:#142018;font:800 16px system-ui;cursor:pointer">Entrar</button></form>';
+  document.body.appendChild(g);document.documentElement.style.overflow='hidden';
+  var f=g.querySelector('form'),inp=g.querySelector('input'),msg=g.querySelector('.m');setTimeout(function(){inp.focus();},50);
+  ['keydown','keyup','keypress','pointerdown','touchstart','mousedown','click'].forEach(function(t){g.addEventListener(t,function(e){e.stopPropagation();});});
+  f.addEventListener('submit',function(e){e.preventDefault();var v=inp.value.trim();if(!v){msg.textContent='Escreve a palavra-passe.';return;}
+   if(!(window.crypto&&crypto.subtle)){msg.textContent='Este navegador não consegue verificar a palavra-passe.';return;}
+   crypto.subtle.digest('SHA-256',new TextEncoder().encode('central30:'+v)).then(function(b){
+    var x=Array.from(new Uint8Array(b)).map(function(n){return n.toString(16).padStart(2,'0');}).join('');
+    if(x===GH||x===CH){try{if(x===CH)LS.setItem('c30.pass2',CH);else LS.setItem(GK,GH);}catch(e){}g.remove();document.documentElement.style.overflow='';}
+    else{msg.textContent='Palavra-passe errada. Tenta outra vez.';inp.value='';inp.focus();}
+   });
+  });
+ }
+ if(document.body)show();else document.addEventListener('DOMContentLoaded',show);
+})();
+</script>
+<script>
 // Sem memória fora da Central: aberto pelo link direto, o jogo não guarda nada (começa sempre do zero).
 // Dentro da Central quem decide é o 'Guardar dados' das Definições da Central.
 (function(){if(window.__C30_STORAGE__)return;try{var m={};var st={getItem:function(k){k=String(k);return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[String(k)]=String(v);},removeItem:function(k){delete m[String(k)];},clear:function(){for(var k in m)delete m[k];},key:function(i){var a=Object.keys(m);return i<a.length?a[i]:null;},get length(){return Object.keys(m).length;}};Object.defineProperty(window,'localStorage',{configurable:true,get:function(){return st;}});}catch(e){}})();
