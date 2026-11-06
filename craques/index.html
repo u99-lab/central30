@@ -305,9 +305,14 @@ function addPlayer(role,ovr){
 // distribuição: muitos bronze, alguns prata, menos ouro, poucos especiais
 const plan=[['GK',22],['DEF',70],['MID',70],['ATT',58]];
 for(const [role,n] of plan)for(let i=0;i<n;i++){
-  const r=R();const ovr=r<.36?Math.round(48+R()*16):r<.68?Math.round(65+R()*9):r<.88?Math.round(75+R()*12):Math.round(88+R()*4); // máximo 92
+  const r=R();const ovr=r<.34?Math.round(48+R()*16):r<.64?Math.round(65+R()*9):r<.84?Math.round(75+R()*12):Math.round(88+Math.sqrt(R())*7); // Lendas 88-95
   addPlayer(role,ovr);
 }
+// Estrelas 93-95 garantidas em todas as posições (para os clubes de topo)
+[['GK',95],['GK',94],['GK',93],['ATT',95],['ATT',94],['ATT',94],['ATT',93],['DEF',95],['MID',95],['MID',94]].forEach(([r,o])=>addPlayer(r,o));
+// Ícones: cartas de 96 a 100, muito muito raras nos pacotes e fora dos planteis dos clubes
+[['ATT',100],['MID',98],['ATT',97],['DEF',97],['GK',96],['MID',96]].forEach(([r,o])=>addPlayer(r,o));
+const ICON=o=>o>=96;
 const tier=o=>o>=88?'special':o>=75?'gold':o>=65?'silver':'bronze';
 const TIER_PT={bronze:'Bronze',silver:'Prata',gold:'Ouro',special:'Lenda'};
 
@@ -388,12 +393,12 @@ const CLUBS=[
   {n:'Navegantes AC',s:'NAV',c1:'#0d47a1',c2:'#ffffff',ovr:78},{n:'Tornado SC',s:'TOR',c1:'#546e7a',c2:'#ffeb3b',ovr:80},
   {n:'Ciclone United',s:'CIC',c1:'#00695c',c2:'#ffffff',ovr:82},{n:'Granito FC',s:'GRA',c1:'#424242',c2:'#ffab00',ovr:84}];
 CLUBS.sort((a,b)=>a.ovr-b.ovr);
-for(const c of CLUBS)c.ovr=Math.round(50+(c.ovr-55)*41/36); // de 50 até 90
+for(const c of CLUBS)c.ovr=Math.round(50+(c.ovr-55)*46/36); // de 50 até 95
 const AI_EASE=t=>t===1?(M&&M.tour?.65:.8):1; // a equipa adversária remata e desarma menos (ainda menos no torneio)
 // Plantel de cada clube: sempre o mesmo, e o OVR mostrado é a média real desse plantel (igual dentro e fora de campo)
 function squadFor(target,seed){
   const used=new Set(),h=id=>((id+1)*2654435761+(seed|0)*40503)%997;
-  return SLOTS.map(sl=>{const pool=DB.filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>Math.abs(a.ovr-target)-Math.abs(b.ovr-target)||h(a.id)-h(b.id));const c=pool[0];used.add(c.id);return c.id;});
+  return SLOTS.map(sl=>{const pool=DB.filter(c=>c.role===sl.role&&!used.has(c.id)&&!ICON(c.ovr)).sort((a,b)=>Math.abs(a.ovr-target)-Math.abs(b.ovr-target)||h(a.id)-h(b.id));const c=pool[0];used.add(c.id);return c.id;});
 }
 CLUBS.forEach((c,i)=>{c.ids=squadFor(c.ovr,i+1);c.ovr=teamOVR(c.ids);});
 function clubSquad(club){return club.ids?club.ids.slice():squadFor(club.ovr,7);}
@@ -519,7 +524,7 @@ function openPack(i){
   const p=PACKS[i];if(S.coins<p.price){toast('Não tens moedas suficientes');return;}
   S.coins-=p.price;
   const got=[];
-  for(let k=0;k<5;k++){let r=Math.random(),t='bronze';for(const [tt,w] of Object.entries(p.w)){if(r<w){t=tt;break;}r-=w;}const pool=DB.filter(c=>tier(c.ovr)===t);got.push(pool[Math.floor(Math.random()*pool.length)]);}
+  for(let k=0;k<5;k++){let r=Math.random(),t='bronze';for(const [tt,w] of Object.entries(p.w)){if(r<w){t=tt;break;}r-=w;}let pool=DB.filter(c=>tier(c.ovr)===t);if(t==='special'&&Math.random()>.015)pool=pool.filter(c=>!ICON(c.ovr));/* ícone: 1,5% das Lendas */got.push(pool[Math.floor(Math.random()*pool.length)]);}
   got.sort((a,b)=>a.ovr-b.ovr);
   const have=new Set(S.owned);let dupCoins=0;const flags=got.map(c=>{const isNew=!have.has(c.id);if(isNew){S.owned.push(c.id);have.add(c.id);}else dupCoins+=coinValue(c);return isNew;});
   S.coins+=dupCoins;save();refreshTop();
