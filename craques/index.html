@@ -305,10 +305,10 @@ function addPlayer(role,ovr){
 // distribuição: muitos bronze, alguns prata, menos ouro, poucos especiais
 const plan=[['GK',22],['DEF',70],['MID',70],['ATT',58]];
 for(const [role,n] of plan)for(let i=0;i<n;i++){
-  const r=R();const ovr=r<.38?Math.round(48+R()*16):r<.72?Math.round(65+R()*9):r<.96?Math.round(75+R()*13):Math.round(89+R()*6);
+  const r=R();const ovr=r<.36?Math.round(48+R()*16):r<.68?Math.round(65+R()*9):r<.88?Math.round(75+R()*12):Math.round(88+R()*4); // máximo 92
   addPlayer(role,ovr);
 }
-const tier=o=>o>=89?'special':o>=75?'gold':o>=65?'silver':'bronze';
+const tier=o=>o>=88?'special':o>=75?'gold':o>=65?'silver':'bronze';
 const TIER_PT={bronze:'Bronze',silver:'Prata',gold:'Ouro',special:'Lenda'};
 
 function cardHTML(c,opt={}){
@@ -388,7 +388,7 @@ const CLUBS=[
   {n:'Navegantes AC',s:'NAV',c1:'#0d47a1',c2:'#ffffff',ovr:78},{n:'Tornado SC',s:'TOR',c1:'#546e7a',c2:'#ffeb3b',ovr:80},
   {n:'Ciclone United',s:'CIC',c1:'#00695c',c2:'#ffffff',ovr:82},{n:'Granito FC',s:'GRA',c1:'#424242',c2:'#ffab00',ovr:84}];
 CLUBS.sort((a,b)=>a.ovr-b.ovr);
-for(const c of CLUBS)c.ovr-=5; // adversários um pouco mais fáceis
+for(const c of CLUBS)c.ovr=Math.round(50+(c.ovr-55)*41/36); // de 50 até 90
 const AI_EASE=t=>t===1?(M&&M.tour?.65:.8):1; // a equipa adversária remata e desarma menos (ainda menos no torneio)
 // Plantel de cada clube: sempre o mesmo, e o OVR mostrado é a média real desse plantel (igual dentro e fora de campo)
 function squadFor(target,seed){
@@ -514,7 +514,7 @@ function renderPacks(){
   $('packList').innerHTML=PACKS.map((p,i)=>`<div class="pack ${p.k}"><div class="art">${p.icon}</div><b>${p.n}</b><span>5 cartas · ${Math.round((p.w.gold+p.w.special)*100)}% ouro ou melhor</span><button class="btn gold" data-pack="${i}" ${S.coins<p.price?'disabled style="opacity:.5"':''}>🪙 ${p.price.toLocaleString('pt-PT')}</button></div>`).join('');
   $('packList').querySelectorAll('[data-pack]').forEach(b=>b.onclick=()=>openPack(+b.dataset.pack));
 }
-const coinValue=c=>Math.round(c.ovr<65?60:c.ovr<75?180:c.ovr<89?500:1500);
+const coinValue=c=>Math.round(c.ovr<65?60:c.ovr<75?180:c.ovr<88?500:1500);
 function openPack(i){
   const p=PACKS[i];if(S.coins<p.price){toast('Não tens moedas suficientes');return;}
   S.coins-=p.price;
