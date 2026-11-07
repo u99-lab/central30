@@ -879,8 +879,13 @@ window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,room
     let n=5;txt.textContent='Há uma versão nova da Central 30. A atualizar em '+n+'…';clearInterval(timer);
     timer=setInterval(()=>{if(playing()){clearInterval(timer);txt.textContent='Há uma versão nova da Central 30. Atualiza quando acabares o jogo.';return}
       n--;if(n<=0){clearInterval(timer);location.reload()}else txt.textContent='Há uma versão nova da Central 30. A atualizar em '+n+'…'},1000)}
+  // IndexNow (Bing, DuckDuckGo, Ecosia, Yandex…): avisa que a página existe/mudou.
+  // Só no site verdadeiro e só uma vez por cada versão da página, em cada aparelho.
+  function indexNow(v){try{if(location.hostname!=='u99-lab.github.io')return;const k='central30.indexnow';if(localStorage.getItem(k)===v)return;localStorage.setItem(k,v);
+    const site='https://u99-lab.github.io/central30/',key='606d5ee8118a52e287f352344a30fa3c';
+    fetch('https://api.indexnow.org/indexnow?url='+encodeURIComponent(site)+'&key='+key+'&keyLocation='+encodeURIComponent(site+key+'.txt'),{mode:'no-cors',keepalive:true}).catch(()=>{})}catch(e){}}
   async function check(){if(found||document.hidden)return;try{const r=await fetch(url(),{method:'HEAD',cache:'no-store'});if(!r.ok)return;const v=sig(r);if(!v)return;
-    if(base===null){base=v;return}if(v!==base)show()}catch(e){}}
+    if(base===null){base=v;indexNow(v);return}if(v!==base)show()}catch(e){}}
   check();setInterval(check,60000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
   window.addEventListener('focus',check);
