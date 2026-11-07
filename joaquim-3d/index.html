@@ -32,7 +32,7 @@
 </script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Joaquim de Carvalho</title>
+<title>Dia de Chuva</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
@@ -133,7 +133,7 @@ h1 em{font-style:normal;color:var(--accent);display:block}
 </head>
 <body>
 
-<canvas id="c" aria-label="Jogo Joaquim de Carvalho em 3D"></canvas>
+<canvas id="c" aria-label="Jogo Dia de Chuva em 3D"></canvas>
 <canvas id="ui"></canvas>
 
 <div id="hud" hidden>
@@ -157,8 +157,8 @@ h1 em{font-style:normal;color:var(--accent);display:block}
 
 <section id="title" class="screen gut">
   <div class="card">
-    <div class="eyebrow">Escola Secundária Dr. Joaquim de Carvalho · Figueira da Foz</div>
-    <h1>Joaquim <em>de Carvalho <span class="tag3d">3D</span></em></h1>
+    <div class="eyebrow">Escola Secundária Vale Verde · Ribeira Alta</div>
+    <h1>Dia de <em>Chuva <span class="tag3d">3D</span></em></h1>
     <p class="lead">Um dia inteiro de aulas, e choveu a noite toda. Chega a horas e faz os mini-testes de Matemática, Português e Inglês. No intervalo grande há jogo contra o 8ºB no pavilhão, mas primeiro tens de tratar de tudo. Depois vem o almoço na cantina, os penáltis em Educação Física e, no fim, o boletim do dia.</p>
     <div class="keys">
       <div><b>WASD / Setas</b>andar (Shift para correr)</div>
@@ -183,7 +183,7 @@ h1 em{font-style:normal;color:var(--accent);display:block}
 
 <section id="report" class="screen gut" hidden>
   <div class="card">
-    <div class="eyebrow">Boletim do dia · 7ºB · Escola Secundária Dr. Joaquim de Carvalho</div>
+    <div class="eyebrow">Boletim do dia · 7ºB · Escola Secundária Vale Verde</div>
     <h1 id="repTitle">Fim do dia</h1>
     <table class="rep"><tbody id="repBody"></tbody></table>
     <p class="lead" id="repText"></p>
@@ -454,7 +454,7 @@ function buildWorld(){
   [['BLOCO A · SALAS',10.5,1,'#2f6fd6'],['BIBLIOTECA',28.5,1,'#2d8a4e'],['BAR',39.5,1,'#e67e22'],['CANTINA',49,1,'#e67e22'],['SALA DOS PROFESSORES',6,14,'#c0392b'],['ARRECADAÇÃO',5.5,26,'#7f8c8d'],['PAVILHÃO',50.5,14,'#ffcf3f']].forEach(([t,i,j,a])=>{
     const s=textSprite(t,{accent:a,size:t.length>12?1:.8});s.position.set(i,2.45,j+.5);world.add(s)});
   const pl=textSprite('CAMPO ENCHARCADO · NÃO JOGAR',{bg:'#b5372b',size:.9});pl.position.set(27,1.9,29.5);world.add(pl);
-  const es=textSprite('ESC. SEC. DR. JOAQUIM DE CARVALHO',{bg:'#152433',fg:'#ffcf3f',size:1.1});es.position.set(38.5,2.4,MH-.5);world.add(es);
+  const es=textSprite('ESC. SEC. VALE VERDE',{bg:'#152433',fg:'#ffcf3f',size:1.1});es.position.set(38.5,2.4,MH-.5);world.add(es);
   // quadros das salas
   [[5.5,'Português','Os Maias · Eça de Queirós','#c0392b'],[15.5,'Matemática','2x + 3 = 11   x = ?','#2f6fd6'],[28.5,'English','Rainy days · puddle · umbrella','#2d8a4e']].forEach(([bx,a,b,c])=>{
     const t=canvasTex(512,170,(g,w,h)=>{g.fillStyle='#f7f7f2';g.fillRect(0,0,w,h);g.fillStyle=c;g.font='40px Bungee, Impact';g.fillText(a,24,58);
@@ -650,13 +650,13 @@ $('dlgbox').addEventListener('click',advance);
 
 // ================= HISTÓRIA =================
 const QUIZ_POOL=[
-  {q:'Que rio desagua no mar na Figueira da Foz?',o:['Tejo','Mondego','Douro'],a:1},
+  {q:'Qual é o maior rio que nasce em Portugal?',o:['Tejo','Mondego','Douro'],a:1},
   {q:'Quantos jogadores tem cada equipa em campo no futsal?',o:['5','7','11'],a:0},
-  {q:'Em que distrito fica a Figueira da Foz?',o:['Leiria','Aveiro','Coimbra'],a:2},
-  {q:'Como se chama a grande praia da Figueira da Foz?',o:['Praia da Rocha','Praia da Claridade','Praia do Guincho'],a:1},
+  {q:'Qual é a capital de Portugal?',o:['Porto','Coimbra','Lisboa'],a:2},
+  {q:'Quantos minutos tem uma hora e meia?',o:['60','90','120'],a:1},
   {q:'No futsal, quanto tempo dura cada parte de um jogo oficial?',o:['20 minutos','45 minutos','10 minutos'],a:0},
 ];
-const QUIZ_FINAL={q:'Quem foi o Dr. Joaquim de Carvalho, que dá nome à escola?',o:['Um treinador de futebol da Naval','Um professor da Universidade de Coimbra e historiador da filosofia, nascido na Figueira','O primeiro diretor do Casino da Figueira'],a:1};
+const QUIZ_FINAL={q:'Porque é que a escola se chama Vale Verde?',o:['Por causa de um treinador de futebol','Por causa do vale verde, cheio de pinheiros, onde foi construída','Por causa da cor das bolas do pavilhão'],a:1};
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function runQuiz(){const qs=shuffle(QUIZ_POOL).slice(0,2).concat([QUIZ_FINAL]);ask(qs,0)}
 function ask(qs,i){
@@ -1112,7 +1112,7 @@ function buildMatchScene(){
     g.beginPath();g.moveTo(500,0);g.lineTo(500,CH);g.stroke();g.beginPath();g.arc(500,300,75,0,7);g.stroke();
     g.beginPath();g.arc(0,300,150,-Math.PI/2,Math.PI/2);g.stroke();g.beginPath();g.arc(CW,300,150,Math.PI/2,Math.PI*1.5);g.stroke();
     g.fillStyle='#f5f0e4';[[500,300],[150,300],[850,300]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,4,0,7);g.fill()});
-    g.font='30px Bungee, Impact';g.textAlign='center';g.fillStyle='rgba(255,255,255,.16)';g.fillText('ESC. SEC. DR. JOAQUIM DE CARVALHO',500,CH-28)});
+    g.font='30px Bungee, Impact';g.textAlign='center';g.fillStyle='rgba(255,255,255,.16)';g.fillText('ESC. SEC. VALE VERDE',500,CH-28)});
   const fl=new THREE.Mesh(new THREE.PlaneGeometry((CW+64)*K,(CH+64)*K),new THREE.MeshLambertMaterial({map:tex}));fl.rotation.x=-Math.PI/2;fl.position.set(CW/2*K,0,CH/2*K);fl.receiveShadow=true;mscene.add(fl);
   const out=new THREE.Mesh(new THREE.PlaneGeometry(80,60),lam('#6b4a2c'));out.rotation.x=-Math.PI/2;out.position.set(15.6,-.01,9.4);out.receiveShadow=true;mscene.add(out);
   const wm=lam('#e6e1d5');
@@ -1334,7 +1334,7 @@ function endMatch(){
   $('cont').hidden=!M.story;$('restart').hidden=!!M.story;
   $('endTitle').textContent=win?'Vitória!':'Derrota...';
   $('endScore').textContent=`7ºB ${a} – ${c} 8ºB`;
-  $('endText').textContent=win?'O 7ºB ganhou no pavilhão da Joaquim de Carvalho enquanto lá fora continuava a chover. O Rui jura que foi tudo táctica dele. Para a semana há desforra.':'O 8ºB levou a melhor desta vez. A Marta diz que foram as luvas molhadas. Pede a desforra e tenta outra vez.';
+  $('endText').textContent=win?'O 7ºB ganhou no pavilhão da Vale Verde enquanto lá fora continuava a chover. O Rui jura que foi tudo táctica dele. Para a semana há desforra.':'O 8ºB levou a melhor desta vez. A Marta diz que foram as luvas molhadas. Pede a desforra e tenta outra vez.';
   $('again').textContent=win?'Jogar outra vez':'Pedir desforra';
   $('end').hidden=false;
   if(win){M.cheer=100000;for(let k=0;k<180;k++)conf.push({x:Math.random()*W,y:-Math.random()*H,vx:rnd(-1,1),vy:rnd(1,3),g:0,c:['#ffcf3f','#63d48f','#fff','#5aa0e6'][k%4],r:rnd(0,6),life:1e9,loop:true})}
