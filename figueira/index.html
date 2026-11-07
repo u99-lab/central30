@@ -432,7 +432,7 @@ function resume(){if(G.state!=='pause')return;G.state='play';$('#pause').hidden=
 $('#go').onclick=start;$('#resume').onclick=resume;$('#quit').onclick=()=>{G.state='menu';$('#pause').hidden=true;['#tl','#mapw','#spd','#prompt','#postal'].forEach(s=>$(s).hidden=true);$('#touch').hidden=true;$('#menu').hidden=false;showBest();if(engG)engG.gain.value=0};
 window.C30pause=f=>{const w=f===undefined?!(G.state==='pause'||G.hub):!!f;G.hub=w&&G.state!=='play'&&G.state!=='pause'?false:false;if(w&&G.state==='play')pause();else if(!w&&G.state==='pause')resume()};
 window.C30isPaused=()=>G.state==='pause';window.C30save=()=>{MEM.set('money',G.money);MEM.set('post',G.post);MEM.set('best',G.best)};
-window.__fig={G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
+window.__fig={get car(){return car},G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
 requestAnimationFrame(loop);
 })();
 </script>
