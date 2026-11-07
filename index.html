@@ -860,4 +860,31 @@ try{new MutationObserver(()=>refreshCounts()).observe($('gameGrid'),{childList:t
 if(location.protocol!=='file:')globalStart();else refreshCounts();
 window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,roomGame,roster:roster.map(p=>p.name),states:[...roomStates.keys()],mqtt:mq.up(),online:pres.size+1,myName})};
 })();
-</script></body></html>
+</script><!-- c30-autoupdate --><style>#c30upd{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);z-index:2147483000;display:flex;gap:12px;align-items:center;background:#0c1012;color:#edf0e9;border:1px solid #c5f47c;border-radius:10px;padding:10px 12px 10px 16px;font:500 14px Inter,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:calc(100vw - 32px)}#c30upd button{background:#c5f47c;color:#101914;border:0;border-radius:7px;padding:8px 12px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}#c30upd[hidden]{display:none}</style>
+<div id="c30upd" role="status" aria-live="polite" hidden><span id="c30updT">Há uma versão nova da Central 30.</span><button type="button" id="c30updB">Atualizar agora</button></div>
+<script>
+// Atualizações rápidas: a página pergunta ao servidor, a cada minuto e quando voltas ao separador,
+// se o index.html mudou (ETag / Last-Modified). Se mudou, recarrega sozinha na lista de jogos;
+// a meio de um jogo só mostra o aviso, para não interromper.
+(function(){
+  if(location.protocol==='file:'||!window.fetch)return;
+  let base=null,found=false,timer=null;
+  const sig=r=>r.headers.get('etag')||r.headers.get('last-modified')||r.headers.get('content-length')||'';
+  const url=()=>location.pathname+(location.pathname.endsWith('/')?'':'')+'?c30check='+Date.now();
+  const playing=()=>{try{return typeof active!=='undefined'&&!!active}catch(e){return false}};
+  const box=document.getElementById('c30upd'),txt=document.getElementById('c30updT');
+  document.getElementById('c30updB').onclick=()=>location.reload();
+  function show(){found=true;box.hidden=false;
+    if(playing()){txt.textContent='Há uma versão nova da Central 30. Atualiza quando acabares o jogo.';return}
+    let n=5;txt.textContent='Há uma versão nova da Central 30. A atualizar em '+n+'…';clearInterval(timer);
+    timer=setInterval(()=>{if(playing()){clearInterval(timer);txt.textContent='Há uma versão nova da Central 30. Atualiza quando acabares o jogo.';return}
+      n--;if(n<=0){clearInterval(timer);location.reload()}else txt.textContent='Há uma versão nova da Central 30. A atualizar em '+n+'…'},1000)}
+  async function check(){if(found||document.hidden)return;try{const r=await fetch(url(),{method:'HEAD',cache:'no-store'});if(!r.ok)return;const v=sig(r);if(!v)return;
+    if(base===null){base=v;return}if(v!==base)show()}catch(e){}}
+  check();setInterval(check,60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+  window.addEventListener('focus',check);
+  window.C30checkUpdate=check;
+})();
+</script>
+</body></html>
