@@ -251,13 +251,13 @@ input[type=range]{accent-color:var(--locker);width:180px}
     <div class="tagrow"><span class="tag">CACIFO 333</span><span class="tag dk">4 AULAS</span><span class="tag dk">MISSÕES</span><span class="tag dk">CASA</span><span class="tag dk">TAVAREDE</span></div>
     <h1>Corrida ao <em>Teste</em></h1>
     <p class="sub">Escola Secundária Dr. Joaquim de Carvalho · Figueira da Foz</p>
-    <p class="story">Estás no <strong>7.º B</strong>. Um dia inteiro, do toque das 08:20 até à hora de dormir. De manhã encontras as tuas coisas antes do teste de <strong>Matemática</strong>. Depois vêm <strong>Português</strong>, <strong>Educação Física</strong> e <strong>Físico-Química</strong>, com missões, basquetebol e almoço pelo meio. No fim das aulas, <strong>a mãe ou o pai</strong> vem buscar-te e vais para casa, no bairro de Tavarede: mostras o boletim, fazes os trabalhos, jantas, dás comida ao gato e vais dormir a horas. Há <strong>10 cromos</strong> escondidos.</p>
+    <p class="story">Estás no <strong>7.º B</strong>. Um dia inteiro, do toque das 08:20 até à hora de dormir. De manhã encontras as tuas coisas antes do teste de <strong>Matemática</strong>. Depois vêm <strong>Português</strong>, <strong>Educação Física</strong> e <strong>Físico-Química</strong>, com missões, basquetebol e almoço pelo meio. No fim das aulas, <strong>a mãe ou o pai</strong> vem buscar-te, ou <strong>vais a pé</strong> para casa, no bairro de Tavarede: mostras o boletim, fazes os trabalhos, jantas, dás comida ao gato e vais dormir a horas. Há <strong>10 cromos</strong> escondidos.</p>
     <div class="cust">
       <div class="field"><label class="lbl2" for="pname">O teu nome</label><input id="pname" maxlength="16" placeholder="Aluno" autocomplete="off"></div>
       <div class="field"><span class="lbl2">Camisola</span><div class="sw" id="swShirt"></div></div>
       <div class="field"><span class="lbl2">Pele</span><div class="sw" id="swSkin"></div></div>
       <div class="field"><span class="lbl2">Cabelo</span><div class="sw" id="swHair"></div></div>
-      <div class="field"><span class="lbl2">Quem te vai buscar?</span><div class="seg two-opt" id="parents"><button data-p="mae" aria-pressed="true">Mãe</button><button data-p="pai" aria-pressed="false">Pai</button></div></div>
+      <div class="field"><span class="lbl2">Como vais para casa?</span><div class="seg" id="parents"><button data-p="mae" aria-pressed="true">Mãe<small>vem de carro</small></button><button data-p="pai" aria-pressed="false">Pai<small>vem de carro</small></button><button data-p="pe" aria-pressed="false">A pé<small>pelo bairro</small></button></div></div>
     </div>
     <div class="two">
       <div class="field"><span class="lbl2">Dificuldade</span>
@@ -1153,7 +1153,7 @@ function report(){G.state='end';hideHud();sfx.win();const keys=['mat','pt','ef',
   $('#endstats').innerHTML=`<dt>Média do dia</dt><dd>${media.toFixed(1)} valores</dd><dt>Assiduidade</dt><dd>${faltas} falta${faltas===1?'':'s'} · ${lates} atraso${lates===1?'':'s'}</dd><dt>Comportamento</dt><dd>${beh} (${G.caught}× a correr)</dd><dt>Missões</dt><dd>${MISSIONS.filter(m=>m.st==='done').length} de 4</dd><dt>Desafio do Tiago</dt><dd>${G.tiago?'Ganhaste':G.tiago===false?'Perdeste':'Não jogaste'}</dd><dt>Almoço</dt><dd>${G.lunch?'Sim':'Não'}</dd><dt>Cromos</dt><dd>${G.cromos} de ${CROMOS.length}</dd>`;
 
   {const H=G.home||{};const dish=['bacalhau à Brás','arroz de pato','sopa e peixe grelhado'][G.drive&&G.drive.ans.jantar!=null?G.drive.ans.jantar:2];
-   $('#homestats').innerHTML=`<dt>Boletim</dt><dd>${H.boletim?'Mostrado':'Ficou na mochila'}</dd>${H.react?`<dt>Reação</dt><dd style="font-family:inherit;font-weight:500">«${H.react}»</dd>`:''}<dt>Trabalhos de casa</dt><dd>${H.tpc==null?'Por fazer':H.tpc+'/3 certas'}</dd><dt>Jantar</dt><dd>${H.jantar?'Sim, '+dish:'Não jantaste'}</dd><dt>Bolacha, o gato</dt><dd>${H.gato===2?'Alimentado':'Ficou com fome'}</dd><dt>Mochila para amanhã</dt><dd>${H.mochila?'Pronta':'Por arrumar'}</dd><dt>Consola com o Tomás</dt><dd>${H.tv?'Sim':'Não'}</dd><dt>Bola de Berlim</dt><dd>${G.lanche?'Comida':'Não'}</dd><dt>Hora de dormir</dt><dd>${H.slept!=null?fmtClock(H.slept)+(H.sleepNote?' · '+H.sleepNote:H.slept<=HM(22,30)?' · a horas':' · tarde'):'—'}</dd><dt>No carro</dt><dd>${honest()?'Disseste a verdade':'Contaste uma mentira'}</dd><dt>Pontuação em casa</dt><dd>${hs} de 7</dd>`;
+   $('#homestats').innerHTML=`<dt>Boletim</dt><dd>${H.boletim?'Mostrado':'Ficou na mochila'}</dd>${H.react?`<dt>Reação</dt><dd style="font-family:inherit;font-weight:500">«${H.react}»</dd>`:''}<dt>Trabalhos de casa</dt><dd>${H.tpc==null?'Por fazer':H.tpc+'/3 certas'}</dd><dt>Jantar</dt><dd>${H.jantar?'Sim, '+dish:'Não jantaste'}</dd><dt>Bolacha, o gato</dt><dd>${H.gato===2?'Alimentado':'Ficou com fome'}</dd><dt>Mochila para amanhã</dt><dd>${H.mochila?'Pronta':'Por arrumar'}</dd><dt>Consola com o Tomás</dt><dd>${H.tv?'Sim':'Não'}</dd><dt>Bola de Berlim</dt><dd>${G.lanche?'Comida':'Não'}</dd><dt>Hora de dormir</dt><dd>${H.slept!=null?fmtClock(H.slept)+(H.sleepNote?' · '+H.sleepNote:H.slept<=HM(22,30)?' · a horas':' · tarde'):'—'}</dd><dt>Para casa</dt><dd>${G.driver==='pe'?'A pé':G.driver==='pai'?'Com o pai, de carro':'Com a mãe, de carro'}</dd><dt>${G.drive&&G.drive.walk?'À chegada':'No carro'}</dt><dd>${honest()?'Disseste a verdade':'Contaste uma mentira'}</dd><dt>Pontuação em casa</dt><dd>${hs} de 7</dd>`;
    try{if(window.C30){if(G.cromos===CROMOS.length)C30.unlock('jdc-cromos','Corrida ao Teste · Todos os cromos');if(stars===3)C30.unlock('jdc-dia','Corrida ao Teste · Um dia perfeito');if(G.tiago)C30.unlock('jdc-tiago','Corrida ao Teste · Ganhaste ao Tiago')}}catch(e){}}
   $('#endp').textContent=media>=15?'Um dia em grande! Os pais vão ficar orgulhosos deste boletim.':media>=10?'Um dia positivo. Com menos atrasos e mais estudo chegas lá acima.':'Dia difícil. Amanhã há mais, e a recuperação também.';if(hs>=6)$('#endp').textContent+=' Em casa foste impecável.';
   
@@ -1227,14 +1227,15 @@ function resetHome(){G.driver=LOOK.parent||'mae';G.home={boletim:false,react:'',
 function schoolMedia(){const k=['mat','pt','ef','fq'];return k.reduce((a,c)=>a+((G.grades[c]&&G.grades[c].nota)||0),0)/4}
 function setupPhase(i){const par=G.driver==='mae'?MAE:PAI;
   if(i===4){MISSIONS.forEach(m=>{if(m.bang){scene.remove(m.bang);m.bang=null}if(m.st==='offer')m.st='off'});
-    par.x=66;par.z=133.6;par.g.position.set(66,0,133.6);par.g.rotation.y=Math.PI;parkCar(72,130.9,0);
-    toast('Acabaram as aulas! '+(G.driver==='mae'?'A mãe está':'O pai está')+' à tua espera do outro lado da passadeira.',false,4)}
+    if(G.driver==='pe'){parkCar(100.5,188.5,-Math.PI/2);toast('Acabaram as aulas! Hoje vais a pé: atravessa na passadeira e segue até à casa nº 12.',false,4.5)}
+    else{par.x=66;par.z=133.6;par.g.position.set(66,0,133.6);par.g.rotation.y=Math.PI;parkCar(72,130.9,0);
+    toast('Acabaram as aulas! '+(G.driver==='mae'?'A mãe está':'O pai está')+' à tua espera do outro lado da passadeira.',false,4)}}
   if(i===5){MAE.x=78.6;MAE.z=193;MAE.g.position.set(78.6,0,193);MAE.g.rotation.y=0;PAI.x=90.2;PAI.z=187.8;PAI.g.position.set(90.2,0,187.8);PAI.g.rotation.y=Math.PI;
     HOME_ITEMS.forEach((h,k)=>setMarker(h,h.x,h.y,h.z,!G.home.moc[k]));
     toast('Estás em casa! Vê as tarefas no painel e deita-te até às 22:30.',false,4)}}
-function homeNext(){if(G.phase===4)return (G.driver==='mae'?'A mãe':'O pai')+' espera-te do outro lado da passadeira';return clockSecs()>=HM(22,30)?'Já passa das 22:30! Vai dormir.':'Em casa · deita-te até às 22:30'}
+function homeNext(){if(G.phase===4)return G.driver==='pe'?'Vais a pé: casa nº 12, na rua do lado':(G.driver==='mae'?'A mãe':'O pai')+' espera-te do outro lado da passadeira';return clockSecs()>=HM(22,30)?'Já passa das 22:30! Vai dormir.':'Em casa · deita-te até às 22:30'}
 function homeObjectives(){const L=[];const H=G.home;const par=G.driver==='mae'?MAE:PAI;const pp=o=>({x:o.g.position.x,z:o.g.position.z,y:0});
-  if(G.phase===4){L.push({label:'Ir ter com '+(G.driver==='mae'?'a mãe':'o pai'),sub:'À saída, do outro lado da passadeira',done:false,t:pp(par)});
+  if(G.phase===4){if(G.driver==='pe')L.push({label:'Ir a pé para casa',sub:'Casa nº 12 · atravessa na passadeira',done:false,t:{x:97.6,z:190.6,y:0}});else L.push({label:'Ir ter com '+(G.driver==='mae'?'a mãe':'o pai'),sub:'À saída, do outro lado da passadeira',done:false,t:pp(par)});
     if(!G.lanche)L.push({label:'Bola de Berlim',sub:'Pastelaria Tavarede · opcional',done:false,t:{x:18,z:150.2,y:0},opt:true});return L}
   L.push({label:'Mostrar o boletim',sub:'À mãe ou ao pai',done:H.boletim,t:H.boletim?null:pp(MAE)});
   L.push({label:'Trabalhos de casa',sub:H.tpc!==null?H.tpc+'/3 certas':'Secretária do quarto',done:H.tpc!==null,t:H.tpc!==null?null:{x:81.5,z:178.7,y:0}});
@@ -1258,7 +1259,7 @@ function homeAction(){const H=G.home;if(!H||G.phase<4)return null;
 function honest(){const D=G.drive;if(!D)return true;const m=schoolMedia(),truth=m>=14?0:m>=10?1:2;return (D.ans.dia==null||D.ans.dia>=truth)&&D.ans.tpc!==1}
 function showBoletim(p){const H=G.home,m=schoolMedia(),fal=['mat','pt','ef','fq'].filter(k=>G.grades[k]&&G.grades[k].falta).length;
   let r=m>=15?'Que orgulho! Vou pôr isto no frigorífico.':m>=10?'Está bem, mas há coisas a melhorar.':'Isto assim não pode ser... amanhã estudamos juntos.';
-  if(G.drive&&G.drive.ans.dia===0&&m<12)r='Disseste-me no carro que tinha corrido muito bem! '+r;
+  if(G.drive&&G.drive.ans.dia===0&&m<12)r='Disseste-me '+(G.drive.walk?'à porta':'no carro')+' que tinha corrido muito bem! '+r;
   if(fal)r+=' E que falta é esta?';H.boletim=true;H.react=r;sfx.ok();toast(p.name+': «'+r+'»',m<10,5);renderObj(true)}
 function tpcEnd(ok){G.home.tpc=ok;G.extra+=45;G.state='play';showHud();toast(ok>=2?`Trabalhos feitos: ${ok}/3 certas. Muito bem!`:`Trabalhos feitos, mas só ${ok}/3 certas.`,ok<2,3);renderObj(true);canvas.focus()}
 function goSleep(auto){const H=G.home;H.slept=clockSecs();H.sleepNote=auto?'Adormeceste no sofá…':'';toast(auto?'Adormeceste no sofá...':'Boa noite! Zzz…',false,2);G.state='sleep';hideHud();
@@ -1385,8 +1386,15 @@ function openTalk(n){G.state='talk';TL.n=n;TL.action=null;try{document.exitPoint
   ['#talk','#eprompt','#arrow','#cross'].forEach(s=>$(s).hidden=true);tbtns.hidden=true;joy.hidden=true;TC.joy=null;for(const k in K)K[k]=false;
   const off=MISSIONS.find(m=>m.st==='offer'&&m.giver===n.name);$('#chwho').textContent=n.name;$('#choice').classList.add('talkmode');$('#choice').hidden=false;
   n.g.rotation.y=Math.atan2(P.x-n.g.position.x,P.z-n.g.position.z);talkSay(off?off.ask:((n.line&&n.line())||n.idle()||'Olá!'))}
+// ---- ir a pé para casa ----
+function walkAsk(k){const d=DLG[k];return d.o.map((t,i)=>({t,f:()=>{G.drive.ans[d.k]=i;const r=dlgReact(d.k,i);if(k<DLG.length-1)talkSay(r+' '+DLG[k+1].q,walkAsk(k+1));else{talkSay(r+' Agora vai lá tratar das tuas coisas.','close');TL.action='mae-cozinha'}}}))}
+function openTalkWith(n,text,after){G.state='talk';TL.n=n;TL.action=null;try{document.exitPointerLock&&document.exitPointerLock()}catch(e){}
+  ['#talk','#eprompt','#arrow','#cross'].forEach(s=>$(s).hidden=true);tbtns.hidden=true;joy.hidden=true;TC.joy=null;for(const k in K)K[k]=false;
+  $('#chwho').textContent=n.name;$('#choice').classList.add('talkmode');$('#choice').hidden=false;n.g.rotation.y=Math.atan2(P.x-n.g.position.x,P.z-n.g.position.z);talkSay(text,after)}
+function walkArrive(){G.drive={ans:{},walk:true};startPhase(5);MAE.x=90.4;MAE.z=192.6;MAE.g.position.set(90.4,0,192.6);sfx.ok();
+  openTalkWith(MAE,'Olá! Vieste a pé? Muito bem! '+DLG[0].q,walkAsk(0))}
 function closeTalk(){if(G.state!=='talk')return;const act=TL.action,n=TL.n;G.state='play';$('#choice').hidden=true;$('#choice').classList.remove('talkmode','typing');TL.n=null;TL.action=null;showHud();canvas.focus();
-  if(act==='basket')startBasket('tiago');else if(act==='drive')startDrive();else if(act==='boletim')showBoletim(n);
+  if(act==='basket')startBasket('tiago');else if(act==='drive')startDrive();else if(act==='boletim')showBoletim(n);else if(act==='mae-cozinha'){MAE.x=78.6;MAE.z=193;MAE.g.position.set(78.6,0,193);MAE.g.rotation.y=0;renderObj(true)}
   else if(act==='tv'){const H=G.home;H.tv=true;G.extra+=30;sfx.win();toast(Math.random()<.6?'Ganhaste 3–2 ao Tomás no jogo de futebol!':'O Tomás ganhou-te 2–1... ele treina muito.',false,3.2);renderObj(true)}}
 // só avança se o toque começou no próprio balão depois da frase começar (evita o toque fantasma do botão E)
 $('#choice').addEventListener('pointerdown',()=>{TL.pd=performance.now()});
@@ -1485,6 +1493,7 @@ function update(dt){
   // cromos
   CROMOS.forEach(cr=>{if(cr.got)return;if(Math.hypot(P.x-cr.x,P.z-cr.z)<2.2&&Math.abs(P.y+.9-cr.y)<2.2){cr.got=true;cr.m.visible=false;G.cromos++;sfx.cromo();toast(`Cromo ${G.cromos}/${CROMOS.length}: ${cr.n}!`,false,2.6)}});
   $('#cromon').textContent='Cromos '+G.cromos+'/'+CROMOS.length;
+  if(G.phase===4&&G.driver==='pe'&&P.y<1&&tileAt(grid,P.x,P.z)==='j'&&P.x>86&&P.z>186){walkArrive();return}
   if(G.phase===5&&G.home)HOME_ITEMS.forEach((h,k)=>{if(G.home.moc[k])return;h.obj.position.y=h.y+Math.sin(TM*2.5+k)*.06+.08;h.obj.rotation.y+=dt*1.6;if(Math.hypot(P.x-h.x,P.z-h.z)<1.6&&P.y<1){G.home.moc[k]=true;setMarker(h,0,0,0,false);sfx.pick();toast('+ '+h.n+' ('+G.home.moc.filter(Boolean).length+'/3)',false,2.2);renderObj(true)}});
   // conversa
   let nearN=null,nd=3.3;NPCS.forEach(n=>{if(!n.g.visible||Math.abs(P.y-n.y)>1.5)return;const d=Math.hypot(P.x-n.g.position.x,P.z-n.g.position.z);if(d<nd){nd=d;nearN=n}});
