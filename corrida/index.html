@@ -177,6 +177,20 @@ input[type=range]{accent-color:var(--locker);width:180px}
 #fade{position:fixed;inset:0;background:#05070c;z-index:19;opacity:0;transition:opacity .7s;pointer-events:none}
 .rh{margin:4px 0 0;font-size:18px;font-weight:800;color:var(--locker)}
 .seg.two-opt{grid-template-columns:1fr 1fr}
+#choice .who{background:var(--locker);color:var(--ink);font-weight:800;font-size:12px;padding:3px 8px;border-radius:2px;letter-spacing:.03em;white-space:nowrap}
+/* balão de conversa: a personagem fala letra a letra, depois aparecem as opções */
+#choice.talkmode{background:#fbf6e6;color:#3a3226;border:0;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 -4px 0 #eadfbf;padding:26px 24px 22px;width:min(620px,calc(100vw - 32px));bottom:calc(env(safe-area-inset-bottom,0px) + 24px);gap:0;backdrop-filter:none;overflow:visible;cursor:pointer}
+#choice.talkmode .who{position:absolute;top:-14px;left:22px;padding:5px 14px;border-radius:999px;font-size:14px;transform:rotate(-2deg);box-shadow:0 3px 0 var(--locker-deep)}
+#choice.talkmode .chq{font-size:clamp(17px,2.2vw,20px);font-weight:600;line-height:1.45;min-height:2.9em;color:#3a3226}
+#choice.talkmode #chopts{position:absolute;right:14px;bottom:calc(100% + 12px);width:auto;min-width:min(240px,calc(100vw - 60px));max-width:min(380px,calc(100vw - 48px));background:#fbf6e6;border-radius:18px;padding:8px;gap:2px;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+#choice.talkmode #chopts:empty,#choice.talkmode.typing #chopts{display:none}
+#choice.talkmode .chb{background:transparent;border:0;border-radius:12px;color:#3a3226;font-size:16px;padding:9px 12px;animation:chIn .22s ease-out both}
+#choice.talkmode .chb:hover,#choice.talkmode .chb:focus-visible{background:#f1e6c4;outline:none}
+#choice.talkmode .chb i{background:#3a3226;color:#fbf6e6}
+@keyframes chIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+#chnext{position:absolute;right:20px;bottom:8px;color:var(--locker-deep);font-size:16px;animation:chBob .7s ease-in-out infinite alternate}
+@keyframes chBob{to{transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){#chnext,#choice.talkmode .chb{animation:none}}
 @media (max-width:640px){
   #topl{width:190px}
   #clock .t{font-size:24px}
@@ -219,7 +233,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
   <div id="bkbar"><i id="bkpow"></i><b class="zone"></b></div>
   <div class="bkhint" id="bkhint">A / D ou rato para apontar · E, Espaço ou clique para lançar</div>
 </div>
-<div class="hud panel" id="choice" hidden><span class="who" id="chwho">Mãe</span><div class="chq" id="chq"></div><div id="chopts"></div></div>
+<div class="hud panel" id="choice" hidden><span class="who" id="chwho">Mãe</span><div class="chq" id="chq"></div><div id="chopts"></div><span id="chnext" hidden>▼</span></div>
 <div id="fade" hidden></div>
 <div id="joy" hidden><i id="knob"></i></div>
 <div id="tbtns" hidden>
@@ -263,7 +277,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
       <div><kbd>W A S D</kbd> andar</div>
       <div><kbd>Rato</kbd> olhar (clica no ecrã)</div>
       <div><kbd>Shift</kbd> correr · <kbd>Espaço</kbd> saltar</div>
-      <div><kbd>E</kbd> falar (escolhes o que dizer com <kbd>1</kbd>–<kbd>4</kbd>), almoçar</div>
+      <div><kbd>E</kbd> falar · <kbd>1</kbd>–<kbd>4</kbd> escolher o que dizer · <kbd>E</kbd> continuar</div>
       <div><kbd>Q</kbd> mudar o objetivo da seta</div>
       <div><kbd>M</kbd> mapa · <kbd>C</kbd> câmara · <kbd>P</kbd> pausa</div>
     </div>
@@ -902,7 +916,7 @@ addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;K[
   else if(s==='map'){if(e.code==='KeyM'||e.code==='Escape')closeMap()}
   else if(s==='pause'){if(e.code==='KeyP')resume()}
   else if(s==='result'){if(e.code==='KeyE'||e.code==='Enter')resultGo()}
-  else if(s==='exam'&&/^Digit[1-4]$/.test(e.code))answer(+e.code.slice(5)-1);else if(s==='drive'&&/^Digit[1-3]$/.test(e.code))pickDlg(+e.code.slice(5)-1);else if(s==='talk'){if(/^Digit[1-4]$/.test(e.code))talkPick(+e.code.slice(5)-1);else if(e.code==='Escape')closeTalk()}});
+  else if(s==='exam'&&/^Digit[1-4]$/.test(e.code))answer(+e.code.slice(5)-1);else if(s==='drive'&&/^Digit[1-3]$/.test(e.code))pickDlg(+e.code.slice(5)-1);else if(s==='talk'){if(/^Digit[1-4]$/.test(e.code))talkPick(+e.code.slice(5)-1);else if(e.code==='KeyE'||e.code==='Space'||e.code==='Enter'){e.preventDefault();talkAdvance(false)}else if(e.code==='Escape')closeTalk()}});
 addEventListener('keyup',e=>{K[e.code]=false});
 addEventListener('blur',()=>{for(const k in K)K[k]=false;if(G.state==='play')pause()});
 canvas.addEventListener('mousedown',e=>{mouseDown=true;if(G.state==='basket'&&!touchMode){shoot()}if((G.state==='play'||G.state==='basket')&&!touchMode){try{const r=canvas.requestPointerLock&&canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(err){}}});
@@ -1282,56 +1296,101 @@ window.C30pause=f=>{const want=f===undefined?!(G.state==='pause'||G.hub):!!f;G.h
 window.C30isPaused=()=>G.state==='pause'||!!G.hub;
 
 
-/* ---------------- CONVERSAS COM OPÇÕES ---------------- */
-const CHAT={
-  'Tiago':['Treino basquetebol todas as tardes no pavilhão.','Para a semana há torneio de badminton. Inscreves-te?'],
-  'Marta':['O badminton é o meu desporto preferido.','O Prof. Nuno diz que tenho jeito para o voleibol.'],
-  'Inês':['Gosto de ler debaixo dos pinheiros no intervalo.','Estou a ler o «Ulisses». Já chegaste à parte do ciclope?'],
-  'Rui':['A sopa da cantina hoje cheirava muito bem.','Já experimentaste as bolas de Berlim da pastelaria? São as melhores!'],
-  'Beatriz':['Tenho teste de Inglês amanhã, que nervos!','Este corredor tem os bancos mais confortáveis da escola.'],
-  'Duarte':['Ando a colecionar os cromos da escola. Há dez!','Dizem que há um cromo em cima dos cacifos...'],
-  'Sofia':['Lá de cima vê-se o átrio todo.','Gosto mais das aulas no piso 1, há mais luz.'],
-  'Prof.ª Helena':['A Matemática treina-se como um desporto: um bocadinho todos os dias.','As equações são como balanças: o que fazes de um lado, fazes do outro.'],
-  'Prof. Carlos':['Ler é viajar sem sair da cadeira.','Já sabes encontrar o sujeito e o complemento direto?'],
-  'Prof. Nuno':['Antes de lançar, olha para o aro e respira.','Hidrata-te bem antes da aula!'],
-  'Prof.ª Teresa':['No laboratório, segurança primeiro: óculos e bata.','Sabias que a luz do Sol demora uns oito minutos a chegar à Terra?'],
-  'Mãe':['Estou tão orgulhosa de ti.','Amanhã acordo-te às sete e meia, está bem?'],
-  'Pai':['No fim de semana vamos à praia da Figueira?','Quando eu andava na escola também me atrasava...'],
-  'Tomás':['Sabes que o Bolacha dormiu na minha cama?','Quando for grande também vou para a Joaquim!'],
-  'Sr. Joaquim':['Faço bolas de Berlim há trinta anos.','No verão levo-as à praia, bem cedinho.'],
-  'Leonor':['O escorrega é o mais rápido do bairro!','Ajudas-me a fazer um castelo na caixa de areia?'],
-  'Dona Rosa':['No meu tempo, a escola era muito diferente.','O autocarro para a Figueira passa de meia em meia hora.'],
+/* ---------------- CONVERSAS (estilo balão: fala letra a letra, depois escolhes) ---------------- */
+// «Como estás?» -> resposta com sentido + 3 maneiras de continuar a conversa
+const MOOD={
+  'Tiago':['Estou cheio de energia! Ontem treinei basquetebol até ser de noite.',[['Treinas todos os dias?','Quase todos! O Prof. Nuno diz que já se nota nos lançamentos.'],['Ensinas-me a lançar?','Claro! O segredo é parar a barra de força no meio, sem tremer.'],['Não te canses demasiado.','Descansa tu, que tens teste! Eu aguento.']]],
+  'Marta':['Estou bem, mas cheia de calor de tanto correr atrás do volante.',[['Volante?','No badminton, a «bola» chama-se volante. Tem penas e tudo!'],['Quem está a ganhar?','Eu, claro! O Tiago ainda não acertou uma.'],['Boa sorte no jogo!','Obrigada! Aparece no fim para ver quem ganhou.']]],
+  'Inês':['Estou calma. Gosto de ler aqui, debaixo dos pinheiros.',[['O que estás a ler?','O «Ulisses», para Português. Vou na parte do ciclope Polifemo!'],['Não tens frio?','Um bocadinho, mas o sol entre os pinheiros sabe bem.'],['Posso sentar-me contigo?','Claro, há espaço no banco!']]],
+  'Rui':['Estou com fome, como sempre!',[['Ainda falta muito para o almoço?','Para mim falta sempre muito. Hoje há arroz de pato!'],['Não trouxeste lanche?','Comi-o logo no primeiro intervalo... erro de principiante.'],['Vai à pastelaria depois das aulas.','Boa ideia! As bolas de Berlim do Sr. Joaquim são as melhores.']]],
+  'Beatriz':['Um bocado nervosa. Amanhã tenho teste de Inglês.',[['Já estudaste?','Mais ou menos... ainda me baralho nos verbos irregulares.'],['Vais ter boa nota!','Disseste isso com tanta confiança que até acredito. Obrigada!'],['Queres estudar comigo?','Queria muito! Pode ser na biblioteca, no intervalo grande?']]],
+  'Duarte':['Estou contente! Encontrei mais um cromo da escola.',[['Onde estava?','Não te digo, isso era batota! Mas olha para cima de vez em quando.'],['Quantos tens?','Tenho três. Dizem que são dez ao todo.'],['Trocamos cromos?','Só se tiveres algum repetido!']]],
+  'Sofia':['Estou bem! Daqui de cima vejo toda a gente a correr.',[['Gostas do piso 1?','Muito! As salas cá de cima têm mais luz.'],['Viste a D. Lurdes?','Está lá em baixo, no corredor. Não corras perto dela!'],['Qual é a tua disciplina preferida?','Físico-Química! Hoje vamos ao laboratório.']]],
+  'Prof.ª Helena':['Estou bem, obrigada. Ansiosa por ver os vossos testes!',[['O teste é difícil?','Se estudaste equações e percentagens, vai correr bem.'],['Posso usar calculadora?','Podes. Por isso é que a tens de ir buscar ao cacifo!'],['Gosto de Matemática.','Que bom ouvir isso! A Matemática está em todo o lado.']]],
+  'Prof. Carlos':['Muito bem! Acabei de ler um livro fantástico.',[['Qual?','«Leandro, Rei da Helíria», da Alice Vieira. Vamos lê-lo este período.'],['Vai haver teste?','Um mini-teste, só para ver se sabes as classes de palavras.'],['Recomenda-me um livro?','Experimenta o «Ulisses», da Maria Alberta Menéres. Vais gostar.']]],
+  'Prof. Nuno':['Em forma, como sempre!',[['Qual é o segredo?','Dormir bem, comer bem e mexer-se todos os dias.'],['O que vamos fazer em EF?','Lançamentos livres no pavilhão. Traz o equipamento!'],['O professor jogava basquetebol?','Joguei muitos anos. Ainda acerto nove em dez!']]],
+  'Prof.ª Teresa':['Bem, obrigada! Estou a preparar uma experiência para a aula.',[['Que experiência?','Vamos separar uma mistura de água e areia por filtração.'],['É perigoso?','Com bata e óculos, no laboratório não há perigo.'],['Adoro o laboratório!','Então vais gostar muito da aula de hoje.']]],
+  'Mãe':['Um bocadinho cansada do trabalho, mas feliz por estar contigo.',[['Como foi o teu dia?','Muitas reuniões! Mas agora quero saber do teu.'],['Precisas de ajuda?','Podes pôr a mesa para o jantar, se quiseres.'],['Gosto muito de ti.','Eu também gosto muito de ti, querido.']]],
+  'Pai':['Estou bem! Já pensei no que vamos fazer no fim de semana.',[['O quê?','Ir à praia da Figueira e depois comer um gelado!'],['Posso levar um amigo?','Claro, quanto mais melhor.'],['Estás cansado?','Um bocadinho, mas nada que um bom jantar não resolva.']]],
+  'Tomás':['Estou aborrecido... ninguém quer brincar comigo.',[['Eu brinco contigo!','Boa! Então joga consola comigo, no sofá!'],['Já fizeste os trabalhos?','Eu só tinha de pintar um desenho. Já está!'],['Onde está o Bolacha?','Anda por aí. Gosta de dormir em cima do sofá.']]],
+  'Sr. Joaquim':['Muito bem! Hoje a pastelaria está cheia.',[['Qual é o bolo mais vendido?','As bolas de Berlim, sem dúvida. No verão também as vendo na praia.'],['Há quanto tempo cá está?','Há trinta anos. Já vendi lanches aos teus pais!'],['Cheira muito bem aqui.','É o forno! Acabou de sair uma fornada.']]],
+  'Leonor':['Estou feliz! Hoje o escorrega está rapidíssimo.',[['Quantos anos tens?','Tenho sete. Um dia também vou para a Joaquim!'],['Viste algum cromo?','Vi uma coisa amarela ao pé da caixa de areia...'],['Cuidado no escorrega!','Eu tenho sempre cuidado. Quase sempre.']]],
+  'Dona Rosa':['Ai, as costas... mas cá vou andando.',[['O autocarro demora?','Já devia ter passado há dez minutos. Hoje vem atrasado.'],['Vai para onde?','Vou à Figueira, ao mercado comprar peixe fresco.'],['As melhoras!','Obrigada, és muito bem-educado.']]],
 };
-const TL={n:null,opts:[]};
+const NEWS={
+  'Tiago':['Para a semana há torneio de badminton. Vou inscrever-me!','O Prof. Nuno vai escolher quem vai ao torneio de basquetebol.'],
+  'Marta':['O Prof. Nuno diz que tenho jeito para o voleibol.','Perdi a bola de voleibol outra vez... sou um desastre.'],
+  'Inês':['A biblioteca recebeu livros novos esta semana.','Vou fazer um trabalho sobre os pinheiros mansos da Figueira.'],
+  'Rui':['Hoje a sopa da cantina é de legumes. Cheira tão bem!','Dizem que amanhã há bacalhau com natas na cantina.'],
+  'Beatriz':['Mudaram os bancos do corredor. Agora são de madeira clara.','A turma do 8.º A ganhou o concurso de leitura.'],
+  'Duarte':['Dizem que há um cromo escondido em cima dos cacifos...','Há um cromo no meio da passadeira, lá fora!'],
+  'Sofia':['Na sala de Artes estão a pintar um mural.','A sala de Informática tem computadores novos.'],
+  'Prof.ª Helena':['Para a semana começamos a matéria das funções.','O clube de Matemática reúne-se às quintas.'],
+  'Prof. Carlos':['O jornal da escola precisa de repórteres. Interessado?','Vamos ao teatro em dezembro!'],
+  'Prof. Nuno':['O torneio de basquetebol começa no próximo mês.','O pavilhão vai ter cestos novos.'],
+  'Prof.ª Teresa':['A Lua está em quarto crescente esta semana.','Vamos fazer uma visita ao planetário.'],
+  'Mãe':['A avó ligou: vem jantar no domingo.','Comprei-te um caderno novo para Português.'],
+  'Pai':['O carro foi à revisão e está como novo.','Vi na televisão que amanhã vai estar sol.'],
+  'Tomás':['O Bolacha dormiu na minha cama a noite toda!','Hoje na escola fiz um desenho do Bolacha.'],
+  'Sr. Joaquim':['Estou a pensar fazer pastéis de nata ao sábado.','Esta manhã vieram três turmas comprar lanche!'],
+  'Leonor':['Fiz um castelo enorme na caixa de areia!','O baloiço amarelo é o mais alto.'],
+  'Dona Rosa':['O peixe no mercado da Figueira está mais caro.','A minha neta também anda na Joaquim de Carvalho!'],
+};
+const TL={n:null,opts:[],full:'',shown:0,typing:false,after:'menu',t0:0,blip:0};
+const pickR=a=>a[Math.floor(Math.random()*a.length)];
 function npcNear(r){let best=null,bd=r;NPCS.forEach(n=>{if(!n.g.visible||Math.abs(P.y-n.y)>1.5)return;const d=Math.hypot(P.x-n.g.position.x,P.z-n.g.position.z);if(d<bd){bd=d;best=n}});return best}
-function talkSay(text){$('#chq').textContent=text}
+// a personagem diz um texto; depois aparece «after»: 'menu' (opções principais), uma lista de opções, ou 'close'
+function talkSay(text,after){TL.full=text;TL.shown=0;TL.typing=true;TL.after=after||'menu';TL.t0=performance.now();TL.opts=[];
+  $('#chq').textContent='';$('#chopts').innerHTML='';$('#choice').classList.add('typing');$('#chnext').hidden=true}
+function talkVoice(n){let h=0;for(const c of n.name)h=(h*31+c.charCodeAt(0))%997;const adult=/Prof|Mãe|Pai|Sr\.|Dona/.test(n.name);return (adult?320:520)+h%180}
+function talkTick(dt){if(!TL.typing)return;const prev=Math.floor(TL.shown);const ch=TL.full[prev]||'';TL.shown+=dt*(/[.,!?…]/.test(ch)?14:42);const now=Math.min(TL.full.length,Math.floor(TL.shown));
+  if(now!==prev){$('#chq').textContent=TL.full.slice(0,now);if(now%2===0&&/[a-zà-úA-ZÀ-Ú]/.test(TL.full[now-1]||'')&&TL.n)tone(talkVoice(TL.n)*(0.9+Math.random()*.25),.045,'triangle',.035)}
+  if(now>=TL.full.length){TL.typing=false;talkShowAfter()}}
+function talkShowAfter(){$('#choice').classList.remove('typing');
+  if(TL.after==='close'){$('#chnext').hidden=false;return}
+  TL.opts=Array.isArray(TL.after)?TL.after:talkOptions(TL.n);
+  $('#chopts').innerHTML=TL.opts.map((o,i)=>`<button class="chb" data-i="${i}" style="animation-delay:${i*45}ms"><i>${i+1}</i>${o.t}</button>`).join('');
+  $('#chopts').querySelectorAll('.chb').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();talkPick(+b.dataset.i,true)}))}
+// carregar no balão / E / Espaço: acaba a frase de uma vez, ou continua
+function talkAdvance(tap){if(G.state!=='talk')return;if(tap&&performance.now()-TL.t0<350)return;
+  if(TL.typing){TL.shown=TL.full.length;$('#chq').textContent=TL.full;TL.typing=false;talkShowAfter();return}
+  if(TL.after==='close')closeTalk()}
+const reply=(t,say,after)=>({t,f:()=>talkSay(say,after)});
 function talkOptions(n){const o=[],H=G.home||{};const add=(t,f)=>o.push({t,f});
   const off=MISSIONS.find(m=>m.st==='offer'&&m.giver===n.name);
-  if(off){add('Claro, eu ajudo!',()=>{acceptMission(off);talkSay(off.carry?'Obrigado! Aqui tens: '+off.item.toLowerCase()+'.':'Obrigado! Depois diz-me se encontraste.');talkRefresh()});add('Agora não posso.',()=>{talkSay('Está bem. Se mudares de ideias, diz-me.');talkRefresh()})}
-  const act=MISSIONS.find(m=>(m.st==='active'||m.st==='carry')&&(m.giver===n.name));
-  if(act&&!off)add('Ainda estou a tratar do teu pedido.',()=>{talkSay(act.st==='carry'?'Já tens? Então leva-o a '+(act.toPt?act.toPt.label:act.to)+'!':'Obrigado! Procura bem: '+act.item.toLowerCase()+'.');talkRefresh()});
-  if(G.phase===0){const it=ITEMS.find(i=>i.npc===n.name&&!i.got);if(it)add('Viste '+({card:'o meu cartão',key:'a minha chave',calc:'a minha calculadora',pen:'a minha caneta',book:'o meu caderno'}[it.id])+'?',()=>{it.known=true;const l=n.line&&n.line();talkSay(l||'Não vi, desculpa.');renderObj(true);talkRefresh()})}
-  if(n.name==='Tiago'&&G.phase>=1&&G.phase<4&&G.tiago===null)add('Aceito o desafio de basquetebol!',()=>{closeTalk();startBasket('tiago')});
-  if(n.name==='Sr. Joaquim'&&!G.lanche&&G.phase>=4)add('Uma bola de Berlim, por favor.',()=>{G.lanche=true;sfx.pick();talkSay('Aqui tens, acabadinha de fazer! São 1,50 €.');renderObj(true);talkRefresh()});
-  if((n===MAE||n===PAI)&&G.phase===4&&G.driver===(n===MAE?'mae':'pai'))add('Vamos para casa!',()=>{closeTalk();startDrive()});
+  if(off){add('Claro, eu ajudo!',()=>{acceptMission(off);talkSay(off.carry?'Obrigado! Aqui tens: '+off.item.toLowerCase()+'.':'Obrigado! Depois diz-me se encontraste.')});add('Agora não posso.',()=>talkSay('Está bem. Se mudares de ideias, diz-me.'))}
+  const act=MISSIONS.find(m=>(m.st==='active'||m.st==='carry')&&m.giver===n.name);
+  if(act&&!off)add('Ainda estou a tratar do teu pedido.',()=>talkSay(act.st==='carry'?'Já tens? Então leva-o a '+(act.toPt?act.toPt.label:act.to)+'!':'Obrigado! Procura bem: '+act.item.toLowerCase()+'.'));
+  if(G.phase===0){const it=ITEMS.find(i=>i.npc===n.name&&!i.got);if(it)add('Viste '+({card:'o meu cartão',key:'a minha chave',calc:'a minha calculadora',pen:'a minha caneta',book:'o meu caderno'}[it.id])+'?',()=>{it.known=true;const l=n.line&&n.line();talkSay(l||'Não vi, desculpa.');renderObj(true)})}
+  if(n.name==='Tiago'&&G.phase>=1&&G.phase<4&&G.tiago===null)add('Aceito o desafio de basquetebol!',()=>talkSay('Então vamos! Mete três em cinco e ganhas.','close-basket'));
+  if(n.name==='Sr. Joaquim'&&!G.lanche&&G.phase>=4)add('Uma bola de Berlim, por favor.',()=>{G.lanche=true;sfx.pick();talkSay('Aqui tens, acabadinha de fazer! São 1,50 €.');renderObj(true)});
+  if((n===MAE||n===PAI)&&G.phase===4&&G.driver===(n===MAE?'mae':'pai'))add('Vamos para casa!',()=>talkSay('Vamos! Põe o cinto.','close-drive'));
   if((n===MAE||n===PAI)&&G.phase===5){
-    if(!H.boletim)add('Queres ver o meu boletim?',()=>{closeTalk();showBoletim(n)});
-    if(n===MAE&&!H.jantar)add('Quando é o jantar?',()=>{talkSay(clockSecs()>=HM(19,30)?'Já está na mesa! Senta-te ao pé de mim.':'Às 19:30. Até lá, faz os trabalhos!');talkRefresh()});
-    add('Posso jogar consola?',()=>{talkSay(H.tpc!==null?'Podes, mas só meia hora!':'Primeiro os trabalhos de casa!');talkRefresh()})}
-  if(n===TOMAS&&!H.tv&&G.phase===5)add('Vamos jogar consola!',()=>{closeTalk();H.tv=true;G.extra+=30;sfx.win();toast(Math.random()<.6?'Ganhaste 3–2 ao Tomás no jogo de futebol!':'O Tomás ganhou-te 2–1... ele treina muito.',false,3.2);renderObj(true)});
-  if(n.teacher&&G.phase<4){const c=curCls();add('Onde é a próxima aula?',()=>{talkSay(`A aula de ${c.name} é na ${c.room}, às ${fmtClock(PH[G.phase].bell)}.`+(G.bell?' Despacha-te, que já tocou!':''));talkRefresh()})}
-  if(o.length<3)add('Que horas são?',()=>{talkSay('São '+fmtClock(clockSecs())+'.'+(G.phase<4&&!G.bell?' Ainda tens tempo.':''));talkRefresh()});
-  if(o.length<3)add('Como estás?',()=>{const l=CHAT[n.name]||['Estou bem, obrigado!'];talkSay(l[Math.floor(Math.random()*l.length)]);talkRefresh()});
-  add('Adeus!',()=>{talkSay(['Até logo!','Adeus!','Até já!'][Math.floor(Math.random()*3)]);setTimeout(closeTalk,500);TL.opts=[];$('#chopts').innerHTML=''});
+    if(!H.boletim)add('Queres ver o meu boletim?',()=>talkSay('Claro que quero! Mostra lá.','close-boletim'));
+    if(n===MAE&&!H.jantar)add('Quando é o jantar?',()=>talkSay(clockSecs()>=HM(19,30)?'Já está na mesa! Senta-te ao pé de mim.':'Às 19:30. Até lá, faz os trabalhos!'));
+    if(!H.tv)add('Posso jogar consola?',()=>talkSay(H.tpc!==null?'Podes, mas só meia hora!':'Primeiro os trabalhos de casa!'))}
+  if(n===TOMAS&&!H.tv&&G.phase===5)add('Vamos jogar consola!',()=>talkSay('Boa! Eu fico com o comando azul!','close-tv'));
+  if(n.teacher&&G.phase<4){const c=curCls();add('Onde é a próxima aula?',()=>talkSay(`A aula de ${c.name} é na ${c.room}, às ${fmtClock(PH[G.phase].bell)}.`+(G.bell?' Despacha-te, que já tocou!':'')))}
+  const mood=MOOD[n.name];
+  if(o.length<3&&mood)add('Como estás?',()=>talkSay(mood[0],mood[1].map(([t,r])=>reply(t,r)).concat([reply('Tenho de ir.',pickR(['Até logo!','Vai lá, então!','Até já!']),'close')])));
+  if(o.length<3&&NEWS[n.name])add('Há novidades?',()=>talkSay(pickR(NEWS[n.name]),[reply('A sério?!','A sério! Podes crer.'),reply('Que fixe!','Pois é!'),reply('Tenho de ir.','Até logo!','close')]));
+  if(o.length<3)add('Que horas são?',()=>talkSay('São '+fmtClock(clockSecs())+'.'+(G.phase<4&&!G.bell?' Ainda tens tempo.':'')));
+  add('Adeus!',()=>talkSay(pickR(['Até logo!','Adeus!','Até já!']),'close'));
   return o.slice(0,4)}
-function talkRefresh(){if(G.state!=='talk')return;TL.opts=talkOptions(TL.n);$('#chopts').innerHTML=TL.opts.map((o,i)=>`<button class="chb" data-i="${i}"><i>${i+1}</i>${o.t}</button>`).join('');
-  $('#chopts').querySelectorAll('.chb').forEach(b=>b.addEventListener('click',()=>talkPick(+b.dataset.i,true)))}
-function openTalk(n){G.state='talk';TL.n=n;TL.t0=performance.now();try{document.exitPointerLock&&document.exitPointerLock()}catch(e){}
+function talkPick(i,tap){if(G.state!=='talk'||TL.typing||(tap&&performance.now()-TL.t0<350))return;const o=TL.opts[i];if(!o)return;sfx.tick();
+  TL.opts=[];$('#chopts').innerHTML='';o.f();
+  // ações que acontecem depois da última frase
+  const a=TL.after;if(typeof a==='string'&&a.startsWith('close-')){TL.action=a.slice(6);TL.after='close'}}
+function openTalk(n){G.state='talk';TL.n=n;TL.action=null;try{document.exitPointerLock&&document.exitPointerLock()}catch(e){}
   ['#talk','#eprompt','#arrow','#cross'].forEach(s=>$(s).hidden=true);tbtns.hidden=true;joy.hidden=true;TC.joy=null;for(const k in K)K[k]=false;
-  const off=MISSIONS.find(m=>m.st==='offer'&&m.giver===n.name);$('#chwho').textContent=n.name;talkSay(off?off.ask:((n.line&&n.line())||n.idle()||'Olá!'));
-  n.g.rotation.y=Math.atan2(P.x-n.g.position.x,P.z-n.g.position.z);$('#choice').hidden=false;sfx.ok();talkRefresh()}
-function talkPick(i,tap){if(G.state!=='talk'||(tap&&performance.now()-(TL.t0||0)<450))return;const o=TL.opts[i];if(o){sfx.tick();o.f()}}
-function closeTalk(){if(G.state!=='talk')return;G.state='play';$('#choice').hidden=true;TL.n=null;showHud();canvas.focus()}
+  const off=MISSIONS.find(m=>m.st==='offer'&&m.giver===n.name);$('#chwho').textContent=n.name;$('#choice').classList.add('talkmode');$('#choice').hidden=false;
+  n.g.rotation.y=Math.atan2(P.x-n.g.position.x,P.z-n.g.position.z);talkSay(off?off.ask:((n.line&&n.line())||n.idle()||'Olá!'))}
+function closeTalk(){if(G.state!=='talk')return;const act=TL.action,n=TL.n;G.state='play';$('#choice').hidden=true;$('#choice').classList.remove('talkmode','typing');TL.n=null;TL.action=null;showHud();canvas.focus();
+  if(act==='basket')startBasket('tiago');else if(act==='drive')startDrive();else if(act==='boletim')showBoletim(n);
+  else if(act==='tv'){const H=G.home;H.tv=true;G.extra+=30;sfx.win();toast(Math.random()<.6?'Ganhaste 3–2 ao Tomás no jogo de futebol!':'O Tomás ganhou-te 2–1... ele treina muito.',false,3.2);renderObj(true)}}
+// só avança se o toque começou no próprio balão depois da frase começar (evita o toque fantasma do botão E)
+$('#choice').addEventListener('pointerdown',()=>{TL.pd=performance.now()});
+$('#choice').addEventListener('click',()=>{if(G.state==='talk'&&TL.pd&&TL.pd>=TL.t0)talkAdvance(false)});
 
 /* ---------------- MEMÓRIA (só dentro da Central 30) ---------------- */
 // Fora da coleção o jogo não guarda nada. Dentro da Central 30, o armazenamento é o da coleção,
@@ -1444,7 +1503,7 @@ function update(dt){
     arrSvg.style.transform=`rotate(${ang}rad)`;arrD.textContent=(tl!==pl?(tl?'escadas ↑ · ':'escadas ↓ · '):'')+Math.round(Math.hypot(tg.x-P.x,tg.z-P.z))+' m'}
   drawMap();
 }
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(G.hub&&G.state!=='pause'){renderer.render(scene,camera);requestAnimationFrame(loop);return}if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}if(G.state==='end'||G.state==='result'||G.state==='exam'){toastT=0;toastEl.style.opacity=0}update(dt);
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(G.state==='talk'&&!G.hub)talkTick(dt);if(G.hub&&G.state!=='pause'){renderer.render(scene,camera);requestAnimationFrame(loop);return}if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}if(G.state==='end'||G.state==='result'||G.state==='exam'){toastT=0;toastEl.style.opacity=0}update(dt);
   if(G.state==='exam'&&G.exam&&!G.exam.lock){G.exam.t-=dt;$('#qbarv').style.width=Math.max(0,G.exam.t/QTIME*100)+'%';if(G.exam.t<=0)answer(-1)}
   renderer.render(scene,camera);requestAnimationFrame(loop)}
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
