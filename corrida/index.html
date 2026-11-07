@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#151412">
-<title>Corrida na Joaquim</title>
+<title>Corrida ao Teste</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -234,10 +234,10 @@ input[type=range]{accent-color:var(--locker);width:180px}
 
 <div class="screen" id="menu">
   <div class="card">
-    <div class="tagrow"><span class="tag">CACIFO 333</span><span class="tag dk">4 AULAS</span><span class="tag dk">MISSÕES</span><span class="tag dk">CASA</span><span class="tag dk">TAVAREDE</span></div>
+    <div class="tagrow"><span class="tag">CACIFO 333</span><span class="tag dk">4 AULAS</span><span class="tag dk">MISSÕES</span><span class="tag dk">CASA</span><span class="tag dk">RIBEIRA ALTA</span></div>
     <h1>Corrida ao <em>Teste</em></h1>
-    <p class="sub">Escola Secundária Dr. Joaquim de Carvalho · Figueira da Foz</p>
-    <p class="story">Estás no <strong>7.º B</strong>. Um dia inteiro, do toque das 08:20 até à hora de dormir. De manhã encontras as tuas coisas antes do teste de <strong>Matemática</strong>. Depois vêm <strong>Português</strong>, <strong>Educação Física</strong> e <strong>Físico-Química</strong>, com missões, basquetebol e almoço pelo meio. No fim das aulas, <strong>a mãe ou o pai</strong> vem buscar-te e vais para casa, no bairro de Tavarede: mostras o boletim, fazes os trabalhos, jantas, dás comida ao gato e vais dormir a horas. Há <strong>10 cromos</strong> escondidos.</p>
+    <p class="sub">Escola Secundária Vale Verde · Ribeira Alta</p>
+    <p class="story">Estás no <strong>7.º B</strong>. Um dia inteiro, do toque das 08:20 até à hora de dormir. De manhã encontras as tuas coisas antes do teste de <strong>Matemática</strong>. Depois vêm <strong>Português</strong>, <strong>Educação Física</strong> e <strong>Físico-Química</strong>, com missões, basquetebol e almoço pelo meio. No fim das aulas, <strong>a mãe ou o pai</strong> vem buscar-te e vais para casa, no bairro da Ribeira Alta: mostras o boletim, fazes os trabalhos, jantas, dás comida ao gato e vais dormir a horas. Há <strong>10 cromos</strong> escondidos.</p>
     <div class="cust">
       <div class="field"><label class="lbl2" for="pname">O teu nome</label><input id="pname" maxlength="16" placeholder="Aluno" autocomplete="off"></div>
       <div class="field"><span class="lbl2">Camisola</span><div class="sw" id="swShirt"></div></div>
@@ -270,7 +270,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
     <div class="warn">Não corras perto das auxiliares. Se chegares depois do toque levas atraso (−2 valores). Se não apareceres de todo, levas falta.</div>
     <div class="btnrow"><button class="btn" id="go">Começar o dia</button></div>
     <div class="best" id="best"></div>
-    <div class="facts"><b>Sobre a escola.</b> Fica em Tavarede, na Figueira da Foz, e tem o nome de Joaquim de Carvalho (1892–1958), filósofo e historiador das ideias nascido na Figueira. O edifício foi requalificado pelo atelier Inês Lobo Arquitectos. No corredor do piso 0 há uma exposição com fotografias da escola.</div>
+    <div class="facts"><b>Sobre a escola.</b> A Escola Vale Verde é inventada: fica na vila da Ribeira Alta, junto a um vale cheio de pinheiros que lhe dá o nome. No corredor do piso 0 há uma exposição com fotografias da escola.</div>
   </div>
 </div>
 
@@ -369,7 +369,7 @@ door(20,30,'a','#'); door(21,30,'a','#');
 door(5,15,'.','w'); door(5,20,'.','w'); door(36,15,'.','w'); door(36,20,'.','w');
 door(7,25,'.','='); door(13,25,'.','='); door(29,25,'.','='); door(36,25,'.','=');
 
-// ===== BAIRRO DE TAVAREDE (fora da escola) =====
+// ===== BAIRRO DA RIBEIRA ALTA (fora da escola) =====
 rect(0,39,41,69,'H');
 fill(17,39,24,39,'_');
 fill(0,40,41,40,'P'); fill(0,41,41,43,'R'); fill(0,44,41,45,'P');
@@ -598,7 +598,7 @@ board(6.05,84,1,6,UP);box(8.5,UP,84,.9,.9,2.6,0x2d3035,true);box(8.5,UP+.9,84,1,
 // placas de saída
 [[63,3.1,89.8,1.0,.25,.06],[22.5,2.95,75.15,.6,.2,.05],[63,UP+2.6,69.1,1,.25,.06]].forEach(a=>{const m=new THREE.Mesh(unitBox,new THREE.MeshBasicMaterial({color:0x1fa858}));m.position.set(a[0],a[1],a[2]);m.scale.set(a[3],a[4],a[5]);scene.add(m)});
 
-// ===== BAIRRO DE TAVAREDE: mobília e detalhes =====
+// ===== BAIRRO DA RIBEIRA ALTA: mobília e detalhes =====
 for(let i=0;i<9;i++)box(63,.013,123.5+i*1.0,5,.004,.5,0xf4f4f0);           // passadeira
 for(let x=-58;x<190;x+=4)if(x<57||x>69)box(x,.006,127.5,2,.004,.12,0xf4f4f0); // traço do meio
 for(let z=136;z<206;z+=4)box(102,.013,z,.12,.004,2,0xf4f4f0);
@@ -661,9 +661,9 @@ const UPR=UP;
 plate('SALA 4',18.03,3.05,46.5,Math.PI/2,1.1,.3);plate('SALA 5',18.03,3.05,61.5,Math.PI/2,1.1,.3);plate('SALA 6',107.97,3.05,46.5,-Math.PI/2,1.1,.3);plate('SALA 7',107.97,3.05,61.5,-Math.PI/2,1.1,.3);
 plate('GINÁSIO',27,3.5,33.04,0,3.2,.7,'#f1efe9','#1c1b1a');plate('CANTINA',87,3.4,31.66,0,3,.6,'#1c1b1a','#f1efe9');
 plate('PISO 0',51.03,3.0,79.5,Math.PI/2,1.4,.5,'#f2f0ea','#1c1b1a');plate('PISO 1',20.03,UP+2.4,72,Math.PI/2,1.1,.4,'#f2f0ea','#1c1b1a');
-plate('ESCOLA SECUNDÁRIA DR. JOAQUIM DE CARVALHO',63,UP+.1,93.04,0,13,.75,'#f3f1ec','#2a2723');
-multiPlate([['JOAQUIM DE CARVALHO','800 40px "Bricolage Grotesque",sans-serif','#f2b705'],['1892 – 1958','600 26px "IBM Plex Mono",monospace'],['Filósofo e historiador das ideias,','500 26px "Bricolage Grotesque",sans-serif'],['nascido na Figueira da Foz.','500 26px "Bricolage Grotesque",sans-serif'],['Professor na Universidade de Coimbra.','500 26px "Bricolage Grotesque",sans-serif']],56,1.7,89.96,Math.PI,2.2,1.25);
-multiPlate([['REQUALIFICAÇÃO','800 40px "Bricolage Grotesque",sans-serif','#f2b705'],['Inês Lobo Arquitectos','600 28px "Bricolage Grotesque",sans-serif'],['Escola em Tavarede,','500 26px "Bricolage Grotesque",sans-serif'],['Figueira da Foz.','500 26px "Bricolage Grotesque",sans-serif'],['Bem-vindos!','600 26px "IBM Plex Mono",monospace']],70,1.7,89.96,Math.PI,2.2,1.25);
+plate('ESCOLA SECUNDÁRIA VALE VERDE',63,UP+.1,93.04,0,13,.75,'#f3f1ec','#2a2723');
+multiPlate([['VALE VERDE','800 40px "Bricolage Grotesque",sans-serif','#f2b705'],['desde 1975','600 26px "IBM Plex Mono",monospace'],['Construída no vale dos pinheiros,','500 26px "Bricolage Grotesque",sans-serif'],['à beira da Ribeira Alta.','500 26px "Bricolage Grotesque",sans-serif'],['Aqui aprende-se a crescer.','500 26px "Bricolage Grotesque",sans-serif']],56,1.7,89.96,Math.PI,2.2,1.25);
+multiPlate([['A NOSSA ESCOLA','800 40px "Bricolage Grotesque",sans-serif','#f2b705'],['Escola Vale Verde','600 28px "Bricolage Grotesque",sans-serif'],['Rua das Gaivotas,','500 26px "Bricolage Grotesque",sans-serif'],['Ribeira Alta.','500 26px "Bricolage Grotesque",sans-serif'],['Bem-vindos!','600 26px "IBM Plex Mono",monospace']],70,1.7,89.96,Math.PI,2.2,1.25);
 // exposição de fotografias no corredor do piso 0
 const CAPS=['Átrio dos cacifos','Sala de aula','Dia de teste','Corredor do piso','A entrada','Cantina','Pavilhão','Refeitório','Fachada','Pátio interior'];
 const photoX=[28.5,33,37.5,42,46.5,79.5,84,88.5,93,97.5];
@@ -674,7 +674,7 @@ PHOTOS.forEach((p,i)=>{const x=photoX[i];const ar=p.w/p.h;const h=ar>1?1.0:1.3,w
   const tx=loader.load(p.d);const m=new THREE.Mesh(plane,new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,1.62,69.08);m.scale.set(w,h,1);scene.add(m);
   const c=plate(CAPS[i],x,1.62-h/2-.32,69.05,0,1.5,.22,'#f2f0ea','#2a2723')});
 // muro da entrada
-(function(){const t=textTex('ESCOLA SECUNDÁRIA COM 3.º CICLO DO E. B. DR. JOAQUIM DE CARVALHO',2048,192,'#bcb8b0','#2b2925','600 60px Georgia,"Times New Roman",serif','right');
+(function(){const t=textTex('ESCOLA SECUNDÁRIA COM 3.º CICLO VALE VERDE',2048,192,'#bcb8b0','#2b2925','600 60px Georgia,"Times New Roman",serif','right');
   const side=lam({map:t}),plain=lam({color:0xbcb8b0});const m=new THREE.Mesh(new THREE.BoxGeometry(.5,1.7,18),[side,side,plain,plain,plain,plain]);m.position.set(49.5,.85,105);m.castShadow=m.receiveShadow=true;scene.add(m);
   colliders.push({x0:49.25,x1:49.75,z0:96,z1:114,lvl:0})})();
 
@@ -690,10 +690,10 @@ HOUSES.forEach(([c0,r0,c1,r1,col])=>{const x0=c0*S,x1=(c1+1)*S,z0=r0*S,z1=(r1+1)
 const hr=prism(25,2.6,25);hr.position.set(84,3.25,186);scene.add(hr);HOUSE_ROOFS.push(hr);HOUSE_ROOFS.push(slab(84,3.15,186,24.4,.12,24.4,0xe7e3da));
 const pr2=prism(19,2.0,28);pr2.rotation.y=Math.PI/2;pr2.position.set(19.5,3.25,147);scene.add(pr2);HOUSE_ROOFS.push(pr2);HOUSE_ROOFS.push(slab(19.5,3.15,147,27.4,.12,18.4,0xe7e3da));
 // placas
-plate('PASTELARIA TAVAREDE',21,2.75,137.96,Math.PI,5,.55,'#7a2a2a','#f4efe4');
+plate('PASTELARIA RIBEIRA',21,2.75,137.96,Math.PI,5,.55,'#7a2a2a','#f4efe4');
 plate('RUA DA ESCOLA',30,2.35,135.0,Math.PI,1.8,.32,'#2f5fa8','#ffffff');
 plate('12',96.03,2.25,188.4,Math.PI/2,.5,.4,'#2f6db5','#ffffff');
-plate('FIGUEIRA DA FOZ',79,1.75,177.03,0,1.7,.5,'#2f6db5','#f2b705');
+plate('RIBEIRA ALTA',79,1.75,177.03,0,1.7,.5,'#2f6db5','#f2b705');
 plate('PARQUE INFANTIL',41,2.0,140.6,Math.PI,2.4,.4,'#2e8b6e','#ffffff');box(41,0,140.4,.08,2.2,.08,0x3d3f42);
 plate('PARAGEM',84,2.95,121.6,Math.PI,1.2,.3,'#f2b705','#151412');
 (function(){const g=new THREE.Mesh(unitBox,glassMat);g.position.set(84,0,122.25);g.scale.set(4,2.4,.05);scene.add(g)})();
@@ -825,7 +825,7 @@ const seatBeam=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,3,12,1,true),beam
 function placeSeat(){const s=curCls().seat;seatRing.position.set(s.x,s.y+.03,s.z);seatBeam.position.set(s.x,s.y+1.5,s.z)}
 
 /* ---------------- CROMOS ---------------- */
-const CROMOS=[{n:'Pinheiro manso',x:43.6,z:47.6,y:1.1},{n:'Cacifo 333',x:72.9,z:82.5,y:2.75},{n:'Joaquim de Carvalho',x:56,z:88.3,y:1.2},{n:'Cesto do ginásio',x:42.2,z:21,y:1.1},{n:'Claraboia da cantina',x:95,z:21,y:1.1},{n:'Laboratório',x:8,z:79.6,y:UP+1.1},{n:'Pinhal da entrada',x:12,z:111.5,y:1.1},{n:'Biblioteca',x:97.5,z:79.5,y:1.1},{n:'Passadeira',x:63,z:127.5,y:1.1},{n:'Parque infantil',x:57.5,z:160,y:1.2}];
+const CROMOS=[{n:'Pinheiro manso',x:43.6,z:47.6,y:1.1},{n:'Cacifo 333',x:72.9,z:82.5,y:2.75},{n:'Placa da escola',x:56,z:88.3,y:1.2},{n:'Cesto do ginásio',x:42.2,z:21,y:1.1},{n:'Claraboia da cantina',x:95,z:21,y:1.1},{n:'Laboratório',x:8,z:79.6,y:UP+1.1},{n:'Pinhal da entrada',x:12,z:111.5,y:1.1},{n:'Biblioteca',x:97.5,z:79.5,y:1.1},{n:'Passadeira',x:63,z:127.5,y:1.1},{n:'Parque infantil',x:57.5,z:160,y:1.2}];
 const cromoTex=CROMOS.map((c,i)=>ctex(128,180,(g,w,h)=>{g.fillStyle='#151412';g.fillRect(0,0,w,h);g.fillStyle='#f2b705';g.fillRect(6,6,w-12,h-12);g.fillStyle='#151412';g.fillRect(14,14,w-28,96);
   g.fillStyle='#f2b705';g.font='800 54px "Bricolage Grotesque",sans-serif';g.textAlign='center';g.fillText(String(i+1),w/2,82);g.fillStyle='#151412';g.font='700 15px "Bricolage Grotesque",sans-serif';
   const words=c.n.split(' ');let line='',yy=132;words.forEach(wd=>{if((line+' '+wd).trim().length>12){g.fillText(line.trim(),w/2,yy);yy+=17;line=wd}else line+=' '+wd});g.fillText(line.trim(),w/2,yy)}));
@@ -1134,7 +1134,7 @@ function report(){G.state='end';hideHud();sfx.win();const keys=['mat','pt','ef',
     return `<tr><td>${CLASSES[k].name}</td><td class="n ${g.nota<10?'low':''}">${g.falta?'F':g.nota}</td><td class="o">${g.falta?'Falta de presença':g.late?'Chegou atrasado (−2)':g.nota>=16?'Muito bom':g.nota>=10?'Satisfaz':'Não satisfaz'}</td></tr>`}).join('');
   const media=sum/4,beh=G.caught===0?'Exemplar':G.caught<=2?'Bom':'A melhorar';
   const hs=homeScore();const stars=1+(media>=12&&faltas===0?1:0)+(hs>=5&&media>=10?1:0);
-  $('#enddiff').textContent=DIFF[diff].label;$('#endwho').textContent=(LOOK.name||'Aluno')+' · 7.º B · Escola Secundária Dr. Joaquim de Carvalho';
+  $('#enddiff').textContent=DIFF[diff].label;$('#endwho').textContent=(LOOK.name||'Aluno')+' · 7.º B · Escola Secundária Vale Verde';
   $('#stars').innerHTML=[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">★</span>`).join('');
   $('#endstats').innerHTML=`<dt>Média do dia</dt><dd>${media.toFixed(1)} valores</dd><dt>Assiduidade</dt><dd>${faltas} falta${faltas===1?'':'s'} · ${lates} atraso${lates===1?'':'s'}</dd><dt>Comportamento</dt><dd>${beh} (${G.caught}× a correr)</dd><dt>Missões</dt><dd>${MISSIONS.filter(m=>m.st==='done').length} de 4</dd><dt>Desafio do Tiago</dt><dd>${G.tiago?'Ganhaste':G.tiago===false?'Perdeste':'Não jogaste'}</dd><dt>Almoço</dt><dd>${G.lunch?'Sim':'Não'}</dd><dt>Cromos</dt><dd>${G.cromos} de ${CROMOS.length}</dd>`;
 
@@ -1192,7 +1192,7 @@ const TOMAS=addNPC({name:'Tomás',x:91.2,z:183.2,y:0,o:{shirt:0xe0702a,pants:0x2
 TOMAS.g.scale.setScalar(.78);
 addNPC({name:'Sr. Joaquim',x:18,z:152.6,y:0,ry:Math.PI,o:{shirt:0xffffff,pants:0x2a2a2a,hair:0x9a9a9a,skin:0xe2b28e},idle:()=>G.lanche?'Volta sempre! Cumprimentos à família.':'Boa tarde! As bolas de Berlim acabaram de sair.'});
 addNPC({name:'Leonor',x:50,z:157,y:0,anim:'hop',o:{shirt:0xf2b705,pants:0x2a2a33,hair:0x6b3e1f,seed:3},idle:()=>'Viste o cromo escondido aqui no parque?'});
-addNPC({name:'Dona Rosa',x:84,z:121.3,y:0,ry:0,o:{shirt:0x5a3a6a,pants:0x2a2a30,hair:0xbcbcbc,skin:0xf0caa8},idle:()=>'Estou à espera do autocarro para a Figueira. Hoje vem atrasado.'});
+addNPC({name:'Dona Rosa',x:84,z:121.3,y:0,ry:0,o:{shirt:0x5a3a6a,pants:0x2a2a30,hair:0xbcbcbc,skin:0xf0caa8},idle:()=>'Estou à espera do autocarro para a cidade. Hoje vem atrasado.'});
 // gato Bolacha
 const cat=new THREE.Group();(()=>{const M=lam({color:0xd98a3a}),W=lam({color:0xf4efe4});const b=new THREE.Mesh(new THREE.BoxGeometry(.5,.24,.22),M);b.position.y=.24;const h=new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.2),M);h.position.set(.32,.38,0);
   const mz=new THREE.Mesh(new THREE.BoxGeometry(.06,.08,.12),W);mz.position.set(.43,.34,0);const e1=new THREE.Mesh(new THREE.ConeGeometry(.05,.1,4),M);e1.position.set(.32,.52,.06);const e2=e1.clone();e2.position.z=-.06;
@@ -1221,7 +1221,7 @@ function setupPhase(i){const par=G.driver==='mae'?MAE:PAI;
 function homeNext(){if(G.phase===4)return (G.driver==='mae'?'A mãe':'O pai')+' espera-te do outro lado da passadeira';return clockSecs()>=HM(22,30)?'Já passa das 22:30! Vai dormir.':'Em casa · deita-te até às 22:30'}
 function homeObjectives(){const L=[];const H=G.home;const par=G.driver==='mae'?MAE:PAI;const pp=o=>({x:o.g.position.x,z:o.g.position.z,y:0});
   if(G.phase===4){L.push({label:'Ir ter com '+(G.driver==='mae'?'a mãe':'o pai'),sub:'À saída, do outro lado da passadeira',done:false,t:pp(par)});
-    if(!G.lanche)L.push({label:'Bola de Berlim',sub:'Pastelaria Tavarede · opcional',done:false,t:{x:18,z:150.2,y:0},opt:true});return L}
+    if(!G.lanche)L.push({label:'Bola de Berlim',sub:'Pastelaria Ribeira · opcional',done:false,t:{x:18,z:150.2,y:0},opt:true});return L}
   L.push({label:'Mostrar o boletim',sub:'À mãe ou ao pai',done:H.boletim,t:H.boletim?null:pp(MAE)});
   L.push({label:'Trabalhos de casa',sub:H.tpc!==null?H.tpc+'/3 certas':'Secretária do quarto',done:H.tpc!==null,t:H.tpc!==null?null:{x:81.5,z:178.7,y:0}});
   L.push({label:'Dar comida ao Bolacha',sub:H.gato===0?'Ração na bancada da cozinha':H.gato===1?'Taça ao pé do frigorífico':'Já comeu',done:H.gato===2,t:H.gato===2?null:H.gato===0?{x:76.4,z:187.3,y:0}:{x:83,z:193.6,y:0}});
@@ -1231,7 +1231,7 @@ function homeObjectives(){const L=[];const H=G.home;const par=G.driver==='mae'?M
   if(!H.tv)L.push({label:'Jogar consola com o Tomás',sub:'Sofá da sala · opcional',done:false,t:{x:88.9,z:180.5,y:0},opt:true});
   L.push({label:'Ir dormir',sub:'Cama do quarto · até às 22:30',done:false,t:{x:78.3,z:180.1,y:0}});return L}
 function homeAction(){const H=G.home;if(!H||G.phase<4)return null;
-  if(!G.lanche&&near({x:18,z:150.2,y:0},2.2))return {t:'Comprar uma bola de Berlim (1,50 €)',f:()=>{G.lanche=true;sfx.pick();toast('Que bola de Berlim! Cheia de creme, como as da praia da Figueira.',false,3.4);renderObj(true)}};
+  if(!G.lanche&&near({x:18,z:150.2,y:0},2.2))return {t:'Comprar uma bola de Berlim (1,50 €)',f:()=>{G.lanche=true;sfx.pick();toast('Que bola de Berlim! Cheia de creme, como as da praia.',false,3.4);renderObj(true)}};
   if(G.phase===4)return null;
   if(H.tpc===null&&near({x:81.5,z:178.7,y:0},1.6))return {t:'Fazer os trabalhos de casa (45 min)',f:()=>startExam('tpc')};
   if(H.gato===0&&near({x:76.4,z:187.3,y:0},1.6))return {t:'Pegar na ração do Bolacha',f:()=>{H.gato=1;sfx.pick();toast('Tens a ração. Agora a taça, ao pé do frigorífico.',false,2.6);renderObj(true)}};
@@ -1296,11 +1296,11 @@ const CHAT={
   'Prof. Nuno':['Antes de lançar, olha para o aro e respira.','Hidrata-te bem antes da aula!'],
   'Prof.ª Teresa':['No laboratório, segurança primeiro: óculos e bata.','Sabias que a luz do Sol demora uns oito minutos a chegar à Terra?'],
   'Mãe':['Estou tão orgulhosa de ti.','Amanhã acordo-te às sete e meia, está bem?'],
-  'Pai':['No fim de semana vamos à praia da Figueira?','Quando eu andava na escola também me atrasava...'],
-  'Tomás':['Sabes que o Bolacha dormiu na minha cama?','Quando for grande também vou para a Joaquim!'],
+  'Pai':['No fim de semana vamos à praia?','Quando eu andava na escola também me atrasava...'],
+  'Tomás':['Sabes que o Bolacha dormiu na minha cama?','Quando for grande também vou para a Vale Verde!'],
   'Sr. Joaquim':['Faço bolas de Berlim há trinta anos.','No verão levo-as à praia, bem cedinho.'],
   'Leonor':['O escorrega é o mais rápido do bairro!','Ajudas-me a fazer um castelo na caixa de areia?'],
-  'Dona Rosa':['No meu tempo, a escola era muito diferente.','O autocarro para a Figueira passa de meia em meia hora.'],
+  'Dona Rosa':['No meu tempo, a escola era muito diferente.','O autocarro para a cidade passa de meia em meia hora.'],
 };
 const TL={n:null,opts:[]};
 function npcNear(r){let best=null,bd=r;NPCS.forEach(n=>{if(!n.g.visible||Math.abs(P.y-n.y)>1.5)return;const d=Math.hypot(P.x-n.g.position.x,P.z-n.g.position.z);if(d<bd){bd=d;best=n}});return best}
