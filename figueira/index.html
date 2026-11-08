@@ -71,7 +71,7 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 @media (max-width:820px){#officeBack{left:auto;right:12px;transform:none;bottom:auto;top:calc(42% - 62px);padding:8px 13px;font-size:13px}}
 #indH{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;font:700 14px var(--fm);color:#46525a}#indH .on{color:#46525a}#indH.tick .on{color:#ffa21a;text-shadow:0 0 8px #ffa21a}#indH .f{filter:grayscale(1) opacity(.45)}#indH .f.lit{filter:none}
 .tb.sm{width:auto;height:auto;border-radius:8px;padding:7px 9px;font-size:11px;position:fixed;top:calc(env(safe-area-inset-top,0px) + 200px);right:12px}
-#tZ{right:170px!important}#tH{right:130px!important}#tX{right:62px!important}#tLu{right:12px!important;top:calc(env(safe-area-inset-top,0px) + 240px)!important}#tHorn{right:120px!important;top:calc(env(safe-area-inset-top,0px) + 240px)!important}#tF{right:62px!important;top:calc(env(safe-area-inset-top,0px) + 240px)!important}
+#tZ{right:170px!important}#tH{right:130px!important}#tX{right:62px!important}#tLu{right:12px!important;top:calc(env(safe-area-inset-top,0px) + 240px)!important}#tMap{right:12px!important;top:calc(env(safe-area-inset-top,0px) + 280px)!important}#tHorn{right:120px!important;top:calc(env(safe-area-inset-top,0px) + 240px)!important}#tF{right:62px!important;top:calc(env(safe-area-inset-top,0px) + 240px)!important}
 @media (max-width:640px){#mini{width:118px;height:118px}#tl{width:calc(100vw - 160px)}#tl .obj{font-size:13px}#spd b{font-size:30px}#postal{display:none}}
 @media (pointer:coarse){#spd{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 146px);min-width:96px;padding:6px 10px}#spd b{font-size:24px}#prompt{bottom:calc(env(safe-area-inset-bottom,0px) + 232px)}
 #tE{left:max(18px,calc(env(safe-area-inset-left,0px) + 18px));transform:none;bottom:calc(env(safe-area-inset-bottom,0px) + 136px)}
@@ -92,7 +92,7 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 <div id="touch" hidden>
   <button class="tb" id="tL">◀</button><button class="tb" id="tR">▶</button>
   <button class="tb" id="tGas">ACEL.</button><button class="tb" id="tBrk">TRAVAR</button><button class="tb" id="tNit">NITRO</button>
-  <button class="tb sm" id="tZ">◀ PISCA</button><button class="tb sm" id="tH">⚠</button><button class="tb sm" id="tX">PISCA ▶</button><button class="tb sm" id="tLu">💡</button><button class="tb sm" id="tF">SAIR</button><button class="tb sm" id="tHorn">📯</button>
+  <button class="tb sm" id="tZ">◀ PISCA</button><button class="tb sm" id="tH">⚠</button><button class="tb sm" id="tX">PISCA ▶</button><button class="tb sm" id="tLu">💡</button><button class="tb sm" id="tF">SAIR</button><button class="tb sm" id="tHorn">📯</button><button class="tb sm" id="tMap">🗺️ MAPA</button>
   <button class="tb" id="tE">E</button><button class="tb" id="tMenu">II PAUSA</button>
 </div>
 
@@ -917,6 +917,8 @@ addEventListener('touchstart',enableTouch,{passive:true,once:true});
 for(const [id,k] of [['#tL','left'],['#tR','right'],['#tGas','gas'],['#tBrk','brake'],['#tNit','nitro']]){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();TB[k]=true;b.classList.add('on')});const up=()=>{TB[k]=false;b.classList.remove('on')};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)}
 {const hb=$('#tHorn');hb.addEventListener('pointerdown',e=>{e.preventDefault();hornOn()});['pointerup','pointercancel','pointerleave'].forEach(t=>hb.addEventListener(t,hornOff))}
 [['#tZ',()=>setIndMode(IND.mode==='L'?'':'L')],['#tX',()=>setIndMode(IND.mode==='R'?'':'R')],['#tH',()=>setIndMode(IND.mode==='H'?'':'H')],['#tLu',toggleLights],['#tF',()=>{toggleFoot();$('#tF').textContent=W.on?'ENTRAR':'SAIR'}]].forEach(([id,f])=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();f()}));
+$('#tMap').addEventListener('pointerdown',e=>{e.preventDefault();openMap()});
+$('#mapw').style.pointerEvents='auto';$('#mapw').style.cursor='pointer';$('#mapw').title='Abrir o mapa (M)';$('#mapw').addEventListener('click',()=>openMap());
 $('#tE').addEventListener('pointerdown',e=>{e.preventDefault();action()});$('#tMenu').addEventListener('pointerdown',e=>{e.preventDefault();pause()});
 
 /* ================= FÍSICA DO CARRO ================= */
