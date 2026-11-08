@@ -709,7 +709,7 @@ function passTarget(p,dirx,dirz,long){
     let sc=-d*.04+(dx*s)*.05*(long?2:1);
     if(dirx||dirz){const dl=Math.hypot(dirx,dirz);const cos=(dx*dirx+dz*dirz)/(d*dl);if(cos<.35)continue;sc+=cos*3;}
     // marcação: penaliza colegas com adversários perto da linha do passe
-    let press=99;for(const o of M.players){if(o.team===p.team)continue;press=Math.min(press,Math.hypot(o.x-q.x,o.z-q.z));const t=clamp(((o.x-p.x)*dx+(o.z-p.z)*dz)/(d*d),0,1);const ld=Math.hypot(p.x+dx*t-o.x,p.z+dz*t-o.z);if(ld<1.6&&t>.1&&t<.95)sc-=2.2;}
+    let press=99;for(const o of M.players){if(o.team===p.team)continue;press=Math.min(press,Math.hypot(o.x-q.x,o.z-q.z));const t=clamp(((o.x-p.x)*dx+(o.z-p.z)*dz)/(d*d),0,1);const ld=Math.hypot(p.x+dx*t-o.x,p.z+dz*t-o.z);if(ld<2.3&&t>.08&&t<.97)sc-=ld<1.2?5:3.2;}
     sc+=Math.min(press,8)*.18;
     if(sc>bs){bs=sc;best=q;}}
   return best;
@@ -721,7 +721,7 @@ function doPass(p,dirx,dirz,long){
   if(long){tx+=side(q.team)*6;}
   const d=Math.hypot(tx-p.x,tz-p.z),acc=p.st.pas/100;
   const ang=Math.atan2(tz-p.z,tx-p.x)+rnd(-1,1)*(1-acc)*.16;
-  const spd=long?clamp(d*.55+9,14,26):clamp(d*.5+7.5,9,22); // a bola rola mais (relva): o passe chega ao colega com 6–8 m/s
+  const spd=long?clamp(d*.5+13,17,28):clamp(d*.42+13,13,25); // passe tenso: chega ao colega depressa (a bola rola mais na relva)
   kickBall(p,Math.cos(ang),Math.sin(ang),spd,long||d>26?clamp(d*.22,3,8):0);
   q.recv=1.6;return true;
 }
