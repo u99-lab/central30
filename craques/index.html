@@ -553,7 +553,10 @@ function renderColl(){
    ========================================================= */
 let AC=null;
 function sfx(k,s=1){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);
-  if(k==='kick'){o.type='triangle';o.frequency.setValueAtTime(160*s+60,t);o.frequency.exponentialRampToValueAtTime(40,t+.12);g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.14);o.start(t);o.stop(t+.15);}
+  if(k==='kick'){if(t-(sfx.lastKick||0)<.12)return;sfx.lastKick=t;// toque seco na bola: ruído curto filtrado (+ um pequeno baque nos remates fortes)
+    if(!sfx.nb){const n=AC.createBuffer(1,AC.sampleRate*.08,AC.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);sfx.nb=n;}
+    const src=AC.createBufferSource(),bp=AC.createBiquadFilter(),ng=AC.createGain();src.buffer=sfx.nb;bp.type='bandpass';bp.frequency.value=700+900*s;bp.Q.value=1.1;src.connect(bp);bp.connect(ng);ng.connect(AC.destination);ng.gain.setValueAtTime(.12+.28*s,t);ng.gain.exponentialRampToValueAtTime(.001,t+.07);src.start(t);src.stop(t+.08);
+    if(s>.55){o.type='sine';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(70,t+.06);g.gain.setValueAtTime(.14*s,t);g.gain.exponentialRampToValueAtTime(.001,t+.07);o.start(t);o.stop(t+.08);}}
   else if(k==='whistle'){o.type='sine';o.frequency.setValueAtTime(2300,t);g.gain.setValueAtTime(.08,t);g.gain.setValueAtTime(.0,t+.18);g.gain.setValueAtTime(.08,t+.24);g.gain.exponentialRampToValueAtTime(.001,t+.6);o.start(t);o.stop(t+.62);}
   else if(k==='goal'){o.type='sawtooth';o.frequency.setValueAtTime(330,t);o.frequency.linearRampToValueAtTime(660,t+.5);g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.001,t+1.2);o.start(t);o.stop(t+1.2);}
   else if(k==='reward'){o.type='sine';o.frequency.setValueAtTime(523,t);o.frequency.setValueAtTime(784,t+.1);o.frequency.setValueAtTime(1047,t+.2);g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.5);o.start(t);o.stop(t+.5);}
@@ -718,7 +721,7 @@ function doPass(p,dirx,dirz,long){
   if(long){tx+=side(q.team)*6;}
   const d=Math.hypot(tx-p.x,tz-p.z),acc=p.st.pas/100;
   const ang=Math.atan2(tz-p.z,tx-p.x)+rnd(-1,1)*(1-acc)*.16;
-  const spd=long?clamp(d*.95+6,16,30):clamp(d*1.15+7,11,27);
+  const spd=long?clamp(d*.55+9,14,26):clamp(d*.5+7.5,9,22); // a bola rola mais (relva): o passe chega ao colega com 6–8 m/s
   kickBall(p,Math.cos(ang),Math.sin(ang),spd,long||d>26?clamp(d*.22,3,8):0);
   q.recv=1.6;return true;
 }
@@ -870,7 +873,7 @@ function stepBall(dt){
       const vn=b.vx*nx+b.vz*nz;if(vn<0){b.vx-=1.6*vn*nx;b.vz-=1.6*vn*nz;}b.vx*=.55;b.vz*=.55;
       b.x=q.x+nx*.45;b.z=q.z+nz*.45;b.last=q.team;b.lastTouch=q;sfx('kick',.2);break;}}
   if(b.y<BR){b.y=BR;if(b.vy<-1.5)b.vy=-b.vy*.48;else b.vy=0;}
-  const onG=b.y<=BR+.01,fr=onG?Math.exp(-1.15*dt):Math.exp(-.12*dt);b.vx*=fr;b.vz*=fr;
+  const onG=b.y<=BR+.01,fr=onG?Math.exp(-.42*dt):Math.exp(-.1*dt);b.vx*=fr;b.vz*=fr;
   // postes e barra
   for(const s of [-1,1]){const gx=s*HL;
     if(Math.abs(b.x-gx)<.35){for(const pz of [-GW,GW])if(Math.abs(b.z-pz)<.3&&b.y<GH){b.vx=-b.vx*.6;b.vz+= (b.z-pz)*8;b.x=gx-s*.36;sfx('kick',.6);}
