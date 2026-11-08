@@ -34,7 +34,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--ink);color:var(-
 #prompt kbd{background:var(--sun);color:var(--ink);border-radius:5px;padding:2px 8px;font:700 12px var(--fm)}
 #board{left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 12px);padding:9px 14px;min-width:260px;max-width:calc(100vw - 32px);font:600 13px var(--fm);background:#0b1a2b;border-color:#2a5aa8}#board b{color:#ffd76a;letter-spacing:.08em}#board div{margin-top:4px;line-height:1.5;color:#e6f0ff}#clock{color:#7fd8a0}
 @media (max-width:640px){#board{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 250px);min-width:0}}
-#wanted{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 64px);transform:translateX(-50%);z-index:30;padding:8px 16px;border-radius:12px;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(90deg,#123a8c,#b3141d);box-shadow:0 4px 18px rgba(0,0,0,.4);animation:wpulse .8s infinite alternate;max-width:calc(100vw - 32px);text-align:center}#wanted[hidden]{display:none}@keyframes wpulse{to{filter:brightness(1.35)}}
+#wanted{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 118px);transform:translateX(-50%);z-index:30;padding:8px 16px;border-radius:12px;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(90deg,#123a8c,#b3141d);box-shadow:0 4px 18px rgba(0,0,0,.4);animation:wpulse .8s infinite alternate;max-width:calc(100vw - 32px);text-align:center}#wanted[hidden]{display:none}@keyframes wpulse{to{filter:brightness(1.35)}}
 #cars button.locked{opacity:.55}
 #toast{left:50%;top:22%;transform:translateX(-50%);font-weight:800;font-size:24px;text-align:center;color:var(--sand);text-shadow:0 2px 14px rgba(0,0,0,.7);transition:opacity .3s;max-width:calc(100vw - 32px);text-wrap:balance}
 #postal{left:max(12px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:min(330px,calc(100vw - 210px));padding:12px 14px}
@@ -977,19 +977,20 @@ function freeSpot(tx,tz,names,fw,fd){let cand=[];for(const g of SEGS){if(names&&
   if(terrainH(cx,cz)<1.2||(typeof inRia==='function'&&inRia(cx,cz)))continue;
   if(NB.some(b=>Math.abs(b.x-cx)<(b.w+W2)/2+2&&Math.abs(b.z-cz)<(b.d+D2)/2+2))continue;
   const nr=nearRoad(cx,cz);if(nr&&nr.d<Math.min(W2,D2)/2+1.5)continue;
-  const rl=nearRail(cx,cz);if(rl&&rl.d!=null&&rl.d<20)continue;
+  const rl=nearRail(cx,cz);if(rl&&rl.d!=null&&rl.d<Math.max(W2,D2)/2+14)continue;{const dr=nearRail(cx+fx*(W2/2+4),cz+fz*(D2/2+4));if(dr&&dr.d<9)continue}
   if(PLACES.some(p=>Math.hypot(p.x-cx,p.z-cz)<40)||PUMPS.some(p=>Math.hypot(p.x-cx,p.z-cz)<25))continue;
   return {x:cx,z:cz,fx,fz,W:W2,D:D2}}}return null}
-function buildPlace(def){const fw=def.big?22:14,fd=def.big?14:10;const sp=freeSpot(def.x,def.z,def.roads,fw,fd);if(!sp)return;const y=terrainH(sp.x,sp.z);const g=new THREE.Group();g.position.set(sp.x,y,sp.z);g.rotation.y=Math.atan2(-sp.fx,-sp.fz);scene.add(g);
+function buildPlace(def){const fw=def.fw||(def.big?22:14),fd=def.fd||(def.big?14:10);const sp=freeSpot(def.x,def.z,def.roads,fw,fd);if(!sp)return;const y=terrainH(sp.x,sp.z);const g=new THREE.Group();g.position.set(sp.x,y,sp.z);g.rotation.y=Math.atan2(-sp.fx,-sp.fz);scene.add(g);
  const h=def.big?7:6;const body=new THREE.Mesh(new THREE.BoxGeometry(fw,h,fd),lam({color:def.wall}));body.position.y=h/2;g.add(body);const roof=new THREE.Mesh(new THREE.BoxGeometry(fw+.6,.5,fd+.6),lam({color:def.roof||0x8a4a32}));roof.position.y=h+.25;g.add(roof);
  // fachada (a frente do grupo é -z)
- const aw=new THREE.Mesh(new THREE.BoxGeometry(fw*.8,.25,2.2),lam({color:def.col}));aw.position.set(0,3.3,-fd/2-1.05);aw.rotation.x=-.18;g.add(aw);
+ const aw=new THREE.Mesh(new THREE.BoxGeometry(fw*.8,.25,2.2),lam({color:def.col}));aw.position.set(0,3.3,-fd/2-1.05);aw.rotation.x=-.18;if(!def.noAw)g.add(aw);
  const door=new THREE.Mesh(new THREE.BoxGeometry(def.big?6:2.2,def.big?4.2:2.8,.12),lam({color:def.big?0x9ab0bb:0x3b2a20}));door.position.set(0,(def.big?4.2:2.8)/2,-fd/2-.05);g.add(door);
  for(const sx of [-1,1]){const wn=new THREE.Mesh(new THREE.BoxGeometry(fw*.22,1.8,.1),new THREE.MeshBasicMaterial({color:0xfff1c4}));wn.position.set(sx*fw*.3,1.9,-fd/2-.05);g.add(wn)}
- const tx=ctex(512,128,(c,w,hh)=>{c.fillStyle=def.signBg||'#1b2a33';c.fillRect(0,0,w,hh);c.fillStyle='#fff';c.font='800 52px "Bricolage Grotesque",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(def.sign,w/2,hh/2+3)});
+ const tx=ctex(512,128,(c,w,hh)=>{c.fillStyle=def.signBg||'#1b2a33';c.fillRect(0,0,w,hh);c.fillStyle='#fff';let fs=52;c.font='800 52px "Bricolage Grotesque",sans-serif';const tw=c.measureText(def.sign).width;if(tw>w*.9)fs=Math.floor(52*w*.9/tw);c.font='800 '+fs+'px "Bricolage Grotesque",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(def.sign,w/2,hh/2+3)});
  const sg=new THREE.Mesh(new THREE.PlaneGeometry(fw*.75,fw*.75/4),new THREE.MeshBasicMaterial({map:tx}));sg.position.set(0,h-1.1,-fd/2-.08);sg.rotation.y=Math.PI;g.add(sg);
  const ring=new THREE.Mesh(new THREE.RingGeometry(2.2,2.8,28),new THREE.MeshBasicMaterial({color:0xffd76a,transparent:true,opacity:.75,side:THREE.DoubleSide,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.15,-fd/2-3.2);g.add(ring);
- addSolid({x:sp.x,z:sp.z,w:sp.W,d:sp.D,h,keep:true});
+ if(def.extra)def.extra(g,fw,fd,h);
+ addSolid({x:sp.x,z:sp.z,w:sp.W,d:sp.D,h:def.tall||h,keep:true});
  const dx=sp.x+sp.fx*(sp.D/2+3.2)*(sp.fx?1:0)+0,dz=sp.z+sp.fz*(sp.fz?(sp.D/2+3.2):0);
  const door2={x:sp.fx?sp.x+sp.fx*(sp.W/2+3.2):sp.x,z:sp.fz?sp.z+sp.fz*(sp.D/2+3.2):sp.z};
  PLACES.push(Object.assign({},def,{x:sp.x,z:sp.z,door:door2,ring}));PLACE_MARKS.push({k:'place',x:sp.x,z:sp.z,ic:def.ic})}
@@ -1002,6 +1003,19 @@ function buildPlace(def){const fw=def.big?22:14,fd=def.big?14:10;const sp=freeSp
   items:[['Parafina para a prancha',3,'A prancha fica a deslizar.'],['Gelado',2.2,'Fresquinho!'],['Aula de surf (1 h)',25,'Apanhaste três ondas. Já és quase profissional!'],['Fato de surf',89,'Agora o mar já não está tão frio.']]},
  {id:'ovos',name:'Casa dos Ovos Moles de Aveiro',sign:'OVOS MOLES',ic:'🥚',x:3420,z:-15700,wall:0xf7f0dc,col:0xd99a1e,signBg:'#8a5a10',kind:'food',town:'Aveiro',
   items:[['Ovos moles (caixa pequena)',6.5,'Doce típico de Aveiro, em forma de búzios e peixinhos.'],['Tripa de Aveiro',3,'Crepe recheado com ovos moles.'],['Café e pastel',2,'Paragem rápida.'],['Barrica de ovos moles',12,'Para levar de presente.']]},
+ {id:'forum',name:'Fórum Aveiro',sign:'FÓRUM AVEIRO',ic:'🛍️',x:3470,z:-15820,big:true,fw:30,fd:18,wall:0xd8cfc0,col:0x8a1c2b,signBg:'#8a1c2b',kind:'food',town:'Aveiro',roof:0x6b6b6b,
+  items:[['Ténis novos',59,'Ficam mesmo bem!'],['T-shirt «Aveiro»',14,'Recordação da Veneza de Portugal.'],['Hambúrguer e batatas',8.5,'Na zona de restauração, com vista para o canal.'],['Bilhete de cinema',7,'O filme foi espetacular.'],['Auscultadores',35,'Agora a música no carro soa ainda melhor.']]},
+ {id:'museu',name:'Museu Marítimo de Ílhavo',sign:'MUSEU MARÍTIMO',ic:'⚓',x:3030,z:-14260,big:true,fw:26,fd:16,wall:0xf4f4f0,col:0x1d3f6e,signBg:'#1d3f6e',kind:'food',town:'Ílhavo',roof:0xe8e8e2,
+  items:[['Bilhete do museu',5,'Viste os barcos da pesca do bacalhau na Terra Nova e o aquário dos bacalhaus!'],['Visita ao navio-museu Santo André',3,'Um arrastão a sério, ancorado na Gafanha.'],['Postal antigo',1,'Um lugre de velas brancas.']]},
+ {id:'va',name:'Vista Alegre · Fábrica e Museu',sign:'VISTA ALEGRE',ic:'🏺',x:2960,z:-14080,big:true,fw:24,fd:14,wall:0xf3ead8,col:0x2a4d8f,signBg:'#2a4d8f',kind:'food',town:'Ílhavo',tall:26,
+  items:[['Visita ao museu da porcelana',8,'A fábrica de porcelana mais antiga de Portugal, de 1824!'],['Chávena de porcelana',14,'Pintada à mão.'],['Prato decorado',29,'Vai direto para a parede da tua casa.']],
+  extra:(g,fw,fd,h)=>{const ch=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.4,26,10),lam({color:0x9a4a32}));ch.position.set(fw/2-2.5,13,fd/2-2.5);ch.castShadow=true;g.add(ch);const cap=new THREE.Mesh(new THREE.BoxGeometry(7,10,7),lam({color:0xf6f3ea}));cap.position.set(-fw/2+3.5,5,fd/2+3);g.add(cap);const tw=new THREE.Mesh(new THREE.ConeGeometry(2.4,4,4),lam({color:0x8a4a32}));tw.position.set(-fw/2+3.5,12,fd/2+3);tw.rotation.y=Math.PI/4;g.add(tw)}},
+ {id:'sotto',noAw:true,name:'Palácio Sotto Mayor',sign:'PALÁCIO SOTTO MAYOR',ic:'🏛️',x:640,z:320,big:true,fw:24,fd:18,wall:0xeedcb8,col:0x7a5a2a,signBg:'#5a4020',kind:'food',town:'Figueira da Foz',roof:0x3b3f46,tall:15,
+  items:[['Visita ao palácio',4,'Salões dourados, escadaria de mármore e tetos pintados do início do século XX.'],['Visita guiada aos jardins',2,'Com estátuas e fontes.']],
+  extra:(g,fw,fd,h)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(fw-2,4,fd-2),lam({color:0x3b3f46}));m.position.y=h+2.2;g.add(m);for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const t=new THREE.Mesh(new THREE.BoxGeometry(4,h+3,4),lam({color:0xeedcb8}));t.position.set(sx*(fw/2-1.5),(h+3)/2,sz*(fd/2-1.5));g.add(t);const r=new THREE.Mesh(new THREE.ConeGeometry(3.1,4.5,4),lam({color:0x3b3f46}));r.position.set(sx*(fw/2-1.5),h+5.2,sz*(fd/2-1.5));r.rotation.y=Math.PI/4;g.add(r)}}},
+ {id:'se',noAw:true,name:'Sé de Aveiro',sign:'SÉ DE AVEIRO',ic:'⛪',x:3380,z:-15900,fw:14,fd:26,wall:0xf7f5ef,col:0xb5502e,signBg:'#6a5a3a',kind:'food',town:'Aveiro',roof:0xb5502e,tall:24,
+  items:[['Acender uma vela',1,'Silêncio e paz lá dentro.'],['Visita ao claustro',2,'A Sé era o antigo convento de São Domingos, do século XV.']],
+  extra:(g,fw,fd,h)=>{const t=new THREE.Mesh(new THREE.BoxGeometry(5,22,5),lam({color:0xf7f5ef}));t.position.set(fw/2-2.5,11,-fd/2+2.5);t.castShadow=true;g.add(t);const sp=new THREE.Mesh(new THREE.ConeGeometry(3.7,5,4),lam({color:0x6b6b6b}));sp.position.set(fw/2-2.5,24.5,-fd/2+2.5);sp.rotation.y=Math.PI/4;g.add(sp);const cr=new THREE.Mesh(new THREE.BoxGeometry(.3,2,.3),lam({color:0x333333}));cr.position.set(fw/2-2.5,28,-fd/2+2.5);g.add(cr)}},
  {id:'mira',name:'Café Central de Mira',sign:'CAFÉ',ic:'☕',x:2200,z:-9500,wall:0xefe2c8,col:0x6a3c1c,signBg:'#4a2a12',kind:'food',town:'Mira',
   items:[['Galão',1.1,'Com espuminha.'],['Sandes de leitão',4,'Leitão da Bairrada, que é já aqui ao lado!'],['Sumo de laranja',2,'Natural.']]}
 ].forEach(buildPlace);

@@ -150,6 +150,15 @@ kbd { display: inline-block; background: var(--acc); color: #111; border-radius:
 .sw.txt button.on { background: var(--acc); color: #111; }
 #start { overflow-y: auto; align-items: flex-start; }
 #start .startcard { margin: auto; padding-block: 16px; }
+@media (pointer: coarse) and (max-height: 500px) {
+  .tbtn { width: 52px; height: 52px; font-size: 18px; }
+  #tE { right: 14px; bottom: 72px; width: 60px; height: 60px; font-size: 24px; }
+  #tJ { right: 14px; bottom: 10px; } #tK { right: 80px; bottom: 10px; } #tM { right: 146px; bottom: 10px; font-size: 12px; }
+  #tR { right: 80px; bottom: 72px; font-size: 11px; } #tC { right: 146px; bottom: 72px; } #tQ { right: 80px; bottom: 134px; font-size: 11px; }
+  #tP { width: 46px; height: 46px; right: calc(130px + env(safe-area-inset-right, 0px)); top: calc(10px + env(safe-area-inset-top, 0px)); }
+  #mini { width: 104px; height: 104px; right: 12px; top: 10px; }
+  #dialog { margin-left: -100px !important; }
+}
 @media (max-width: 640px) {
   #mini { width: 120px; height: 120px; }
   #floor { top: 142px; }
