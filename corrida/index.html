@@ -404,6 +404,7 @@ fill1(2,25,15,25,'='); fill1(26,25,39,25,'=');
 fill1(10,26,10,29,'='); fill1(16,25,16,29,'='); fill1(25,25,25,29,'='); fill1(33,26,33,29,'=');
 fill1(2,26,9,29,'p'); fill1(11,26,15,29,'p'); fill1(26,26,32,29,'p'); fill1(34,26,39,29,'p');
 fill1(17,25,24,29,'V'); fill1(20,25,21,25,'.');
+fill1(17,25,18,29,'.'); fill1(23,25,24,29,'.'); fill1(17,29,24,29,'.'); fill1(20,30,21,30,'.'); // galerias + entrada (secretaria)
 [[7,25],[13,25],[29,25],[36,25]].forEach(([c,r])=>L1[r][c]='.');
 
 const TILE_SOLID=new Set(['#','k','=','w','L','H','h','B']);
@@ -412,6 +413,7 @@ const WALL_H={'#':10,'k':5.5,'=':10,'w':10,'L':2.4,'H':1.3,'h':3.2,'B':6.4};
 const CEIL_H={'.':3.4,'p':3.4,'a':9,'c':5.2,'G':9,'S':9,'q':2.8,'j':2.8};
 const ST={x0:60,x1:66,z0:78,z1:87};
 const inSt=(x,z)=>x>=ST.x0&&x<=ST.x1&&z>=ST.z0&&z<=ST.z1;
+const RP={x0:60,x1:66,z0:93,z1:113};const inRp=(x,z)=>x>=RP.x0&&x<=RP.x1&&z>=RP.z0&&z<=RP.z1;const rpH=z=>Math.max(0,Math.min(1,(RP.z1-z)/(RP.z1-RP.z0)))*UP;
 const ramp=z=>Math.max(0,Math.min(1,(ST.z1-z)/(ST.z1-ST.z0)))*UP;
 
 /* ---------------- RENDERER ---------------- */
@@ -550,7 +552,24 @@ box(63,UP-.2,72,24,.2,6,0xd9d4c9);          // ponte do piso 1 sobre o átrio
 box(63,UP+3.2,74.9,24,9-UP-3.2,.25,0xf1efe9);// pano de parede por cima da ponte
 // guardas de vidro do piso 1
 const rail=(x,z,w,d)=>{box(x,UP,z,w,1.05,d,0x3d3f42);};
-[[55.5,75.05,9,.06],[70.5,75.05,9,.06],[60.05,76.5,.06,3],[65.95,76.5,.06,3]].forEach(a=>{const m=new THREE.Mesh(unitBox,glassMat);m.position.set(a[0],UP,a[1]);m.scale.set(a[2],1.05,a[3]);scene.add(m);box(a[0],UP+1.02,a[1],a[2]+.02,.05,a[3]+.02,0x3d3f42)});
+[[58.5,75.05,3,.06],[67.5,75.05,3,.06],[60.05,76.5,.06,3],[65.95,76.5,.06,3],[57.05,81,.06,12],[68.95,81,.06,12]].forEach(a=>{const m=new THREE.Mesh(unitBox,glassMat);m.position.set(a[0],UP,a[1]);m.scale.set(a[2],1.05,a[3]);scene.add(m);box(a[0],UP+1.02,a[1],a[2]+.02,.05,a[3]+.02,0x3d3f42)});
+
+
+/* ---------------- ENTRADA PELO PISO DE CIMA (como na escola verdadeira) ----------------
+   Rua → rampa → secretaria → dois caminhos à volta do átrio → juntam-se ao fundo → descer as escadas → cacifos */
+box(54,UP-.25,82.5,6,.25,15,0xe3dfd6);box(72,UP-.25,82.5,6,.25,15,0xe3dfd6);box(63,UP-.25,88.5,12,.25,3,0xe3dfd6);box(63,UP-.25,91.5,6,.25,3,0xe3dfd6);
+box(63,0,91.5,6,2.75,3,0xf1efe9,true);  // a antiga porta de baixo passa a parede
+// secretaria: balcão, estrado e placa
+box(63,UP,87.35,9,1.08,.7,0xb98d5b,true);box(63,UP+1.08,87.35,9.2,.06,.8,0xe9e3d6);box(63,UP-.2,86.1,9,.2,1.8,0xd9d4c9);
+box(66.2,UP+1.14,87.3,.5,.35,.05,0x1c1c1c);box(60.2,UP+1.14,87.4,.6,.03,.4,0xf4f4f4);
+// porta envidraçada da entrada (lado de fora)
+{const gm=new THREE.Mesh(unitBox,glassMat);gm.position.set(63,UP,93.05);gm.scale.set(5.6,2.7,.08);scene.add(gm);box(63,UP+2.7,93.05,6,.12,.14,0x3d3f42);box(60.05,UP,93.05,.12,2.7,.14,0x3d3f42);box(65.95,UP,93.05,.12,2.7,.14,0x3d3f42);box(63,UP,93.05,.08,2.7,.14,0x3d3f42)}
+// rampa (cunha), guardas e colisões
+{const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(RP.z1-RP.z0,0);sh.lineTo(0,UP);sh.lineTo(0,0);const g=new THREE.ExtrudeGeometry(sh,{depth:RP.x1-RP.x0,bevelEnabled:false});
+ const m=new THREE.Mesh(g,lam({color:0xbdb6a8}));m.rotation.y=-Math.PI/2;m.position.set(RP.x0,0,RP.z0);m.castShadow=m.receiveShadow=true;scene.add(m);
+ const top=new THREE.Mesh(new THREE.PlaneGeometry(RP.x1-RP.x0,Math.hypot(RP.z1-RP.z0,UP)),lam({map:T.concrete}));top.rotation.x=-Math.PI/2+Math.atan2(UP,RP.z1-RP.z0);top.position.set(63,UP/2+.02,(RP.z0+RP.z1)/2);top.receiveShadow=true;scene.add(top);
+ const N=10;for(let i=0;i<N;i++){const z0=RP.z0+i*(RP.z1-RP.z0)/N,z1=z0+(RP.z1-RP.z0)/N,h=rpH((z0+z1)/2);box(RP.x0-.15,0,(z0+z1)/2,.3,h+1,z1-z0,0xf1efe9);box(RP.x1+.15,0,(z0+z1)/2,.3,h+1,z1-z0,0xf1efe9)}
+ for(const lv of [0,1]){colliders.push({x0:RP.x0-.32,x1:RP.x0-.02,z0:RP.z0,z1:RP.z1,lvl:lv});colliders.push({x0:RP.x1+.02,x1:RP.x1+.32,z0:RP.z0,z1:RP.z1,lvl:lv})}}
 
 /* ---------------- MOBÍLIA ---------------- */
 function chair(cx,cz,bx,bz,col,y){y=y||0;col=col||0x7f8790;box(cx,y+.44,cz,.42,.04,.42,col);
@@ -695,10 +714,10 @@ plate('PISO 0',51.03,3.0,79.5,Math.PI/2,1.4,.5,'#f2f0ea','#1c1b1a');
 // sinais de saída verdes (como no corredor da foto)
 {const sTex=ctex(256,96,(g,w,h)=>{g.fillStyle='#1f8a4c';g.fillRect(0,0,w,h);g.strokeStyle='#e9f5ec';g.lineWidth=4;g.strokeRect(5,5,w-10,h-10);g.fillStyle='#f4fbf6';g.font='800 40px "Bricolage Grotesque",sans-serif';g.textBaseline='middle';g.fillText('SAÍDA',92,50);
   g.save();g.translate(50,50);g.fillRect(-20,-6,26,12);g.beginPath();g.moveTo(6,-16);g.lineTo(26,0);g.lineTo(6,16);g.fill();g.restore()});
- const sm=new THREE.MeshBasicMaterial({map:sTex,side:THREE.DoubleSide});
- [[30,72,Math.PI/2],[96,72,-Math.PI/2],[20,48,0],[106,48,0],[63,84.5,0]].forEach(([x,z,ry])=>{const m=new THREE.Mesh(plane,sm);m.position.set(x,2.72,z);m.rotation.y=ry;m.scale.set(1.05,.4,1);scene.add(m);const st=new THREE.Mesh(new THREE.BoxGeometry(.03,.6,.03),new THREE.MeshLambertMaterial({color:0x888888}));st.position.set(x,3.1,z);scene.add(st)})}
+ const sm=new THREE.MeshBasicMaterial({map:sTex});
+ [[30,72,Math.PI/2],[96,72,-Math.PI/2],[20,48,0],[106,48,0],[63,84.5,0]].forEach(([x,z,ry])=>{const m=new THREE.Mesh(plane,sm);m.position.set(x,2.72,z);m.rotation.y=ry;m.scale.set(1.05,.4,1);scene.add(m);const m2=m.clone();m2.rotation.y=ry+Math.PI;scene.add(m2);const st=new THREE.Mesh(new THREE.BoxGeometry(.03,.6,.03),new THREE.MeshLambertMaterial({color:0x888888}));st.position.set(x,3.1,z);scene.add(st)})}
 plate('PISO 1',20.03,UP+2.4,72,Math.PI/2,1.1,.4,'#f2f0ea','#1c1b1a');
-plate('ESCOLA SECUNDÁRIA DR. JOAQUIM DE CARVALHO',63,UP+.1,93.04,0,13,.75,'#f3f1ec','#2a2723');
+plate('ESCOLA SECUNDÁRIA DR. JOAQUIM DE CARVALHO',63,UP+3.25,93.2,0,13,.75,'#f3f1ec','#2a2723');plate('SECRETARIA',63,UP+2.45,85.3,0,3.4,.6,'#1f4f7a','#ffffff');plate('ENTRADA',63,UP+3.0,93.12,0,2.2,.4,'#2a2723','#f2b705');
 multiPlate([['JOAQUIM DE CARVALHO','800 40px "Bricolage Grotesque",sans-serif','#f2b705'],['1892 – 1958','600 26px "IBM Plex Mono",monospace'],['Filósofo e historiador das ideias,','500 26px "Bricolage Grotesque",sans-serif'],['nascido na Figueira da Foz.','500 26px "Bricolage Grotesque",sans-serif'],['Professor na Universidade de Coimbra.','500 26px "Bricolage Grotesque",sans-serif']],56,1.7,89.96,Math.PI,2.2,1.25);
 multiPlate([['REQUALIFICAÇÃO','800 40px "Bricolage Grotesque",sans-serif','#f2b705'],['Inês Lobo Arquitectos','600 28px "Bricolage Grotesque",sans-serif'],['Escola em Tavarede,','500 26px "Bricolage Grotesque",sans-serif'],['Figueira da Foz.','500 26px "Bricolage Grotesque",sans-serif'],['Bem-vindos!','600 26px "IBM Plex Mono",monospace']],70,1.7,89.96,Math.PI,2.2,1.25);
 // exposição de fotografias no corredor do piso 0
@@ -971,12 +990,12 @@ tap('#jbtn',()=>jump());tap('#cbtn',()=>setCam((camMode+1)%3));tap('#mbtn',()=>G
 /* ---------------- COLISÃO E ALTURAS ---------------- */
 const RAD=.3;
 const tileAt=(g,x,z)=>{const c=Math.floor(x/S),r=Math.floor(z/S);return (r<0||r>=ROWS||c<0||c>=COLS)?'H':g[r][c]};
-function floorAt(x,z,cy){if(inSt(x,z)){const h=ramp(z);return Math.abs(h-cy)<=.75?h:null}
+function floorAt(x,z,cy){if(inSt(x,z)){const h=ramp(z);return Math.abs(h-cy)<=.75?h:null}if(inRp(x,z)){const h=rpH(z);return Math.abs(h-cy)<=.75?h:null}
   if(Math.abs(cy)<=.75&&!TILE_SOLID.has(tileAt(grid,x,z)))return 0;
   if(Math.abs(cy-UP)<=.75&&W1(tileAt(L1,x,z)))return UP;return null}
 const CORN=[[RAD,RAD],[RAD,-RAD],[-RAD,RAD],[-RAD,-RAD],[RAD,0],[-RAD,0],[0,RAD],[0,-RAD]];
 function wallHit(x,z,lvl){for(const [dx,dz] of CORN){const px=x+dx,pz=z+dz;
-    if(lvl){if(inSt(px,pz))continue;if(!W1(tileAt(L1,px,pz)))return true}else if(TILE_SOLID.has(tileAt(grid,px,pz)))return true}
+    if(lvl){if(inSt(px,pz)||inRp(px,pz))continue;if(!W1(tileAt(L1,px,pz)))return true}else if(TILE_SOLID.has(tileAt(grid,px,pz)))return true}
   for(const b of colliders)if(b.lvl===lvl&&x>b.x0-RAD&&x<b.x1+RAD&&z>b.z0-RAD&&z<b.z1+RAD)return true;
   if(!lvl){for(const c of TRAFFIC)if(Math.abs(x-c.x)<2.1+RAD&&Math.abs(z-c.z)<.95+RAD)return true}if(!lvl)for(const t of treeCol)if((x-t.x)**2+(z-t.z)**2<(t.r+RAD)**2)return true;return false}
 function tryMove(nx,nz){const h=floorAt(nx,nz,P.y);if(h===null)return false;if(wallHit(nx,nz,h>1.8?1:0))return false;P.x=nx;P.z=nz;P.y=h;return true}
@@ -1017,7 +1036,7 @@ function makeBase(lvl,big){const k=big?10:8;const cv=document.createElement('can
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){g.fillStyle=COLR[grid[r][c]]||'#000';g.fillRect(c*k,r*k,k,k)}
   if(lvl){g.fillStyle='rgba(21,20,18,.55)';g.fillRect(0,0,cv.width,cv.height);for(let r=22;r<=30;r++)for(let c=1;c<=40;c++){const ch=L1[r][c];if(ch==='V'){if(grid[r][c]==='S'){g.fillStyle='#c9c0b0';g.fillRect(c*k,r*k,k,k)}continue}g.fillStyle=COLR[ch]||'#000';g.fillRect(c*k,r*k,k,k)}}
   g.font=`700 ${big?22:15}px "Bricolage Grotesque",sans-serif`;g.textAlign='center';
-  const labels=lvl?[['LAB.',6,28.5],['S22',13,28.5],['INFORM.',29.5,28.5],['ARTES',37,28.5],['ESCADAS',21,27.6]]:[['GINÁSIO',8.5,6],['CANTINA',29.5,6],['PÁTIO',20.5,17],['ÁTRIO',21,25],['S19',6,28.5],['S5',3.5,19.8],['S4',3.5,15],['BIBL.',29.5,28.5],['S20',13,28.5],['S8',37,28.5],['ENTRADA',21,36],['PASTELARIA',6.5,49],['PARQUE',17.5,51.5],['CASA',27.5,62.3],['CAMPO',16.5,62.3],['RUA DA ESCOLA',10,42.8]];
+  const labels=lvl?[['LAB.',6,28.5],['S22',13,28.5],['INFORM.',29.5,28.5],['ARTES',37,28.5],['ESCADAS',21,27.6],['SECRETARIA',21,30.4]]:[['GINÁSIO',8.5,6],['CANTINA',29.5,6],['PÁTIO',20.5,17],['ÁTRIO',21,25],['S19',6,28.5],['S5',3.5,19.8],['S4',3.5,15],['BIBL.',29.5,28.5],['S20',13,28.5],['S8',37,28.5],['ENTRADA',21,36],['PASTELARIA',6.5,49],['PARQUE',17.5,51.5],['CASA',27.5,62.3],['CAMPO',16.5,62.3],['RUA DA ESCOLA',10,42.8]];
   labels.forEach(([t,x,y])=>{g.fillStyle='rgba(244,241,234,.85)';g.fillText(t,x*k+1,y*k+1);g.fillStyle='#151412';g.fillText(t,x*k,y*k)});return cv}
 let mapBase=null;
 function drawMarks(g,k,lvl,big){const blink=(Math.sin(TM*6)+1)/2;const sc=big?1.4:1;
@@ -1470,6 +1489,8 @@ function arriveField(){parkCar(52,124.2,Math.PI);const par=G.driver==='mae'?MAE:
   Object.assign(P,{x:51,z:170.5,y:0,camY:0,yaw:Math.PI,pitch:-.05,face:0});G.treino='field';G.state='play';showHud();canvas.focus();
   toast((G.driver==='mae'?'A mãe':'O pai')+' deixou-te no campo. Fala com o Mister Fernando para começar o treino.',false,4);renderObj(true)}
 
+addNPC({name:'D. Fátima',x:63,z:86.1,y:UP,ry:0,o:{shirt:0x7a4f8a,pants:0x2a2a33,hair:0x5a3a20,skin:0xe2b28e,seed:5},idle:()=>G.phase===0?'Bom dia! Os cacifos ficam lá em baixo: vai pela galeria e desce as escadas.':'Precisas de alguma coisa da secretaria?'});
+Object.assign(MOOD,{'D. Fátima':['Muito bem, obrigada! Muito trabalho na secretaria.',[['Onde ficam os cacifos?','Contornas o átrio por um dos lados, vais em frente e desces as escadas.'],['Posso pedir um cartão novo?','Só com a autorização do diretor de turma.'],['Bom trabalho!','Obrigada, querido.']]]});Object.assign(NEWS,{'D. Fátima':['As matrículas abrem em junho.','Perdeste alguma coisa? Vê nos perdidos e achados.']});
 /* ---------------- MEMÓRIA (só dentro da Central 30) ---------------- */
 // Fora da coleção o jogo não guarda nada. Dentro da Central 30, o armazenamento é o da coleção,
 // que só fica guardado quando a opção «Guardar dados» está ligada nas definições.
@@ -1580,9 +1601,10 @@ function update(dt){
   // seta
   if((TM*4|0)!==G.objTick){G.objTick=TM*4|0;renderObj()}
   const showArrow=diff!=='dificil'&&!!G.target;$('#arrow').hidden=!showArrow;
-  if(showArrow){const tg=G.target;let tx=tg.x,tz=tg.z;const tl=lvlOf(tg.y),pl=lvlOf(P.y);if(tl!==pl&&!inSt(P.x,P.z)){tx=63;tz=tl?88:76.5}
+  if(showArrow){const tg=G.target;let tx=tg.x,tz=tg.z;const tl=lvlOf(tg.y),pl=lvlOf(P.y);const ar=(z,y)=>z>93.2?'O':(y>1.8?'U':'D');const pa=inRp(P.x,P.z)?'R':ar(P.z,P.y),ta=ar(tg.z,tg.y);let lab='';
+     if(!inSt(P.x,P.z)&&pa!==ta){if(pa==='O'){tx=63;tz=115;lab='rampa · '}else if(pa==='R'){if(ta!=='O'){tx=63;tz=91;lab='entrada · '}}else if(pa==='U'){if(ta==='O'){tx=63;tz=95;lab='saída · '}else{tx=63;tz=76.5;lab='escadas ↓ · '}}else{tx=63;tz=88;lab='escadas ↑ · '}}
     const dx=tx-P.x,dz=tz-P.z,fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);const ang=Math.atan2(dx*rx+dz*rz,dx*fx+dz*fz);
-    arrSvg.style.transform=`rotate(${ang}rad)`;arrD.textContent=(tl!==pl?(tl?'escadas ↑ · ':'escadas ↓ · '):'')+Math.round(Math.hypot(tg.x-P.x,tg.z-P.z))+' m'}
+    arrSvg.style.transform=`rotate(${ang}rad)`;arrD.textContent=lab+Math.round(Math.hypot(tg.x-P.x,tg.z-P.z))+' m'}
   drawMap();
 }
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(G.state==='talk'&&!G.hub)talkTick(dt);if(G.hub&&G.state!=='pause'){renderer.render(scene,camera);requestAnimationFrame(loop);return}if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}if(G.state==='end'||G.state==='result'||G.state==='exam'){toastT=0;toastEl.style.opacity=0}update(dt);
