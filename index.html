@@ -896,7 +896,7 @@ window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,room
 })();
 </script>
 <!-- c30-aviso --><style>#c30aviso{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 18px);transform:translateX(-50%);z-index:2147482000;width:min(460px,calc(100vw - 32px));background:#0c1012;color:#edf0e9;border:1px solid #c5f47c66;border-radius:12px;padding:16px 18px 14px;font:500 14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 14px 40px rgba(0,0,0,.55)}#c30aviso[hidden]{display:none}#c30aviso b{color:#c5f47c}#c30aviso p{margin:0 0 6px}#c30aviso small{color:#91a09e}#c30aviso button{margin-top:8px;background:#c5f47c;color:#101914;border:0;border-radius:7px;padding:8px 14px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer}</style>
-<div id="c30aviso" role="status" hidden><p><b>Parabéns! Já podes aceder aos jogos.</b> Escolhe um e diverte-te.</p><p>Alguns jogos ainda estão a ser melhorados e podem falhar de vez em quando. Se isso acontecer, recarrega a página.</p><button type="button" id="c30avisoOk">Vamos jogar</button></div>
+<div id="c30aviso" role="status" hidden><p><b>Parabéns! Já podes aceder aos jogos.</b> Escolhe um e diverte-te.</p><button type="button" id="c30avisoOk">Vamos jogar</button></div>
 <script>
 // Depois de pôr o código certo aparece «Parabéns! Já podes aceder aos jogos.» (só quando o ecrã do código apareceu nesta visita)
 (function(){const box=document.getElementById('c30aviso');const close=()=>{box.hidden=true};document.getElementById('c30avisoOk').onclick=close;
