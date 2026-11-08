@@ -260,6 +260,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
       <div class="field"><span class="lbl2">Camisola</span><div class="sw" id="swShirt"></div></div>
       <div class="field"><span class="lbl2">Pele</span><div class="sw" id="swSkin"></div></div>
       <div class="field"><span class="lbl2">Cabelo</span><div class="sw" id="swHair"></div></div>
+      <div class="field"><span class="lbl2">És</span><div class="seg" id="genero"><button data-g="0" aria-pressed="true">Rapaz</button><button data-g="1" aria-pressed="false">Rapariga</button></div></div>
       <div class="field"><span class="lbl2">Como vais para casa?</span><div class="seg" id="parents"><button data-p="mae" aria-pressed="true">Mãe<small>vem de carro</small></button><button data-p="pai" aria-pressed="false">Pai<small>vem de carro</small></button><button data-p="pe" aria-pressed="false">A pé<small>pelo bairro</small></button></div></div>
     </div>
     <div class="two">
@@ -780,6 +781,7 @@ Object.assign(sun.shadow.camera,{left:-40,right:40,top:40,bottom:-40,near:1,far:
 
 /* ---------------- PESSOAS ---------------- */
 const skins=[0xe8bd9a,0xd9a27c,0xb97c57,0xf0caa8,0x8d5a3b];
+const FEM=new Set(['Marta','Inês','Beatriz','Sofia','Prof.ª Helena','Prof.ª Teresa','D. Lurdes','Mãe','Leonor','Dona Rosa','Matilde','D. Fátima']);
 function person(o){const g=new THREE.Group();const M=c=>lam({color:c});
   const leg=()=>{const geo=new THREE.BoxGeometry(.17,.8,.19);geo.translate(0,-.4,0);return new THREE.Mesh(geo,M(o.pants))};
   const legL=leg(),legR=leg();legL.position.set(-.11,.82,0);legR.position.set(.11,.82,0);
@@ -790,6 +792,12 @@ function person(o){const g=new THREE.Group();const M=c=>lam({color:c});
   const head=new THREE.Mesh(new THREE.SphereGeometry(.14,14,10),M(skin));head.position.y=1.6;
   const hair=new THREE.Mesh(new THREE.SphereGeometry(.15,14,10,0,Math.PI*2,0,Math.PI*.55),M(o.hair||0x2b1d14));hair.position.y=1.62;hair.rotation.x=-.25;
   g.add(legL,legR,torso,armL,armR,head,hair);
+  if(o.girl){const hc=M(o.hair||0x2b1d14),sd=(o.seed||0)+(o.name?o.name.length:0);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(.3,sd%3===0?.26:.42,.09),hc);back.position.set(0,sd%3===0?1.58:1.49,-.1);g.add(back);
+    for(const sx of [-1,1]){const lk=new THREE.Mesh(new THREE.BoxGeometry(.05,.28,.12),hc);lk.position.set(sx*.135,1.52,-.01);g.add(lk)}
+    if(sd%3===0){const pt=new THREE.Mesh(new THREE.BoxGeometry(.09,.3,.09),hc);pt.position.set(0,1.45,-.19);pt.rotation.x=.25;g.add(pt);const tie=new THREE.Mesh(new THREE.BoxGeometry(.11,.05,.11),M(0xe0507a));tie.position.set(0,1.6,-.16);g.add(tie)}
+    if(sd%2===1&&!o.seated){const sk=new THREE.Mesh(new THREE.CylinderGeometry(.22,.29,.3,8),M(o.skirt||[0x2a3550,0x6a2e4e,0x3d5a8a,0x4a4a4a][sd%4]));sk.position.y=.72;g.add(sk)}
+    torso.scale.x=.94}
   if(o.bag){const b=new THREE.Mesh(new THREE.BoxGeometry(.36,.42,.16),M(o.bag));b.position.set(0,1.15,-.21);g.add(b)}
   g.traverse(m=>{if(m.isMesh)m.castShadow=true});
   g.userData={legL,legR,armL,armR};
@@ -805,7 +813,7 @@ const IN_C30=typeof window.__C30_SESSION__==='string';
 const MEM={get(k,d){if(!IN_C30)return d;try{const v=localStorage.getItem('jdc.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
   set(k,v){if(!IN_C30)return;try{localStorage.setItem('jdc.'+k,JSON.stringify(v))}catch(e){}}};
 const SHIRTS=['#f2b705','#c0392b','#2f6db5','#2e8b6e','#7a4a9a','#ececec'],SKINS=[0xf0caa8,0xe8bd9a,0xd9a27c,0xb97c57,0x8d5a3b],HAIRS=['#1a1a1a','#4a2e18','#8a5a2a','#d8b060'];
-const LOOK={name:'',shirt:0,skin:1,hair:0,parent:'mae'};
+const LOOK={name:'',shirt:0,skin:1,hair:0,parent:'mae',girl:0};
 let camMode=1;
 
 /* ---------------- OBJETOS DA MANHÃ ---------------- */
@@ -917,15 +925,15 @@ const NPCS=[
   {name:'Prof. Nuno',x:16,z:13.5,y:0,o:{shirt:0xc0392b,pants:0x1f2b5a,hair:0x2b1d14,seed:1},teacher:'ef',idle:()=>PH[G.phase].cls==='ef'?'Vai para a marca amarela, na linha de lance livre!':'O pavilhão está sempre aberto para quem quer treinar.'},
   {name:'Prof.ª Teresa',x:7.3,z:84,y:UP,o:{shirt:0xe6e6e0,pants:0x2a2a30,hair:0x1a1a1a,seed:4},teacher:'fq',idle:()=>PH[G.phase].cls==='fq'?'Bata vestida? Senta-te no lugar marcado.':'No laboratório não se corre!'},
 ];
-NPCS.forEach(n=>{n.g=person(n.o);n.g.position.set(n.x,n.y,n.z);n.g.rotation.y=n.teacher?Math.PI/2:Math.random()*6});
+NPCS.forEach(n=>{n.g=person(Object.assign({name:n.name,girl:FEM.has(n.name)},n.o));n.g.position.set(n.x,n.y,n.z);n.g.rotation.y=n.teacher?Math.PI/2:Math.random()*6});
 const npc=name=>NPCS.find(n=>n.name===name);
 seat12.forEach((d,i)=>{[-.35,.35].forEach((dz,j)=>{if(d.x===22.5&&d.z===87.2&&dz<0)return;if((i*2+j)%3===2)return;
-  const p=person({shirt:[0x2a3f5f,0x4d4d4d,0x6a2e2e,0x2f5d4a,0x1f2b3a,0x8a6a3a][(i+j)%6],pants:0x2a2a33,hair:[0x1a1a1a,0x3a2a1c,0x6b4a2a][(i+j)%3],seed:i+j,seated:true});p.position.set(d.x+.55,-.37,d.z+dz);p.rotation.y=-Math.PI/2;
+  const p=person({shirt:[0x2a3f5f,0x4d4d4d,0x6a2e2e,0x2f5d4a,0x1f2b3a,0x8a6a3a][(i+j)%6],pants:0x2a2a33,hair:[0x1a1a1a,0x3a2a1c,0x6b4a2a][(i+j)%3],seed:i+j,seated:true,girl:(i+j)%2===1});p.position.set(d.x+.55,-.37,d.z+dz);p.rotation.y=-Math.PI/2;
   p.userData.armL.rotation.x=p.userData.armR.rotation.x=-1.1})});
 
 // alunos do 8.º e 9.º ano no piso de cima (um pouco mais altos)
 [[37,40.5,44],[81,85,89,93,97]].forEach((xs,ri)=>xs.forEach((x,ix)=>[80.4,83.8,87.2].forEach((z0,iz)=>{const z=ri?[80.6,84.2,87.8][iz]:z0;if((ix+iz+ri)%3===1)return;
-  const p=person({shirt:[0x1f2b3a,0x5a2e4e,0x2e4a5a,0x3d3d3d,0x6a4a2e,0x2f5d4a][(ix+iz*2+ri)%6],pants:0x23232b,hair:[0x1a1a1a,0x5a3a20,0x8a6a3a][(ix+iz)%3],seed:ix*3+iz+ri*7,seated:true});
+  const p=person({shirt:[0x1f2b3a,0x5a2e4e,0x2e4a5a,0x3d3d3d,0x6a4a2e,0x2f5d4a][(ix+iz*2+ri)%6],pants:0x23232b,hair:[0x1a1a1a,0x5a3a20,0x8a6a3a][(ix+iz)%3],seed:ix*3+iz+ri*7,seated:true,girl:(ix+iz+ri)%2===0});
   p.scale.setScalar(1.08);p.position.set(x+.55,UP-.4,z+(ri?0:.35));p.rotation.y=-Math.PI/2;p.userData.armL.rotation.x=p.userData.armR.rotation.x=-1.1})));
 const WALKERS=[
   {path:[[10,72.6],[50,72.6],[50,71.4],[10,71.4]],y:UP,sp:1.1,big:1,o:{shirt:0x3d3d3d,pants:0x23232b,hair:0x5a3a20,bag:0x1f1f1f,seed:6}},
@@ -937,13 +945,13 @@ const WALKERS=[
   {path:[[115,71],[10,71]],y:UP,sp:1.2,o:{shirt:0x6a4a8a,pants:0x2a2a33,hair:0x2b1d14,bag:0x2f5d4a,seed:3}},
   {path:[[21,40],[21,66]],y:0,sp:1.0,o:{shirt:0x8a8a8a,pants:0x22303f,hair:0x5a3a20,bag:0xd94b3a,seed:1}},
 ];
-WALKERS.forEach((w,i)=>{w.g=person(w.o);if(w.big)w.g.scale.setScalar(1.08);w.i=1;w.x=w.path[0][0];w.z=w.path[0][1];w.t=i});
+WALKERS.forEach((w,i)=>{w.g=person(Object.assign({girl:i%2===1},w.o));if(w.big)w.g.scale.setScalar(1.08);w.i=1;w.x=w.path[0][0];w.z=w.path[0][1];w.t=i});
 const AUXES=[
-  {name:'D. Lurdes',g:person({shirt:0x5d86b5,pants:0x2a2a33,hair:0x8a8a8a,skin:0xe2b28e}),path:[[9,72],[118,72]],y:0,i:1,x:9,z:72,cool:0,pause:0,active:true},
+  {name:'D. Lurdes',g:person({girl:true,name:'D. Lurdes',shirt:0x5d86b5,pants:0x2a2a33,hair:0x8a8a8a,skin:0xe2b28e}),path:[[9,72],[118,72]],y:0,i:1,x:9,z:72,cool:0,pause:0,active:true},
   {name:'Sr. Armando',g:person({shirt:0x5d86b5,pants:0x2a2a33,hair:0x3a3a3a,skin:0xd9a27c}),path:[[118,72],[9,72]],y:UP,i:1,x:118,z:72,cool:0,pause:0,active:false},
 ];
 let avatar=null;
-function buildAvatar(){if(avatar)scene.remove(avatar);avatar=person({shirt:new THREE.Color(SHIRTS[LOOK.shirt]).getHex(),pants:0x2a2a33,hair:new THREE.Color(HAIRS[LOOK.hair]).getHex(),skin:SKINS[LOOK.skin],bag:0x1c1b1a});avatar.visible=false}
+function buildAvatar(){if(avatar)scene.remove(avatar);avatar=person({shirt:new THREE.Color(SHIRTS[LOOK.shirt]).getHex(),pants:0x2a2a33,hair:new THREE.Color(HAIRS[LOOK.hair]).getHex(),skin:SKINS[LOOK.skin],bag:0x1c1b1a,girl:!!LOOK.girl,seed:3});avatar.visible=false}
 buildAvatar();
 
 /* ---------------- ÁUDIO ---------------- */
@@ -1162,6 +1170,7 @@ document.querySelectorAll('#cams button,#cams2 button').forEach(b=>b.addEventLis
 function swatches(id,list,key){const el=$(id);el.innerHTML=list.map((c,i)=>`<button aria-label="Cor ${i+1}" style="background:${typeof c==='number'?'#'+c.toString(16).padStart(6,'0'):c}" data-i="${i}"></button>`).join('');
   const upd=()=>el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.i===LOOK[key])));upd();
   el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{LOOK[key]=+b.dataset.i;upd();buildAvatar()}))}
+document.querySelectorAll('#genero button').forEach(b=>b.addEventListener('click',()=>{LOOK.girl=+b.dataset.g;document.querySelectorAll('#genero button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));buildAvatar()}));
 swatches('#swShirt',SHIRTS,'shirt');swatches('#swSkin',SKINS,'skin');swatches('#swHair',HAIRS,'hair');
 $('#pname').value=LOOK.name||'';$('#pname').addEventListener('input',e=>{LOOK.name=e.target.value.trim()});
 function hideHud(){['#topl','#mapw','#cross','#talk','#arrow','#eprompt','#bk','#choice'].forEach(s=>$(s).hidden=true);tbtns.hidden=true;joy.hidden=true;TC.joy=null}
@@ -1251,7 +1260,7 @@ function updateTraffic(dt){TRAFFIC.forEach(t=>{let block=false,human=false;const
   const target=block?0:t.sp;t.v+=(target-t.v)*Math.min(1,dt*(block?6:1.2));t.x+=t.dir*t.v*dt;
   if(t.dir>0&&t.x>200)t.x=-70;if(t.dir<0&&t.x<-70)t.x=200;t.g.position.set(t.x,0,t.z)})}
 // pessoas do bairro e da casa
-function addNPC(n){n.g=person(n.o);n.g.position.set(n.x,n.y,n.z);n.g.rotation.y=n.ry||0;NPCS.push(n);return n}
+function addNPC(n){n.g=person(Object.assign({name:n.name,girl:FEM.has(n.name)},n.o));n.g.position.set(n.x,n.y,n.z);n.g.rotation.y=n.ry||0;NPCS.push(n);return n}
 const parentLine=who=>{const H=G.home||{};if(G.phase===4)return who===G.driver?'Olá! Então? Anda, entra no carro.':'';
   if(G.phase===5){if(who==='mae'&&!H.jantar&&clockSecs()>=HM(19,30))return 'O jantar está na mesa! Anda comer.';if(!H.boletim)return 'Então, não me mostras o boletim do dia?';if(H.tpc===null)return 'Já fizeste os trabalhos de casa?';if(clockSecs()>=HM(22,30))return 'Já são horas de ir para a cama!';return who==='mae'?'Hoje estás tão crescido...':'Amanhã há mais. Descansa bem.'}return ''};
 const MAE=addNPC({name:'Mãe',x:66,z:133.6,y:0,o:{shirt:0xb3445a,pants:0x2a2a3a,hair:0x3a2414,skin:0xe8bd9a},vis:()=>G.phase===5||(G.phase===4&&G.driver==='mae'&&G.state!=='drive'),idle:()=>parentLine('mae')});
@@ -1507,7 +1516,7 @@ Object.assign(MOOD,{'D. Fátima':['Muito bem, obrigada! Muito trabalho na secret
 // Fora da coleção o jogo não guarda nada. Dentro da Central 30, o armazenamento é o da coleção,
 // que só fica guardado quando a opção «Guardar dados» está ligada nas definições.
 window.C30save=()=>{MEM.set('look',LOOK);MEM.set('cam',camMode);MEM.set('diff',diff)};
-(function(){const l=MEM.get('look',null);if(l&&typeof l==='object'){['name','shirt','skin','hair','parent'].forEach(k=>{if(l[k]!=null)LOOK[k]=l[k]})}
+(function(){const l=MEM.get('look',null);if(l&&typeof l==='object'){['name','shirt','skin','hair','parent','girl'].forEach(k=>{if(l[k]!=null)LOOK[k]=l[k]})}
   const c=MEM.get('cam',null);if([0,1,2].includes(c))setCam(c);const d=MEM.get('diff',null);if(DIFF[d])setDiff(d);
   $('#pname').value=LOOK.name||'';['swShirt','swSkin','swHair'].forEach((id,i)=>{const key=['shirt','skin','hair'][i];document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.i===LOOK[key])))});
   seg('#parents','p',LOOK.parent||'mae');buildAvatar();showBest()})();
@@ -1631,6 +1640,7 @@ function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);c
 addEventListener('resize',resize);resize();
 placeItems();
 requestAnimationFrame(loop);
+document.querySelectorAll('#genero button').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.g===(LOOK.girl|0))));
 window.C30me=()=>G.state==='drive'&&typeof pCar!=='undefined'?pCar:avatar;
 window.__dbg={openTalk,talkPick,closeTalk,npcNear,TL,MEM,IN_C30,NPCS,P,G,start,ITEMS,MISSIONS,CROMOS,startExam,startBasket,shoot,startPhase,report,tryMove,setCam,doAction,startDrive,pickDlg,currentAction,homeAction};
 })();
