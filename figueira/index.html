@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d1a24">
-<title>Volta à Figueira</title>
+<title>Costa de Prata</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -28,6 +28,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--ink);color:var(-
 #spd{right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(env(safe-area-inset-bottom,0px) + 18px);padding:10px 14px;text-align:right;min-width:150px}
 #spd b{display:block;font:600 40px/1 var(--fm);font-variant-numeric:tabular-nums}
 #spd small{font:600 10px var(--fm);letter-spacing:.14em;color:var(--muted)}
+#fuelB{height:5px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:5px;overflow:hidden}#fuelB i{display:block;height:100%;background:linear-gradient(90deg,#2e8b57,#9be08e);width:100%}#fuelB.low i{background:#ff6b5b}
 #nitro{height:5px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:7px;overflow:hidden}#nitro i{display:block;height:100%;background:linear-gradient(90deg,#4fc3f7,#b3e5fc);width:100%}
 #prompt{left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 110px);padding:8px 14px;font-weight:700;display:flex;gap:9px;align-items:center;max-width:calc(100vw - 32px)}
 #prompt kbd{background:var(--sun);color:var(--ink);border-radius:5px;padding:2px 8px;font:700 12px var(--fm)}
@@ -53,7 +54,7 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 .btn{justify-self:start;font:800 18px var(--fd);padding:14px 26px;border:0;border-radius:9px;background:var(--sun);color:#1b0f06;cursor:pointer;box-shadow:0 4px 0 #b4561b}
 .btn.ghost{background:transparent;color:var(--paper);box-shadow:inset 0 0 0 1px #34505f;font-size:15px;padding:11px 16px}
 .facts{font-size:12.5px;color:var(--muted);line-height:1.5;border-top:1px solid #23394a;padding-top:10px}
-#mapBig{width:auto;height:auto;max-width:100%;max-height:calc(100vh - 170px);aspect-ratio:1;border-radius:10px;border:1px solid #23394a;background:#0b1f2c}
+#mapBig{width:auto;height:auto;max-width:100%;max-height:calc(100vh - 170px);aspect-ratio:auto;border-radius:10px;border:1px solid #23394a;background:#0b1f2c}
 .tb{position:fixed;z-index:7;border:2px solid var(--sand);background:rgba(10,22,32,.55);color:var(--sand);font:800 13px var(--fd);touch-action:none;border-radius:50%;width:74px;height:74px}
 .tb.on{background:var(--sand);color:var(--ink)}
 #tGas{right:max(20px,calc(env(safe-area-inset-right,0px) + 20px));bottom:calc(env(safe-area-inset-bottom,0px) + 120px)}
@@ -81,7 +82,7 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 <canvas id="c" tabindex="0"></canvas>
 <div class="hud pn" id="tl" hidden><div class="lbl"><span id="mode">PASSEIO LIVRE</span><span id="money">0 €</span></div><div class="obj" id="obj">Explora a Figueira. Os marcadores no mapa são missões.</div><div class="tmr" id="tmr"></div></div>
 <div class="hud pn" id="mapw" hidden><canvas id="mini" width="340" height="340"></canvas></div>
-<div class="hud pn" id="spd" hidden><b id="kmh">0</b><small>KM/H · <span id="gearT">D</span></small><div id="indH"><span class="l">◀</span><span class="f" title="Faróis (L)">💡</span><span class="r">▶</span></div><div id="nitro"><i id="nitv"></i></div></div>
+<div class="hud pn" id="spd" hidden><b id="kmh">0</b><small>KM/H · <span id="gearT">D</span></small><div id="indH"><span class="l">◀</span><span class="f" title="Faróis (L)">💡</span><span class="r">▶</span></div><div id="nitro"><i id="nitv"></i></div><div id="fuelB"><i id="fuelv"></i></div></div>
 <div class="hud pn" id="prompt" hidden><kbd>E</kbd><span id="promptT"></span></div>
 <div class="hud" id="toast" style="opacity:0"></div>
 <div class="hud pn" id="postal" hidden><b id="postT">POSTAL</b><p id="postP"></p></div>
@@ -95,9 +96,9 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 
 <div class="screen" id="menu">
   <div class="card">
-    <div class="eyebrow">FIGUEIRA DA FOZ · DE BUARCOS AO CABEDELO</div>
-    <h1>Volta à <em>Figueira</em></h1>
-    <p class="lead">Conduz pela Figueira da Foz: a <b>Avenida</b> ao lado da enorme <b>Praia da Claridade</b>, o <b>Bairro Novo</b> e o Casino, o <b>Forte</b> e a marina, a <b>Ponte Edgar Cardoso</b> sobre o Mondego, <b>Buarcos</b>, a subida da <b>Serra da Boa Viagem</b> até ao farol e <b>Tavarede</b>. Faz entregas, corridas e corridas de táxi, encontra os <b>10 postais</b> da cidade e gere <b>a tua empresa</b> no centro: entras no escritório e és O Patrão.</p>
+    <div class="eyebrow">DA FIGUEIRA DA FOZ A AVEIRO · PELA A17</div>
+    <h1>Costa de <em>Prata</em></h1>
+    <p class="lead">Conduz da <b>Figueira da Foz</b> até <b>Aveiro</b>: a Avenida e a Claridade, a <b>A17</b> com portagens e área de serviço, a EN109 por <b>Tocha, Mira e Vagos</b>, as dunas e o pinhal, a <b>Costa Nova</b> das casas às riscas, o <b>Farol da Barra</b>, a Ria e os <b>canais de Aveiro</b> com moliceiros. Apanha o <b>comboio</b> entre estações, abastece nas bombas, faz entregas, corridas e táxi, encontra os <b>16 postais</b> e gere a tua <b>empresa</b> no centro da Figueira.</p>
     <div class="row">
       <div><span class="lbl2">Carro</span><div class="seg" id="cars"><button data-c="0" aria-pressed="true">Citadino<small>ágil</small></button><button data-c="1" aria-pressed="false">Desportivo<small>rápido</small></button><button data-c="2" aria-pressed="false">Carrinha<small>pesada</small></button></div></div>
       <div><span class="lbl2">Cor</span><div class="sw" id="colors"></div></div>
@@ -112,7 +113,8 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
   </div>
 </div>
 <div class="screen" id="pause" hidden><div class="card"><h2>Pausa</h2><p class="lead" id="pauseInfo"></p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="resume">Continuar</button><button class="btn ghost" id="quit">Menu</button></div></div></div>
-<div class="screen" id="mapS" hidden><div class="card" style="justify-items:center;gap:10px"><h2>Mapa da Figueira</h2><canvas id="mapBig" width="640" height="640"></canvas><button class="btn" id="mapClose">Fechar (M)</button></div></div>
+<div class="screen" id="trainS" hidden><div class="card"><div class="eyebrow">ESTAÇÃO · COMBOIO DA COSTA DE PRATA</div><h2>Para onde vais?</h2><p class="lead">O carro segue contigo no comboio. O bilhete custa 2,50 €.</p><div id="trainList" style="display:grid;gap:8px"></div><div><button class="btn ghost" id="trainClose">Ficar aqui</button></div></div></div>
+<div class="screen" id="mapS" hidden><div class="card" style="justify-items:center;gap:10px"><h2>Mapa da Costa de Prata</h2><canvas id="mapBig" width="520" height="1100"></canvas><button class="btn" id="mapClose">Fechar (M)</button></div></div>
 
 <script type="text/plain" id="patraoSrc"><!DOCTYPE html>
 <html lang="pt-PT">
@@ -493,12 +495,23 @@ let rs=7;const rnd=()=>{rs=(rs*16807)%2147483647;return(rs-1)/2147483646};
    Mar a oeste, rio Mondego a sul, Serra da Boa Viagem a norte de Buarcos, Tavarede para o interior. */
 const shoreX=z=>z>-400?-620:-620+(-(z+400))*.3;           // linha de água (praia)
 const avX=z=>z>-400?-130:-130+(-(z+400))*.12;               // Avenida 25 de Abril / marginal até Buarcos
-const RIV0=1080,RIV1=1480;                                  // margens do Mondego
+const RIV0=1080,RIV1=1480;
+/* ---- Costa de Prata: da Serra da Boa Viagem até Aveiro (distâncias encurtadas ~4,5x) ---- */
+const shoreN=z=>z>-1900?-560:z>-2900?-560+(z+1900)*-.05:-510+((-z)-2900)*.18;   // linha de costa a norte
+const riaW=z=>(120+900*smooth(-11000,-15000,z))*smooth(-10600,-11000,z)*smooth(-16700,-16300,z);
+const riaE=z=>shoreN(z)+300+riaW(z);                                              // margem nascente da Ria
+const CANALS=[[3060,-15720,3560,-15720,24],[3060,-15900,3400,-15900,18],[3300,-15720,3300,-15560,16]];
+function inCanal(x,z){for(const c of CANALS){const vx=c[2]-c[0],vz=c[3]-c[1],L2=vx*vx+vz*vz,t=clamp(((x-c[0])*vx+(z-c[1])*vz)/L2,0,1);if(Math.hypot(x-c[0]-vx*t,z-c[1]-vz*t)<c[4]/2)return true}return false}
+function inRia(x,z){if(z>-10500)return false;const sx=shoreN(z);if(z<-15170&&z>-15330&&x>=sx-5&&x<=sx+310)return true;const w=riaW(z);return w>2&&x>sx+300&&x<sx+300+w||inCanal(x,z)}                                  // margens do Mondego
 function terrainH(x,z){
   if(z>RIV0&&z<RIV1&&x>-800)return -3;                      // rio
   if(z>=RIV1){return x<-470?-3:1.2+smooth(-470,-380,x)*.6}  // margem sul (Gala, Cabedelo)
   const serraStart=-1900;
-  if(z<serraStart){const sea=x<-560+(z+1900)*-.05;if(sea)return -3;const s=smooth(serraStart,-2350,z);return 1.5+s*(70+fbm(x/320,z/320)*170)*smooth(-560,-430,x)+smooth(-430,-300,x)*s*20}
+  if(z<serraStart){const sx=shoreN(z);if(x<sx)return -3;if(inRia(x,z))return -3;
+    const s=smooth(serraStart,-2350,z)*smooth(-3900,-3200,z)*smooth(1700,1000,x);
+    const north=smooth(-2600,-3300,z),dune=smooth(sx,sx+40,x)*smooth(sx+330,sx+130,x)*(2.5+fbm(x/55,z/55)*7),plain=2+fbm(x/700,z/700)*5*smooth(sx+300,sx+1100,x);
+    const riaF=z<-10400?(x<sx+300?1:smooth(riaE(z),riaE(z)+160,x)):1;
+    return 1.5+north*(plain-1.5+dune)*riaF+s*(70+fbm(x/320,z/320)*170)*smooth(-560,-430,x)+smooth(-430,-300,x)*s*20}
   if(x<shoreX(z))return -3;
   const tav=smooth(900,2600,x)*smooth(600,-600,z)*fbm(x/400+3,z/400)*18;
   return 1.2+tav;
@@ -522,17 +535,53 @@ road('Estrada do Cabo Mondego',[[avX(-1850),-1850],[-60,-1990],[120,-2140],[60,-
 for(let x=-150;x<=150;x+=100)road('Buarcos',[[x,-1950],[x,-1650]],8);
 for(let z=-1950;z<=-1650;z+=100)road('Buarcos',[[avX(z),z],[200,z]],8);
 road('Passeio do Jardim',[[620,560],[1500,560]],9);
+/* ---- estradas da Costa de Prata ---- */
+const A17=[[2050,-900],[2250,-1500],[2400,-2600],[2450,-4000],[2550,-5500],[2700,-7000],[2850,-8500],[3050,-10000],[3300,-11500],[3550,-12800],[3800,-14000],[3950,-15000],[3970,-15700]];
+road('A17',A17,22,{auto:true,rural:true});
+road('EN109',[[1960,-760],[1900,-1500],[1850,-2600],[1750,-4200],[1700,-5600],[1800,-6500],[1900,-8000],[2200,-9500],[2500,-11200],[3000,-12800],[3000,-13600],[3000,-14200],[3200,-15000],[3330,-15400]],10,{rural:true});
+road('Saída Tocha',[[2620,-6650],[2300,-6550],[1800,-6500]],9,{rural:true});
+road('Saída Mira',[[2950,-9300],[2600,-9420],[2200,-9500]],9,{rural:true});
+road('Saída Vagos',[[3520,-12650],[3250,-12760],[3000,-12800]],9,{rural:true});
+road('Saída Ílhavo',[[3760,-13850],[3400,-14100],[3000,-14200]],9,{rural:true});
+road('Saída Aveiro',[[3965,-15500],[3750,-15560],[3560,-15580]],9,{rural:true});
+road('Estrada da Praia da Tocha',[[1800,-6500],[1200,-6480],[600,-6500],[shoreN(-6500)+140,-6500]],9,{rural:true});
+road('Estrada da Praia de Mira',[[2200,-9500],[1700,-9480],[1200,-9500],[shoreN(-9500)+140,-9500]],9,{rural:true});
+{const a=[];for(let z=-9500;z>=-14900;z-=280)a.push([shoreN(z)+170,z]);a.push([shoreN(-14960)+185,-14960],[shoreN(-15000)+200,-15000]);road('Estrada das Dunas',a,9,{rural:true});}
+{const x0=shoreN(-15000)+200,x1=riaE(-15000)+70,a=[];for(let x=x0;x<=x1+.1;x+=20){const t=(x-x0)/(x1-x0),y=1.6+5.6*smooth(0,.09,t)*smooth(1,.91,t);a.push([x,-15000,y])}road('Ponte da Barra',a,12,{bridge:true});}
+road('Gafanha',[[riaE(-15000)+70,-15000],[3100,-15000],[3200,-15000]],10,{rural:true});
+road('Área de Serviço',[[2785,-8050],[2880,-8150],[2895,-8350],[2815,-8450]],8,{});
+// vilas e cidade de Aveiro (ruas em grelha)
+const TOWNS=[{n:'Tocha',x:1800,z:-6500,r:260},{n:'Praia da Tocha',x:shoreN(-6500)+220,z:-6500,r:180},{n:'Mira',x:2200,z:-9500,r:300},{n:'Praia de Mira',x:shoreN(-9500)+230,z:-9500,r:220},{n:'Vagos',x:3000,z:-12800,r:280},{n:'Ílhavo',x:3010,z:-14200,r:300},{n:'Costa Nova',x:shoreN(-14300)+170,z:-14300,r:330},{n:'Barra',x:shoreN(-15100)+180,z:-15080,r:200},{n:'Gafanha da Nazaré',x:3120,z:-15080,r:200},{n:'Aveiro',x:3420,z:-15750,r:520}];
+function gridTown(name,x0,x1,z0,z1,dx,dz){for(let x=x0;x<=x1;x+=dx)road(name,[[x,z0],[x,z1]],8);for(let z=z0;z<=z1;z+=dz)road(name,[[x0,z],[x1,z]],8)}
+gridTown('Tocha',1650,1950,-6640,-6360,100,95);
+gridTown('Mira',2060,2380,-9680,-9320,105,110);
+gridTown('Praia de Mira',shoreN(-9500)+200,shoreN(-9500)+420,-9640,-9360,110,95);
+gridTown('Vagos',2860,3150,-12940,-12660,95,95);
+gridTown('Ílhavo',2860,3180,-14380,-14020,105,120);
+gridTown('Aveiro',3160,3760,-16150,-15360,120,110);
+{const z0=-14650,z1=-13950;for(let z=z0;z<=z1;z+=140)road('Costa Nova',[[shoreN(z)+60,z],[shoreN(z)+290,z]],7)}
+
 // curvas suaves nas estradas fora da cidade (cortes de Chaikin)
-ROADS.forEach(r=>{if(!['Estrada do Cabo Mondego','Estrada de Buarcos','Estrada de Tavarede','Estrada da Gala'].includes(r.name))return;let P=r.pts;for(let k=0;k<3;k++){const Q=[P[0]];for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];Q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}Q.push(P[P.length-1]);P=Q}r.pts=P});
+ROADS.forEach(r=>{if(!['Estrada do Cabo Mondego','Estrada de Buarcos','Estrada de Tavarede','Estrada da Gala','A17','EN109','Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Estrada da Praia da Tocha','Estrada da Praia de Mira','Estrada das Dunas','Área de Serviço'].includes(r.name))return;let P=r.pts;for(let k=0;k<3;k++){const Q=[P[0]];for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];Q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}Q.push(P[P.length-1]);P=Q}r.pts=P});
 // estrutura de consulta: segmentos
 const SEGS=[];ROADS.forEach((r,ri)=>{for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1];SEGS.push({r,ri,ax:a[0],az:a[1],bx:b[0],bz:b[1],ay:a[2],by:b[2],len:Math.hypot(b[0]-a[0],b[1]-a[1])})}});
-function nearRoad(x,z){let best=null,bd=1e9;for(const s of SEGS){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),px=s.ax+vx*t,pz=s.az+vz*t,d=Math.hypot(x-px,z-pz);if(d<bd){bd=d;best={s,t,d,px,pz}}}return best}
-function onBridgeXZ(x,z){return Math.abs(x-2200)<7.9&&z>1045&&z<1560}
-function bridgeY(z){const t=(z-1045)/515;return 4+Math.sin(t*Math.PI)*20}
-function targetY(x,z){return onBridgeXZ(x,z)?bridgeY(z):Math.max(terrainH(x,z),-.4)}
-function surfaceAt(x,z,curY){ // altura onde o carro está (ponte primeiro)
-  const br=ROADS.find(r=>r.bridge);if(Math.abs(x-2200)<7.9&&z>1045&&z<1560){const t=(z-1045)/515,y=4+Math.sin(t*Math.PI)*20;if(curY==null||Math.abs(curY-y)<4)return y}
+const SG=new Map(),SGC=250;SEGS.forEach(s=>{const x0=Math.floor((Math.min(s.ax,s.bx)-30)/SGC),x1=Math.floor((Math.max(s.ax,s.bx)+30)/SGC),z0=Math.floor((Math.min(s.az,s.bz)-30)/SGC),z1=Math.floor((Math.max(s.az,s.bz)+30)/SGC);for(let i=x0;i<=x1;i++)for(let j=z0;j<=z1;j++){const k=i+','+j;(SG.get(k)||SG.set(k,[]).get(k)).push(s)}});
+function nearRoad(x,z){const ci=Math.floor(x/SGC),cj=Math.floor(z/SGC);for(let rr=1;rr<=3;rr++){let best=null,bd=1e9;for(let i=ci-rr;i<=ci+rr;i++)for(let j=cj-rr;j<=cj+rr;j++){const L=SG.get(i+','+j);if(!L)continue;for(const s of L){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),px=s.ax+vx*t,pz=s.az+vz*t,d=Math.hypot(x-px,z-pz);if(d<bd){bd=d;best={s,t,d,px,pz}}}}if(best&&bd<rr*SGC)return best}return nearRoadAll(x,z)}
+function nearRoadAll(x,z){let best=null,bd=1e9;for(const s of SEGS){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),px=s.ax+vx*t,pz=s.az+vz*t,d=Math.hypot(x-px,z-pz);if(d<bd){bd=d;best={s,t,d,px,pz}}}return best}
+const BRIDGES=ROADS.filter(r=>r.bridge).map(r=>{const xs=r.pts.map(p=>p[0]),zs=r.pts.map(p=>p[1]);return{r,x0:Math.min(...xs)-12,x1:Math.max(...xs)+12,z0:Math.min(...zs)-12,z1:Math.max(...zs)+12,deck:r.name==='Ponte Edgar Cardoso'?7.9:r.w/2+1}});
+function bridgeAt(x,z){for(const B of BRIDGES){if(x<B.x0||x>B.x1||z<B.z0||z>B.z1)continue;const P=B.r.pts;for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],vx=b[0]-a[0],vz=b[1]-a[1],L2=vx*vx+vz*vz,t=((x-a[0])*vx+(z-a[1])*vz)/L2;if(t<0||t>1)continue;const px=a[0]+vx*t,pz=a[1]+vz*t,lat=Math.hypot(x-px,z-pz);if(lat<B.deck){const L=Math.sqrt(L2);return{y:a[2]+(b[2]-a[2])*t,lat,px,pz,nx:(x-px)/(lat||1),nz:(z-pz)/(lat||1),half:B.deck-1}}}}return null}
+function onBridgeXZ(x,z){return !!bridgeAt(x,z)}
+function bridgeY(z,x){const b=bridgeAt(x==null?2200:x,z);return b?b.y:0}
+function targetY(x,z){const b=bridgeAt(x,z);return b?b.y:Math.max(terrainH(x,z),-.4)}
+function surfaceAt(x,z,curY){ // altura onde o carro está (pontes primeiro)
+  const b=bridgeAt(x,z);if(b&&(curY==null||Math.abs(curY-b.y)<4))return b.y;
   return Math.max(terrainH(x,z),-3)}
+/* ---- linha do comboio (Figueira → Aveiro) ---- */
+let RAIL=[[1660,960],[1760,300],[2150,-300],[2160,-1500],[2120,-4000],[2060,-6420],[2150,-8000],[2420,-9420],[2800,-11500],[3260,-12820],[3330,-14150],[3560,-15350],[3580,-15930]];
+for(let k=0;k<3;k++){const Q=[RAIL[0]];for(let i=0;i<RAIL.length-1;i++){const a=RAIL[i],b=RAIL[i+1];Q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}Q.push(RAIL[RAIL.length-1]);RAIL=Q}
+const RAILS=[];let railLen=0;for(let i=0;i<RAIL.length-1;i++){const a=RAIL[i],b=RAIL[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);RAILS.push({ax:a[0],az:a[1],bx:b[0],bz:b[1],len:L,s0:railLen});railLen+=L}
+function nearRail(x,z){let best=null,bd=1e9;for(const s of RAILS){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len),0,1),px=s.ax+vx*t,pz=s.az+vz*t,d=Math.hypot(x-px,z-pz);if(d<bd){bd=d;best={s,t,d,px,pz,sAt:s.s0+s.len*t}}}return best}
+function railPoint(sv){sv=clamp(sv,0,railLen);for(const s of RAILS){if(sv<=s.s0+s.len){const t=(sv-s.s0)/s.len;return{x:lerp(s.ax,s.bx,t),z:lerp(s.az,s.bz,t),dx:(s.bx-s.ax)/s.len,dz:(s.bz-s.az)/s.len}}}const s=RAILS[RAILS.length-1];return{x:s.bx,z:s.bz,dx:(s.bx-s.ax)/s.len,dz:(s.bz-s.az)/s.len}}
 
 /* ================= RENDER ================= */
 const canvas=$('#c');const renderer=new THREE.WebGLRenderer({canvas,antialias:true});const mobile=matchMedia('(pointer:coarse)').matches;
@@ -546,30 +595,47 @@ function ctex(w,h,draw,rx,ry){const c=document.createElement('canvas');c.width=w
 
 // terreno 6 km x 6 km (alisado por baixo das estradas; o carro usa a mesma altura que se vê)
 const TS=6400,TN=mobile?200:280,TC=new THREE.Vector3(800,0,-300),HV=new Float32Array((TN+1)*(TN+1)),CELL=TS/TN,TH0=terrainH;
-function meshH(x,z){const fx=(x-(TC.x-TS/2))/CELL,fz=(z-(TC.z-TS/2))/CELL;if(fx<0||fz<0||fx>=TN||fz>=TN)return TH0(x,z);const ix=Math.floor(fx),iz=Math.floor(fz),u=fx-ix,v=fz-iz,N=TN+1;
+function meshH(x,z){const fx=(x-(TC.x-TS/2))/CELL,fz=(z-(TC.z-TS/2))/CELL;if(fx<0||fz<0||fx>=TN||fz>=TN)return meshN(x,z);const ix=Math.floor(fx),iz=Math.floor(fz),u=fx-ix,v=fz-iz,N=TN+1;
  const ha=HV[iz*N+ix],hb=HV[(iz+1)*N+ix],hc=HV[(iz+1)*N+ix+1],hd=HV[iz*N+ix+1];return u+v<=1?ha+u*(hd-ha)+v*(hb-ha):hc+(1-u)*(hb-hc)+(1-v)*(hd-hc)}
 {const g=new THREE.PlaneGeometry(TS,TS,TN,TN);g.rotateX(-Math.PI/2);g.translate(TC.x,0,TC.z);const p=g.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color();
- for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);let h=terrainH(x,z);if(h>-.5){const nr=nearRoad(x,z);if(!nr.s.r.bridge){const w2=nr.s.r.w/2;if(nr.d<w2+26){const rh=terrainH(nr.px,nr.pz);h=lerp(h,rh,smooth(w2+26,w2+6,nr.d))}}}p.setY(i,h);HV[i]=h;const n=fbm(x/90,z/90),zo=zoneAt(x,z);
+ for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);let h=terrainH(x,z);if(h>-.5){const nr=nearRoad(x,z);if(!nr.s.r.bridge){const w2=nr.s.r.w/2;if(nr.d<w2+26){const rh=terrainH(nr.px,nr.pz);h=lerp(h,rh,smooth(w2+26,w2+6,nr.d))}}const rl=nearRail(x,z);if(rl.d<30)h=lerp(h,TH0(rl.px,rl.pz),smooth(30,6,rl.d))}p.setY(i,h);HV[i]=h;const n=fbm(x/90,z/90),zo=zoneAt(x,z);
   if(h<-.5)c.setRGB(.55,.52,.40);else if(zo==='areia')c.setRGB(.93+n*.04,.85+n*.05,.64+n*.05);else if(h>25)c.setRGB(.30+n*.08,.40+n*.1,.24+n*.06);
   else if(x>avX(z)+6&&x<1560&&z>-280&&z<1060||x>-200&&x<230&&z>-1980&&z<-1620)c.setRGB(.70+n*.05,.68+n*.05,.62+n*.04);else c.setRGB(.40+n*.1,.52+n*.1,.30+n*.07);col.set([c.r,c.g,c.b],i*3)}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();const m=new THREE.Mesh(g,lam({vertexColors:true}));m.receiveShadow=true;scene.add(m)}
+
+// ---- terreno a norte: da Serra até Aveiro (malha própria, também alisada por baixo das estradas e da linha) ----
+const NX0=-1600,NX1=5600,NZ0=-16900,NZ1=-3500,NSX=mobile?120:170,NSZ=mobile?220:310,NCX=(NX1-NX0)/NSX,NCZ=(NZ1-NZ0)/NSZ,HVN=new Float32Array((NSX+1)*(NSZ+1));
+function meshN(x,z){const fx=(x-NX0)/NCX,fz=(z-NZ0)/NCZ;if(fx<0||fz<0||fx>=NSX||fz>=NSZ)return TH0(x,z);const ix=Math.floor(fx),iz=Math.floor(fz),u=fx-ix,v=fz-iz,N=NSX+1;
+ const ha=HVN[iz*N+ix],hb=HVN[(iz+1)*N+ix],hc=HVN[(iz+1)*N+ix+1],hd=HVN[iz*N+ix+1];return u+v<=1?ha+u*(hd-ha)+v*(hb-ha):hc+(1-u)*(hb-hc)+(1-v)*(hd-hc)}
+{const g=new THREE.PlaneGeometry(NX1-NX0,NZ1-NZ0,NSX,NSZ);g.rotateX(-Math.PI/2);g.translate((NX0+NX1)/2,0,(NZ0+NZ1)/2);const p=g.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color();
+ for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);let h=TH0(x,z);if(h>-.5){const nr=nearRoad(x,z);if(!nr.s.r.bridge){const w2=nr.s.r.w/2;if(nr.d<w2+30){const rh=TH0(nr.px,nr.pz);h=lerp(h,rh,smooth(w2+30,w2+6,nr.d))}}const rl=nearRail(x,z);if(rl.d<36)h=lerp(h,TH0(rl.px,rl.pz),smooth(36,6,rl.d))}
+  p.setY(i,h);HVN[i]=h;const n=fbm(x/90,z/90),sx=shoreN(z),town=TOWNS.find(t=>Math.hypot(x-t.x,z-t.z)<t.r);
+  if(h<-.5)c.setRGB(.50,.50,.40);else if(x<sx+90)c.setRGB(.92+n*.05,.85+n*.05,.65+n*.05);else if(x<sx+300&&z<-10400)c.setRGB(.82+n*.06,.78+n*.06,.60+n*.05);
+  else if(town)c.setRGB(.68+n*.05,.66+n*.05,.6+n*.04);else if(z<-14450&&z>-14980&&x>riaE(z)&&x<riaE(z)+230)c.setRGB(.86+n*.08,.88+n*.08,.88+n*.06);
+  else if(x<sx+1500)c.setRGB(.33+n*.08,.42+n*.08,.25+n*.06);else{const f=fbm(x/300,z/300);c.setRGB(f>.55?.55+n*.1:.42+n*.1,f>.55?.6+n*.08:.55+n*.1,f>.55?.3:.28+n*.06)}col.set([c.r,c.g,c.b],i*3)}
  g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();const m=new THREE.Mesh(g,lam({vertexColors:true}));m.receiveShadow=true;scene.add(m)}
 terrainH=meshH; // daqui para a frente tudo usa a altura do terreno desenhado
 // mar e rio com ondulação
 const waterU=Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.fog),{uT:{value:0},uNight:{value:0}});
 const waterMat=new THREE.ShaderMaterial({uniforms:waterU,fog:true,vertexShader:`varying vec3 vW;\n#include <fog_pars_vertex>\nvoid main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mvPosition=viewMatrix*w;gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}`,
  fragmentShader:`uniform float uT;uniform float uNight;varying vec3 vW;\n#include <fog_pars_fragment>\nvoid main(){float w=sin(vW.x*.05+uT*1.3)*.5+sin(vW.z*.07-uT*1.1)*.5+sin((vW.x+vW.z)*.13+uT*2.)*.3;vec3 c=mix(vec3(.10,.38,.52),vec3(.20,.55,.68),.5+w*.18);c=mix(c,vec3(.03,.08,.14),uNight*.75);float foam=smoothstep(.9,1.25,w);c+=foam*.08;gl_FragColor=vec4(c,1.);\n#include <fog_fragment>\n}`});
-{const sea=new THREE.Mesh(new THREE.PlaneGeometry(16000,16000),waterMat);sea.rotation.x=-Math.PI/2;sea.position.set(800,-.4,-300);scene.add(sea)}
+{const sea=new THREE.Mesh(new THREE.PlaneGeometry(30000,36000),waterMat);sea.rotation.x=-Math.PI/2;sea.position.set(1500,-.4,-7000);scene.add(sea)}
+{const pts=[];for(let z=-2900;z>-16800;z-=40){if(z<-15170&&z>-15330)continue;pts.push(new THREE.Vector3(shoreN(z)+4,-.3,z))}const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));scene.add(ln)}
 // espuma na rebentação
 {const pts=[];for(let z=1060;z>-1880;z-=20)pts.push(new THREE.Vector3(shoreX(z)+4,-.3,z));const g=new THREE.BufferGeometry().setFromPoints(pts);const ln=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));scene.add(ln)}
 
 // estradas (fitas que seguem o terreno; a ponte tem altura própria)
 const roadTex=ctex(64,256,(g,w,h)=>{g.fillStyle='#3b3f42';g.fillRect(0,0,w,h);for(let i=0;i<900;i++){g.fillStyle=`rgba(255,255,255,${Math.random()*.05})`;g.fillRect(Math.random()*w,Math.random()*h,1.5,1.5)}g.fillStyle='#e9e5d6';g.fillRect(w/2-1.5,0,3,h*.5);g.fillStyle='rgba(233,229,214,.8)';g.fillRect(3,0,2,h);g.fillRect(w-5,0,2,h)},1,1);
+const autoTex=ctex(256,256,(g,w,h)=>{g.fillStyle='#34383b';g.fillRect(0,0,w,h);for(let i=0;i<2500;i++){g.fillStyle=`rgba(255,255,255,${Math.random()*.05})`;g.fillRect(Math.random()*w,Math.random()*h,1.5,1.5)}
+  const u=m=>m/22*w;g.fillStyle='#e9e5d6';[1.5,20.5].forEach(m=>g.fillRect(u(m)-1.2,0,2.4,h));[9.3,12.7].forEach(m=>g.fillRect(u(m)-1.2,0,2.4,h));[5.4,16.6].forEach(m=>{for(let y=0;y<h;y+=64)g.fillRect(u(m)-1,y,2,30)});
+  g.fillStyle='#8d8a82';g.fillRect(u(9.6),0,u(12.4)-u(9.6),h)},1,1);
+const autoMat=lam({map:autoTex,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
 const roadMat=lam({map:roadTex,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
 ROADS.forEach((r,ri)=>{const P=[];for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/8));for(let k=0;k<n;k++){const t=k/n;P.push([lerp(a[0],b[0],t),lerp(a[1],b[1],t),a[2]!=null?lerp(a[2],b[2],t):null])}}const e=r.pts[r.pts.length-1];P.push([e[0],e[1],e[2]!=null?e[2]:null]);
   const pos=[],uv=[],idx=[];let acc=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[Math.min(P.length-1,i+1)],o=P[Math.max(0,i-1)];let dx=q[0]-o[0],dz=q[1]-o[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;const nx=-dz,nz=dx;if(i>0)acc+=Math.hypot(p[0]-P[i-1][0],p[1]-P[i-1][1]);
-   for(const s of [-1,1]){const x=p[0]+nx*s*r.w/2,z=p[1]+nz*s*r.w/2,y=p[2]!=null?p[2]:Math.max(meshH(p[0],p[1]),-.2)+.1+(meshH(p[0],p[1])>4?.15:0)+ri*.0005;pos.push(x,y,z);uv.push(s<0?0:1,acc/14)}
+   for(const s of [-1,1]){const x=p[0]+nx*s*r.w/2,z=p[1]+nz*s*r.w/2,y=p[2]!=null?p[2]:Math.max(meshH(p[0],p[1]),-.2)+.1+(meshH(p[0],p[1])>4?.15:0)+ri*.0005;pos.push(x,y,z);uv.push(s<0?0:1,acc/(r.auto?40:14))}
    if(i>0){const b=(i-1)*2;idx.push(b,b+2,b+1,b+1,b+2,b+3)}}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,roadMat);m.receiveShadow=true;scene.add(m)});
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,r.auto?autoMat:roadMat);m.receiveShadow=true;scene.add(m)});
 
 // passeios com lancil e passadeiras nas ruas da cidade
 {const URB=new Set(['Avenida 25 de Abril','Marginal do Mondego','Bairro Novo','Centro','Buarcos','Passeio do Jardim']);
@@ -600,13 +666,50 @@ const concrete=lam({color:0xd9d6cc}),white=lam({color:0xf3f1ea});
  const cab=new THREE.LineBasicMaterial({color:0xeeeeee});const cp=[];for(let k=1;k<=10;k++){for(const s of [-1,1]){const zz=1302+s*k*22,t=(zz-1045)/515,y=4+Math.sin(t*Math.PI)*20;cp.push(new THREE.Vector3(2200,88-k*3,1302),new THREE.Vector3(2200+(k%2?7:-7),y+.5,zz))}}
  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(cp),cab));g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(g)}
 
+/* ================= COSTA DE PRATA: A17, PONTE DA BARRA, LINHA DO COMBOIO ================= */
+const GLASS=lam({color:0x9fc4d6});
+const _ID=new THREE.Object3D();function inst(geo,mat,list,fn,shadow){const m=new THREE.InstancedMesh(geo,mat,Math.max(1,list.length));list.forEach((t,i)=>{_ID.position.set(0,0,0);_ID.rotation.set(0,0,0);_ID.scale.set(1,1,1);fn(_ID,t);_ID.updateMatrix();m.setMatrixAt(i,_ID.matrix)});if(!list.length)m.count=0;m.castShadow=!!(shadow&1);m.receiveShadow=!!(shadow&2);m.frustumCulled=false;scene.add(m);return m}
+function alongRoad(name,step,fn){const r=ROADS.find(r=>r.name===name);let acc=0,next=0;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),dx=(b[0]-a[0])/L,dz=(b[1]-a[1])/L;while(next<=acc+L){const t=(next-acc)/L;fn(lerp(a[0],b[0],t),lerp(a[1],b[1],t),dx,dz,next);next+=step}acc+=L}return acc}
+const A17LEN=alongRoad('A17',1e9,()=>{});
+// separador central (betão) e rails metálicos nas bermas, em instâncias
+{const bar=[],rail=[];alongRoad('A17',8,(x,z,dx,dz)=>{const nx=-dz,nz=dx;bar.push({x,z,a:Math.atan2(dx,dz)});for(const sd of [-1,1]){const px=x+nx*sd*11.3,pz=z+nz*sd*11.3;const near=['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Área de Serviço'].some(n=>{const r=ROADS.find(r=>r.name===n);return Math.hypot(px-r.pts[0][0],pz-r.pts[0][1])<70||Math.hypot(px-r.pts[r.pts.length-1][0],pz-r.pts[r.pts.length-1][1])<70});if(!near)rail.push({x:px,z:pz,a:Math.atan2(dx,dz)})}});
+ const bg=new THREE.BoxGeometry(.6,.85,8.1);bg.translate(0,.42,0);inst(bg,lam({color:0xc9c5bb}),bar,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a});
+ const rg=new THREE.BoxGeometry(.12,.32,8.1);rg.translate(0,.62,0);inst(rg,lam({color:0xb8bec4}),rail,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a});
+ const pg=new THREE.BoxGeometry(.1,.7,.1);pg.translate(0,.35,0);inst(pg,lam({color:0x8a9096}),rail,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a})}
+// placas azuis de autoestrada e pórticos de portagem eletrónica
+const TOLLS=[];
+{const DEST=[['Mira',-9450],['Vagos',-12800],['Ílhavo',-14150],['Aveiro',-15550]],SOUTH=[['Figueira da Foz',-900],['Tocha',-6550],['Mira',-9450]];
+ function panel(lines,w,h,bg){return ctex(512,Math.round(512*h/w),(g,W,H)=>{g.fillStyle=bg||'#1d4fa0';g.fillRect(0,0,W,H);g.strokeStyle='#fff';g.lineWidth=6;g.strokeRect(8,8,W-16,H-16);g.fillStyle='#fff';const fs=Math.round(H/(lines.length+.8)*.62);g.font=`700 ${fs}px "Bricolage Grotesque",sans-serif`;lines.forEach((l,i)=>{g.textAlign='left';g.fillText(l[0],34,H*(i+1)/(lines.length+.5));if(l[1]){g.textAlign='right';g.fillText(l[1],W-34,H*(i+1)/(lines.length+.5))}})})}
+ function gantry(x,z,dx,dz,texN,texS,toll){const a=Math.atan2(dx,dz),nx=-dz,nz=dx,y=terrainH(x,z),g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=a;scene.add(g);
+  for(const sd of [-1,1]){const p=new THREE.Mesh(new THREE.BoxGeometry(.5,7.2,.5),lam({color:0x9aa1a8}));p.position.set(sd*12.2,3.6,0);g.add(p)}const beam=new THREE.Mesh(new THREE.BoxGeometry(25,.7,.6),lam({color:0x9aa1a8}));beam.position.y=6.9;g.add(beam);
+  if(texN){const m=new THREE.Mesh(new THREE.PlaneGeometry(9,3.2),new THREE.MeshBasicMaterial({map:texN}));m.position.set(-5.5,7,-.35);m.rotation.y=Math.PI;g.add(m)}
+  if(texS){const m=new THREE.Mesh(new THREE.PlaneGeometry(9,3.2),new THREE.MeshBasicMaterial({map:texS}));m.position.set(5.5,7,.35);g.add(m)}
+  if(toll){for(let k=-9;k<=9;k+=3.6){const cam=new THREE.Mesh(new THREE.BoxGeometry(.5,.35,.6),lam({color:0x2a2f35}));cam.position.set(k,6.35,0);g.add(cam)}TOLLS.push({x,z,dx,dz,last:-9})}}
+ // placas de direção a cada ~2,3 km, nos dois sentidos
+ const marks=[];alongRoad('A17',2300,(x,z,dx,dz,sAt)=>{if(sAt<400||sAt>A17LEN-400)return;marks.push([x,z,dx,dz,sAt])});
+ marks.forEach(([x,z,dx,dz,sAt])=>{const next=DEST.filter(d=>d[1]<z-200).slice(0,2),prev=SOUTH.filter(d=>d[1]>z+200).slice(-2).reverse();const km=d=>Math.max(1,Math.round(Math.abs(z-d[1])*4.5/1000))+' km';
+   gantry(x,z,dx,dz,panel([['A17  ↑ NORTE'],...next.map(d=>[d[0],km(d)])],9,3.2),panel([['A17  ↓ SUL'],...prev.map(d=>[d[0],km(d)])],9,3.2),false)});
+ // pórticos de portagem eletrónica (com câmaras)
+ alongRoad('A17',1e9,()=>{});[0.3,0.68].forEach(f=>{alongRoad('A17',A17LEN*f,(x,z,dx,dz,sAt)=>{if(sAt>0&&Math.abs(sAt-A17LEN*f)<5){const t=panel([['PORTAGEM ELETRÓNICA'],['Classe 1','0,95 €']],9,3.2,'#2a6a3a');gantry(x,z,dx,dz,t,t,true)}})});
+ // placas de saída nas bermas
+ ['Tocha','Mira','Vagos','Ílhavo','Aveiro'].forEach((n,i)=>{const r=ROADS.find(r=>r.name==='Saída '+n),p=r.pts[0];const tex=panel([['SAÍDA '+(i+2)],[n]],4,2.2);const m=new THREE.Mesh(new THREE.PlaneGeometry(4,2.2),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));m.position.set(p[0]+14,terrainH(p[0],p[1])+3.4,p[1]+90);scene.add(m);const po=new THREE.Mesh(new THREE.BoxGeometry(.15,2.6,.15),lam({color:0x8a9096}));po.position.set(p[0]+14,terrainH(p[0],p[1])+1.3,p[1]+90);scene.add(po)})}
+// Ponte da Barra: tabuleiro baixo e comprido com pilares sobre a Ria
+{const r=ROADS.find(r=>r.name==='Ponte da Barra'),g=new THREE.Group(),con=lam({color:0xd4d0c6});for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);const d=new THREE.Mesh(unitBox,con);d.scale.set(L+.4,1,15);d.position.set((a[0]+b[0])/2,(a[2]+b[2])/2-1.05,a[1]);g.add(d);
+  for(const sd of [-1,1]){const rl=new THREE.Mesh(unitBox,lam({color:0xf3f1ea}));rl.scale.set(L+.4,1.05,.25);rl.position.set((a[0]+b[0])/2,(a[2]+b[2])/2,a[1]+sd*7.3);g.add(rl)}if(i%3===0&&a[2]>3){const pi=new THREE.Mesh(unitBox,con);pi.scale.set(2.4,a[2]+3,6);pi.position.set(a[0],-3,a[1]);g.add(pi)}}
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(g)}
+// linha do comboio: balastro, travessas e carris
+{const P=[];for(let sv=0;sv<railLen;sv+=6){const p=railPoint(sv);P.push(p)}const pos=[],idx=[];P.forEach((p,i)=>{const nx=-p.dz,nz=p.dx,y=terrainH(p.x,p.z)+.12;for(const sd of [-1,1])pos.push(p.x+nx*sd*2.3,y,p.z+nz*sd*2.3);if(i>0){const b=(i-1)*2;idx.push(b,b+2,b+1,b+1,b+2,b+3)}});
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,lam({color:0x7a7065,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));m.receiveShadow=true;scene.add(m);
+ const sl=[];for(let sv=0;sv<railLen;sv+=mobile?2.4:1.2)sl.push(railPoint(sv));const sg=new THREE.BoxGeometry(2.6,.14,.26);inst(sg,lam({color:0x5a4a3a}),sl,(d,p)=>{d.position.set(p.x,terrainH(p.x,p.z)+.2,p.z);d.rotation.y=Math.atan2(p.dx,p.dz)},2);
+ const rl=[];for(let sv=0;sv<railLen;sv+=6)rl.push(railPoint(sv+3));const rg=new THREE.BoxGeometry(.09,.14,6.05);for(const sd of [-.72,.72])inst(rg,lam({color:0x9a9ea3}),rl,(d,p)=>{d.position.set(p.x-p.dz*sd,terrainH(p.x,p.z)+.34,p.z+p.dx*sd);d.rotation.y=Math.atan2(p.dx,p.dz)},0)}
+
 /* ================= EDIFÍCIOS (instâncias com janelas por shader) ================= */
 const B=[{x:2200,z:1302,w:3,d:4,h:0,keep:true,hidden:true}];// {x,z,w,d,h,col} (o 1.º é o pilone da ponte, só para colisão)
 const COLS=[0xf3efe6,0xf6e7c8,0xe9eef0,0xf1d9c4,0xdfe8e1,0xf5f0dc,0xe3d4bd,0xcfdde6];
 function addB(x,z,w,d,h,col){B.push({x,z,w,d,h,col:col!=null?col:COLS[Math.floor(rnd()*COLS.length)]})}
 function freeArea(x0,z0,x1,z1){// coloca prédios num quarteirão sem tocar nas estradas
   const m=8;for(let x=x0+m;x<x1-m-6;){const w=10+rnd()*16;if(x+w>x1-m)break;for(let z=z0+m;z<z1-m-6;){const d=10+rnd()*14;if(z+d>z1-m)break;yield_(x+w/2,z+d/2,w-1.5,d-1.5);z+=d}x+=w}}
-let zoneH=()=>10;function yield_(x,z,w,d){if(Math.abs(x-2200)<30)return;if(zoneAt(x,z)!=='terra')return;if(nearRoad(x,z).d<8.5+Math.max(w,d)/2*.75)return;addB(x,z,w,d,zoneH(x,z))}
+let zoneH=()=>10;function yield_(x,z,w,d){if(Math.abs(x-2200)<30&&z>900)return;if(nearRail(x,z).d<14+Math.max(w,d)/2)return;if(zoneAt(x,z)!=='terra')return;if(nearRoad(x,z).d<8.5+Math.max(w,d)/2*.75)return;addB(x,z,w,d,zoneH(x,z))}
 // Bairro Novo: frente marítima alta (prédios dos anos 60-70) e interior médio
 zoneH=(x,z)=>x<-20?26+rnd()*30:9+rnd()*10;
 for(let x=-60;x<600;x+=110)for(let z=-250;z<980;z+=120)freeArea(x,z,x+110,z+120);
@@ -618,11 +721,20 @@ zoneH=()=>5+rnd()*5;for(let x=-150;x<150;x+=100)for(let z=-1950;z<-1650;z+=100)f
 // Tavarede e margem sul (dispersos)
 zoneH=()=>6+rnd()*5;for(let i=0;i<70;i++){const x=1550+rnd()*700,z=-900+rnd()*1100;yield_(x,z,10+rnd()*8,10+rnd()*8)}
 for(let i=0;i<45;i++){const x=600+rnd()*1700,z=1600+rnd()*250;yield_(x,z,9+rnd()*8,9+rnd()*8)}
+// ---- vilas da Costa de Prata ----
+const AVEIRO_COLS=[0x9fc6d9,0xf2c6b6,0xf3e2a0,0xb9dcc2,0xe8b5c8,0xf6efe2,0xc9b6e4];
+zoneH=()=>6+rnd()*6;
+[['Tocha',1650,1950,-6640,-6360,100,95],['Mira',2060,2380,-9680,-9320,105,110],['Vagos',2860,3150,-12940,-12660,95,95],['Ílhavo',2860,3180,-14380,-14020,105,120]].forEach(([n,x0,x1,z0,z1,dx,dz])=>{for(let x=x0;x<x1;x+=dx)for(let z=z0;z<z1;z+=dz)freeArea(x,z,x+dx,z+dz)});
+{const x0=shoreN(-9500)+200;for(let x=x0;x<x0+220;x+=110)for(let z=-9640;z<-9360;z+=95)freeArea(x,z,x+110,z+95)}
+zoneH=(x,z)=>9+rnd()*9;{const n0=B.length;for(let x=3160;x<3760;x+=120)for(let z=-16150;z<-15360;z+=110)freeArea(x,z,x+120,z+110);for(let i=n0;i<B.length;i++)B[i].col=AVEIRO_COLS[Math.floor(rnd()*AVEIRO_COLS.length)]}
+// casas dispersas ao longo da EN109
+zoneH=()=>5+rnd()*4;{const r=ROADS.find(r=>r.name==='EN109');for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(a[1]>-2600)continue;for(let t=0;t<L;t+=70){if(rnd()<.45)continue;const x=lerp(a[0],b[0],t/L),z=lerp(a[1],b[1],t/L),nx=-(b[1]-a[1])/L,nz=(b[0]-a[0])/L,sd=rnd()<.5?-1:1,o=22+rnd()*20;yield_(x+nx*sd*o,z+nz*sd*o,9+rnd()*6,9+rnd()*6)}}}
+
 // edifícios marcantes (com nome) — ocupam lugar e entram na colisão
 const LM={};function landmark(id,x,z,w,d,h,col,label){LM[id]={x,z,label};B.push({x,z,w,d,h,col,keep:true})}
 // limpar prédios que colidam com os marcos
 function clearAround(x,z,r){for(let i=B.length-1;i>=0;i--){const b=B[i];if(!b.keep&&Math.abs(b.x-x)<r+b.w/2&&Math.abs(b.z-z)<r+b.d/2)B.splice(i,1)}}
-[['casino',105,170,56,30,13,0xe8c690,'CASINO'],['mercado',760,690,58,40,10,0xf0e2c0,'MERCADO'],['escola',2060,-680,120,26,13,0xf4f2ec,'ESCOLA DR. JOAQUIM DE CARVALHO'],['camara',1100,920,40,28,15,0xf5efe0,'CÂMARA MUNICIPAL'],['empresa',1205,410,40,30,18,0xe9efe9,'A TUA EMPRESA']].forEach(a=>{clearAround(a[1],a[2],Math.max(a[3],a[4])/2+6);landmark(...a)});
+[['casino',105,170,56,30,13,0xe8c690,'CASINO'],['mercado',760,690,58,40,10,0xf0e2c0,'MERCADO'],['escola',2060,-680,120,26,13,0xf4f2ec,'ESCOLA DR. JOAQUIM DE CARVALHO'],['camara',1100,920,40,28,15,0xf5efe0,'CÂMARA MUNICIPAL'],['empresa',1205,410,40,30,18,0xe9efe9,'A TUA EMPRESA'],['est_fig',1708,950,30,12,8,0xf3ead6,'ESTAÇÃO DA FIGUEIRA'],['est_aveiro',3600,-15985,46,16,11,0xf4f1e8,'ESTAÇÃO DE AVEIRO'],['confeitaria',3360,-15770,16,14,9,0xf2c6b6,'OVOS MOLES'],['mercado_av',3462,-15640,34,24,8,0xf6efe2,'MERCADO DO PEIXE'],['as_mira',2930,-8250,30,18,6,0xeceae4,'ÁREA DE SERVIÇO']].forEach(a=>{clearAround(a[1],a[2],Math.max(a[3],a[4])/2+6);landmark(...a)});
 const bMat=new THREE.MeshLambertMaterial({color:0xffffff});const bU={uNight:{value:0}};
 bMat.onBeforeCompile=sh=>{sh.uniforms.uNight=bU.uNight;
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vON;').replace('#include <project_vertex>','#include <project_vertex>\nvec4 wpp=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nwpp=instanceMatrix*wpp;\n#endif\nvWP=(modelMatrix*wpp).xyz;vON=objectNormal;');
@@ -664,9 +776,61 @@ label('CASINO FIGUEIRA',105,15,154.8,0,26,4,'#2a1d14','#f7c46a');label('MERCADO 
  scene.add(g);window.__lamp=lamp}
 LM.claridade={x:-380,z:640,label:'Praia da Claridade'};LM.ponte={x:2200,z:1600,label:'Ponte Edgar Cardoso'};LM.buarcos={x:-40,z:-1800,label:'Buarcos'};LM.cabedelo={x:-120,z:1720,label:'Cabedelo'};LM.pastelaria={x:990,z:460,label:'Pastelaria do centro'};LM.praca={x:880,z:830,label:'Praça do táxi'};
 for(const k of ['casino','mercado','escola','camara','empresa']){const l=LM[k];l.z+=k==='escola'?28:-24}
+for(const k of ['est_fig','est_aveiro','confeitaria','mercado_av','as_mira','salinas','costanova','barra','praiamira','aveiro','mira','tocha','vagos','ilhavo','a17']){const l=LM[k];if(!l)continue;const n=nearRoad(l.x,l.z);if(n.d>9){l.x=n.px;l.z=n.pz}}
+
+
+/* ---- Costa de Prata: decoração ---- */
+LM.a17={x:2120,z:-1200,label:'Início da A17'};LM.tocha={x:1800,z:-6500,label:'Tocha'};LM.mira={x:2200,z:-9500,label:'Mira'};LM.praiamira={x:shoreN(-9500)+160,z:-9500,label:'Praia de Mira'};
+LM.vagos={x:3000,z:-12800,label:'Vagos'};LM.ilhavo={x:3010,z:-14200,label:'Ílhavo'};LM.costanova={x:shoreN(-14300)+170,z:-14300,label:'Costa Nova'};LM.barra={x:shoreN(-15060)+170,z:-15060,label:'Farol da Barra'};LM.aveiro={x:3300,z:-15640,label:'Aveiro · canais'};
+LM.salinas={x:riaE(-14700)+120,z:-14700,label:'Salinas de Aveiro'};
+const MOLI=[],TRAINS=[],STATIONS=[],PUMPS=[];
+function addSolid(b){B.push(b);const x0=Math.floor((b.x-b.w/2)/40),x1=Math.floor((b.x+b.w/2)/40),z0=Math.floor((b.z-b.d/2)/40),z1=Math.floor((b.z+b.d/2)/40);for(let i=x0;i<=x1;i++)for(let j=z0;j<=z1;j++){const k=i+','+j;(BG.get(k)||BG.set(k,[]).get(k)).push(b)}}
+{const g=new THREE.Group(),add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=true;g.add(o);return o};
+ // Costa Nova: palheiros às riscas (vermelho, verde, azul, amarelo)
+ const stripe=c=>{const t=ctex(64,64,(gg,w,h)=>{gg.fillStyle='#fbfaf6';gg.fillRect(0,0,w,h);gg.fillStyle=c;for(let x=0;x<w;x+=16)gg.fillRect(x,0,8,h)});t.wrapS=THREE.RepeatWrapping;t.repeat.set(3,1);return lam({map:t})};
+ const pal=[stripe('#c43a2f'),stripe('#2e8b57'),stripe('#2f6db5'),stripe('#e0a81c')],roofP=lam({color:0x8a3a2a});
+ for(let z=-14640;z<-13960;z+=24){for(const side of [-1,1]){if(rnd()<.18)continue;const sx=shoreN(z),x=sx+170+side*(30+rnd()*12);if(nearRoad(x,z).d<8)continue;const h=terrainH(x,z),w=10+rnd()*4,d=8+rnd()*3,hh=6+rnd()*2.5;const m=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),pal[Math.floor(rnd()*4)]);m.position.set(x,h+hh/2,z);m.castShadow=m.receiveShadow=true;g.add(m);
+   const rf=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*.72,2.4,4),roofP);rf.position.set(x,h+hh+1.2,z);rf.rotation.y=Math.PI/4;rf.scale.z=d/w;g.add(rf);addSolid({x,z,w,d,h:hh,keep:true,hidden:true,col:0})}}
+ // Farol da Barra (o mais alto de Portugal)
+ {const x=LM.barra.x+20,z=LM.barra.z-30,y=terrainH(x,z);add(new THREE.CylinderGeometry(3.2,4.6,46,18),lam({color:0xf6f4ee}),x,y+23,z);for(const yy of [14,30])add(new THREE.CylinderGeometry(3.7,3.9,2.4,18),lam({color:0xc0392b}),x,y+yy,z);add(new THREE.CylinderGeometry(3.4,3.4,4,18),lam({color:0xc0392b}),x,y+48,z);add(new THREE.SphereGeometry(2,12,10),new THREE.MeshBasicMaterial({color:0xfff3b0}),x,y+51.5,z);addSolid({x,z,w:9,d:9,h:46,keep:true,hidden:true,col:0})}
+ // salinas: tanques de sal e montes brancos
+ for(let z=-14940;z<-14470;z+=34)for(let k=0;k<5;k++){const x=riaE(z)+25+k*40,y=terrainH(x,z);const tq=new THREE.Mesh(new THREE.BoxGeometry(34,.15,28),lam({color:k%2?0xd9dde0:0xc4d2d8}));tq.position.set(x,y+.1,z);g.add(tq);if(rnd()<.3){const mt=new THREE.Mesh(new THREE.ConeGeometry(2.4,2.2,10),lam({color:0xfafafa}));mt.position.set(x+10,y+1.1,z);g.add(mt)}}
+ // Praia de Mira: palheiros de madeira e barcos da arte xávega na areia
+ for(let i=0;i<14;i++){const z=-9640+i*20,x=shoreN(z)+150+rnd()*30;if(nearRoad(x,z).d<7)continue;const y=terrainH(x,z);add(new THREE.BoxGeometry(8,6,7),lam({color:0x6b4a2e}),x,y+4,z);for(const a of [-3,3])for(const b of [-2.6,2.6])add(new THREE.BoxGeometry(.3,1.6,.3),lam({color:0x4a3220}),x+a,y+.8,z+b)}
+ for(let i=0;i<5;i++){const z=-9600+i*45,x=shoreN(z)+40,y=terrainH(x,z),hull=add(new THREE.BoxGeometry(3,1.3,11),lam({color:[0x2f6db5,0xc43a2f,0x2e8b57][i%3]}),x,y+.65,z);const pr=add(new THREE.BoxGeometry(2.6,2.2,1.4),lam({color:0xf2f0ea}),x,y+1.3,z-5.6);pr.rotation.x=-.5}
+ // moliceiros nos canais de Aveiro e na Ria (barcos pintados de proa curva)
+ const moliM=[0xe0a81c,0x2f6db5,0xc43a2f,0x2e8b57];const mk=(c)=>{const b=new THREE.Group();const h=new THREE.Mesh(new THREE.BoxGeometry(2.4,.8,13),lam({color:0x1f1f22}));h.position.y=.4;b.add(h);const pt=new THREE.Mesh(new THREE.BoxGeometry(2.5,.5,13.2),lam({color:c}));pt.position.y=.85;b.add(pt);const pr=new THREE.Mesh(new THREE.BoxGeometry(2.2,2.6,1.3),lam({color:c}));pr.position.set(0,1.7,-6.6);pr.rotation.x=-.45;b.add(pr);const st=new THREE.Mesh(new THREE.BoxGeometry(2,1.6,1),lam({color:0xf3e2a0}));st.position.set(0,1.4,6.4);st.rotation.x=.35;b.add(st);b.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(b);return b};
+ CANALS.forEach((c,i)=>{for(let k=0;k<2;k++){const b=mk(moliM[(i+k)%4]);MOLI.push({g:b,c,t:rnd(),v:(.02+rnd()*.02)*(k?1:-1)})}});
+ for(let i=0;i<6;i++){const z=-13500-i*350,b=mk(moliM[i%4]);MOLI.push({g:b,ria:true,z,t:rnd(),v:.01+rnd()*.01})}
+ scene.add(g)}
+// pinhal (Mata Nacional): milhares de pinheiros-mansos em instâncias
+{const T=[],N=mobile?1600:4200;let tries=0;while(T.length<N&&tries<N*6){tries++;const z=-3700-rnd()*10900,sx=shoreN(z),x=sx+120+rnd()*(z<-10400?220:1450);if(z<-10400&&x>sx+290)continue;if(terrainH(x,z)<1)continue;if(nearRoad(x,z).d<9||nearRail(x,z).d<9||hitBuilding(x,z,4))continue;if(TOWNS.some(t=>Math.hypot(x-t.x,z-t.z)<t.r))continue;T.push({x,z,s:.8+rnd()*.6})}
+ for(let i=0;i<(mobile?300:900);i++){const z=-3700-rnd()*10000,x=shoreN(z)+1600+rnd()*1800;if(nearRoad(x,z).d<10||nearRail(x,z).d<10||hitBuilding(x,z,4)||terrainH(x,z)<1||TOWNS.some(t=>Math.hypot(x-t.x,z-t.z)<t.r))continue;T.push({x,z,s:.7+rnd()*.5})}
+ const tg=new THREE.CylinderGeometry(.3,.42,6,5);tg.translate(0,3,0);const cg=new THREE.SphereGeometry(3.4,7,5);cg.scale(1,.5,1);cg.translate(0,7,0);
+ inst(tg,lam({color:0x7a5a3a}),T,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cg,lam({color:0x355f2e}),T,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1)}
+// estações de comboio (com plataforma e placa) e o comboio
+{const ST=[['Figueira da Foz',1660,960],['Tocha',2060,-6420],['Mira',2420,-9420],['Vagos',3260,-12820],['Aveiro',3580,-15880]];
+ ST.forEach(([n,x,z])=>{const r=nearRail(x,z),p=railPoint(r.sAt),nx=-p.dz,nz=p.dx,cx=p.x+nx*7,cz=p.z+nz*7,y=terrainH(cx,cz);STATIONS.push({name:n,s:r.sAt,x:cx,z:cz,dx:p.dx,dz:p.dz});
+  const pl=new THREE.Mesh(new THREE.BoxGeometry(5,1,60),lam({color:0xbdb6a8}));pl.position.set(cx,y+.5,cz);pl.rotation.y=Math.atan2(p.dx,p.dz);pl.receiveShadow=true;scene.add(pl);
+  const cv=new THREE.Mesh(new THREE.BoxGeometry(5.6,.25,20),lam({color:0x3d4247}));cv.position.set(cx,y+4.2,cz);cv.rotation.y=pl.rotation.y;scene.add(cv);
+  const tx=ctex(512,96,(g,w,h)=>{g.fillStyle='#173a6b';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font='800 50px "Bricolage Grotesque",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(n.toUpperCase(),w/2,h/2+2)});
+  const sg=new THREE.Mesh(new THREE.PlaneGeometry(7,1.3),new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));sg.position.set(cx,y+5.2,cz);sg.rotation.y=pl.rotation.y+Math.PI/2;scene.add(sg);
+  });
+ // fachada de azulejos da estação de Aveiro
+ {const az=ctex(128,128,(g,w,h)=>{g.fillStyle='#f6f6f2';g.fillRect(0,0,w,h);g.strokeStyle='#1f4fa0';g.lineWidth=3;for(let i=0;i<4;i++)for(let j=0;j<4;j++){const x=i*32+16,y=j*32+16;g.beginPath();g.arc(x,y,10,0,7);g.stroke();g.beginPath();g.moveTo(x-14,y);g.lineTo(x+14,y);g.moveTo(x,y-14);g.lineTo(x,y+14);g.stroke()}},6,2);
+  const l=LM.est_aveiro;const f=new THREE.Mesh(new THREE.PlaneGeometry(44,9),lam({map:az}));f.position.set(l.x,terrainH(l.x,l.z)+5,l.z+8.05);scene.add(f)}
+ // o comboio: locomotiva + 2 carruagens (branco com faixa azul)
+ const tm=lam({color:0xf3f3ef}),tb=lam({color:0x2a5aa8}),tw=lam({color:0x1d2a33});
+ const car=()=>{const g=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(3,3.4,20),tm);b.position.y=2.4;g.add(b);const s1=new THREE.Mesh(new THREE.BoxGeometry(3.05,.5,20.05),tb);s1.position.y=1.5;g.add(s1);const w=new THREE.Mesh(new THREE.BoxGeometry(3.06,.9,18),tw);w.position.y=3.2;g.add(w);g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);return g};
+ const TR={cars:[car(),car(),car()],s:STATIONS[0].s+5,v:0,dir:1,stop:8,next:1,ride:null};TRAINS.push(TR)}
+// bombas de gasolina (Figueira, área de serviço da A17, Mira, Aveiro)
+{const PS=[['Figueira',1760,-140],['A17 · Área de Serviço',2885,-8250],['Mira',2420,-9560],['Aveiro',3720,-15430]];
+ PS.forEach(([n,x,z])=>{const y=terrainH(x,z),g=new THREE.Group();g.position.set(x,y,z);scene.add(g);const cn=new THREE.Mesh(new THREE.BoxGeometry(14,.6,10),lam({color:0xf3f1ea}));cn.position.y=5;g.add(cn);const st=new THREE.Mesh(new THREE.BoxGeometry(14.2,.7,10.2),lam({color:0x2e8b57}));st.position.y=4.6;g.add(st);
+  for(const a of [-4.5,4.5]){const po=new THREE.Mesh(new THREE.BoxGeometry(.5,4.6,.5),lam({color:0xdadada}));po.position.set(a,2.3,0);g.add(po);const pu=new THREE.Mesh(new THREE.BoxGeometry(.9,1.6,.6),lam({color:0x2e8b57}));pu.position.set(a,.8,2);g.add(pu)}
+  const tx=ctex(256,64,(gg,w,h)=>{gg.fillStyle='#2e8b57';gg.fillRect(0,0,w,h);gg.fillStyle='#fff';gg.font='800 30px "Bricolage Grotesque",sans-serif';gg.textAlign='center';gg.textBaseline='middle';gg.fillText('COMBUSTÍVEL',w/2,h/2+1)});const sg=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));sg.position.set(0,6.3,0);g.add(sg);PUMPS.push({name:n,x,z})})}
 
 // candeeiros (só brilham à noite)
-const lampMat=new THREE.MeshBasicMaterial({color:0x333333});{const pts=[];SEGS.forEach(s=>{if(s.r.bridge)return;for(let t=0;t<s.len;t+=55){const x=lerp(s.ax,s.bx,t/s.len),z=lerp(s.az,s.bz,t/s.len);const nx=-(s.bz-s.az)/s.len,nz=(s.bx-s.ax)/s.len;pts.push([x+nx*(s.r.w/2+1.5),z+nz*(s.r.w/2+1.5)])}});
+const lampMat=new THREE.MeshBasicMaterial({color:0x333333});{const pts=[];SEGS.forEach(s=>{if(s.r.bridge||s.r.auto||s.r.rural)return;for(let t=0;t<s.len;t+=55){const x=lerp(s.ax,s.bx,t/s.len),z=lerp(s.az,s.bz,t/s.len);const nx=-(s.bz-s.az)/s.len,nz=(s.bx-s.ax)/s.len;pts.push([x+nx*(s.r.w/2+1.5),z+nz*(s.r.w/2+1.5)])}});
  const geo=new THREE.BoxGeometry(.25,7,.25);geo.translate(0,3.5,0);const pole=new THREE.InstancedMesh(geo,lam({color:0x4a5258}),pts.length);const hg=new THREE.SphereGeometry(.45,8,6);const heads=new THREE.InstancedMesh(hg,lampMat,pts.length);const D=new THREE.Object3D();
  pts.forEach((p,i)=>{const h=surfaceAt(p[0],p[1]);D.position.set(p[0],h,p[1]);D.updateMatrix();pole.setMatrixAt(i,D.matrix);D.position.y=h+7.1;D.updateMatrix();heads.setMatrixAt(i,D.matrix)});pole.frustumCulled=heads.frustumCulled=false;scene.add(pole,heads)}
 
@@ -694,16 +858,18 @@ function carModel(type,color){const c=CARS[type],g=new THREE.Group(),M=x=>lam({c
   g.traverse(o=>{if(o.isMesh)o.castShadow=true});return g}
 let car=null,carType=0,carColor=0;
 const IND={mode:'',h0:0,turned:false,blink:0,lights:false,lightsAuto:true};const W={on:false,x:0,z:0,y:0,yaw:0,ph:0,m:null};
-const P={x:avX(600)+3,z:600,y:1.3,h:0,vx:0,vz:0,nitro:100,lastSafe:null,wet:false,inWater:0};
+const P={fuel:100,x:avX(600)+3,z:600,y:1.3,h:0,vx:0,vz:0,nitro:100,lastSafe:null,wet:false,inWater:0};
 // tráfego
-const TRAF=[];{const lanes=ROADS.filter(r=>!r.name.startsWith('Passeio')&&r.pts.length>1);const N=mobile?38:84;for(let i=0;i<N;i++){const r=lanes[i%lanes.length];const m=carModel(i%3,PAINT[(i+2)%PAINT.length]);scene.add(m);TRAF.push({side:rnd()<.5?-1:1,type:i%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,sp:10+rnd()*5,cur:0})}}
-function trafPos(T){const a=T.r.pts[T.seg],b=T.r.pts[T.seg+1];const x=lerp(a[0],b[0],T.t),z=lerp(a[1],b[1],T.t);let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;if(T.dir<0){dx=-dx;dz=-dz}const off=T.r.w*.25;return{x:x-dz*off,z:z+dx*off,dx,dz,L,y:a[2]!=null?lerp(a[2],b[2],T.t):null}}
+const TRAF=[];{const lanes=ROADS.filter(r=>!r.name.startsWith('Passeio')&&r.pts.length>1);const N=mobile?38:84;for(let i=0;i<N;i++){const r=lanes[i%lanes.length];const m=carModel(i%3,PAINT[(i+2)%PAINT.length]);scene.add(m);TRAF.push({side:rnd()<.5?-1:1,type:i%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,sp:10+rnd()*5,cur:0})}
+ const extra=[['A17',mobile?12:30,()=>({off:rnd()<.55?3.4:6.9,sp:24+rnd()*9})],['EN109',mobile?5:12,()=>({sp:13+rnd()*5})],['Aveiro',mobile?4:10,()=>({sp:9+rnd()*4})],['Estrada das Dunas',mobile?2:5,()=>({sp:12+rnd()*4})]];let k=N;
+ for(const [name,n,opt] of extra){const rs=ROADS.filter(r=>r.name===name);for(let i=0;i<n;i++,k++){const r=rs[i%rs.length];const m=carModel(k%3,PAINT[(k+1)%PAINT.length]);scene.add(m);TRAF.push(Object.assign({side:rnd()<.5?-1:1,type:k%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,cur:0},opt()))}}}
+function trafPos(T){const a=T.r.pts[T.seg],b=T.r.pts[T.seg+1];const x=lerp(a[0],b[0],T.t),z=lerp(a[1],b[1],T.t);let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;if(T.dir<0){dx=-dx;dz=-dz}const off=T.off||T.r.w*.25;return{x:x-dz*off,z:z+dx*off,dx,dz,L,y:a[2]!=null?lerp(a[2],b[2],T.t):null}}
 function updateTraffic(dt){for(const T of TRAF){const p=trafPos(T);let sp=T.sp;const FP=focus(),ddx=FP.x-p.x,ddz=FP.z-p.z,ahead=ddx*p.dx+ddz*p.dz,side=Math.abs(-ddx*p.dz+ddz*p.dx);if(ahead>0&&ahead<14&&side<3)sp=0;if(W.on){const cx=P.x-p.x,cz=P.z-p.z,ah2=cx*p.dx+cz*p.dz;if(ah2>0&&ah2<12&&Math.abs(-cx*p.dz+cz*p.dx)<2.6)sp=0}for(const O of TRAF){if(O===T||O.x==null)continue;const ox=O.x-p.x,oz=O.z-p.z,ah=ox*p.dx+oz*p.dz;if(ah>0&&ah<9&&Math.abs(-ox*p.dz+oz*p.dx)<2.2){sp=0;break}}T.cur=lerp(T.cur,sp,Math.min(1,dt*2));
   T.t+=T.dir*T.cur*dt/p.L;if(T.t>1){if(T.seg<T.r.pts.length-2){T.seg++;T.t-=1}else{T.t=1;T.dir=-1}}if(T.t<0){if(T.seg>0){T.seg--;T.t+=1}else{T.t=0;T.dir=1}}
   const q=trafPos(T);const y=q.y!=null?q.y:surfaceAt(q.x,q.z);T.m.position.set(q.x,y,q.z);T.m.rotation.y=Math.atan2(-q.dx,-q.dz);T.m.userData.wheels.forEach(w=>w.rotation.x-=T.cur*dt/.36);setBrake(T.m,sp<T.cur-.5||T.cur<1);T.x=q.x;T.z=q.z;T.dx=q.dx;T.dz=q.dz}}
 
 /* ================= MISSÕES ================= */
-const POSTAIS=[['torre','Torre do Relógio','Ergue-se no areal da Praia da Claridade e é um dos símbolos da Figueira.'],['forte','Forte de Santa Catarina','Defendia a entrada do rio Mondego. Hoje fica junto à marina.'],['casino','Casino','Fica no Bairro Novo, o bairro das férias de antigamente.'],['mercado','Mercado Municipal','Peixe, fruta e flores do concelho, todas as manhãs.'],['ponte','Ponte Edgar Cardoso','Inaugurada em 1982 e desenhada pelo engenheiro Edgar Cardoso. Atravessa o Mondego.'],['claridade','Praia da Claridade','Uma das maiores praias urbanas da Europa, com centenas de metros de areia.'],['buarcos','Buarcos','Antiga vila de pescadores, hoje parte da cidade, com a sua marginal.'],['farol','Farol do Cabo Mondego','No alto da Serra da Boa Viagem: daqui vê-se o mar e a cidade inteira.'],['escola','Escola Joaquim de Carvalho','A escola de Tavarede, com o nome do filósofo figueirense Joaquim de Carvalho.'],['cabedelo','Cabedelo','A praia do outro lado do rio, conhecida pelas ondas para o surf.']];
+const POSTAIS=[['torre','Torre do Relógio','Ergue-se no areal da Praia da Claridade e é um dos símbolos da Figueira.'],['forte','Forte de Santa Catarina','Defendia a entrada do rio Mondego. Hoje fica junto à marina.'],['casino','Casino','Fica no Bairro Novo, o bairro das férias de antigamente.'],['mercado','Mercado Municipal','Peixe, fruta e flores do concelho, todas as manhãs.'],['ponte','Ponte Edgar Cardoso','Inaugurada em 1982 e desenhada pelo engenheiro Edgar Cardoso. Atravessa o Mondego.'],['claridade','Praia da Claridade','Uma das maiores praias urbanas da Europa, com centenas de metros de areia.'],['buarcos','Buarcos','Antiga vila de pescadores, hoje parte da cidade, com a sua marginal.'],['farol','Farol do Cabo Mondego','No alto da Serra da Boa Viagem: daqui vê-se o mar e a cidade inteira.'],['escola','Escola Joaquim de Carvalho','A escola de Tavarede, com o nome do filósofo figueirense Joaquim de Carvalho.'],['cabedelo','Cabedelo','A praia do outro lado do rio, conhecida pelas ondas para o surf.'],['costanova','Costa Nova','Os palheiros, casas às riscas de muitas cores, são o símbolo da Costa Nova.'],['barra','Farol da Barra','É o farol mais alto de Portugal e ilumina a entrada da Ria de Aveiro.'],['aveiro','Canais de Aveiro','Os moliceiros, barcos pintados com cores vivas, passeiam pelos canais da cidade.'],['est_aveiro','Estação de Aveiro','A estação antiga tem painéis de azulejos azuis com paisagens da região.'],['praiamira','Praia de Mira','Aqui ainda se pesca com a arte xávega: as redes são puxadas da água para a areia.'],['salinas','Salinas de Aveiro','Nos tanques das salinas, o sol e o vento transformam a água do mar em sal.']];
 const MISS=[
  {id:'empresa',type:'empresa',name:'A tua empresa',from:'empresa',txt:'Entra no escritório: és O Patrão.'},
  {id:'berlim',type:'entrega',name:'Bolas de Berlim',from:'pastelaria',to:'torre',txt:'Leva as bolas de Berlim à Torre do Relógio, para os banhistas da Claridade.'},
@@ -717,7 +883,17 @@ const MISS=[
  {id:'volta',type:'corrida',name:'Volta à Figueira',from:'torre',cps:[[-130,300],[105,140],[760,660],[1500,1045],[2200,1300],[2200,1680],[2200,1300],[1200,1045],[330,1045],[-130,900],[-130,300]],medal:[150,185,230]},
  {id:'serra',type:'corrida',name:'Subida ao Cabo Mondego',from:'buarcos',cps:[[avX(-1850),-1850],[-60,-1990],[120,-2140],[60,-2290],[-160,-2400],[-300,-2520],[-400,-2610]],medal:[45,58,75]},
  {id:'taxi',type:'taxi',name:'Táxi da Figueira',from:'praca',txt:'Leva três passageiros aos destinos que pedirem.'},
+ {id:'ovos',type:'entrega',name:'Ovos moles de Aveiro',from:'confeitaria',to:'pastelaria',txt:'Leva os ovos moles de Aveiro até à pastelaria da Figueira. A A17 é o caminho mais rápido!'},
+ {id:'sal',type:'entrega',name:'Sal das salinas',from:'salinas',to:'mercado',txt:'Leva o sal das salinas de Aveiro para o Mercado da Figueira.'},
+ {id:'xavega',type:'entrega',name:'Peixe da arte xávega',from:'praiamira',to:'mercado_av',txt:'Os pescadores da Praia de Mira apanharam sardinha. Leva-a ao Mercado do Peixe de Aveiro.'},
+ {id:'surf2',type:'entrega',name:'Pranchas para a Costa Nova',from:'cabedelo',to:'costanova',txt:'Leva as pranchas do Cabedelo até à Costa Nova, onde estão as casas às riscas.'},
+ {id:'farol2',type:'entrega',name:'Lâmpada para o Farol da Barra',from:'ilhavo',to:'barra',txt:'Leva a lâmpada nova de Ílhavo ao Farol da Barra, pela Ponte da Barra.'},
+ {id:'a17race',type:'corrida',name:'Corrida da A17',from:'a17',cps:[],medal:[300,360,460]},
+ {id:'dunas',type:'corrida',name:'Estrada das Dunas',from:'praiamira',cps:[],medal:[150,185,240]},
 ];
+// pontos das corridas novas: ao longo da A17 e da Estrada das Dunas
+{const a=[];alongRoad('A17',1150,(x,z,dx,dz,sv)=>{if(sv>300)a.push([x+(-dz)*5,z+dx*5])});MISS.find(m=>m.id==='a17race').cps=a;
+ const b=[];alongRoad('Estrada das Dunas',800,(x,z,dx,dz,sv)=>{if(sv>200)b.push([x,z])});const r=ROADS.find(r=>r.name==='Estrada das Dunas'),e=r.pts[r.pts.length-1];b.push([e[0],e[1]]);MISS.find(m=>m.id==='dunas').cps=b}
 const G={state:'menu',money:0,mission:null,timer:0,post:{},best:{},cam:0,weather:'dia',paused:false,prompt:null,stats:{entregas:0,corridas:0,taxis:0}};
 Object.assign(G,{money:MEM.get('money',0),post:MEM.get('post',{}),best:MEM.get('best',{})});
 const markers=[];const mGeo=new THREE.CylinderGeometry(5,5,40,20,1,true);const MCOL={entrega:0xf2b705,corrida:0x4fc3f7,taxi:0x7fd8a0,empresa:0xb57cff};
@@ -732,7 +908,7 @@ function tone(f,d,type,v,delay){const a=ac();if(!a)return;const t=a.currentTime+
 const sfx={ok:()=>{tone(660,.15,'triangle',.12);tone(990,.25,'triangle',.1,.08)},win:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.35,'triangle',.11,i*.1)),bad:()=>tone(160,.35,'square',.05),hit:()=>tone(90,.18,'sine',.2),cp:()=>tone(880,.12,'triangle',.1)};
 
 /* ================= INPUT ================= */
-const K={};addEventListener('keydown',e=>{K[e.code]=true;if(G.state==='play'){if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='KeyF')toggleFoot();else if(e.code==='KeyZ'||e.code==='Digit7'||e.code==='Numpad7')setIndMode(IND.mode==='L'?'':'L');else if(e.code==='KeyX'||e.code==='Digit9'||e.code==='Numpad9')setIndMode(IND.mode==='R'?'':'R');else if(e.code==='KeyH'||e.code==='Digit8'||e.code==='Numpad8')setIndMode(IND.mode==='H'?'':'H');else if(e.code==='KeyL'||e.code==='Digit0'||e.code==='Numpad0')toggleLights();else if(e.code==='KeyN'){if(!e.repeat)hornOn()}else if(e.code==='KeyE')action();else if(e.code==='KeyC'){G.cam=(G.cam+1)%3;setSeg('#cams','k',G.cam)}else if(e.code==='KeyR')recover();else if(e.code==='KeyM')openMap();else if(e.code==='KeyP'||e.code==='Escape')pause()}else if(G.state==='map'&&(e.code==='KeyM'||e.code==='Escape'))closeMap();else if(G.state==='pause'&&e.code==='KeyP')resume()});
+const K={};addEventListener('keydown',e=>{K[e.code]=true;if(G.state==='train'&&(e.code==='KeyE'||e.code==='Space')){const T=TRAINS[0];if(T&&T.ride){T.s=STATIONS[T.ride.to].s;arriveTrain()}return}if(G.state==='play'){if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='KeyF')toggleFoot();else if(e.code==='KeyZ'||e.code==='Digit7'||e.code==='Numpad7')setIndMode(IND.mode==='L'?'':'L');else if(e.code==='KeyX'||e.code==='Digit9'||e.code==='Numpad9')setIndMode(IND.mode==='R'?'':'R');else if(e.code==='KeyH'||e.code==='Digit8'||e.code==='Numpad8')setIndMode(IND.mode==='H'?'':'H');else if(e.code==='KeyL'||e.code==='Digit0'||e.code==='Numpad0')toggleLights();else if(e.code==='KeyN'){if(!e.repeat)hornOn()}else if(e.code==='KeyE')action();else if(e.code==='KeyC'){G.cam=(G.cam+1)%3;setSeg('#cams','k',G.cam)}else if(e.code==='KeyR')recover();else if(e.code==='KeyM')openMap();else if(e.code==='KeyP'||e.code==='Escape')pause()}else if(G.state==='map'&&(e.code==='KeyM'||e.code==='Escape'))closeMap();else if(G.state==='pause'&&e.code==='KeyP')resume()});
 addEventListener('keyup',e=>{K[e.code]=false;if(e.code==='KeyN')hornOff()});addEventListener('blur',()=>{for(const k in K)K[k]=false;if(G.state==='play')pause()});
 const TB={};let touchOn=false;function enableTouch(){if(touchOn)return;touchOn=true;if(G.state==='play')$('#touch').hidden=false}
 addEventListener('touchstart',enableTouch,{passive:true,once:true});
@@ -748,8 +924,9 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
   const gas=K.KeyW||K.ArrowUp||TB.gas,brk=K.KeyS||K.ArrowDown||TB.brake,left=K.KeyA||K.ArrowLeft||TB.left,right=K.KeyD||K.ArrowRight||TB.right,hand=K.ShiftLeft||K.ShiftRight,nit=(K.Space||TB.nitro)&&P.nitro>0&&gas;
   const zo=zoneAt(P.x,P.z),onRoad=nearRoad(P.x,P.z).d<nearRoad(P.x,P.z).s.r.w/2+1.5;const surfGrip=onRoad?1:zo==='areia'?.45:.75,surfDrag=onRoad?1:zo==='areia'?3.2:1.8;
   let a=0;if(gas)a+=c.acc*(nit?1.7:1);if(brk)a-=v>1?c.acc*1.6:c.acc*.6;
+  {const used=Math.abs(v)*dt*100/17000*(nit?1.8:1);if(P.fuel>0){P.fuel=Math.max(0,P.fuel-used);if(P.fuel===0)toast('Ficaste sem combustível! Vai devagar até uma bomba (ícone verde no mapa).',true,4);else if(P.fuel<15&&P.fuel+used>=15)toast('Pouco combustível: procura uma bomba.',true,3)}}
   if(nit){P.nitro=Math.max(0,P.nitro-dt*25)}else P.nitro=Math.min(100,P.nitro+dt*6);
-  const vmax=c.max*(nit?1.3:1)*(onRoad?1:zo==='areia'?.45:.7);
+  const vmax=(P.fuel<=0?.14:1)*c.max*(nit?1.3:1)*(onRoad?1:zo==='areia'?.45:.7);
   P.vx+=fx*a*dt;P.vz+=fz*a*dt;v=P.vx*fx+P.vz*fz;
   const drag=.0025*surfDrag*Math.abs(v)+.3*surfDrag*(gas?0:1)*.25;const sp=Math.hypot(P.vx,P.vz);if(sp>0){const k=Math.max(0,1-drag*dt);P.vx*=k;P.vz*=k}
   if(v>vmax){P.vx-=fx*(v-vmax)*Math.min(1,dt*2);P.vz-=fz*(v-vmax)*Math.min(1,dt*2)}if(v<-12){P.vx-=fx*(v+12);P.vz-=fz*(v+12)}
@@ -759,9 +936,9 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
   const nx=P.x+P.vx*dt,nz=P.z+P.vz*dt;const r=c.wid*.6;const b=hitBuilding(nx,nz,r);
   if(b){const ox=nx-b.x,oz=nz-b.z,px=b.w/2+r-Math.abs(ox),pz=b.d/2+r-Math.abs(oz);const imp=Math.hypot(P.vx,P.vz);if(px<pz){P.vx=-P.vx*.3;P.vz*=.7}else{P.vz=-P.vz*.3;P.vx*=.7}if(imp>6){sfx.hit();shake=Math.min(1,imp/25)}}
   else{let carHit=null;for(const T of TRAF){if(T.x==null)continue;const tc=CARS[T.type],rx=nx-T.x,rz=nz-T.z,a1=Math.abs(rx*T.dx+rz*T.dz),s1=Math.abs(-rx*T.dz+rz*T.dx);const pa=Math.abs(Math.sin(P.h)*T.dx-Math.cos(P.h)*T.dz);const ext=c.wid/2+(c.len/2-c.wid/2)*pa,exs=c.wid/2+(c.len/2-c.wid/2)*(1-pa);if(a1<tc.len/2+ext*.9&&s1<tc.wid/2+exs*.9){carHit=T;break}}if(carHit){const dx=nx-carHit.x,dz=nz-carHit.z,L=Math.hypot(dx,dz)||1,imp=Math.hypot(P.vx,P.vz);P.vx=dx/L*Math.max(2,imp*.35);P.vz=dz/L*Math.max(2,imp*.35);if(imp>5){sfx.hit();shake=Math.min(1,imp/25)}}else{P.x=nx;P.z=nz}}
-  if(onBridgeXZ(P.x,P.z)&&Math.abs(P.y-bridgeY(P.z))<4){const lim=6.9;if(Math.abs(P.x-2200)>lim){P.x=2200+Math.sign(P.x-2200)*lim;P.vx*=-.25;if(Math.hypot(P.vx,P.vz)>6){sfx.hit();shake=.4}}}
-  const ty=surfaceAt(P.x,P.z,P.y);P.y=onBridgeXZ(P.x,P.z)&&Math.abs(P.y-bridgeY(P.z))<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
-  if(ty<-1&&!(Math.abs(P.x-2200)<8&&P.z>1045&&P.z<1560)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
+  {const bA=bridgeAt(P.x,P.z);if(bA&&Math.abs(P.y-bA.y)<4&&bA.lat>bA.half){const push=bA.lat-bA.half;P.x-=bA.nx*push;P.z-=bA.nz*push;const vn=P.vx*bA.nx+P.vz*bA.nz;if(vn>0){P.vx-=1.25*vn*bA.nx;P.vz-=1.25*vn*bA.nz;if(vn>6){sfx.hit();shake=.4}}}}
+  const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
+  if(ty<-1&&!bridgeAt(P.x,P.z)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
   car.position.set(P.x,P.y,P.z);car.rotation.y=-P.h;const sx=terrainH(P.x+Math.sin(P.h)*2,P.z-Math.cos(P.h)*2)-terrainH(P.x-Math.sin(P.h)*2,P.z+Math.cos(P.h)*2);car.rotation.x=onRoad&&P.y>3&&Math.abs(P.x-2200)<8?0:clamp(sx/4,-.25,.25);
   setBrake(car,(brk&&fv>.5)||hand||(!gas&&Math.abs(fv)<1.5)||(!gas&&fv>2&&a<0));car.userData.wheels.forEach((w,i)=>{w.rotation.x-=fv*dt/.36;if(i<2)car.userData.pivots[i].rotation.y=steer*.35});
   if(eng&&AC){eng.frequency.setTargetAtTime(55+Math.abs(fv)*5.5+(gas?20:0),AC.currentTime,.05);engG.gain.setTargetAtTime(G.state==='play'?.035+(gas?.03:0):0,AC.currentTime,.1)}
@@ -800,14 +977,40 @@ let HORN=null;function hornOn(){const a=ac();if(!a||HORN||W.on)return;const g=a.
   for(const T of TRAF){const dx=T.x-P.x,dz=T.z-P.z;if(Math.hypot(dx,dz)<25)T.sp=Math.min(T.sp+2,19)}}
 function hornOff(){const h=HORN;if(!h||!AC)return;HORN=null;h.g.gain.linearRampToValueAtTime(0,AC.currentTime+.06);setTimeout(()=>{try{h.o.forEach(o=>o.stop())}catch(e){}},120)}
 
+
+/* ================= COSTA DE PRATA: portagens, bombas, comboio, sítio ================= */
+function nearPump(){const F=focus();return PUMPS.find(p=>Math.hypot(F.x-p.x,F.z-p.z)<11)}
+function refuel(){const need=100-P.fuel;if(need<2){toast('O depósito já está cheio.',false,1.4);return}const litres=need*.5,price=1.75;let cost=litres*price;let add=need;if(G.money<cost){add=Math.max(0,G.money/price/.5);cost=add*.5*price}if(add<1){toast('Não tens dinheiro para combustível. Faz uma entrega!',true,2.5);return}P.fuel+=add;G.money-=cost;MEM.set('money',G.money);sfx.ok();toast('Abasteceste '+(add*.5).toFixed(1).replace('.',',')+' L · −'+euro(cost),false,2.6)}
+function updateTolls(){if(W.on)return;for(const T of TOLLS){const dd=(P.x-T.x)*T.dx+(P.z-T.z)*T.dz,lat=Math.abs(-(P.x-T.x)*T.dz+(P.z-T.z)*T.dx);if(lat<13&&T.prev!=null&&Math.sign(dd)!==Math.sign(T.prev)&&performance.now()-T.last>4000){T.last=performance.now();G.money=Math.max(0,G.money-.95);MEM.set('money',G.money);tone(1320,.08,'square',.04);toast('Portagem eletrónica A17: −0,95 €',false,1.8)}T.prev=lat<30?dd:null}}
+function trainNearStation(st){const T=TRAINS[0];return T&&!T.ride&&T.stop>0&&Math.abs(T.s-st.s)<20}
+function nearStation(){const F=focus();return STATIONS.find(st=>Math.hypot(F.x-st.x,F.z-st.z)<26)}
+function updateTrain(dt){const T=TRAINS[0];if(!T)return;
+  if(T.ride){const goal=STATIONS[T.ride.to].s,dir=Math.sign(goal-T.s),vm=Math.max(60,T.ride.dist/9);T.v=Math.min(vm,T.v+dt*vm*.6);const left=Math.abs(goal-T.s);if(left<vm*1.6)T.v=Math.max(10,Math.min(T.v,left*.65));T.s+=dir*T.v*dt;if(Math.abs(goal-T.s)<1.5||Math.sign(goal-T.s)!==dir){T.s=goal;arriveTrain()}}
+  else if(T.stop>0){T.stop-=dt;T.v=0;if(T.stop<=0){if(T.next>=STATIONS.length||T.next<0){T.dir=-T.dir;T.next=T.cur+T.dir}}}
+  else{const goal=STATIONS[T.next].s,dir=Math.sign(goal-T.s),left=Math.abs(goal-T.s);T.v=Math.min(33,T.v+dt*4);if(left<300)T.v=Math.max(3,Math.min(T.v,left*.11));T.s+=dir*T.v*dt;if(left<1.2){T.s=goal;T.stop=14;T.cur=T.next;T.next=T.next+T.dir;if(T.next>=STATIONS.length||T.next<0){T.dir=-T.dir;T.next=T.cur+T.dir}}}
+  const fw=T.ride?Math.sign(STATIONS[T.ride.to].s-T.s)||1:T.dir;T.cars.forEach((g,i)=>{const p=railPoint(T.s-i*21*fw);g.position.set(p.x,terrainH(p.x,p.z)+.3,p.z);g.rotation.y=Math.atan2(p.dx,p.dz)});
+  // não deixar o carro ficar debaixo do comboio
+  if(!T.ride&&!W.on)for(const g of T.cars){const dx=P.x-g.position.x,dz=P.z-g.position.z,d=Math.hypot(dx,dz);if(d<5.5&&Math.abs(P.y-g.position.y)<3){P.x=g.position.x+dx/(d||1)*5.6;P.z=g.position.z+dz/(d||1)*5.6;P.vx*=-.3;P.vz*=-.3;if(T.v>3){sfx.hit();shake=.6;toast('Cuidado com o comboio!',true,1.5)}}}}
+function openTrainMenu(st){const i=STATIONS.indexOf(st);G.state='trainmenu';$('#trainS').hidden=false;$('#touch').hidden=true;if(engG)engG.gain.value=0;
+  $('#trainList').innerHTML=STATIONS.map((o,k)=>k===i?'':`<button class="btn ghost" data-k="${k}">${o.name} · ${Math.max(1,Math.round(Math.abs(o.s-st.s)*4.5/1000))} km · 2,50 €</button>`).join('');
+  $('#trainList').querySelectorAll('button').forEach(b=>b.onclick=()=>startRide(i,+b.dataset.k))}
+function closeTrainMenu(){G.state='play';$('#trainS').hidden=true;if(touchOn)$('#touch').hidden=false;canvas.focus()}
+function startRide(from,to){if(G.money<2.5){toast('O bilhete custa 2,50 €. Faz primeiro uma entrega!',true,2.5);return}G.money-=2.5;MEM.set('money',G.money);$('#trainS').hidden=true;const T=TRAINS[0];T.ride={from,to,dist:Math.abs(STATIONS[to].s-STATIONS[from].s)};T.s=STATIONS[from].s;T.v=0;T.stop=0;G.state='train';car.visible=false;if(W.m)W.m.visible=false;['#tl','#prompt','#spd','#mapw'].forEach(s=>$(s).hidden=true);$('#touch').hidden=true;sfx.ok();toast('Comboio para '+STATIONS[to].name+'! (E salta a viagem)',false,2.5)}
+function arriveTrain(){const T=TRAINS[0],st=STATIONS[T.ride.to];T.cur=T.ride.to;T.next=T.cur+T.dir;if(T.next>=STATIONS.length||T.next<0){T.dir=-T.dir;T.next=T.cur+T.dir}T.ride=null;T.v=0;T.stop=10;
+  const nx=-st.dz,nz=st.dx;let px=st.x+nx*14,pz=st.z+nz*14;const nr=nearRoad(px,pz);if(nr.d<60){px=nr.px;pz=nr.pz}Object.assign(P,{x:px,z:pz,vx:0,vz:0,h:Math.atan2(st.dx,-st.dz)});P.y=surfaceAt(P.x,P.z);if(W.on){W.on=false}car.visible=true;G.state='play';['#tl','#spd','#mapw'].forEach(s=>$(s).hidden=false);if(touchOn)$('#touch').hidden=false;sfx.win();toast('Chegaste a '+st.name+' de comboio!',false,3)}
+function placeTrainCam(dt){const T=TRAINS[0],g=T.cars[0],p=railPoint(T.s),nx=-p.dz,nz=p.dx;const tx=g.position.x+nx*28-p.dx*18,tz=g.position.z+nz*28-p.dz*18,k=Math.min(1,dt*3);camera.position.x=lerp(camera.position.x,tx,k);camera.position.z=lerp(camera.position.z,tz,k);camera.position.y=lerp(camera.position.y,g.position.y+9,k);_v.set(g.position.x,g.position.y+2,g.position.z);camera.lookAt(_v);sun.position.set(g.position.x+150,300,g.position.z+120);sun.target.position.set(g.position.x,0,g.position.z)}
+function updateBoats(dt){for(const b of MOLI){if(b.ria){b.t+=b.v*dt*.05;b.z+=Math.sin(b.t)*.4;const x=shoreN(b.z)+300+riaW(b.z)*(.5+.25*Math.sin(b.t*1.7));b.g.position.set(x,-.35,b.z);b.g.rotation.y=Math.sin(b.t)*.3}else{const c=b.c;b.t+=b.v*dt*(30/Math.hypot(c[2]-c[0],c[3]-c[1]));if(b.t>1||b.t<0){b.v=-b.v;b.t=clamp(b.t,0,1)}b.g.position.set(lerp(c[0],c[2],b.t),-.35,lerp(c[1],c[3],b.t));b.g.rotation.y=Math.atan2(c[2]-c[0],c[3]-c[1])+(b.v<0?Math.PI:0)}}}
+function placeName(x,z){const t=TOWNS.find(t=>Math.hypot(x-t.x,z-t.z)<t.r);if(t)return t.n;if(z>-2050&&x<2400)return z<-1600?'Buarcos':'Figueira da Foz';const n=nearRoad(x,z);if(n.d<14){if(n.s.r.auto)return 'A17 · km '+Math.max(1,Math.round(((-z)-900)*4.5/1000));if(n.s.r.name==='EN109')return 'EN109';if(n.s.r.name==='Ponte da Barra')return 'Ponte da Barra';if(n.s.r.name==='Estrada das Dunas')return 'Estrada das Dunas';if(n.s.r.name.startsWith('Saída'))return n.s.r.name}if(z<-2000&&z>-3800&&x<1700)return 'Serra da Boa Viagem';if(inRia(x,z))return 'Ria de Aveiro';if(x<shoreN(z)+320&&z<-3000)return 'Mata Nacional e dunas';return 'Costa de Prata'}
+
 /* ================= HUD / MAPA ================= */
 const toastEl=$('#toast');let toastT=0;function toast(m,bad,d){toastEl.textContent=m;toastEl.style.color=bad?'var(--bad)':'var(--sand)';toastEl.style.opacity=1;toastT=d||2.5}
 const euro=n=>Math.round(n).toLocaleString('pt-PT')+' €';const mmss=s=>{s=Math.max(0,s);const m=Math.floor(s/60);return m+':'+String(Math.floor(s%60)).padStart(2,'0')};
-const W0=-900,W1=3100,Z0=-2900,Z1=2000,MW=W1-W0,MH=Z1-Z0;
-const baseMap=document.createElement('canvas');baseMap.width=800;baseMap.height=Math.round(800*MH/MW);{const g=baseMap.getContext('2d'),sx=baseMap.width/MW;const img=g.createImageData(baseMap.width,baseMap.height);for(let j=0;j<baseMap.height;j++)for(let i=0;i<baseMap.width;i++){const x=W0+i/sx,z=Z0+j/sx,h=terrainH(x,z),zo=zoneAt(x,z),k=(j*baseMap.width+i)*4;let c=h<-.5?[38,92,120]:zo==='areia'?[226,206,160]:h>25?[70,96,62]:[96,122,82];img.data[k]=c[0];img.data[k+1]=c[1];img.data[k+2]=c[2];img.data[k+3]=255}g.putImageData(img,0,0);
+const W0=-1600,W1=5600,Z0=-16900,Z1=2000,MW=W1-W0,MH=Z1-Z0;
+const baseMap=document.createElement('canvas');baseMap.width=1000;baseMap.height=Math.round(800*MH/MW);{const g=baseMap.getContext('2d'),sx=baseMap.width/MW;const img=g.createImageData(baseMap.width,baseMap.height);for(let j=0;j<baseMap.height;j++)for(let i=0;i<baseMap.width;i++){const x=W0+i/sx,z=Z0+j/sx,h=terrainH(x,z),zo=zoneAt(x,z),k=(j*baseMap.width+i)*4;let c=h<-.5?[38,92,120]:zo==='areia'?[226,206,160]:h>25?[70,96,62]:[96,122,82];img.data[k]=c[0];img.data[k+1]=c[1];img.data[k+2]=c[2];img.data[k+3]=255}g.putImageData(img,0,0);
  g.strokeStyle='#e9e3d4';g.lineCap='round';ROADS.forEach(r=>{g.lineWidth=Math.max(1.5,r.w*sx*.9);g.beginPath();r.pts.forEach((p,i)=>{const X=(p[0]-W0)*sx,Y=(p[1]-Z0)*sx;i?g.lineTo(X,Y):g.moveTo(X,Y)});g.stroke()});
+ g.strokeStyle='#5b8fd6';g.lineWidth=3;g.beginPath();A17.forEach((p,i)=>{const X=(p[0]-W0)*sx,Y=(p[1]-Z0)*sx;i?g.lineTo(X,Y):g.moveTo(X,Y)});g.stroke();g.setLineDash([3,3]);g.strokeStyle='#2a2a2a';g.lineWidth=1.6;g.beginPath();RAIL.forEach((p,i)=>{const X=(p[0]-W0)*sx,Y=(p[1]-Z0)*sx;i?g.lineTo(X,Y):g.moveTo(X,Y)});g.stroke();g.setLineDash([]);
  g.fillStyle='#3a3f44';B.forEach(b=>{if(!b.hidden)g.fillRect((b.x-b.w/2-W0)*sx,(b.z-b.d/2-Z0)*sx,b.w*sx,b.d*sx)});
- g.font='700 13px "Bricolage Grotesque",sans-serif';g.textAlign='center';[['BUARCOS',-40,-1800],['CLARIDADE',-400,400],['BAIRRO NOVO',260,350],['CENTRO',1050,620],['TAVAREDE',1950,-450],['RIO MONDEGO',900,1280],['CABEDELO',-100,1790],['SERRA DA BOA VIAGEM',500,-2350],['FAROL',-430,-2700]].forEach(([t,x,z])=>{const X=(x-W0)*sx,Y=(z-Z0)*sx;g.fillStyle='rgba(13,26,36,.7)';g.fillText(t,X+1,Y+1);g.fillStyle='#fff';g.fillText(t,X,Y)})}
+ g.font='700 13px "Bricolage Grotesque",sans-serif';g.textAlign='center';[['TOCHA',1800,-6650],['MIRA',2200,-9700],['PRAIA DE MIRA',shoreN(-9500)+260,-9380],['VAGOS',3000,-12980],['ÍLHAVO',3010,-14420],['COSTA NOVA',shoreN(-14300)+150,-14250],['FAROL DA BARRA',shoreN(-15100)+150,-15260],['AVEIRO',3420,-16250],['RIA DE AVEIRO',2300,-13300],['A17',2620,-6000],['A17',3300,-11000],['MATA NACIONAL',700,-7500],['BUARCOS',-40,-1800],['CLARIDADE',-400,400],['BAIRRO NOVO',260,350],['CENTRO',1050,620],['TAVAREDE',1950,-450],['RIO MONDEGO',900,1280],['CABEDELO',-100,1790],['SERRA DA BOA VIAGEM',500,-2350],['FAROL',-430,-2700]].forEach(([t,x,z])=>{const X=(x-W0)*sx,Y=(z-Z0)*sx;g.fillStyle='rgba(13,26,36,.7)';g.fillText(t,X+1,Y+1);g.fillStyle='#fff';g.fillText(t,X,Y)})}
 function drawMap(cv,full){const g=cv.getContext('2d'),W=cv.width,H=cv.height;g.fillStyle='#0b1f2c';g.fillRect(0,0,W,H);const sx=baseMap.width/MW;
   let scale,ox,oz;if(full){scale=Math.min(W/MW,H/MH);ox=W0;oz=Z0;g.drawImage(baseMap,0,0,MW*scale,MH*scale)}else{scale=.35;const FF=focus();ox=FF.x-W/2/scale;oz=FF.z-H/2/scale;g.drawImage(baseMap,(ox-W0)*sx,(oz-Z0)*sx,W/scale*sx,H/scale*sx,0,0,W,H)}
   const pr=(x,z)=>[(x-ox)*scale,(z-oz)*scale];
@@ -819,26 +1022,27 @@ function openMap(){if(G.state!=='play')return;G.state='map';$('#mapS').hidden=fa
 
 /* ================= LÓGICA DAS MISSÕES ================= */
 function dist(a,b){return Math.hypot(a.x-b.x,a.z-b.z)}
+$('#trainClose').onclick=closeTrainMenu;
 function nearMarker(){if(G.mission)return null;let b=null,bd=12;const F=focus();markers.forEach(mk=>{const d=Math.hypot(F.x-mk.x,F.z-mk.z);if(d<bd){bd=d;b=mk}});return b}
-function action(){if(G.state!=='play')return;const mk=nearMarker();if(mk){startMission(mk.m);return}if(G.mission&&G.mission.type==='taxi'&&G.mission.wait){}}
+function action(){if(G.state!=='play')return;if(!W.on&&nearPump()&&Math.hypot(P.vx,P.vz)<3){refuel();return}{const st=nearStation();if(st&&Math.hypot(P.vx,P.vz)<3){if(trainNearStation(st)){openTrainMenu(st);return}const T=TRAINS[0];toast('O comboio ainda não chegou. Espera um bocadinho na estação.',false,2.2);return}}const mk=nearMarker();if(mk){startMission(mk.m);return}if(G.mission&&G.mission.type==='taxi'&&G.mission.wait){}}
 function startMission(m){if(m.type==='empresa'){openOffice();return}if(W.on){toast('Entra no carro primeiro (F).',true,1.5);return}const sp=Math.hypot(P.vx,P.vz);if(sp>8){toast('Abranda para começar a missão.',true,1.5);return}G.mission={...m,t:0,i:0};sfx.ok();
-  if(m.type==='entrega'){const a=LM[m.from],b=LM[m.to];G.mission.limit=Math.round(Math.hypot(a.x-b.x,a.z-b.z)/13+25);G.target=b;G.mission.target=b;toast(m.name+': '+m.txt,false,4)}
+  if(m.type==='entrega'){const a=LM[m.from],b=LM[m.to];{const dd=Math.hypot(a.x-b.x,a.z-b.z);G.mission.limit=Math.round(dd>3000?dd/24+70:dd/13+25)}G.target=b;G.mission.target=b;toast(m.name+': '+m.txt,false,4)}
   else if(m.type==='corrida'){G.mission.cps=m.cps.map(p=>({x:p[0],z:p[1]}));G.target=G.mission.cps[0];toast(m.name+'! Passa pelos anéis azuis. Já!',false,3)}
   else{G.mission.ride=0;newFare();toast('Táxi! Vai buscar o primeiro passageiro.',false,3)}}
-const FARE_SPOTS=['torre','casino','mercado','escola','buarcos','marina','camara','forte','claridade'];
+const FARE_SPOTS=['torre','casino','mercado','escola','buarcos','marina','camara','forte','claridade','claridade','casino','mira','costanova','aveiro','ilhavo'];
 function newFare(){const M=G.mission;const a=FARE_SPOTS[Math.floor(Math.random()*FARE_SPOTS.length)];let b;do{b=FARE_SPOTS[Math.floor(Math.random()*FARE_SPOTS.length)]}while(b===a);M.pick=LM[a];M.drop=LM[b];M.on=false;G.target=M.pick;M.t=0;M.limit=Math.round(dist(LM[a],LM[b])/12+dist(P,LM[a])/12+40)}
 function endMission(ok,msg,pay){if(pay)G.money+=pay;MEM.set('money',G.money);toast(msg,!ok,4);if(ok)sfx.win();else sfx.bad();G.mission=null;G.target=null;goal.visible=false;ring.visible=false}
-function updateMission(dt){const M=G.mission;if(!M){$('#mode').textContent='PASSEIO LIVRE';const mk=nearMarker();$('#obj').textContent=mk?mk.m.name+' · '+(mk.m.txt||'Corrida contra o relógio.'):'Explora a Figueira. Os marcadores no mapa são missões.';$('#tmr').textContent='';return}
+function updateMission(dt){const M=G.mission;if(!M){$('#mode').textContent='PASSEIO · '+(G.placeT>0?G.placeName:(G.placeName=placeName(focus().x,focus().z),G.placeT=.5,G.placeName)).toUpperCase();G.placeT=(G.placeT||0)-.1;const mk=nearMarker();$('#obj').textContent=mk?mk.m.name+' · '+(mk.m.txt||'Corrida contra o relógio.'):'Explora a Figueira. Os marcadores no mapa são missões.';$('#tmr').textContent='';return}
   M.t+=dt;
   if(M.type==='entrega'){const left=M.limit-M.t,d=dist(P,M.target);$('#mode').textContent='ENTREGA';$('#obj').textContent=M.name+' → '+M.target.label+' · '+Math.round(d)+' m';$('#tmr').textContent=mmss(left);$('#tmr').classList.toggle('bad',left<10);
-    if(d<14&&Math.hypot(P.vx,P.vz)<6){G.stats.entregas++;const pay=Math.round(60+dist(LM[M.from],M.target)*.06+Math.max(0,left)*2);endMission(true,'Entregue! +'+euro(pay),pay)}else if(left<=0)endMission(false,'O tempo acabou. A entrega falhou.')}
+    if(d<14&&Math.hypot(P.vx,P.vz)<6){G.stats.entregas++;const pay=Math.round(60+Math.min(900,dist(LM[M.from],M.target)*.06)+Math.min(250,Math.max(0,left)*2));endMission(true,'Entregue! +'+euro(pay),pay)}else if(left<=0)endMission(false,'O tempo acabou. A entrega falhou.')}
   else if(M.type==='corrida'){const c=M.cps[M.i],d=dist(P,c);$('#mode').textContent='CORRIDA';$('#obj').textContent=M.name+' · anel '+(M.i+1)+'/'+M.cps.length+' · '+Math.round(d)+' m';$('#tmr').textContent=mmss(M.t);$('#tmr').classList.remove('bad');
     if(d<12){sfx.cp();M.i++;if(M.i>=M.cps.length){const t=M.t,med=t<=M.medal[0]?'OURO':t<=M.medal[1]?'PRATA':t<=M.medal[2]?'BRONZE':'';const prev=G.best[M.id];if(!prev||t<prev){G.best[M.id]=t;MEM.set('best',G.best)}G.stats.corridas++;const pay=med==='OURO'?400:med==='PRATA'?250:med==='BRONZE'?150:60;endMission(true,M.name+' em '+mmss(t)+(med?' · '+med:'')+(prev&&t<prev?' · NOVO RECORDE':'')+' · +'+euro(pay),pay);return}G.target=M.cps[M.i]}}
   else{const left=M.limit-M.t,tg=M.on?M.drop:M.pick,d=dist(P,tg);$('#mode').textContent='TÁXI · '+(M.ride+1)+'/3';$('#obj').textContent=(M.on?'Leva o passageiro a ':'Vai buscar o passageiro a ')+tg.label+' · '+Math.round(d)+' m';$('#tmr').textContent=mmss(left);$('#tmr').classList.toggle('bad',left<10);
     if(d<14&&Math.hypot(P.vx,P.vz)<5){if(!M.on){M.on=true;G.target=M.drop;sfx.cp();toast('Passageiro: «Para '+M.drop.label+', por favor!»',false,2.5)}else{const pay=Math.round(40+dist(M.pick,M.drop)*.05+Math.max(0,left)*1.5);G.money+=pay;M.ride++;sfx.ok();if(M.ride>=3){G.stats.taxis++;endMission(true,'Fim do turno de táxi! +'+euro(pay),0);return}toast('Corrida paga: +'+euro(pay)+'. Próximo passageiro!',false,2.5);newFare()}}else if(left<=0)endMission(false,'O passageiro desistiu. Turno de táxi terminado.')}
   if(G.target){goal.visible=M.type!=='corrida';ring.visible=M.type==='corrida';const y=targetY(G.target.x,G.target.z);goal.position.set(G.target.x,y+30,G.target.z);ring.position.set(G.target.x,y+6,G.target.z);ring.lookAt(P.x,y+6,P.z)}}
-function checkPostais(){POSTAIS.forEach(([id,t,txt],i)=>{if(G.post[id])return;const m=postMeshes[i],F=focus();if(Math.hypot(F.x-m.position.x,F.z-m.position.z)<10){G.post[id]=1;MEM.set('post',G.post);m.visible=false;sfx.ok();const n=Object.keys(G.post).length;toast('Postal '+n+'/10: '+t,false,3);$('#postT').textContent='POSTAL '+n+'/10 · '+t.toUpperCase();$('#postP').textContent=txt;$('#postal').hidden=false;clearTimeout(window.__pt);window.__pt=setTimeout(()=>$('#postal').hidden=true,9000);
-  if(n===10)try{window.C30&&C30.unlock('vfig-postais','Volta à Figueira · Todos os postais')}catch(e){}}})}
+function checkPostais(){POSTAIS.forEach(([id,t,txt],i)=>{if(G.post[id])return;const m=postMeshes[i],F=focus();if(Math.hypot(F.x-m.position.x,F.z-m.position.z)<10){G.post[id]=1;MEM.set('post',G.post);m.visible=false;sfx.ok();const n=Object.keys(G.post).length;toast('Postal '+n+'/'+POSTAIS.length+': '+t,false,3);$('#postT').textContent='POSTAL '+n+'/'+POSTAIS.length+' · '+t.toUpperCase();$('#postP').textContent=txt;$('#postal').hidden=false;clearTimeout(window.__pt);window.__pt=setTimeout(()=>$('#postal').hidden=true,9000);
+  if(n===POSTAIS.length)try{window.C30&&C30.unlock('vfig-postais','Costa de Prata · Todos os postais')}catch(e){}}})}
 
 /* ================= TEMPO / LUZ ================= */
 let rain=null;function applyWeather(w){G.weather=w;const night=w==='noite',sunset=w==='por',wet=w==='chuva';P.wet=wet;
@@ -856,9 +1060,11 @@ function placeCam(dt,fv){const fx=Math.sin(P.h),fz=-Math.cos(P.h);let dist=[9,16
 function loop(now){if(G.state==='office'){last=now;requestAnimationFrame(loop);return}const dt=Math.min(.05,(now-last)/1000);last=now;TM+=dt;waterU.uT.value=TM;
   if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}
   markers.forEach((mk,i)=>{mk.o.visible=!G.mission;mk.o.material.opacity=.18+Math.sin(TM*3+i)*.06});postMeshes.forEach((m,i)=>{m.rotation.y+=dt*1.5});if(window.__lamp)window.__lamp.material.color.setHSL(.14,1,.6+Math.sin(TM*2)*.25);
-  if(G.state==='play'){updateTraffic(dt);let fv=0;if(W.on){stepWalk(dt);placeWalkCam(dt)}else{fv=stepCar(dt);placeCam(dt,fv)}updateIndicators(dt);updateMission(dt);checkPostais();
-    const mk=nearMarker();const pr=$('#prompt');if(mk){pr.hidden=false;$('#promptT').textContent='Começar: '+mk.m.name}else pr.hidden=true;
-    uiT+=dt;if(uiT>.1){uiT=0;$('#kmh').textContent=W.on?0:Math.round(Math.abs(fv)*3.6);$('#gearT').textContent=W.on?'A PÉ':fv<-.5?'R':'D';$('#nitv').style.width=P.nitro+'%';$('#money').textContent=euro(G.money);drawMap($('#mini'),false)}
+  updateTrain(dt);updateBoats(dt);
+  if(G.state==='train'){updateTraffic(dt);placeTrainCam(dt)}
+  if(G.state==='play'){updateTraffic(dt);updateTolls();let fv=0;if(W.on){stepWalk(dt);placeWalkCam(dt)}else{fv=stepCar(dt);placeCam(dt,fv)}updateIndicators(dt);updateMission(dt);checkPostais();
+    const mk=nearMarker();const pr=$('#prompt');const pu=!W.on&&nearPump(),st=nearStation();if(pu){pr.hidden=false;$('#promptT').textContent='Abastecer ('+Math.round(P.fuel)+'%)'}else if(st){pr.hidden=false;$('#promptT').textContent=trainNearStation(st)?'Apanhar o comboio em '+st.name:'Estação de '+st.name+' · o comboio vem a caminho'}else if(mk){pr.hidden=false;$('#promptT').textContent='Começar: '+mk.m.name}else pr.hidden=true;
+    uiT+=dt;if(uiT>.1){uiT=0;$('#kmh').textContent=W.on?0:Math.round(Math.abs(fv)*3.6);$('#gearT').textContent=W.on?'A PÉ':fv<-.5?'R':'D';$('#nitv').style.width=P.nitro+'%';$('#fuelv').style.width=P.fuel+'%';$('#fuelB').classList.toggle('low',P.fuel<15);$('#money').textContent=euro(G.money);drawMap($('#mini'),false)}
     sun.position.set(P.x+150,300,P.z+120);sun.target.position.set(P.x,0,P.z);if(rain){rain.position.set(P.x,P.y,P.z);const a=rain.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-dt*28;if(y<0)y+=60;a.setY(i,y)}a.needsUpdate=true}}
   else if(G.state==='menu'){updateTraffic(dt);const a=TM*.05;camera.position.set(-150+Math.cos(a)*420,90,500+Math.sin(a)*420);camera.lookAt(-150,10,450);sun.position.set(0,400,300);sun.target.position.set(-150,0,450)}
   if(!G.hub)renderer.render(scene,camera);requestAnimationFrame(loop)}
@@ -875,9 +1081,9 @@ document.querySelectorAll('#colors button').forEach(b=>b.onclick=()=>{carColor=+
 function showBest(){const n=Object.keys(G.post).length;$('#best').textContent=(IN_C30?'Saldo '+euro(G.money)+' · postais '+n+'/10. ':'')+'Mapa inspirado na Figueira da Foz real, com distâncias encurtadas para caber num jogo. Fora da Central 30 o jogo não guarda nada; dentro, segue a opção «Guardar dados».'}
 showBest();applyWeather('dia');
 function start(){ac();if(car)scene.remove(car);car=carModel(carType,PAINT[carColor]);scene.add(car);MEM.set('setup',{c:carType,col:carColor,cam:G.cam});
-  Object.assign(P,{x:avX(620)+3,z:620,h:0,vx:0,vz:0,nitro:100,inWater:0});P.y=surfaceAt(P.x,P.z);camera.position.set(P.x,P.y+4,P.z+10);applyWeather(G.weather);
+  Object.assign(P,{x:avX(620)+3,z:620,h:0,vx:0,vz:0,nitro:100,inWater:0,fuel:100});P.y=surfaceAt(P.x,P.z);camera.position.set(P.x,P.y+4,P.z+10);applyWeather(G.weather);
   IND.mode='';IND.lightsAuto=true;if(W.on){W.on=false;if(W.m)W.m.visible=false}G.state='play';G.mission=null;G.target=null;$('#menu').hidden=true;['#tl','#mapw','#spd'].forEach(s=>$(s).hidden=false);if(touchOn)$('#touch').hidden=false;canvas.focus();toast('Bem-vindo à Avenida! Os marcadores coloridos são missões.',false,3.5)}
-function pause(){if(G.state!=='play')return;G.state='pause';$('#pause').hidden=false;$('#pauseInfo').textContent='Saldo '+euro(G.money)+' · entregas '+G.stats.entregas+' · corridas '+G.stats.corridas+' · turnos de táxi '+G.stats.taxis+' · postais '+Object.keys(G.post).length+'/10';$('#touch').hidden=true;if(engG)engG.gain.value=0}
+function pause(){if(G.state!=='play')return;G.state='pause';$('#pause').hidden=false;$('#pauseInfo').textContent='Saldo '+euro(G.money)+' · entregas '+G.stats.entregas+' · corridas '+G.stats.corridas+' · turnos de táxi '+G.stats.taxis+' · postais '+Object.keys(G.post).length+'/'+POSTAIS.length;$('#touch').hidden=true;if(engG)engG.gain.value=0}
 function resume(){if(G.state!=='pause')return;G.state='play';$('#pause').hidden=true;if(touchOn)$('#touch').hidden=false;canvas.focus()}
 $('#go').onclick=start;$('#resume').onclick=resume;$('#quit').onclick=()=>{G.state='menu';$('#pause').hidden=true;['#tl','#mapw','#spd','#prompt','#postal'].forEach(s=>$(s).hidden=true);$('#touch').hidden=true;$('#menu').hidden=false;showBest();if(engG)engG.gain.value=0};
 
@@ -892,7 +1098,7 @@ function closeOffice(){if(G.state!=='office')return;try{const w=officeWin();w.C3
 $('#officeBack').onclick=closeOffice;
 window.C30pause=f=>{if(G.state==='office'){const w=officeWin();if(w&&w.C30pause)w.C30pause(f);return}const w=f===undefined?!(G.state==='pause'||G.hub):!!f;G.hub=w&&G.state!=='play'&&G.state!=='pause'?false:false;if(w&&G.state==='play')pause();else if(!w&&G.state==='pause')resume()};
 window.C30isPaused=()=>G.state==='office'?!!(officeWin()&&officeWin().C30isPaused&&officeWin().C30isPaused()):G.state==='pause';window.C30save=()=>{try{const w=officeWin();w&&w.C30save&&w.C30save()}catch(e){}MEM.set('money',G.money);MEM.set('post',G.post);MEM.set('best',G.best)};
-window.__fig={get car(){return car},IND,W,toggleFoot,setIndMode,toggleLights,stepWalk,G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
+window.__fig={updateTolls,updateTrain,camera,snapCam:()=>{const fx=Math.sin(P.h),fz=-Math.cos(P.h);camera.position.set(P.x-fx*16,P.y+7,P.z-fz*16)},get TRAIN(){return TRAINS[0]},STATIONS,PUMPS,TOLLS,startRide,placeName,get car(){return car},IND,W,toggleFoot,setIndMode,toggleLights,stepWalk,G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
 requestAnimationFrame(loop);
 })();
 </script>
