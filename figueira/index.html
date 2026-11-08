@@ -540,8 +540,12 @@ for(let x=-150;x<=150;x+=100)road('Buarcos',[[x,-1950],[x,-1650]],8);
 for(let z=-1950;z<=-1650;z+=100)road('Buarcos',[[avX(z),z],[200,z]],8);
 road('Passeio do Jardim',[[620,560],[1500,560]],9);
 /* ---- estradas da Costa de Prata ---- */
-const A17=[[2050,-900],[2250,-1500],[2400,-2600],[2450,-4000],[2550,-5500],[2700,-7000],[2850,-8500],[3050,-10000],[3300,-11500],[3550,-12800],[3800,-14000],[3950,-15000],[3970,-15700]];
+const A17=[[2330,-596],[2380,-1200],[2440,-2600],[2450,-4000],[2550,-5500],[2700,-7000],[2850,-8500],[3050,-10000],[3300,-11500],[3550,-12800],[3800,-14000],[3950,-15000],[3970,-15700]];
 road('A17',A17,22,{auto:true,rural:true});
+// Nó da Figueira: rotunda no início da A17, ligada à Estrada de Tavarede, à de Buarcos e à EN109
+{const cx=2330,cz=-560,rr=34,a=[];for(let k=0;k<=24;k++){const t=k/24*Math.PI*2;a.push([cx+Math.cos(t)*rr,cz+Math.sin(t)*rr])}road('Rotunda da A17',a,10,{});}
+road('Ligação à A17',[[1960,-760],[2080,-690],[2200,-610],[2296,-566]],10,{rural:true});
+road('Ligação à A17',[[1900,-500],[2060,-520],[2200,-545],[2296,-556]],10,{rural:true});
 road('EN109',[[1960,-760],[1900,-1500],[1850,-2600],[1750,-4200],[1700,-5600],[1800,-6500],[1900,-8000],[2200,-9500],[2500,-11200],[3000,-12800],[3000,-13600],[3000,-14200],[3200,-15000],[3330,-15400]],10,{rural:true});
 road('Saída Tocha',[[2620,-6650],[2300,-6550],[1800,-6500]],9,{rural:true});
 road('Saída Mira',[[2950,-9300],[2600,-9420],[2200,-9500]],9,{rural:true});
@@ -566,7 +570,7 @@ gridTown('Aveiro',3160,3760,-16150,-15360,120,110);
 {const z0=-14650,z1=-13950;for(let z=z0;z<=z1;z+=140)road('Costa Nova',[[shoreN(z)+60,z],[shoreN(z)+290,z]],7)}
 
 // curvas suaves nas estradas fora da cidade (cortes de Chaikin)
-ROADS.forEach(r=>{if(!['Estrada do Cabo Mondego','Estrada de Buarcos','Estrada de Tavarede','Estrada da Gala','A17','EN109','Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Estrada da Praia da Tocha','Estrada da Praia de Mira','Estrada das Dunas','Área de Serviço'].includes(r.name))return;let P=r.pts;for(let k=0;k<3;k++){const Q=[P[0]];for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];Q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}Q.push(P[P.length-1]);P=Q}r.pts=P});
+ROADS.forEach(r=>{if(!['Estrada do Cabo Mondego','Estrada de Buarcos','Estrada de Tavarede','Estrada da Gala','A17','Ligação à A17','EN109','Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Estrada da Praia da Tocha','Estrada da Praia de Mira','Estrada das Dunas','Área de Serviço'].includes(r.name))return;let P=r.pts;for(let k=0;k<3;k++){const Q=[P[0]];for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];Q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}Q.push(P[P.length-1]);P=Q}r.pts=P});
 // estrutura de consulta: segmentos
 const SEGS=[];ROADS.forEach((r,ri)=>{for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1];SEGS.push({r,ri,ax:a[0],az:a[1],bx:b[0],bz:b[1],ay:a[2],by:b[2],len:Math.hypot(b[0]-a[0],b[1]-a[1])})}});
 const SG=new Map(),SGC=250;SEGS.forEach(s=>{const x0=Math.floor((Math.min(s.ax,s.bx)-30)/SGC),x1=Math.floor((Math.max(s.ax,s.bx)+30)/SGC),z0=Math.floor((Math.min(s.az,s.bz)-30)/SGC),z1=Math.floor((Math.max(s.az,s.bz)+30)/SGC);for(let i=x0;i<=x1;i++)for(let j=z0;j<=z1;j++){const k=i+','+j;(SG.get(k)||SG.set(k,[]).get(k)).push(s)}});
@@ -676,7 +680,7 @@ const _ID=new THREE.Object3D();function inst(geo,mat,list,fn,shadow){const m=new
 function alongRoad(name,step,fn){const r=ROADS.find(r=>r.name===name);let acc=0,next=0;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),dx=(b[0]-a[0])/L,dz=(b[1]-a[1])/L;while(next<=acc+L){const t=(next-acc)/L;fn(lerp(a[0],b[0],t),lerp(a[1],b[1],t),dx,dz,next);next+=step}acc+=L}return acc}
 const A17LEN=alongRoad('A17',1e9,()=>{});
 // separador central (betão) e rails metálicos nas bermas, em instâncias
-{const bar=[],rail=[];alongRoad('A17',8,(x,z,dx,dz)=>{const nx=-dz,nz=dx;bar.push({x,z,a:Math.atan2(dx,dz)});for(const sd of [-1,1]){const px=x+nx*sd*11.3,pz=z+nz*sd*11.3;const near=['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Área de Serviço'].some(n=>{const r=ROADS.find(r=>r.name===n);return Math.hypot(px-r.pts[0][0],pz-r.pts[0][1])<70||Math.hypot(px-r.pts[r.pts.length-1][0],pz-r.pts[r.pts.length-1][1])<70});if(!near)rail.push({x:px,z:pz,a:Math.atan2(dx,dz)})}});
+{const bar=[],rail=[];alongRoad('A17',8,(x,z,dx,dz,sv)=>{if(sv<24)return;const nx=-dz,nz=dx;bar.push({x,z,a:Math.atan2(dx,dz)});for(const sd of [-1,1]){const px=x+nx*sd*11.3,pz=z+nz*sd*11.3;const near=['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Área de Serviço'].some(n=>{const r=ROADS.find(r=>r.name===n);return Math.hypot(px-r.pts[0][0],pz-r.pts[0][1])<70||Math.hypot(px-r.pts[r.pts.length-1][0],pz-r.pts[r.pts.length-1][1])<70});if(!near)rail.push({x:px,z:pz,a:Math.atan2(dx,dz)})}});
  const bg=new THREE.BoxGeometry(.6,.85,8.1);bg.translate(0,.42,0);inst(bg,lam({color:0xc9c5bb}),bar,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a});
  const rg=new THREE.BoxGeometry(.12,.32,8.1);rg.translate(0,.62,0);inst(rg,lam({color:0xb8bec4}),rail,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a});
  const pg=new THREE.BoxGeometry(.1,.7,.1);pg.translate(0,.35,0);inst(pg,lam({color:0x8a9096}),rail,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a})}
@@ -690,7 +694,7 @@ const TOLLS=[];
   if(texS){const m=new THREE.Mesh(new THREE.PlaneGeometry(9,3.2),new THREE.MeshBasicMaterial({map:texS}));m.position.set(5.5,7,.35);g.add(m)}
   if(toll){for(let k=-9;k<=9;k+=3.6){const cam=new THREE.Mesh(new THREE.BoxGeometry(.5,.35,.6),lam({color:0x2a2f35}));cam.position.set(k,6.35,0);g.add(cam)}TOLLS.push({x,z,dx,dz,last:-9})}}
  // placas de direção a cada ~2,3 km, nos dois sentidos
- const marks=[];alongRoad('A17',2300,(x,z,dx,dz,sAt)=>{if(sAt<400||sAt>A17LEN-400)return;marks.push([x,z,dx,dz,sAt])});
+ const marks=[];alongRoad('A17',60,(x,z,dx,dz,sAt)=>{if(Math.abs(sAt-120)<1)gantry(x,z,dx,dz,panel([['A17  ↑  INÍCIO'],['Aveiro','55 km'],['Mira','26 km']],9,3.2),null,false)});alongRoad('A17',2300,(x,z,dx,dz,sAt)=>{if(sAt<400||sAt>A17LEN-400)return;marks.push([x,z,dx,dz,sAt])});
  marks.forEach(([x,z,dx,dz,sAt])=>{const next=DEST.filter(d=>d[1]<z-200).slice(0,2),prev=SOUTH.filter(d=>d[1]>z+200).slice(-2).reverse();const km=d=>Math.max(1,Math.round(Math.abs(z-d[1])*4.5/1000))+' km';
    gantry(x,z,dx,dz,panel([['A17  ↑ NORTE'],...next.map(d=>[d[0],km(d)])],9,3.2),panel([['A17  ↓ SUL'],...prev.map(d=>[d[0],km(d)])],9,3.2),false)});
  // pórticos de portagem eletrónica (com câmaras)
@@ -827,6 +831,18 @@ function addSolid(b){B.push(b);const x0=Math.floor((b.x-b.w/2)/40),x1=Math.floor
  const tm=lam({color:0xf3f3ef}),tb=lam({color:0x2a5aa8}),tw=lam({color:0x1d2a33});
  const car=()=>{const g=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(3,3.4,20),tm);b.position.y=2.4;g.add(b);const s1=new THREE.Mesh(new THREE.BoxGeometry(3.05,.5,20.05),tb);s1.position.y=1.5;g.add(s1);const w=new THREE.Mesh(new THREE.BoxGeometry(3.06,.9,18),tw);w.position.y=3.2;g.add(w);g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);return g};
  const TR={cars:[car(),car(),car()],s:STATIONS[0].s+5,v:0,dir:1,stop:8,next:1,ride:null};TRAINS.push(TR)}
+
+// passagens de nível: cruz de Santo André e cancelas vermelhas e brancas (descem quando o comboio se aproxima)
+const LEVELX=[];{const segI=(a,b,c,d)=>{const r=(b[0]-a[0])*(d[1]-c[1])-(b[1]-a[1])*(d[0]-c[0]);if(Math.abs(r)<1e-9)return null;const t=((c[0]-a[0])*(d[1]-c[1])-(c[1]-a[1])*(d[0]-c[0]))/r,u=((c[0]-a[0])*(b[1]-a[1])-(c[1]-a[1])*(b[0]-a[0]))/r;return t>=0&&t<=1&&u>=0&&u<=1?[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]:null};
+ for(const rs of RAILS)for(const g of SEGS){if(g.r.auto||g.r.bridge)continue;const p=segI([rs.ax,rs.az],[rs.bx,rs.bz],[g.ax,g.az],[g.bx,g.bz]);if(!p)continue;if(LEVELX.some(q=>Math.hypot(q.x-p[0],q.z-p[1])<25))continue;
+  const rd=Math.hypot(g.bx-g.ax,g.bz-g.az),dx=(g.bx-g.ax)/rd,dz=(g.bz-g.az)/rd,y=terrainH(p[0],p[1]);const grp=new THREE.Group();grp.position.set(p[0],y,p[1]);grp.rotation.y=Math.atan2(dx,dz);scene.add(grp);const arms=[];
+  for(const sd of [-1,1]){const px=sd*(g.r.w/2+1.2);const po=new THREE.Mesh(new THREE.BoxGeometry(.25,1.4,.25),lam({color:0xf3f1ea}));po.position.set(px,.7,sd*-7);grp.add(po);
+   const arm=new THREE.Group();arm.position.set(px,1.25,sd*-7);grp.add(arm);for(let k=0;k<5;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(g.r.w/10,.14,.14),lam({color:k%2?0xffffff:0xd52b1e}));b.position.set(-sd*(k+.5)*g.r.w/10,0,0);arm.add(b)}arms.push({arm,sd});
+   const cr=new THREE.Group();cr.position.set(px+sd*.6,2.6,sd*-7.6);grp.add(cr);for(const r of [.6,-.6]){const x1=new THREE.Mesh(new THREE.BoxGeometry(1.4,.18,.05),lam({color:0xd52b1e}));x1.rotation.z=r;cr.add(x1)}const lg=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),new THREE.MeshBasicMaterial({color:0x330000}));lg.position.set(0,-.55,0);cr.add(lg);arms[arms.length-1].light=lg}
+  LEVELX.push({x:p[0],z:p[1],arms,s:nearRail(p[0],p[1]).sAt,dx,dz,w:g.r.w,down:0})}}
+function updateLevelX(dt){const T=TRAINS[0];if(!T)return;for(const L of LEVELX){const near=Math.abs(T.s-L.s)<340||T.cars.some(g=>Math.hypot(g.position.x-L.x,g.position.z-L.z)<40);L.down=clamp(L.down+(near?dt:-dt)*.9,0,1);const blink=near&&(performance.now()/350|0)%2;for(const a of L.arms){a.arm.rotation.z=a.sd*(1-L.down)*-1.4;if(a.light)a.light.material.color.setHex(blink?0xff2a1a:0x330000)}
+  // cancela em baixo: o carro não passa
+  if(L.down>.8&&!W.on){const rx=P.x-L.x,rz=P.z-L.z,al=rx*L.dx+rz*L.dz,lat=Math.abs(-rx*L.dz+rz*L.dx);if(lat<L.w/2+1&&Math.abs(al)<8.5&&Math.abs(al)>5.5){const sg=Math.sign(al);P.x=L.x+L.dx*sg*8.6+(-L.dz)*(-rx*L.dz+rz*L.dx);P.z=L.z+L.dz*sg*8.6+L.dx*(-rx*L.dz+rz*L.dx);const vn=P.vx*L.dx+P.vz*L.dz;if(vn*sg<0){P.vx-=vn*L.dx*1.3;P.vz-=vn*L.dz*1.3;if(Math.abs(vn)>5){sfx.hit();toast('Passagem de nível fechada: espera pelo comboio!',true,2)}}}}}}
 // bombas de gasolina (Figueira, área de serviço da A17, Mira, Aveiro)
 {const PS=[['Figueira',1760,-140],['A17 · Área de Serviço',2885,-8250],['Mira',2420,-9560],['Aveiro',3720,-15430]];
  PS.forEach(([n,x,z])=>{const y=terrainH(x,z),g=new THREE.Group();g.position.set(x,y,z);scene.add(g);const cn=new THREE.Mesh(new THREE.BoxGeometry(14,.6,10),lam({color:0xf3f1ea}));cn.position.y=5;g.add(cn);const st=new THREE.Mesh(new THREE.BoxGeometry(14.2,.7,10.2),lam({color:0x2e8b57}));st.position.y=4.6;g.add(st);
@@ -864,11 +880,11 @@ let car=null,carType=0,carColor=0;
 const IND={mode:'',h0:0,turned:false,blink:0,lights:false,lightsAuto:true};const W={on:false,x:0,z:0,y:0,yaw:0,ph:0,m:null};
 const P={fuel:100,x:avX(600)+3,z:600,y:1.3,h:0,vx:0,vz:0,nitro:100,lastSafe:null,wet:false,inWater:0};
 // tráfego
-const TRAF=[];{const lanes=ROADS.filter(r=>!r.name.startsWith('Passeio')&&r.pts.length>1);const N=mobile?38:84;for(let i=0;i<N;i++){const r=lanes[i%lanes.length];const m=carModel(i%3,PAINT[(i+2)%PAINT.length]);scene.add(m);TRAF.push({side:rnd()<.5?-1:1,type:i%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,sp:10+rnd()*5,cur:0})}
- const extra=[['A17',mobile?12:30,()=>({off:rnd()<.55?3.4:6.9,sp:24+rnd()*9})],['EN109',mobile?5:12,()=>({sp:13+rnd()*5})],['Aveiro',mobile?4:10,()=>({sp:9+rnd()*4})],['Estrada das Dunas',mobile?2:5,()=>({sp:12+rnd()*4})]];let k=N;
+const TRAF=[];{const lanes=ROADS.filter(r=>!r.name.startsWith('Passeio')&&r.pts.length>1);const N=mobile?48:110;for(let i=0;i<N;i++){const r=lanes[i%lanes.length];const m=carModel(i%3,PAINT[(i+2)%PAINT.length]);scene.add(m);TRAF.push({side:rnd()<.5?-1:1,type:i%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,sp:10+rnd()*5,cur:0})}
+ const extra=[['A17',mobile?18:44,()=>({off:rnd()<.55?3.4:6.9,sp:24+rnd()*9})],['EN109',mobile?8:18,()=>({sp:13+rnd()*5})],['Aveiro',mobile?4:10,()=>({sp:9+rnd()*4})],['Estrada das Dunas',mobile?2:5,()=>({sp:12+rnd()*4})]];let k=N;
  for(const [name,n,opt] of extra){const rs=ROADS.filter(r=>r.name===name);for(let i=0;i<n;i++,k++){const r=rs[i%rs.length];const m=carModel(k%3,PAINT[(k+1)%PAINT.length]);scene.add(m);TRAF.push(Object.assign({side:rnd()<.5?-1:1,type:k%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,cur:0},opt()))}}}
 function trafPos(T){const a=T.r.pts[T.seg],b=T.r.pts[T.seg+1];const x=lerp(a[0],b[0],T.t),z=lerp(a[1],b[1],T.t);let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;if(T.dir<0){dx=-dx;dz=-dz}const off=T.off||T.r.w*.25;return{x:x-dz*off,z:z+dx*off,dx,dz,L,y:a[2]!=null?lerp(a[2],b[2],T.t):null}}
-function updateTraffic(dt){for(const T of TRAF){const p=trafPos(T);let sp=T.sp;const FP=focus(),ddx=FP.x-p.x,ddz=FP.z-p.z,ahead=ddx*p.dx+ddz*p.dz,side=Math.abs(-ddx*p.dz+ddz*p.dx);if(ahead>0&&ahead<14&&side<3)sp=0;if(W.on){const cx=P.x-p.x,cz=P.z-p.z,ah2=cx*p.dx+cz*p.dz;if(ah2>0&&ah2<12&&Math.abs(-cx*p.dz+cz*p.dx)<2.6)sp=0}for(const O of TRAF){if(O===T||O.x==null)continue;const ox=O.x-p.x,oz=O.z-p.z,ah=ox*p.dx+oz*p.dz;if(ah>0&&ah<9&&Math.abs(-ox*p.dz+oz*p.dx)<2.2){sp=0;break}}T.cur=lerp(T.cur,sp,Math.min(1,dt*2));
+function updateTraffic(dt){for(const T of TRAF){const p=trafPos(T);let sp=T.sp;const FP=focus(),ddx=FP.x-p.x,ddz=FP.z-p.z,ahead=ddx*p.dx+ddz*p.dz,side=Math.abs(-ddx*p.dz+ddz*p.dx);if(ahead>0&&ahead<14&&side<3)sp=0;if(W.on){const cx=P.x-p.x,cz=P.z-p.z,ah2=cx*p.dx+cz*p.dz;if(ah2>0&&ah2<12&&Math.abs(-cx*p.dz+cz*p.dx)<2.6)sp=0}for(const O of TRAF){if(O===T||O.x==null||O.dx==null)continue;if(O.dx*p.dx+O.dz*p.dz<.6)continue;const ox=O.x-p.x,oz=O.z-p.z,ah=ox*p.dx+oz*p.dz;if(ah>0&&ah<9&&Math.abs(-ox*p.dz+oz*p.dx)<2.2){sp=Math.min(sp,Math.max(0,(ah-5)*2));break}}T.cur=lerp(T.cur,sp,Math.min(1,dt*2));
   T.t+=T.dir*T.cur*dt/p.L;if(T.t>1){if(T.seg<T.r.pts.length-2){T.seg++;T.t-=1}else{T.t=1;T.dir=-1}}if(T.t<0){if(T.seg>0){T.seg--;T.t+=1}else{T.t=0;T.dir=1}}
   const q=trafPos(T);const y=q.y!=null?q.y:surfaceAt(q.x,q.z);T.m.position.set(q.x,y,q.z);T.m.rotation.y=Math.atan2(-q.dx,-q.dz);T.m.userData.wheels.forEach(w=>w.rotation.x-=T.cur*dt/.36);setBrake(T.m,sp<T.cur-.5||T.cur<1);T.x=q.x;T.z=q.z;T.dx=q.dx;T.dz=q.dz}}
 
@@ -943,6 +959,10 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
   if(b){const ox=nx-b.x,oz=nz-b.z,px=b.w/2+r-Math.abs(ox),pz=b.d/2+r-Math.abs(oz);const imp=Math.hypot(P.vx,P.vz);if(px<pz){P.vx=-P.vx*.3;P.vz*=.7}else{P.vz=-P.vz*.3;P.vx*=.7}if(imp>6){sfx.hit();shake=Math.min(1,imp/25)}}
   else{let carHit=null;for(const T of TRAF){if(T.x==null)continue;const tc=CARS[T.type],rx=nx-T.x,rz=nz-T.z,a1=Math.abs(rx*T.dx+rz*T.dz),s1=Math.abs(-rx*T.dz+rz*T.dx);const pa=Math.abs(Math.sin(P.h)*T.dx-Math.cos(P.h)*T.dz);const ext=c.wid/2+(c.len/2-c.wid/2)*pa,exs=c.wid/2+(c.len/2-c.wid/2)*(1-pa);if(a1<tc.len/2+ext*.9&&s1<tc.wid/2+exs*.9){carHit=T;break}}if(carHit){const dx=nx-carHit.x,dz=nz-carHit.z,L=Math.hypot(dx,dz)||1,imp=Math.hypot(P.vx,P.vz);P.vx=dx/L*Math.max(2,imp*.35);P.vz=dz/L*Math.max(2,imp*.35);if(imp>5){sfx.hit();shake=Math.min(1,imp/25)}}else{P.x=nx;P.z=nz}}
   {const bA=bridgeAt(P.x,P.z);if(bA&&Math.abs(P.y-bA.y)<4&&bA.lat>bA.half){const push=bA.lat-bA.half;P.x-=bA.nx*push;P.z-=bA.nz*push;const vn=P.vx*bA.nx+P.vz*bA.nz;if(vn>0){P.vx-=1.25*vn*bA.nx;P.vz-=1.25*vn*bA.nz;if(vn>6){sfx.hit();shake=.4}}}}
+  {const na=nearRoad(P.x,P.z);if(na.s.r.auto&&na.d<12.6){const g=na.s,ux=(g.bx-g.ax)/g.len,uz=(g.bz-g.az)/g.len,side=Math.sign((P.x-na.px)*(-uz)+(P.z-na.pz)*ux)||1,nx=-uz*side,nz=ux*side;
+   const wall=(lim,dirOut)=>{const tgt=lim;P.x=na.px+nx*tgt;P.z=na.pz+nz*tgt;const vn=(P.vx*nx+P.vz*nz)*dirOut;if(vn>0){P.vx-=nx*dirOut*vn*1.35;P.vz-=nz*dirOut*vn*1.35;if(vn>5){sfx.hit();shake=Math.min(1,vn/25)}}};
+   if(na.d<1.05&&g.len&&na.t>.0001)wall(1.05,-1);  // separador central
+   else if(na.d>10.95&&!ROADS.some(r=>!r.auto&&r.name!=='A17'&&r.pts.some((p,i)=>i<r.pts.length-1&&(()=>{const q=r.pts[i+1],vx=q[0]-p[0],vz=q[1]-p[1],L2=vx*vx+vz*vz,t=clamp(((P.x-p[0])*vx+(P.z-p[1])*vz)/L2,0,1);return Math.hypot(P.x-p[0]-vx*t,P.z-p[1]-vz*t)<r.w/2+3})())))wall(10.95,1)}}  // rails (menos nas saídas)
   const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
   if(ty<-1&&!bridgeAt(P.x,P.z)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
   car.position.set(P.x,P.y,P.z);car.rotation.y=-P.h;const sx=terrainH(P.x+Math.sin(P.h)*2,P.z-Math.cos(P.h)*2)-terrainH(P.x-Math.sin(P.h)*2,P.z+Math.cos(P.h)*2);car.rotation.x=onRoad&&P.y>3&&Math.abs(P.x-2200)<8?0:clamp(sx/4,-.25,.25);
@@ -1116,7 +1136,7 @@ function placeCam(dt,fv){const fx=Math.sin(P.h),fz=-Math.cos(P.h);let dist=[9,16
 function loop(now){if(G.state==='office'){last=now;requestAnimationFrame(loop);return}const dt=Math.min(.05,(now-last)/1000);last=now;TM+=dt;waterU.uT.value=TM;
   if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}
   markers.forEach((mk,i)=>{mk.o.visible=!G.mission;mk.o.material.opacity=.18+Math.sin(TM*3+i)*.06});postMeshes.forEach((m,i)=>{m.rotation.y+=dt*1.5});if(window.__lamp)window.__lamp.material.color.setHSL(.14,1,.6+Math.sin(TM*2)*.25);
-  updateTrain(dt);updateBoats(dt);
+  updateTrain(dt);updateBoats(dt);updateLevelX(dt);
   if(G.state==='train'){updateTraffic(dt);placeTrainCam(dt)}
   if(G.state==='play'){updateTraffic(dt);updateTolls();let fv=0;if(W.on){stepWalk(dt);placeWalkCam(dt)}else{fv=stepCar(dt);placeCam(dt,fv)}updateIndicators(dt);updateMission(dt);checkPostais();
     const mk=nearMarker();const pr=$('#prompt');const pu=!W.on&&nearPump(),st=nearStation();if(pu){pr.hidden=false;$('#promptT').textContent='Abastecer ('+Math.round(P.fuel)+'%)'}else if(st){pr.hidden=false;$('#promptT').textContent=trainNearStation(st)?'Apanhar o comboio em '+st.name:'Estação de '+st.name+' · o comboio vem a caminho'}else if(mk){pr.hidden=false;$('#promptT').textContent='Começar: '+mk.m.name}else pr.hidden=true;
@@ -1154,7 +1174,7 @@ function closeOffice(){if(G.state!=='office')return;try{const w=officeWin();w.C3
 $('#officeBack').onclick=closeOffice;
 window.C30pause=f=>{if(G.state==='office'){const w=officeWin();if(w&&w.C30pause)w.C30pause(f);return}const w=f===undefined?!(G.state==='pause'||G.hub):!!f;G.hub=w&&G.state!=='play'&&G.state!=='pause'?false:false;if(w&&G.state==='play')pause();else if(!w&&G.state==='pause')resume()};
 window.C30isPaused=()=>G.state==='office'?!!(officeWin()&&officeWin().C30isPaused&&officeWin().C30isPaused()):G.state==='pause';window.C30save=()=>{try{const w=officeWin();w&&w.C30save&&w.C30save()}catch(e){}MEM.set('money',G.money);MEM.set('post',G.post);MEM.set('best',G.best)};
-window.__fig={updateTolls,updateTrain,camera,snapCam:()=>{const fx=Math.sin(P.h),fz=-Math.cos(P.h);camera.position.set(P.x-fx*16,P.y+7,P.z-fz*16)},get TRAIN(){return TRAINS[0]},STATIONS,PUMPS,TOLLS,startRide,placeName,get car(){return car},IND,W,toggleFoot,setIndMode,toggleLights,stepWalk,G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
+window.__fig={get LEVELX(){return LEVELX},updateTolls,updateTrain,camera,snapCam:()=>{const fx=Math.sin(P.h),fz=-Math.cos(P.h);camera.position.set(P.x-fx*16,P.y+7,P.z-fz*16)},get TRAIN(){return TRAINS[0]},STATIONS,PUMPS,TOLLS,startRide,placeName,get car(){return car},IND,W,toggleFoot,setIndMode,toggleLights,stepWalk,G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
 requestAnimationFrame(loop);
 })();
 </script>
