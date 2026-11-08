@@ -1631,6 +1631,7 @@ function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);c
 addEventListener('resize',resize);resize();
 placeItems();
 requestAnimationFrame(loop);
+window.C30me=()=>G.state==='drive'&&typeof pCar!=='undefined'?pCar:avatar;
 window.__dbg={openTalk,talkPick,closeTalk,npcNear,TL,MEM,IN_C30,NPCS,P,G,start,ITEMS,MISSIONS,CROMOS,startExam,startBasket,shoot,startPhase,report,tryMove,setCam,doAction,startDrive,pickDlg,currentAction,homeAction};
 })();
 </script>
