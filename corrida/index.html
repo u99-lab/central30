@@ -409,8 +409,8 @@ fill1(17,25,18,29,'.'); fill1(23,25,24,29,'.'); fill1(17,29,24,29,'.'); fill1(20
 
 const TILE_SOLID=new Set(['#','k','=','w','L','H','h','B']);
 const W1=ch=>ch==='.'||ch==='p';
-const WALL_H={'#':10,'k':5.5,'=':10,'w':10,'L':2.4,'H':1.3,'h':3.2,'B':6.4};
-const CEIL_H={'.':3.4,'p':3.4,'a':9,'c':5.2,'G':9,'S':9,'q':2.8,'j':2.8};
+const WALL_H={'#':7.4,'k':5.5,'=':7.4,'w':7.4,'L':2.4,'H':1.3,'h':3.2,'B':6.4};
+const CEIL_H={'.':3.4,'p':3.4,'a':7,'c':5.2,'G':7,'S':7,'q':2.8,'j':2.8};
 const ST={x0:60,x1:66,z0:78,z1:87};
 const inSt=(x,z)=>x>=ST.x0&&x<=ST.x1&&z>=ST.z0&&z<=ST.z1;
 const RP={x0:60,x1:66,z0:93,z1:113};const inRp=(x,z)=>x>=RP.x0&&x<=RP.x1&&z>=RP.z0&&z<=RP.z1;const rpH=z=>Math.max(0,Math.min(1,(RP.z1-z)/(RP.z1-RP.z0)))*UP;
@@ -433,23 +433,23 @@ scene.background=ctex(4,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);g
 const yOf=(m,H,h)=>h-(m/H)*h;
 const T={
   winWall:ctex(64,320,(g,w,h)=>{g.fillStyle='#f3f1ec';g.fillRect(0,0,w,h);speckle(g,w,h,300,.04,2);
-    for(let f=0;f<3;f++){const b=0.9+f*3.6,t=b+1.75;const y0=yOf(t,10,h),y1=yOf(b,10,h);
+    for(let f=0;f<2;f++){const b=0.9+f*3.6,t=b+1.75;const y0=yOf(t,7.4,h),y1=yOf(b,7.4,h);
       g.fillStyle='#d9d5cb';g.fillRect(0,y0-3,w,y1-y0+6);
       const gr=g.createLinearGradient(0,y0,0,y1);gr.addColorStop(0,'#58798c');gr.addColorStop(1,'#a8c5d3');g.fillStyle=gr;g.fillRect(2,y0,w-4,y1-y0);
       g.fillStyle='#eeece6';g.fillRect(w/2-1.5,y0,3,y1-y0);g.fillRect(2,y0+(y1-y0)*.3,w-4,2);
       g.fillStyle='rgba(0,0,0,.12)';g.fillRect(0,y1+2,w,3);}
-    g.fillStyle='rgba(0,0,0,.05)';g.fillRect(0,yOf(3.6,10,h),w,1);g.fillRect(0,yOf(7.2,10,h),w,1);}),
+    g.fillStyle='rgba(0,0,0,.05)';g.fillRect(0,yOf(3.6,7.4,h),w,1);g.fillStyle='rgba(0,0,0,.08)';g.fillRect(0,yOf(7.25,7.4,h),w,3);}),
   kWall:ctex(64,128,(g,w,h)=>{g.fillStyle='#f1efe9';g.fillRect(0,0,w,h);speckle(g,w,h,200,.04,2);
     const y0=yOf(4.7,5.5,h),y1=yOf(3.7,5.5,h);g.fillStyle='#5f7d8e';g.fillRect(0,y0,w,y1-y0);g.fillStyle='#e9e6df';g.fillRect(w/2-1,y0,2,y1-y0);
     g.fillStyle='rgba(0,0,0,.08)';g.fillRect(0,0,1,h);}),
   intWall:ctex(64,320,(g,w,h)=>{g.fillStyle='#f2f0ea';g.fillRect(0,0,w,h);speckle(g,w,h,200,.03,2);
-    [0,UP].forEach(b=>{const y0=yOf(b+1.25,10,h),y1=yOf(b,10,h);g.fillStyle='#d4b17f';g.fillRect(0,y0,w,y1-y0);
+    [0,UP].forEach(b=>{const y0=yOf(b+1.25,7.4,h),y1=yOf(b,7.4,h);g.fillStyle='#d4b17f';g.fillRect(0,y0,w,y1-y0);
       for(let x=0;x<w;x+=8){g.fillStyle=`rgba(90,55,20,${.08+Math.random()*.08})`;g.fillRect(x,y0,1,y1-y0)}
       g.fillStyle='#bf9965';g.fillRect(0,y0,w,2);g.fillStyle='#8c6a43';g.fillRect(0,y1-3,w,3)});}),
   woodGlass:ctex(64,320,(g,w,h)=>{g.fillStyle='#f2f0ea';g.fillRect(0,0,w,h);
-    const top=yOf(3.0,10,h);g.fillStyle='#dcc196';g.fillRect(0,top,w,h-top);
+    const top=yOf(3.0,7.4,h);g.fillStyle='#dcc196';g.fillRect(0,top,w,h-top);
     for(let x=0;x<w;x+=3){g.fillStyle=`rgba(150,110,60,${Math.random()*.15})`;g.fillRect(x,top,1,h-top)}
-    const gy0=yOf(2.7,10,h),gy1=yOf(0.25,10,h);const gr=g.createLinearGradient(0,gy0,w,gy1);gr.addColorStop(0,'#cfe0e6');gr.addColorStop(1,'#e8eff0');g.fillStyle=gr;g.fillRect(6,gy0,w-12,gy1-gy0);
+    const gy0=yOf(2.7,7.4,h),gy1=yOf(0.25,7.4,h);const gr=g.createLinearGradient(0,gy0,w,gy1);gr.addColorStop(0,'#cfe0e6');gr.addColorStop(1,'#e8eff0');g.fillStyle=gr;g.fillRect(6,gy0,w-12,gy1-gy0);
     g.fillStyle='rgba(255,255,255,.5)';g.beginPath();g.moveTo(14,gy0);g.lineTo(26,gy0);g.lineTo(12,gy1);g.lineTo(6,gy1);g.fill();}),
   lockers:ctex(256,205,(g,w,h)=>{const pat=[1,0,1,1,0,1];const cw=w/6,rh=h/4;
     for(let c=0;c<6;c++)for(let r=0;r<4;r++){const x=c*cw,y=r*rh;g.fillStyle=pat[c]?'#f2b705':'#1c1b1a';g.fillRect(x,y,cw,rh);
@@ -501,14 +501,14 @@ const wallMat={'h':lam({map:T.houseWall}),'#':lam({map:T.winWall}),'k':lam({map:
 for(const k in wallMat){if(!walls[k])continue;inst(unitBox,wallMat[k],walls[k],(d,t)=>{d.position.set(t.x,0,t.z);d.scale.set(S,WALL_H[k],S)},k==='L'?2:3)}
 // vidro: cantina inteira, átrio só até ao piso 1 (por cima, parede)
 const glassMat=lam({color:0xc4dfea,transparent:true,opacity:.26,depthWrite:false});
-inst(unitBox,glassMat,walls.g,(d,t)=>{d.position.set(t.x,0,t.z);d.scale.set(t.horiz?S:.12,t.r<=10?5.5:9,t.horiz?.12:S)},0);
+inst(unitBox,glassMat,walls.g,(d,t)=>{d.position.set(t.x,0,t.z);d.scale.set(t.horiz?S:.12,t.r<=10?5.5:7,t.horiz?.12:S)},0);
 // paredes do piso 1 onde no piso 0 há passagem
 const upW=[];for(let r=22;r<=30;r++)for(let c=1;c<=40;c++){if(TILE_SOLID.has(L1[r][c])&&!TILE_SOLID.has(grid[r][c])&&grid[r][c]!=='g'&&!doors.some(d=>d.c===c&&d.r===r))upW.push({x:(c+.5)*S,z:(r+.5)*S})}
-const upWM=inst(unitBox,lam({color:0xf1efe9}),upW,(d,t)=>{d.position.set(t.x,UP-.2,t.z);d.scale.set(S,10-UP+.2,S)},1);
+const upWM=inst(unitBox,lam({color:0xf1efe9}),upW,(d,t)=>{d.position.set(t.x,UP-.2,t.z);d.scale.set(S,7.4-UP+.2,S)},1);
 // lintéis
 const lintMat={'h':lam({color:0xf4efe4}),'#':lam({color:0xf1efe9}),'=':lam({color:0xf1efe9}),'w':lam({color:0xdcc196}),'g':lam({color:0x3d3f42})};
-const lintels=[];doors.forEach(d=>{const h=d.wall==='g'?(d.r<=10?5.5:9):WALL_H[d.wall];const up=W1(L1[d.r][d.c]);
-  if(up){lintels.push({d,y0:2.75,y1:UP-.2});lintels.push({d,y0:UP+2.75,y1:10})}else lintels.push({d,y0:d.wall==='h'?2.25:2.75,y1:h})});
+const lintels=[];doors.forEach(d=>{const h=d.wall==='g'?(d.r<=10?5.5:7):WALL_H[d.wall];const up=W1(L1[d.r][d.c]);
+  if(up){lintels.push({d,y0:2.75,y1:UP-.2});lintels.push({d,y0:UP+2.75,y1:7.4})}else lintels.push({d,y0:d.wall==='h'?2.25:2.75,y1:h})});
 for(const k in lintMat){const L=lintels.filter(l=>l.d.wall===k);if(!L.length)continue;
   inst(unitBox,lintMat[k],L,(o,l)=>{const t=l.d;const x=(t.c+.5)*S,z=(t.r+.5)*S;o.position.set(x,l.y0,z);
     const vertical=TILE_SOLID.has(grid[t.r-1][t.c])||grid[t.r-1][t.c]==='g';const th=k==='g'?.2:S;
@@ -530,16 +530,16 @@ const l1M=[];for(const k in f1){l1M.push(inst(flatPlane,floorMats[k],f1[k],(d,t)
 
 /* ---------------- TELHADOS ---------------- */
 const roofTiles=[];for(let r=12;r<=30;r++)for(let c=1;c<=40;c++){if(c>=9&&c<=32&&r<=21)continue;roofTiles.push({x:(c+.5)*S,z:(r+.5)*S})}
-const roofSlabM=inst(unitBox,lam({color:0xe7e3da}),roofTiles,(d,t)=>{d.position.set(t.x,10,t.z);d.scale.set(S,.35,S)},0);
+const roofSlabM=inst(unitBox,lam({color:0xe7e3da}),roofTiles,(d,t)=>{d.position.set(t.x,7.4,t.z);d.scale.set(S,.35,S)},0);
 const roofTex=ctex(64,64,(g,w,h)=>{g.fillStyle='#b9532f';g.fillRect(0,0,w,h);for(let y=0;y<h;y+=8){g.fillStyle='rgba(0,0,0,.18)';g.fillRect(0,y,w,2);for(let x=(y/8%2)*6;x<w;x+=12){g.fillStyle='rgba(255,255,255,.06)';g.fillRect(x,y+2,6,6)}}},1,1);
 const roofMat=lam({color:0xffffff,map:roofTex,flatShading:true});
 function prism(w,h,len){const sh=new THREE.Shape();sh.moveTo(-w/2,0);sh.lineTo(w/2,0);sh.lineTo(0,h);sh.lineTo(-w/2,0);const g=new THREE.ExtrudeGeometry(sh,{depth:len,bevelEnabled:false,UVGenerator:{generateTopUV:(gg,v,a,b,c)=>[new THREE.Vector2(v[a*3]/3,v[a*3+1]/3),new THREE.Vector2(v[b*3]/3,v[b*3+1]/3),new THREE.Vector2(v[c*3]/3,v[c*3+1]/3)],generateSideWallUV:(gg,v,a,b,c,d)=>{const p=i=>new THREE.Vector2(v[i*3+2]/2,Math.hypot(v[i*3],v[i*3+1])/1.2);return [p(a),p(b),p(c),p(d)]}}});g.translate(0,0,-len/2);return new THREE.Mesh(g,roofMat)}
 roofTex.wrapS=roofTex.wrapT=THREE.RepeatWrapping;
-const pf=prism(28.5,2.8,122);pf.rotation.y=Math.PI/2;pf.position.set(63,10.35,79.5);scene.add(pf);
-const pw=prism(25,2.5,31);pw.position.set(15,10.35,51);scene.add(pw);
-const pe=prism(25,2.5,31);pe.position.set(111,10.35,51);scene.add(pe);
+const pf=prism(28.5,2.8,122);pf.rotation.y=Math.PI/2;pf.position.set(63,7.75,79.5);scene.add(pf);
+const pw=prism(25,2.5,31);pw.position.set(15,7.75,51);scene.add(pw);
+const pe=prism(25,2.5,31);pe.position.set(111,7.75,51);scene.add(pe);
 const slab=(x,y,z,w,h,d,col)=>{const m=new THREE.Mesh(unitBox,lam({color:col}));m.position.set(x,y,z);m.scale.set(w,h,d);scene.add(m);return m};
-const gymRoof=slab(27,10,18,43,.5,31,0x8d8b86);
+const gymRoof=slab(27,7.4,18,43,.5,31,0x8d8b86);
 const cantRoof=slab(90,5.5,18,61,.45,31,0x575550);
 const canopy=slab(80,4.1,34.6,40,.25,3.8,0x45433f);canopy.castShadow=true;
 [62,71,80,89,98].forEach(x=>box(x,0,36.2,.16,4.1,.16,0x45433f,true));
@@ -549,7 +549,7 @@ const STEPS=20;for(let i=0;i<STEPS;i++){const z1=ST.z1-i*(ST.z1-ST.z0)/STEPS,z0=
   box(ST.x0+.12,0,(z0+z1)/2,.24,h+.95,z1-z0,0xe9e6df);box(ST.x1-.12,0,(z0+z1)/2,.24,h+.95,z1-z0,0xe9e6df)}
 box(63,UP-.2,76.5,6,.2,3,0xd9d4c9);         // patamar
 box(63,UP-.2,72,24,.2,6,0xd9d4c9);          // ponte do piso 1 sobre o átrio
-box(63,UP+3.2,74.9,24,9-UP-3.2,.25,0xf1efe9);// pano de parede por cima da ponte
+box(63,UP+3.2,74.9,24,7-UP-3.2,.25,0xf1efe9);// pano de parede por cima da ponte
 // guardas de vidro do piso 1
 const rail=(x,z,w,d)=>{box(x,UP,z,w,1.05,d,0x3d3f42);};
 [[58.5,75.05,3,.06],[67.5,75.05,3,.06],[60.05,76.5,.06,3],[65.95,76.5,.06,3],[57.05,81,.06,12],[68.95,81,.06,12]].forEach(a=>{const m=new THREE.Mesh(unitBox,glassMat);m.position.set(a[0],UP,a[1]);m.scale.set(a[2],1.05,a[3]);scene.add(m);box(a[0],UP+1.02,a[1],a[2]+.02,.05,a[3]+.02,0x3d3f42)});
@@ -707,10 +707,10 @@ function multiPlate(lines,x,y,z,ry,w,h){const W=640,H=Math.round(640*h/w);const 
   const m=new THREE.Mesh(plane,new THREE.MeshBasicMaterial({map:t}));m.position.set(x,y,z);m.rotation.y=ry;m.scale.set(w,h,1);scene.add(m)}
 const UPR=UP;
 [['SALA 19',22.5],['SALA 20',40.5],['BIBLIOTECA',88.5],['SALA 8',109.5]].forEach(([t,x])=>plate(t,x,3.05,74.97,Math.PI,t.length>7?1.6:1.2,.32));
-[['LABORATÓRIO',22.5],['SALA 22',40.5],['INFORMÁTICA',88.5],['ARTES',109.5]].forEach(([t,x])=>plate(t,x,UPR+2.95,74.97,Math.PI,t.length>7?1.7:1.2,.32));
+[['LABORATÓRIO',22.5],['SALA 22 · 8.º A',40.5],['SALA 24 · 9.º A',88.5],['ARTES · 8.º e 9.º',109.5]].forEach(([t,x])=>plate(t,x,UPR+2.95,74.97,Math.PI,Math.max(1.2,t.length*.14),.32));
 plate('SALA 4',18.03,3.05,46.5,Math.PI/2,1.1,.3);plate('SALA 5',18.03,3.05,61.5,Math.PI/2,1.1,.3);plate('SALA 6',107.97,3.05,46.5,-Math.PI/2,1.1,.3);plate('SALA 7',107.97,3.05,61.5,-Math.PI/2,1.1,.3);
 plate('GINÁSIO',27,3.5,33.04,0,3.2,.7,'#f1efe9','#1c1b1a');plate('CANTINA',87,3.4,31.66,0,3,.6,'#1c1b1a','#f1efe9');
-plate('PISO 0',51.03,3.0,79.5,Math.PI/2,1.4,.5,'#f2f0ea','#1c1b1a');
+plate('PISO 0 · 7.º ANO',51.03,3.0,79.5,Math.PI/2,2.6,.5,'#f2f0ea','#1c1b1a');plate('↑ PISO 1 · 8.º E 9.º ANOS',63,UP+2.5,69.2,0,3.6,.45,'#1c1b1a','#f2b705');
 // sinais de saída verdes (como no corredor da foto)
 {const sTex=ctex(256,96,(g,w,h)=>{g.fillStyle='#1f8a4c';g.fillRect(0,0,w,h);g.strokeStyle='#e9f5ec';g.lineWidth=4;g.strokeRect(5,5,w-10,h-10);g.fillStyle='#f4fbf6';g.font='800 40px "Bricolage Grotesque",sans-serif';g.textBaseline='middle';g.fillText('SAÍDA',92,50);
   g.save();g.translate(50,50);g.fillRect(-20,-6,26,12);g.beginPath();g.moveTo(6,-16);g.lineTo(26,0);g.lineTo(6,16);g.fill();g.restore()});
@@ -860,7 +860,7 @@ const lockerHole=new THREE.Mesh(new THREE.BoxGeometry(.02,.58,.48),lam({color:0x
 /* ---------------- AULAS E FASES DO DIA ---------------- */
 const CLASSES={
   mat:{name:'Matemática',room:'Sala 19',teacher:'Prof.ª Helena',seat:{x:23.05,z:86.85,y:0},type:'quiz'},
-  pt:{name:'Português',room:'Sala 22 · Piso 1',teacher:'Prof. Carlos',seat:{x:41.05,z:83.45,y:UP},type:'quiz'},
+  pt:{name:'Português',room:'Sala 20',teacher:'Prof. Carlos',seat:{x:41.05,z:83.45,y:0},type:'quiz'},
   ef:{name:'Educação Física',room:'Ginásio',teacher:'Prof. Nuno',seat:{x:15.6,z:18,y:0},type:'basket'},
   fq:{name:'Físico-Química',room:'Laboratório · Piso 1',teacher:'Prof.ª Teresa',seat:{x:20,z:83.6,y:UP},type:'quiz'},
 };
@@ -891,7 +891,7 @@ CROMOS.forEach((c,i)=>{c.m=new THREE.Mesh(new THREE.BoxGeometry(.32,.45,.02),[la
 const MISSIONS=[
   {id:'bola',title:'Bola perdida',giver:'Marta',ask:'Perdi a bola de voleibol no pátio! Encontras-ma? Traz-ma aqui ao ginásio.',item:'Bola de voleibol',spots:[[34,58,.2],[60,40,.2],[92,47,.2],[70,63,.2]],to:'Marta'},
   {id:'livro',title:'Livro atrasado',giver:'Beatriz',ask:'Podes devolver este livro na biblioteca? O prazo acaba hoje.',item:'Livro da biblioteca',carry:true,toPt:{x:81,z:80.6,y:0,label:'balcão da biblioteca'}},
-  {id:'ponto',title:'Recado da professora',giver:'Prof.ª Helena',ask:'Vai buscar o livro de ponto à Sala 8 e leva-o ao Prof. Carlos, na Sala 22 do piso 1.',item:'Livro de ponto',spots:[[111.5,84.5,.82]],to:'Prof. Carlos'},
+  {id:'ponto',title:'Recado da professora',giver:'Prof.ª Helena',ask:'Vai buscar o livro de ponto à Sala 8 e leva-o ao Prof. Carlos, na Sala 20.',item:'Livro de ponto',spots:[[111.5,84.5,.82]],to:'Prof. Carlos'},
   {id:'tele',title:'Telemóvel perdido',giver:'Inês',ask:'Não encontro o meu telemóvel! Ajudas-me a procurá-lo?',item:'Telemóvel',spots:[[20,10.4,.3],[80,18,.84],[113.5,87,UP+.84],[48,72,.1]],to:'Inês'},
   {id:'sandes',title:'Sandes para o Rui',giver:'Rui',ask:'Esqueci-me do dinheiro. Vais-me buscar uma sandes mista ao balcão?',item:'Sandes mista',spots:[[73,8.1,1.12]],to:'Rui'},
 ];
@@ -908,9 +908,9 @@ const NPCS=[
   {name:'Rui',x:104,z:15,y:0,o:{shirt:0xd2632f,pants:0x2d3440,hair:0x3a2a1c,seed:2},line:hintLine('card','Sem cartão nem almoçavas hoje!',it=>'Deixaste o cartão '+it.s.hint+'.'),idle:()=>G.lunch?'Hoje o arroz de pato estava bom!':'Já almoçaste? Vai ao balcão com o cartão.'},
   {name:'Beatriz',x:21,z:55,y:0,o:{shirt:0xd9b23a,pants:0x2a2a2a,hair:0x5a3a20,seed:3,bag:0x8a2a2a},line:hintLine('book','Vai, ainda chegas a tempo!',it=>'O teu caderno está '+it.s.hint+'.'),idle:()=>'Este corredor tem os bancos mais confortáveis da escola.'},
   {name:'Duarte',x:56.5,z:85,y:0,o:{shirt:0x3b3b3b,pants:0x2f4d7a,hair:0x1a1a1a,seed:4,bag:0xf2b705},line:hintLine('calc','Calculadora na mão. Despacha-te!',()=>has('key')?'Tens a chave! O 333 é o da moldura amarela, aqui ao lado.':'O cacifo 333 está trancado. Sem a chave não o abres.'),idle:()=>'Há cromos da escola escondidos por todo o lado. Já tenho três!'},
-  {name:'Sofia',x:57,z:72.5,y:UP,o:{shirt:0x2a8a8a,pants:0x2a2a33,hair:0xc9a050,seed:3,bag:0x5a3a7a},idle:()=>'No piso 1 ficam o Laboratório, a Sala 22, a Informática e as Artes.'},
+  {name:'Sofia',x:57,z:72.5,y:UP,o:{shirt:0x2a8a8a,pants:0x2a2a33,hair:0xc9a050,seed:3,bag:0x5a3a7a},idle:()=>'O piso de cima é do 8.º e do 9.º ano. Só lá vais para o Laboratório!'},
   {name:'Prof.ª Helena',x:8,z:84,y:0,o:{shirt:0x7a4a6a,pants:0x2a2a30,hair:0x7a5a3a,seed:0},teacher:'mat',idle:()=>{if(G.phase===0){const m=missing();return m.length?'Ainda te falta: '+m.join(', ')+'. Sem isso não fazes o teste!':'Senta-te no teu lugar, o da luz amarela.'}return 'Bom trabalho hoje. Não te esqueças dos trabalhos de casa!'}},
-  {name:'Prof. Carlos',x:34.6,z:84,y:UP,o:{shirt:0x3a5a7a,pants:0x2a2a30,hair:0x4a4a4a,seed:2},teacher:'pt',idle:()=>PH[G.phase].cls==='pt'?'Senta-te no lugar da luz amarela. Hoje há mini-teste!':'Já leste o livro para a próxima aula?'},
+  {name:'Prof. Carlos',x:34.6,z:84,y:0,o:{shirt:0x3a5a7a,pants:0x2a2a30,hair:0x4a4a4a,seed:2},teacher:'pt',idle:()=>PH[G.phase].cls==='pt'?'Senta-te no lugar da luz amarela. Hoje há mini-teste!':'Já leste o livro para a próxima aula?'},
   {name:'Prof. Nuno',x:16,z:13.5,y:0,o:{shirt:0xc0392b,pants:0x1f2b5a,hair:0x2b1d14,seed:1},teacher:'ef',idle:()=>PH[G.phase].cls==='ef'?'Vai para a marca amarela, na linha de lance livre!':'O pavilhão está sempre aberto para quem quer treinar.'},
   {name:'Prof.ª Teresa',x:7.3,z:84,y:UP,o:{shirt:0xe6e6e0,pants:0x2a2a30,hair:0x1a1a1a,seed:4},teacher:'fq',idle:()=>PH[G.phase].cls==='fq'?'Bata vestida? Senta-te no lugar marcado.':'No laboratório não se corre!'},
 ];
@@ -919,7 +919,14 @@ const npc=name=>NPCS.find(n=>n.name===name);
 seat12.forEach((d,i)=>{[-.35,.35].forEach((dz,j)=>{if(d.x===22.5&&d.z===87.2&&dz<0)return;if((i*2+j)%3===2)return;
   const p=person({shirt:[0x2a3f5f,0x4d4d4d,0x6a2e2e,0x2f5d4a,0x1f2b3a,0x8a6a3a][(i+j)%6],pants:0x2a2a33,hair:[0x1a1a1a,0x3a2a1c,0x6b4a2a][(i+j)%3],seed:i+j,seated:true});p.position.set(d.x+.55,-.37,d.z+dz);p.rotation.y=-Math.PI/2;
   p.userData.armL.rotation.x=p.userData.armR.rotation.x=-1.1})});
+
+// alunos do 8.º e 9.º ano no piso de cima (um pouco mais altos)
+[[37,40.5,44],[81,85,89,93,97]].forEach((xs,ri)=>xs.forEach((x,ix)=>[80.4,83.8,87.2].forEach((z0,iz)=>{const z=ri?[80.6,84.2,87.8][iz]:z0;if((ix+iz+ri)%3===1)return;
+  const p=person({shirt:[0x1f2b3a,0x5a2e4e,0x2e4a5a,0x3d3d3d,0x6a4a2e,0x2f5d4a][(ix+iz*2+ri)%6],pants:0x23232b,hair:[0x1a1a1a,0x5a3a20,0x8a6a3a][(ix+iz)%3],seed:ix*3+iz+ri*7,seated:true});
+  p.scale.setScalar(1.08);p.position.set(x+.55,UP-.4,z+(ri?0:.35));p.rotation.y=-Math.PI/2;p.userData.armL.rotation.x=p.userData.armR.rotation.x=-1.1})));
 const WALKERS=[
+  {path:[[10,72.6],[50,72.6],[50,71.4],[10,71.4]],y:UP,sp:1.1,big:1,o:{shirt:0x3d3d3d,pants:0x23232b,hair:0x5a3a20,bag:0x1f1f1f,seed:6}},
+  {path:[[118,72.4],[76,72.4]],y:UP,sp:1.3,big:1,o:{shirt:0x5a2e4e,pants:0x2a2a33,hair:0x1a1a1a,bag:0x8a2a2a,seed:7}},
   {path:[[36,40],[90,40],[90,63],[36,63]],y:0,sp:1.3,o:{shirt:0xb33a3a,pants:0x22303f,hair:0x2b1d14,bag:0x2a2a2a,seed:1}},
   {path:[[90,63],[36,63],[36,40],[90,40]],y:0,sp:1.1,o:{shirt:0x3a6ab3,pants:0x2a2a2a,hair:0x6b3e1f,bag:0xc9a050,seed:4}},
   {path:[[115,70.5],[10,70.5]],y:0,sp:1.2,o:{shirt:0x4f7a3a,pants:0x2d3440,hair:0x1a1a1a,bag:0x8a2a2a,seed:2}},
@@ -927,7 +934,7 @@ const WALKERS=[
   {path:[[115,71],[10,71]],y:UP,sp:1.2,o:{shirt:0x6a4a8a,pants:0x2a2a33,hair:0x2b1d14,bag:0x2f5d4a,seed:3}},
   {path:[[21,40],[21,66]],y:0,sp:1.0,o:{shirt:0x8a8a8a,pants:0x22303f,hair:0x5a3a20,bag:0xd94b3a,seed:1}},
 ];
-WALKERS.forEach((w,i)=>{w.g=person(w.o);w.i=1;w.x=w.path[0][0];w.z=w.path[0][1];w.t=i});
+WALKERS.forEach((w,i)=>{w.g=person(w.o);if(w.big)w.g.scale.setScalar(1.08);w.i=1;w.x=w.path[0][0];w.z=w.path[0][1];w.t=i});
 const AUXES=[
   {name:'D. Lurdes',g:person({shirt:0x5d86b5,pants:0x2a2a33,hair:0x8a8a8a,skin:0xe2b28e}),path:[[9,72],[118,72]],y:0,i:1,x:9,z:72,cool:0,pause:0,active:true},
   {name:'Sr. Armando',g:person({shirt:0x5d86b5,pants:0x2a2a33,hair:0x3a3a3a,skin:0xd9a27c}),path:[[118,72],[9,72]],y:UP,i:1,x:118,z:72,cool:0,pause:0,active:false},
@@ -1036,7 +1043,7 @@ function makeBase(lvl,big){const k=big?10:8;const cv=document.createElement('can
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){g.fillStyle=COLR[grid[r][c]]||'#000';g.fillRect(c*k,r*k,k,k)}
   if(lvl){g.fillStyle='rgba(21,20,18,.55)';g.fillRect(0,0,cv.width,cv.height);for(let r=22;r<=30;r++)for(let c=1;c<=40;c++){const ch=L1[r][c];if(ch==='V'){if(grid[r][c]==='S'){g.fillStyle='#c9c0b0';g.fillRect(c*k,r*k,k,k)}continue}g.fillStyle=COLR[ch]||'#000';g.fillRect(c*k,r*k,k,k)}}
   g.font=`700 ${big?22:15}px "Bricolage Grotesque",sans-serif`;g.textAlign='center';
-  const labels=lvl?[['LAB.',6,28.5],['S22',13,28.5],['INFORM.',29.5,28.5],['ARTES',37,28.5],['ESCADAS',21,27.6],['SECRETARIA',21,30.4]]:[['GINÁSIO',8.5,6],['CANTINA',29.5,6],['PÁTIO',20.5,17],['ÁTRIO',21,25],['S19',6,28.5],['S5',3.5,19.8],['S4',3.5,15],['BIBL.',29.5,28.5],['S20',13,28.5],['S8',37,28.5],['ENTRADA',21,36],['PASTELARIA',6.5,49],['PARQUE',17.5,51.5],['CASA',27.5,62.3],['CAMPO',16.5,62.3],['RUA DA ESCOLA',10,42.8]];
+  const labels=lvl?[['LAB.',6,28.5],['8.º A',13,28.5],['9.º A',29.5,28.5],['ARTES',37,28.5],['ESCADAS',21,27.6],['SECRETARIA',21,30.4]]:[['GINÁSIO',8.5,6],['CANTINA',29.5,6],['PÁTIO',20.5,17],['ÁTRIO',21,25],['S19',6,28.5],['S5',3.5,19.8],['S4',3.5,15],['BIBL.',29.5,28.5],['S20',13,28.5],['S8',37,28.5],['ENTRADA',21,36],['PASTELARIA',6.5,49],['PARQUE',17.5,51.5],['CASA',27.5,62.3],['CAMPO',16.5,62.3],['RUA DA ESCOLA',10,42.8]];
   labels.forEach(([t,x,y])=>{g.fillStyle='rgba(244,241,234,.85)';g.fillText(t,x*k+1,y*k+1);g.fillStyle='#151412';g.fillText(t,x*k,y*k)});return cv}
 let mapBase=null;
 function drawMarks(g,k,lvl,big){const blink=(Math.sin(TM*6)+1)/2;const sc=big?1.4:1;
@@ -1355,7 +1362,7 @@ const MOOD={
   'Rui':['Estou com fome, como sempre!',[['Ainda falta muito para o almoço?','Para mim falta sempre muito. Hoje há arroz de pato!'],['Não trouxeste lanche?','Comi-o logo no primeiro intervalo... erro de principiante.'],['Vai à pastelaria depois das aulas.','Boa ideia! As bolas de Berlim do Sr. Joaquim são as melhores.']]],
   'Beatriz':['Um bocado nervosa. Amanhã tenho teste de Inglês.',[['Já estudaste?','Mais ou menos... ainda me baralho nos verbos irregulares.'],['Vais ter boa nota!','Disseste isso com tanta confiança que até acredito. Obrigada!'],['Queres estudar comigo?','Queria muito! Pode ser na biblioteca, no intervalo grande?']]],
   'Duarte':['Estou contente! Encontrei mais um cromo da escola.',[['Onde estava?','Não te digo, isso era batota! Mas olha para cima de vez em quando.'],['Quantos tens?','Tenho três. Dizem que são dez ao todo.'],['Trocamos cromos?','Só se tiveres algum repetido!']]],
-  'Sofia':['Estou bem! Daqui de cima vejo toda a gente a correr.',[['Gostas do piso 1?','Muito! As salas cá de cima têm mais luz.'],['Viste a D. Lurdes?','Está lá em baixo, no corredor. Não corras perto dela!'],['Qual é a tua disciplina preferida?','Físico-Química! Hoje vamos ao laboratório.']]],
+  'Sofia':['Estou bem! Daqui de cima vejo toda a gente a correr.',[['Andas no 8.º?','Ando! O piso de cima é nosso: 8.º e 9.º ano.'],['Viste a D. Lurdes?','Está lá em baixo, no corredor. Não corras perto dela!'],['Qual é a tua disciplina preferida?','Físico-Química! Hoje vamos ao laboratório.']]],
   'Prof.ª Helena':['Estou bem, obrigada. Ansiosa por ver os vossos testes!',[['O teste é difícil?','Se estudaste equações e percentagens, vai correr bem.'],['Posso usar calculadora?','Podes. Por isso é que a tens de ir buscar ao cacifo!'],['Gosto de Matemática.','Que bom ouvir isso! A Matemática está em todo o lado.']]],
   'Prof. Carlos':['Muito bem! Acabei de ler um livro fantástico.',[['Qual?','«Leandro, Rei da Helíria», da Alice Vieira. Vamos lê-lo este período.'],['Vai haver teste?','Um mini-teste, só para ver se sabes as classes de palavras.'],['Recomenda-me um livro?','Experimenta o «Ulisses», da Maria Alberta Menéres. Vais gostar.']]],
   'Prof. Nuno':['Em forma, como sempre!',[['Qual é o segredo?','Dormir bem, comer bem e mexer-se todos os dias.'],['O que vamos fazer em EF?','Lançamentos livres no pavilhão. Traz o equipamento!'],['O professor jogava basquetebol?','Joguei muitos anos. Ainda acerto nove em dez!']]],
