@@ -331,6 +331,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
   </div>
 </div>
 
+<div class="screen" id="weekend" hidden><div class="card"><div class="tagrow"><span class="tag">FIM DE SEMANA</span></div><h1 id="wkh">Sábado</h1><p class="story" id="wkp"></p><p class="sub" id="wkres" style="font-weight:800;font-size:20px"></p><div class="btnrow"><button class="btn" id="wkgo">Continuar</button></div></div></div>
 <div class="screen" id="end" hidden>
   <div class="card report">
     <div class="tagrow"><span class="tag">BOLETIM DO DIA</span><span class="tag dk" id="enddiff">Normal</span></div>
@@ -342,7 +343,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
     <h3 class="rh">Em casa</h3>
     <dl class="stats" id="homestats"></dl>
     <p class="story" id="endp"></p>
-    <div class="btnrow"><button class="btn" id="again">Jogar outro dia</button><button class="btn ghost" id="tomenu">Menu</button></div>
+    <div class="btnrow"><button class="btn" id="again">Continuar a semana</button><button class="btn ghost" id="newweek">Recomeçar na segunda</button><button class="btn ghost" id="tomenu">Menu</button></div>
   </div>
 </div>
 
@@ -1198,8 +1199,27 @@ function classEnd(nota,detail){const k=PH[G.phase].cls,c=CLASSES[k];const n=Math
 function resultGo(){if(G.state!=='result')return;$('#result').hidden=true;G.state='play';showHud();startPhase(G.phase+1);canvas.focus()}
 $('#resgo').addEventListener('click',resultGo);
 function falta(){const k=PH[G.phase].cls;G.grades[k]={nota:0,late:false,falta:true};bell(1.2);toast('Faltaste à aula de '+CLASSES[k].name+'!',true,3.5);startPhase(G.phase+1,true)}
+
+const DIAS=['Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado','Domingo'];
+const TREINO_DIAS=[1,3,4];
+G.wday=MEM.get('wday',0);if(!(G.wday>=0&&G.wday<=4))G.wday=0;
+const hasTreino=()=>TREINO_DIAS.includes(G.wday);
+function dayLabel(){return DIAS[G.wday]}
+function startWeekend(){G.state='end';hideHud();['#menu','#end','#pause','#exam','#result','#bigmap'].forEach(s=>$(s).hidden=true);G.wday=5;renderWeekend()}
+function renderWeekend(){const w=$('#weekend');w.hidden=false;
+ if(G.wday===5){$('#wkh').innerHTML='Sábado · <em>dia livre</em>';$('#wkp').textContent='Não há escola nem treino. Dormes até tarde, ajudas em casa e à tarde vais à praia com a família. Amanhã, domingo, é dia de jogo contra o Buarcos!';$('#wkres').textContent='';$('#wkgo').textContent='Continuar: Domingo (jogo)'}
+ else{$('#wkh').innerHTML='Domingo · <em>dia de jogo</em>';$('#wkp').textContent='Jogo contra o Buarcos às 10:00, no campo do bairro. O jogo acabou empatado e vai ser decidido nos penáltis: marca o máximo que conseguires em 5 remates!';$('#wkres').textContent='';$('#wkgo').textContent='Jogar os penáltis'}}
+function wkGo(){if(G.wday===5){G.wday=6;renderWeekend();return}
+ if(G.wday===6&&!G.matchDone){$('#weekend').hidden=true;G.match=true;resetGame();G.wday=6;G.state='play';Object.assign(P,{x:PSPOT.x,z:PSPOT.z+2.6,y:0,camY:0,yaw:0,pitch:-.05});startPenalty();return}
+ G.matchDone=false;G.wday=0;MEM.set('wday',0);$('#weekend').hidden=true;start()}
+function endMatch(goals){G.match=false;G.matchDone=true;const opp=[2,3,3,4][Math.floor(Math.random()*4)];const win=goals>opp,draw=goals===opp;
+ G.state='end';hideHud();$('#weekend').hidden=false;$('#wkh').innerHTML='Domingo · <em>'+(win?'vitória!':draw?'empate':'derrota')+'</em>';
+ $('#wkp').textContent=win?'Ganhaste nos penáltis! Marcaste '+goals+' e o Buarcos marcou '+opp+'. O Mister Fernando diz que foste o melhor em campo.':draw?'Empate nos penáltis ('+goals+'–'+opp+'). Para a semana há mais!':'O Buarcos ganhou nos penáltis: '+opp+'–'+goals+'. Treina bem na terça, quinta e sexta!';
+ $('#wkres').textContent='Penáltis: Tu '+goals+' – '+opp+' Buarcos';$('#wkgo').textContent='Continuar: Segunda-feira (nova semana)';try{window.C30&&win&&C30.unlock('jdc-jogo','Corrida ao Teste · Ganhaste o jogo de domingo')}catch(e){}
+ if(win)sfx.win();else sfx.bad()}
 function start(){ac();window.C30save&&window.C30save();bell(1.6);resetGame();G.state='play';['#menu','#end','#pause','#exam','#result','#bigmap'].forEach(s=>$(s).hidden=true);showHud();
-  toast('São 08:20. Encontra as tuas coisas antes do teste das 08:30!',false,3.2);canvas.focus()}
+  if(G.wday>4)G.wday=0;if(!hasTreino())G.treino='skip';
+  toast(dayLabel()+' · São 08:20. Encontra as tuas coisas antes do teste das 08:30!'+(hasTreino()?' Hoje há treino às 17:00.':''),false,3.6);canvas.focus()}
 function pause(){if(G.state!=='play')return;G.state='pause';try{document.exitPointerLock&&document.exitPointerLock()}catch(e){}$('#pause').hidden=false;joy.hidden=true;TC.joy=null;for(const k in K)K[k]=false}
 function resume(){if(G.state!=='pause')return;G.state='play';$('#pause').hidden=true;showHud();canvas.focus()}
 $('#resume').addEventListener('click',resume);
@@ -1221,8 +1241,9 @@ function report(){G.state='end';hideHud();sfx.win();const keys=['mat','pt','ef',
   $('#endp').textContent=media>=15?'Um dia em grande! Os pais vão ficar orgulhosos deste boletim.':media>=10?'Um dia positivo. Com menos atrasos e mais estudo chegas lá acima.':'Dia difícil. Amanhã há mais, e a recuperação também.';if(hs>=6)$('#endp').textContent+=' Em casa foste impecável.';
   
   {const prev=MEM.get('best-'+diff,null);if(!prev||media>prev.media||(media===prev.media&&G.cromos>prev.cromos))MEM.set('best-'+diff,{media,cromos:G.cromos})}
+  $('#endh').innerHTML='Fim de <em>'+dayLabel().toLowerCase()+'</em>';{const nx=G.wday+1;$('#again').textContent='Continuar a semana: '+DIAS[nx]+(nx===5?' (fim de semana)':'');MEM.set('wday',nx>4?0:nx)}
   $('#end').hidden=false;showBest()}
-$('#go').addEventListener('click',start);$('#again').addEventListener('click',start);
+$('#go').addEventListener('click',start);$('#again').addEventListener('click',()=>{G.wday++;if(G.wday>=5){startWeekend();return}start()});$('#newweek').addEventListener('click',()=>{G.wday=0;MEM.set('wday',0);start()});$('#wkgo').addEventListener('click',wkGo);
 $('#tomenu').addEventListener('click',()=>{G.state='menu';$('#end').hidden=true;$('#menu').hidden=false;showBest()});
 
 /* ---------------- AÇÕES (E) ---------------- */
@@ -1296,7 +1317,7 @@ function setupPhase(i){const par=G.driver==='mae'?MAE:PAI;
   if(i===5){if(G.treino==='done')G.extra=(G.extra||0)+60;MAE.x=78.6;MAE.z=193;MAE.g.position.set(78.6,0,193);MAE.g.rotation.y=0;PAI.x=90.2;PAI.z=187.8;PAI.g.position.set(90.2,0,187.8);PAI.g.rotation.y=Math.PI;
     HOME_ITEMS.forEach((h,k)=>setMarker(h,h.x,h.y,h.z,!G.home.moc[k]));
     toast('Estás em casa! Vê as tarefas no painel e deita-te até às 22:30.',false,4)}}
-function homeNext(){if(G.phase===4)return G.treino==='none'?'Treino de futebol às 17:00 · campo do bairro':G.treino==='field'?'Treino de futebol · fala com o Mister':'Depois do treino · vai para casa';return clockSecs()>=HM(22,30)?'Já passa das 22:30! Vai dormir.':'Em casa · deita-te até às 22:30'}
+function homeNext(){if(G.phase===4)return G.treino==='none'?'Treino de futebol às 17:00 · campo do bairro':G.treino==='field'?'Treino de futebol · fala com o Mister':!hasTreino()?'Hoje ('+dayLabel()+') não há treino · vai para casa':'Depois do treino · vai para casa';return clockSecs()>=HM(22,30)?'Já passa das 22:30! Vai dormir.':'Em casa · deita-te até às 22:30'}
 function homeObjectives(){const L=[];const H=G.home;const par=G.driver==='mae'?MAE:PAI;const pp=o=>({x:o.g.position.x,z:o.g.position.z,y:0});
   if(G.phase===4){const tr=G.treino,pe=G.driver==='pe',quem=G.driver==='mae'?'a mãe':'o pai';
     if(tr==='none')L.push(pe?{label:'Ir a pé para o treino',sub:'Campo de futebol do bairro',done:false,t:{x:51,z:169.5,y:0}}:{label:'Ir ter com '+quem,sub:'Leva-te ao treino de futebol',done:false,t:pp(par)});
@@ -1476,17 +1497,17 @@ const PSPOT={x:51,z:182},GOALZ=173,GOALW=2.5,GOALH=2.0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const COACH=addNPC({name:'Mister Fernando',x:58.5,z:189,y:0,ry:-Math.PI/2,o:{shirt:0x1f4fa0,pants:0x1f2b3a,hair:0x8a8a8a,skin:0xd9a27c},idle:()=>G.treino==='done'?'Bom treino! Descansa bem.':G.phase===4?'Estás atrasado! Vem para o campo.':'O treino é depois das aulas.'});
 addNPC({name:'Gonçalo',x:44,z:196,y:0,anim:'hop',o:{shirt:0xc0392b,pants:0xffffff,hair:0x2b1d14,seed:2},idle:()=>'Hoje vou marcar um golo de bicicleta!'});
-addNPC({name:'Matilde',x:57,z:199,y:0,anim:'hop',o:{shirt:0xc0392b,pants:0xffffff,hair:0x6b3e1f,seed:3},idle:()=>'O Mister diz que temos jogo no sábado!'});
-Object.assign(MOOD,{'Mister Fernando':['Estou bem! Pronto para vos pôr a correr.',[['O que vamos treinar?','Penáltis! Escolhe sempre o canto antes de chutar.'],['Vamos ter jogo?','No sábado, contra o Buarcos. Quero toda a gente cá!'],['Estou cansado das aulas.','O futebol tira o cansaço. Vais ver!']]],
-  'Gonçalo':['Cheio de energia!',[['Treinaste muito?','Todos os dias no quintal com o meu pai.'],['Qual é a tua posição?','Avançado, claro!'],['Boa sorte no sábado!','Para ti também!']]],
+addNPC({name:'Matilde',x:57,z:199,y:0,anim:'hop',o:{shirt:0xc0392b,pants:0xffffff,hair:0x6b3e1f,seed:3},idle:()=>'O Mister diz que temos jogo no domingo!'});
+Object.assign(MOOD,{'Mister Fernando':['Estou bem! Pronto para vos pôr a correr.',[['O que vamos treinar?','Penáltis! Escolhe sempre o canto antes de chutar.'],['Vamos ter jogo?','No domingo, contra o Buarcos. Quero toda a gente cá!'],['Estou cansado das aulas.','O futebol tira o cansaço. Vais ver!']]],
+  'Gonçalo':['Cheio de energia!',[['Treinaste muito?','Todos os dias no quintal com o meu pai.'],['Qual é a tua posição?','Avançado, claro!'],['Boa sorte no domingo!','Para ti também!']]],
   'Matilde':['Estou ótima, marquei dois golos no aquecimento!',[['Dois golos?!','E quase o terceiro!'],['Ensinas-me?','Chuta com o peito do pé e olha para o canto.'],['Fixe!','Agora é a tua vez!']]]});
 Object.assign(NEWS,{'Mister Fernando':['O campo vai ter relva nova em março.','Este ano temos equipamentos novos.'],'Gonçalo':['O guarda-redes treinou o mês todo.'],'Matilde':['A minha irmã joga na equipa principal!']});
 const keeper=person({shirt:0x1fa858,pants:0x111111,hair:0x2b1d14,seed:2});keeper.position.set(PSPOT.x,0,GOALZ+.7);
 const fball=new THREE.Mesh(new THREE.SphereGeometry(.11,16,12),lam({color:0xffffff}));fball.castShadow=true;fball.position.set(PSPOT.x,.11,PSPOT.z);scene.add(fball);
 function startPenalty(){G.state='penalty';try{if(!touchMode)canvas.requestPointerLock&&canvas.requestPointerLock()}catch(e){}hideHud();$('#bk').hidden=false;if(touchMode)tbtns.hidden=false;$('#ebtn').textContent='CHUTAR';
   G.pk={shots:0,goals:0,ball:null,aim:0,t:0,done:0,kx:PSPOT.x,kt:PSPOT.x,kd:0};fball.position.set(PSPOT.x,.11,PSPOT.z);
-  $('#bktitle').textContent='Treino · penáltis';$('#bkhint').textContent='A / D ou rato para apontar · E, Espaço ou clique para chutar';updPk();
-  toast('Mister Fernando: «Cinco penáltis. Escolhe o canto e não facilites!»',false,3)}
+  $('#bktitle').textContent=G.match?'Jogo de domingo · penáltis contra o Buarcos':'Treino · penáltis';$('#bkhint').textContent='A / D ou rato para apontar · E, Espaço ou clique para chutar';updPk();
+  toast(G.match?'Mister Fernando: «É agora! Cinco penáltis para ganhar o jogo!»':'Mister Fernando: «Cinco penáltis. Escolhe o canto e não facilites!»',false,3)}
 function updPk(){$('#bkscore').textContent=`Penálti ${Math.min(G.pk.shots+1,5)}/5 · Golos ${G.pk.goals}`}
 function kick(){const B=G.pk;if(G.state!=='penalty'||!B||B.ball||B.shots>=5||B.done)return;const p=(Math.sin(B.t*2.4)+1)/2,v=13+p*9,el=.05+p*.24,dx=-Math.sin(B.aim),dz=-Math.cos(B.aim);
   B.ball={x:PSPOT.x,y:.11,z:PSPOT.z,vx:dx*Math.cos(el)*v,vy:Math.sin(el)*v,vz:dz*Math.cos(el)*v,life:0,res:null};
@@ -1502,7 +1523,7 @@ function stepPk(dt){const B=G.pk;B.t+=dt;if(K.KeyA||K.ArrowLeft)B.aim=Math.min(.
     b.life+=dt;fball.position.set(b.x,b.y,b.z);if(b.life>2.3){B.ball=null;B.shots++;fball.position.set(PSPOT.x,.11,PSPOT.z);if(B.shots>=5)B.done=1.1;else updPk()}}
   const dive=B.ball&&B.kd<=0?clamp((B.kt-PSPOT.x)/2.3,-1,1):0;keeper.position.set(B.kx,Math.abs(dive)>.4?-.35:0,GOALZ+.7);keeper.rotation.set(0,0,-dive*1.1);walkAnim(keeper,TM,false);
   if(B.done>0){B.done-=dt;if(B.done<=0){B.done=0;endPenalty()}}}
-function endPenalty(){const B=G.pk;$('#bk').hidden=true;$('#ebtn').textContent='E';$('#bkhint').textContent='A / D ou rato para apontar · E, Espaço ou clique para lançar';
+function endPenalty(){const B=G.pk;$('#bk').hidden=true;$('#ebtn').textContent='E';$('#bkhint').textContent='A / D ou rato para apontar · E, Espaço ou clique para lançar';if(G.match){keeper.position.set(PSPOT.x,0,GOALZ+.7);keeper.rotation.set(0,0,0);try{document.exitPointerLock&&document.exitPointerLock()}catch(e){}if(touchMode)tbtns.hidden=true;endMatch(B.goals);return}
   G.treinoGolos=B.goals;G.treino='done';G.pt=Math.max(G.pt,(HM(18,15)-HM(16,20))/8);keeper.position.set(PSPOT.x,0,GOALZ+.7);keeper.rotation.set(0,0,0);
   G.state='play';showHud();Object.assign(P,{x:56,z:186.5,y:0,camY:0,yaw:Math.PI/2});sfx.win();
   toast('Mister Fernando: «'+(B.goals>=4?'Grande treino! '+B.goals+' golos!':B.goals>=2?B.goals+' golos. Bom treino!':'Só '+B.goals+'... para a próxima corre melhor.')+'» Agora vai para casa.',B.goals<2,4.5);renderObj(true)}
