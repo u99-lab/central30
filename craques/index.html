@@ -84,7 +84,9 @@ h2{margin:0 0 10px;font-size:20px}
 .toolbar button.on{background:var(--acc);color:#06210f;border-color:var(--acc)}
 /* ---------- equipa ---------- */
 .squad{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px;flex:1;min-height:0}
-@media (max-width:860px){.squad{grid-template-columns:1fr}}
+@media (max-width:860px){.squad{grid-template-columns:1fr;flex:none}.side{min-height:auto}.side .grid{overflow:visible}}
+@media (max-width:640px){.pitch{min-height:380px}.pitch .card.sm{transform:scale(.46);margin:0 -64px -90px 0}.slot .empty{width:56px;height:78px;font-size:12px}.top{flex-wrap:wrap;gap:8px}.top label.pill input{width:110px!important}}
+.slot .pen{position:absolute;left:50%;transform:translateX(-50%);bottom:-14px;background:#e53935;color:#fff;font:800 10px system-ui;border-radius:6px;padding:1px 5px;white-space:nowrap;z-index:3}.pickpen{font:800 11px system-ui;color:#ff8a80;text-align:center;margin-top:2px}
 .pitch{position:relative;border-radius:16px;min-height:430px;background:repeating-linear-gradient(0deg,#1f8a4c 0 40px,#1b7c44 40px 80px);border:2px solid #ffffff55;overflow:hidden}
 .pitch:before{content:"";position:absolute;left:8%;right:8%;top:50%;border-top:2px solid #ffffff66}
 .pitch:after{content:"";position:absolute;left:50%;top:50%;width:90px;height:90px;margin:-45px;border:2px solid #ffffff66;border-radius:50%}
@@ -345,8 +347,14 @@ function load(){if(!IN_CENTRAL){try{localStorage.removeItem(SAVE_KEY);}catch{}S=
 function save(){if(!IN_CENTRAL)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch{}}
 function autoBest(){
   const used=new Set();S.squad=SLOTS.map(sl=>{const c=S.owned.map(i=>DB[i]).filter(c=>c.role===sl.role&&!used.has(c.id)).sort((a,b)=>b.ovr-a.ovr)[0];if(c){used.add(c.id);return c.id;}return null;});
+  // lugares vazios: o melhor jogador que sobra (fora da posição rende menos; o guarda-redes tem de ser guarda-redes)
+  S.squad=S.squad.map((id,i)=>{if(id!=null)return id;const role=SLOTS[i].role;const c=S.owned.map(j=>DB[j]).filter(c=>!used.has(c.id)&&(role==='GK'?c.role==='GK':c.role!=='GK')).sort((a,b)=>(b.ovr-posPen(b,role))-(a.ovr-posPen(a,role)))[0];if(c){used.add(c.id);return c.id}return null});
 }
-const teamOVR=ids=>{const cs=ids.filter(i=>i!=null).map(i=>DB[i]);return cs.length?Math.round(cs.reduce((a,c)=>a+c.ovr,0)/11):0;};
+// fora da posição o jogador rende menos: posição vizinha −6, longe −12 (o guarda-redes só pode ser guarda-redes)
+const ROLE_I={GK:0,DEF:1,MID:2,ATT:3};
+function posPen(card,slotRole){if(!card)return 0;if(card.role===slotRole)return 0;if(card.role==='GK'||slotRole==='GK')return 40;return Math.abs(ROLE_I[card.role]-ROLE_I[slotRole])===1?6:12}
+const effOvr=(id,i)=>{const c=DB[id];return c?Math.max(1,c.ovr-(i!=null&&SLOTS[i]?posPen(c,SLOTS[i].role):0)):0};
+const teamOVR=ids=>{const v=ids.map((id,i)=>id!=null?effOvr(id,ids.length===11?i:null):null).filter(x=>x!=null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/11):0;};
 function refreshTop(){
   document.querySelectorAll('.coinsTxt').forEach(e=>e.textContent=S.coins.toLocaleString('pt-PT'));
   document.querySelectorAll('.ovrTxt').forEach(e=>e.textContent=teamOVR(S.squad));
@@ -498,13 +506,13 @@ function renderSquad(){
   $('teamNameIn').value=myName();
   const p=$('pitch');p.innerHTML='';
   SLOTS.forEach((sl,i)=>{const d=document.createElement('div');d.className='slot'+(selSlot===i?' sel':'');d.style.left=sl.x+'%';d.style.top=sl.y+'%';
-    const id=S.squad[i];d.innerHTML=id!=null?cardHTML(DB[id],{sm:true}):`<div class="empty">${sl.role}</div>`;
+    const id=S.squad[i];const pen=id!=null?posPen(DB[id],sl.role):0;d.innerHTML=id!=null?cardHTML(DB[id],{sm:true})+(pen?`<div class="pen">−${pen} fora da posição</div>`:''):`<div class="empty">${sl.role}</div>`;
     d.onclick=()=>{selSlot=i;renderSquad();};p.appendChild(d);});
   const lst=$('pickList');
   if(selSlot==null){$('pickTitle').textContent='Toca num lugar do campo';lst.innerHTML='';return;}
-  const role=SLOTS[selSlot].role;$('pickTitle').textContent='Escolhe: '+({GK:'guarda-redes',DEF:'defesa',MID:'médio',ATT:'avançado'})[role];
-  const cs=[...new Set(S.owned)].map(i=>DB[i]).filter(c=>c.role===role).sort((a,b)=>b.ovr-a.ovr);
-  lst.innerHTML=cs.map(c=>{const inSq=S.squad.includes(c.id);return `<div style="opacity:${inSq&&S.squad[selSlot]!==c.id?.45:1}">${cardHTML(c,{sm:true})}</div>`;}).join('')||'<p style="color:var(--mut)">Não tens cartas desta posição. Abre pacotes!</p>';
+  const role=SLOTS[selSlot].role;$('pickTitle').textContent='Escolhe: '+({GK:'guarda-redes',DEF:'defesa',MID:'médio',ATT:'avançado'})[role]+(role==='GK'?'':' (podes pôr qualquer jogador; fora da posição rende menos)');
+  const cs=[...new Set(S.owned)].map(i=>DB[i]).filter(c=>role==='GK'?c.role==='GK':c.role!=='GK').sort((a,b)=>(b.ovr-posPen(b,role))-(a.ovr-posPen(a,role)));
+  lst.innerHTML=cs.map(c=>{const inSq=S.squad.includes(c.id);const pen=posPen(c,role);return `<div style="opacity:${inSq&&S.squad[selSlot]!==c.id?.45:1}">${cardHTML(c,{sm:true})}${pen?`<div class="pickpen">−${pen} · fica ${c.ovr-pen}</div>`:''}</div>`;}).join('')||'<p style="color:var(--mut)">Não tens cartas para este lugar. Abre pacotes!</p>';
   lst.querySelectorAll('[data-card]').forEach(e=>e.onclick=()=>{const id=+e.dataset.card;const other=S.squad.indexOf(id);if(other>=0)S.squad[other]=S.squad[selSlot];S.squad[selSlot]=id;save();refreshTop();renderSquad();});
 }
 $('teamNameIn').addEventListener('change',e=>{const v=e.target.value.replace(/[<>]/g,'').trim().slice(0,18);S.teamName=v||'Craques FC';e.target.value=S.teamName;save();toast('Nome da equipa: '+S.teamName);});
@@ -663,7 +671,7 @@ function startMatch(ci,tour){
   if(M)for(const p of M.players)scene.remove(p.mesh);
   M={half:1,ci,tour:!!tour,teams,players:[],ball:{x:0,y:BR,z:0,vx:0,vy:0,vz:0,owner:null,last:0,shot:null,lastTouch:null},score:[0,0],time:0,dur:240,state:'kickoff',stateT:0,kickTeam:0,ctrl:null,paused:false,switchCd:0,shotId:0,stats:{shots:[0,0]}};
   teams.forEach((t,ti)=>{t.ids.forEach((id,i)=>{const card=DB[id],b=BASE[i];const mesh=makeMan(t.c1,t.c2,card,i===0?1:i+1,b.r==='GK');scene.add(mesh);
-    M.players.push({team:ti,i,card,st:statsOf(card),role:b.r,base:b,x:0,z:0,vx:0,vz:0,face:ti?Math.PI:0,mesh,cd:0,tackleCd:0,stun:0,run:0,recv:0});});});
+    M.players.push({team:ti,i,card,st:(()=>{const st=statsOf(card),pen=posPen(card,b.r);if(pen){const f=1-pen/100;for(const k in st)if(k!=='gk')st[k]=Math.round(st[k]*f)}return st})(),role:b.r,base:b,x:0,z:0,vx:0,vz:0,face:ti?Math.PI:0,mesh,cd:0,tackleCd:0,stun:0,run:0,recv:0});});});
   $('hn1').textContent=teams[0].short;$('hn2').textContent=teams[1].short;$('hc1').style.background=teams[0].c1;$('hc2').style.background=teams[1].c1;
   for(const s of screens)$(s).hidden=true;
   $('hud').hidden=false;$('pauseBtn').hidden=false;$('touch').hidden=!isTouch;document.body.classList.add('playing');
