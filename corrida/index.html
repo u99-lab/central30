@@ -111,8 +111,11 @@ input[type=range]{accent-color:var(--locker);width:180px}
 #opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .opt{font:600 19px var(--f-mono);padding:14px 10px;border:2px solid #1c1b19;background:#fffdf7;color:#1c1b19;border-radius:3px;cursor:pointer;text-align:left;display:flex;gap:10px;align-items:center}
 .opt i{font-style:normal;font-size:12px;background:#1c1b19;color:#f7f4ec;border-radius:2px;padding:1px 6px}
-.opt.right{background:#d9f0cf;border-color:#3d8b2c}
-.opt.wrong{background:#f6d4cc;border-color:#c0392b}
+.opt.right{background:#2f8a2a;border-color:#1f5e1b;color:#fff;box-shadow:0 0 0 3px #9be08e}.opt.right i{background:#fff;color:#2f8a2a}
+.opt.dim{opacity:.4}
+#qfb{min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;font:800 22px var(--f-display,system-ui);border-radius:4px;padding:6px 12px;text-align:center}
+#qfb.ok{background:#2f8a2a;color:#fff}#qfb.no{background:#c0392b;color:#fff}#qfb:empty{visibility:hidden}
+.opt.wrong{background:#c0392b;border-color:#7f2117;color:#fff;box-shadow:0 0 0 3px #f2a093}.opt.wrong i{background:#fff;color:#c0392b}
 #clock .t{font-size:30px}
 #clock .next{font-size:12px;color:var(--paper);margin-top:2px;font-weight:500}
 #clock .next.late{color:var(--alert);font-weight:700}
@@ -313,7 +316,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
     <div id="qnum">PERGUNTA 1 DE 5</div>
     <div id="qtext"></div>
     <div id="qbar"><i id="qbarv"></i></div>
-    <div id="opts"></div>
+    <div id="opts"></div><div id="qfb" role="status" aria-live="polite"></div>
   </div>
 </div>
 
@@ -1121,11 +1124,12 @@ function startExam(clsId){const c=CLASSES[clsId]||{name:'Trabalhos de casa',room
   $('#examh').textContent=clsId==='tpc'?'Trabalhos de casa':'Mini-teste de '+c.name;$('#examr').textContent='7.º B · '+c.room+' · '+c.teacher;
   G.exam={cls:clsId,qs:clsId==='tpc'?[matExam()[0],bankExam('pt')[0],bankExam('fq')[0]]:clsId==='mat'?matExam():bankExam(clsId),i:0,ok:0,t:QTIME,lock:false};$('#exam').hidden=false;showQ()}
 function showQ(){const E=G.exam,q=E.qs[E.i];$('#qnum').textContent=`PERGUNTA ${E.i+1} DE ${E.qs.length}`;$('#qtext').textContent=q.q;E.t=QTIME;E.lock=false;
-  $('#opts').innerHTML=q.opts.map((o,i)=>`<button class="opt" data-i="${i}"><i>${i+1}</i>${o}</button>`).join('');
+  $('#qfb').textContent='';$('#qfb').className='';$('#opts').innerHTML=q.opts.map((o,i)=>`<button class="opt" data-i="${i}"><i>${i+1}</i>${o}</button>`).join('');
   $('#opts').querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>answer(+b.dataset.i)));const f=$('#opts .opt');f&&f.focus({preventScroll:true})}
 function answer(i){const E=G.exam;if(!E||E.lock||G.state!=='exam')return;E.lock=true;const q=E.qs[E.i];const bs=$('#opts').querySelectorAll('.opt');
-  if(i===q.right){E.ok++;sfx.ok()}else{sfx.bad();if(bs[i])bs[i].classList.add('wrong')}bs[q.right].classList.add('right');
-  setTimeout(()=>{E.i++;if(E.i>=E.qs.length){$('#exam').hidden=true;(E.cls==='tpc'?tpcEnd(E.ok):classEnd(E.ok*4,`${E.ok} de 5 respostas certas.`))}else showQ()},750)}
+  if(i===q.right){E.ok++;sfx.ok()}else{sfx.bad();if(bs[i])bs[i].classList.add('wrong')}bs[q.right].classList.add('right');bs.forEach((b,k)=>{if(k!==q.right&&k!==i)b.classList.add('dim')});
+  const fb=$('#qfb');if(i===q.right){fb.textContent='✔ Certo!';fb.className='ok'}else{fb.textContent=(i<0?'⏱ O tempo acabou':'✘ Errado')+' — a certa era: '+q.opts[q.right];fb.className='no'}
+  setTimeout(()=>{E.i++;if(E.i>=E.qs.length){$('#exam').hidden=true;(E.cls==='tpc'?tpcEnd(E.ok):classEnd(E.ok*4,`${E.ok} de 5 respostas certas.`))}else showQ()},i===q.right?1300:2300)}
 
 /* ---------------- BASQUETEBOL ---------------- */
 const HOOP={x:11.25,y:3.05,z:18,r:.23},BR=.12,SPOT={x:15.6,z:18};
@@ -1439,15 +1443,16 @@ function talkPick(i,tap){if(G.state!=='talk'||TL.typing||(tap&&performance.now()
   TL.opts=[];$('#chopts').innerHTML='';o.f();
   // ações que acontecem depois da última frase
   const a=TL.after;if(typeof a==='string'&&a.startsWith('close-')){TL.action=a.slice(6);TL.after='close'}}
+function faceNpc(n){n.g.rotation.y=Math.atan2(P.x-n.g.position.x,P.z-n.g.position.z);P.yaw=Math.atan2(-(n.g.position.x-P.x),-(n.g.position.z-P.z));P.pitch=-.06}
 function openTalk(n){G.state='talk';TL.n=n;TL.action=null;try{document.exitPointerLock&&document.exitPointerLock()}catch(e){}
   ['#talk','#eprompt','#arrow','#cross'].forEach(s=>$(s).hidden=true);tbtns.hidden=true;joy.hidden=true;TC.joy=null;for(const k in K)K[k]=false;
   const off=MISSIONS.find(m=>m.st==='offer'&&m.giver===n.name);$('#chwho').textContent=n.name;$('#choice').classList.add('talkmode');$('#choice').hidden=false;
-  n.g.rotation.y=Math.atan2(P.x-n.g.position.x,P.z-n.g.position.z);talkSay(off?off.ask:((n.line&&n.line())||n.idle()||'Olá!'))}
+  faceNpc(n);talkSay(off?off.ask:((n.line&&n.line())||n.idle()||'Olá!'))}
 // ---- ir a pé para casa ----
 function walkAsk(k){const d=DLG[k];return d.o.map((t,i)=>({t,f:()=>{G.drive.ans[d.k]=i;const r=dlgReact(d.k,i);if(k<DLG.length-1)talkSay(r+' '+DLG[k+1].q,walkAsk(k+1));else{talkSay(r+' Agora vai lá tratar das tuas coisas.','close');TL.action='mae-cozinha'}}}))}
 function openTalkWith(n,text,after){G.state='talk';TL.n=n;TL.action=null;try{document.exitPointerLock&&document.exitPointerLock()}catch(e){}
   ['#talk','#eprompt','#arrow','#cross'].forEach(s=>$(s).hidden=true);tbtns.hidden=true;joy.hidden=true;TC.joy=null;for(const k in K)K[k]=false;
-  $('#chwho').textContent=n.name;$('#choice').classList.add('talkmode');$('#choice').hidden=false;n.g.rotation.y=Math.atan2(P.x-n.g.position.x,P.z-n.g.position.z);talkSay(text,after)}
+  $('#chwho').textContent=n.name;$('#choice').classList.add('talkmode');$('#choice').hidden=false;faceNpc(n);talkSay(text,after)}
 function walkArrive(){if(G.treino==='none')G.treino='skip';if(G.driver!=='pe')parkCar(100.5,188.5,-Math.PI/2);G.drive={ans:{},walk:true};startPhase(5);MAE.x=90.4;MAE.z=192.6;MAE.g.position.set(90.4,0,192.6);sfx.ok();
   openTalkWith(MAE,'Olá! Vieste a pé? Muito bem! '+DLG[0].q,walkAsk(0))}
 function closeTalk(){if(G.state!=='talk')return;const act=TL.action,n=TL.n;G.state='play';$('#choice').hidden=true;$('#choice').classList.remove('talkmode','typing');TL.n=null;TL.action=null;showHud();canvas.focus();
@@ -1519,6 +1524,10 @@ function placeCamera(dt,bobOn){const eye=P.camY+1.62+P.jh;const aerial=camMode==
   avatar.visible=G.state==='play'&&camMode!==0||G.state==='map'&&camMode!==0;
   if(G.state==='penalty'){camera.position.set(PSPOT.x,1.55,PSPOT.z+2.6);camera.rotation.set(-.05,G.pk.aim,0);return}
   if(G.state==='basket'){camera.position.set(SPOT.x,1.62,SPOT.z);camera.rotation.set(.2,Math.PI/2+G.bk.aim,0);return}
+  if(G.state==='talk'&&TL.n&&TL.n.g&&camMode!==0){const nx=TL.n.g.position.x,nz=TL.n.g.position.z,ny=TL.n.g.position.y;const dx=nx-P.x,dz=nz-P.z,L=Math.hypot(dx,dz)||1,ux=dx/L,uz=dz/L;let sd=1;
+    const ok=(px,pz)=>{for(let t=.3;t<=1;t+=.1){if(camBlocked(P.x+(px-P.x)*t,P.camY+1.95,P.z+(pz-P.z)*t))return false}return true};
+    let cx=P.x-ux*2.3-uz*.95,cz=P.z-uz*2.3+ux*.95;if(!ok(cx,cz)){cx=P.x-ux*2.3+uz*.95;cz=P.z-uz*2.3-ux*.95}if(!ok(cx,cz)){cx=P.x-ux*.9;cz=P.z-uz*.9}
+    camera.position.set(cx,P.camY+1.95,cz);_v.set(nx,ny+1.45,nz);camera.lookAt(_v);avatar.visible=true;return}
   if(camMode===0||G.state==='menu'){camera.position.set(P.x,eye+(bobOn?Math.sin(P.bob)*.045:0),P.z);camera.rotation.set(P.pitch,P.yaw,0);return}
   const hx=P.x,hy=P.camY+1.55+P.jh,hz=P.z;
   if(camMode===1){const el=Math.max(-.25,Math.min(1.1,-P.pitch+.18)),D=3.6;const bx=Math.sin(P.yaw)*Math.cos(el),by=Math.sin(el),bz=Math.cos(P.yaw)*Math.cos(el);let d=D;
@@ -1538,6 +1547,7 @@ function update(dt){
     if(!B.ball){$('#bkpow').style.width=((Math.sin(B.t*2.4)+1)/2*100)+'%'}stepBall(dt);if(B.done>0){B.done-=dt;if(B.done<=0){B.done=0;endBasket()}}
     placeCamera(dt);return}
   if(G.state==='drive'){updateTraffic(dt);updateDrive(dt);return}
+  if(G.state==='talk'){placeCamera(dt);return}
   if(G.state!=='play'&&G.state!=='menu'){if(G.state==='map'){updateTraffic(dt);drawBig()}return}
   NPCS.forEach((n,i)=>{const u=n.g.userData;if(n.vis){n.g.visible=n.vis();if(!n.g.visible)return}if(n.anim==='hop'){n.g.position.y=Math.abs(Math.sin(TM*5+i*1.3))*.22;u.armR.rotation.x=-1.6+Math.sin(TM*5+i)*.9;n.g.position.x=n.x+Math.sin(TM*.9+i*2)*1.2;n.g.rotation.y=n.x<27?Math.PI/2:-Math.PI/2}
     else u.armL.rotation.x=Math.sin(TM*1.3+i)*.08;
