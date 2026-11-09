@@ -584,13 +584,15 @@ const SA_LIST=[];{const A=ROADS.find(r=>r.name==='A17').pts;const cum=[0];for(le
  // uma área de cada lado (sentido Aveiro a este, sentido Figueira a oeste), ligadas por uma ponte por cima da A17
  for(const [nome,z] of [['Tocha',-4700],['Mira',-8250],['Vagos',-11800],['Gafanha',-14500]]){const s0=sAtZ(z);
   for(const sd of [1,-1]){const pts=[];
-   for(const [ds,off] of [[-150,10],[-110,17],[-70,27],[-35,34],[0,36],[35,34],[70,27],[110,17],[150,10]]){const p=at(s0+ds),nx=-p.dz*sd,nz=p.dx*sd;pts.push([p.x+nx*off,p.z+nz*off])}
+   for(let ds=-160;ds<=160.1;ds+=8){const off=10+26*Math.pow(Math.cos(ds/160*Math.PI/2),2),p=at(s0+ds),nx=-p.dz*sd,nz=p.dx*sd;pts.push([p.x+nx*off,p.z+nz*off])}
    road('Área de Serviço',pts,8,{sa:nome});const c=at(s0),nx=-c.dz*sd,nz=c.dx*sd;SA_LIST.push({name:'A17 · Área de Serviço de '+nome+' ('+(sd>0?'sentido Aveiro':'sentido Figueira')+')',x:c.x+nx*36,z:c.z+nz*36,town:nome,side:sd});
    // ligação da área até à ponte
-   const lk=[];for(const [ds,off] of [[35,34],[90,48],[150,70],[200,95]]){const p=at(s0+ds),qx=-p.dz*sd,qz=p.dx*sd;lk.push([p.x+qx*off,p.z+qz*off])}road('Área de Serviço · ligação',lk,7,{rural:true})}
+   const lk=[],B3=(a,b,c,d,t)=>{const u=1-t;return u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d};const off0=10+26*Math.pow(Math.cos(24/160*Math.PI/2),2),RR=38;const push=(ds,off)=>{const p=at(s0+ds),qx=-p.dz*sd,qz=p.dx*sd;lk.push([p.x+qx*off,p.z+qz*off])};
+   for(let k=0;k<=16;k++){const t=k/16;push(B3(24,150,200+2*RR,200+2*RR,t),B3(off0,off0,70,120,t))}
+   for(let k=1;k<=14;k++){const a=k/14*Math.PI;push(200+RR+RR*Math.cos(a),120+RR*Math.sin(a))}road('Área de Serviço · ligação',lk,7,{rural:true})}
   // a ponte: atravessa a A17 a 200 m do centro da área
-  {const p=at(s0+200),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*95,p.z+nz*95)+.12,y1=terrainH(p.x-nx*95,p.z-nz*95)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
-   for(let o=95;o>=-95.1;o-=7.6){const u=(95-o)/190,base=lerp(y0,y1,u),f=smooth(0,.42,u)*smooth(1,.58,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
+  {const p=at(s0+200),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*120,p.z+nz*120)+.12,y1=terrainH(p.x-nx*120,p.z-nz*120)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
+   for(let o=120;o>=-120.1;o-=8){const u=(120-o)/240,base=lerp(y0,y1,u),f=smooth(0,.42,u)*smooth(1,.58,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
    road('Ponte da Área de Serviço de '+nome,br,7,{bridge:true,viaduct:true,rural:true})}}}
 // viadutos: as saídas e ligações da A17 passam POR CIMA da linha do comboio (só as estradas pequenas têm passagens de nível)
 {const XS=[['Ligação à A17',2147,-682],['Ligação à A17',2131,-533],['Saída Tocha',2081,-6528],['Saída Mira',2425,-9455],['Saída Vagos',3200,-12765],['Saída Ílhavo',3346,-14102],['Saída Aveiro',3567,-15579]];
@@ -921,8 +923,8 @@ let car=null,carType=0,carColor=0;
 const IND={mode:'',h0:0,turned:false,blink:0,lights:false,lightsAuto:true};const W={on:false,x:0,z:0,y:0,yaw:0,ph:0,m:null};
 const P={fuel:100,x:avX(600)+3,z:600,y:1.3,h:0,vx:0,vz:0,nitro:100,lastSafe:null,wet:false,inWater:0};
 // tráfego
-const TRAF=[];{const lanes=ROADS.filter(r=>!r.name.startsWith('Passeio')&&r.pts.length>1);const N=mobile?90:260;const LL=lanes.map(r=>{let L=0;for(let i=0;i<r.pts.length-1;i++)L+=Math.hypot(r.pts[i+1][0]-r.pts[i][0],r.pts[i+1][1]-r.pts[i][1]);return L}),LT=LL.reduce((a,b)=>a+b,0);const pickLane=()=>{let u=rnd()*LT;for(let i=0;i<lanes.length;i++){u-=LL[i];if(u<=0)return lanes[i]}return lanes[0]};for(let i=0;i<N;i++){const r=pickLane();const m=carModel(i%3,PAINT[(i+2)%PAINT.length]);scene.add(m);TRAF.push({side:rnd()<.5?-1:1,type:i%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,sp:10+rnd()*5,cur:0})}
- const extra=[['A17',mobile?36:110,()=>({off:rnd()<.55?3.4:6.9,sp:24+rnd()*9})],['EN109',mobile?14:36,()=>({sp:13+rnd()*5})],['Aveiro',mobile?10:30,()=>({sp:9+rnd()*4})],['Estrada das Dunas',mobile?4:10,()=>({sp:12+rnd()*4})]];let k=N;
+const TRAF=[];{const lanes=ROADS.filter(r=>!r.name.startsWith('Passeio')&&r.pts.length>1);const N=mobile?110:380;const LL=lanes.map(r=>{let L=0;for(let i=0;i<r.pts.length-1;i++)L+=Math.hypot(r.pts[i+1][0]-r.pts[i][0],r.pts[i+1][1]-r.pts[i][1]);return L}),LT=LL.reduce((a,b)=>a+b,0);const pickLane=()=>{let u=rnd()*LT;for(let i=0;i<lanes.length;i++){u-=LL[i];if(u<=0)return lanes[i]}return lanes[0]};for(let i=0;i<N;i++){const r=pickLane();const m=carModel(i%3,PAINT[(i+2)%PAINT.length]);scene.add(m);TRAF.push({side:rnd()<.5?-1:1,type:i%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,sp:10+rnd()*5,cur:0})}
+ const extra=[['A17',mobile?44:150,()=>({off:rnd()<.55?3.4:6.9,sp:24+rnd()*9})],['EN109',mobile?16:48,()=>({sp:13+rnd()*5})],['Aveiro',mobile?12:40,()=>({sp:9+rnd()*4})],['Estrada das Dunas',mobile?4:10,()=>({sp:12+rnd()*4})]];let k=N;
  for(const [name,n,opt] of extra){const rs=ROADS.filter(r=>r.name===name);for(let i=0;i<n;i++,k++){const r=rs[i%rs.length];const m=carModel(k%3,PAINT[(k+1)%PAINT.length]);scene.add(m);TRAF.push(Object.assign({side:rnd()<.5?-1:1,type:k%3,r,m,seg:Math.floor(rnd()*(r.pts.length-1)),t:rnd(),dir:rnd()<.5?1:-1,cur:0},opt()))}}}
 
 // ===== polícia: carros PSP (cidade) e GNR (estradas e A17); passar o limite à frente deles dá perseguição e multa =====
@@ -939,13 +941,34 @@ function updatePolice(dt){if(W.on&&!G.chase){for(const T of POLICE)policeLights(
  for(const T of POLICE)policeLights(T,T.chase);
  const C=G.chase;$('#wanted').hidden=!C;if(!C)return;const T=C.T;C.t+=dt;
  // o carro da polícia vai atrás de ti
- const tx=P.x-T.cx,tz=P.z-T.cz,d=Math.hypot(tx,tz),want=Math.atan2(tx,-tz);let dh=want-T.ch;dh=Math.atan2(Math.sin(dh),Math.cos(dh));T.ch+=clamp(dh,-2.4*dt,2.4*dt);
+ const d=Math.hypot(P.x-T.cx,P.z-T.cz),tg=policeTarget(T,d),tx=tg.x-T.cx,tz=tg.z-T.cz,want=Math.atan2(tx,-tz);let dh=want-T.ch;dh=Math.atan2(Math.sin(dh),Math.cos(dh));T.ch+=clamp(dh,-2.4*dt,2.4*dt);
  const goalV=d<9?Math.max(0,spd/3.6-1):Math.min(52,Math.max(18,spd/3.6+8));T.cv=lerp(T.cv,goalV,Math.min(1,dt*1.5));const fx=Math.sin(T.ch),fz=-Math.cos(T.ch);
- if(d>7){T.cx+=fx*T.cv*dt;T.cz+=fz*T.cv*dt}const y=surfaceAt(T.cx,T.cz,T.m.position.y);T.m.position.set(T.cx,y,T.cz);T.m.rotation.y=-T.ch;T.m.userData.wheels.forEach(w=>w.rotation.x-=T.cv*dt/.36);T.x=T.cx;T.z=T.cz;T.dx=fx;T.dz=fz;
+ if(d>7){const nx2=T.cx+fx*T.cv*dt,nz2=T.cz+fz*T.cv*dt;if(hitBuilding(nx2,nz2,1.7)||terrainH(nx2,nz2)<-.4){T.cv*=.3;T.roadMode=2.5}else{T.cx=nx2;T.cz=nz2}}if(T.roadMode>0)T.roadMode-=dt;const y=surfaceAt(T.cx,T.cz,T.m.position.y);T.m.position.set(T.cx,y,T.cz);T.m.rotation.y=-T.ch;T.m.userData.wheels.forEach(w=>w.rotation.x-=T.cv*dt/.36);T.x=T.cx;T.z=T.cz;T.dx=fx;T.dz=fz;
  sirenT-=dt;if(sirenT<=0&&d<260){sirenT=.42;const hi=(C.t/.42|0)%2;tone(hi?960:700,.4,'sawtooth',.035*clamp(1-d/260,.15,1))}
  $('#wantedT').textContent=d<16&&spd<6?'Para o carro… ('+Math.max(0,1.5-C.stop).toFixed(1).replace('.',',')+' s)':(T.gnr?'GNR':'Polícia')+' atrás de ti · '+Math.round(d)+' m · encosta e para (ou foge!)';
  if(d<16&&spd<6){C.stop+=dt;if(C.stop>1.5){const fine=C.over>=40?250:C.over>=25?120:60;G.money=Math.max(0,G.money-fine);MEM.set('money',G.money);G.stats.multas=(G.stats.multas||0)+1;endChase();sfx.bad();toast('Multa por excesso de velocidade: −'+euro(fine)+' ('+C.over+' km/h acima do limite)',true,4.5)}}else C.stop=Math.max(0,C.stop-dt);
  if(d>380){C.far+=dt;if(C.far>5){endChase();sfx.win();toast('Fugiste à polícia! Cuidado com a velocidade…',false,3)}}else C.far=0}
+// a polícia anda pelas estradas (e pelas pontes): mapa de estradas como rede de pontos e caminho mais curto (A*)
+let RNET=null;
+function buildRoadNet(){const N=[],adj=[],grid=new Map(),key=(x,z)=>Math.floor(x/25)+','+Math.floor(z/25);
+ for(const r of ROADS){if(r.name.startsWith('Passeio')||r.pts.length<2)continue;let prev=-1;const first=N.length;
+  for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/18));for(let k=(i===0?0:1);k<=n;k++){const t=k/n,id=N.length;N.push({x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,br:!!r.bridge,au:!!r.auto,end:false});adj.push([]);if(prev>=0){adj[id].push(prev);adj[prev].push(id)}prev=id}}
+  N[first].end=true;N[N.length-1].end=true}
+ N.forEach((n,i)=>{const k=key(n.x,n.z);if(!grid.has(k))grid.set(k,[]);grid.get(k).push(i)});
+ N.forEach((n,i)=>{if(n.br&&!n.end)return;const cx=Math.floor(n.x/25),cz=Math.floor(n.z/25);for(let a=cx-1;a<=cx+1;a++)for(let c=cz-1;c<=cz+1;c++){const L=grid.get(a+','+c);if(!L)continue;for(const j of L){if(j===i||adj[i].includes(j))continue;const m=N[j];if(m.br&&!m.end)continue;if(n.au!==m.au&&!(n.end||m.end))continue;if(Math.hypot(n.x-m.x,n.z-m.z)<14){adj[i].push(j);adj[j].push(i)}}}});
+ RNET={N,adj,grid}}
+function netNear(x,z){const cx=Math.floor(x/25),cz=Math.floor(z/25);let best=-1,bd=1e9;for(let r=1;r<=4&&best<0;r++)for(let a=cx-r;a<=cx+r;a++)for(let c=cz-r;c<=cz+r;c++){const L=RNET.grid.get(a+','+c);if(!L)continue;for(const j of L){const n=RNET.N[j],d=Math.hypot(n.x-x,n.z-z);if(d<bd){bd=d;best=j}}}return best}
+function netPath(a,b){const {N,adj}=RNET,g=new Map([[a,0]]),from=new Map(),open=[[Math.hypot(N[a].x-N[b].x,N[a].z-N[b].z),a]],done=new Set();let it=0;
+ while(open.length&&it++<20000){let bi=0;for(let i=1;i<open.length;i++)if(open[i][0]<open[bi][0])bi=i;const [,u]=open.splice(bi,1)[0];if(u===b)break;if(done.has(u))continue;done.add(u);
+  for(const v of adj[u]){const nd=g.get(u)+Math.hypot(N[u].x-N[v].x,N[u].z-N[v].z);if(nd<(g.has(v)?g.get(v):1e18)){g.set(v,nd);from.set(v,u);open.push([nd+Math.hypot(N[v].x-N[b].x,N[v].z-N[b].z),v])}}}
+ if(!from.has(b)&&a!==b)return null;const path=[b];let c=b;while(c!==a){c=from.get(c);path.push(c)}return path.reverse()}
+function policeTarget(T,d){
+ if(!(T.roadMode>0)&&d<130){let clear=true;const n=Math.ceil(d/5);for(let k=1;k<n;k++){const x=T.cx+(P.x-T.cx)*k/n,z=T.cz+(P.z-T.cz)*k/n;if(hitBuilding(x,z,1.5)||terrainH(x,z)<-.4){clear=false;break}}if(clear){T.path=null;return{x:P.x,z:P.z}}}
+ if(!RNET)buildRoadNet();const now=performance.now();
+ if(!T.path||now-(T.pathT||0)>1500){T.pathT=now;const a=netNear(T.cx,T.cz),b=netNear(P.x,P.z);T.path=a>=0&&b>=0?netPath(a,b):null;T.pi=0}
+ if(!T.path||!T.path.length)return{x:P.x,z:P.z};
+ while(T.pi<T.path.length-1){const n=RNET.N[T.path[T.pi]];if(Math.hypot(n.x-T.cx,n.z-T.cz)<12)T.pi++;else break}
+ const n=RNET.N[T.path[Math.min(T.pi,T.path.length-1)]];return{x:n.x,z:n.z}}
 function endChase(){const C=G.chase;if(!C)return;const T=C.T;T.chase=false;T.m.userData.tag.visible=false;
  // volta à estrada mais perto do sítio onde está
  let best=null,bd=1e9;for(const r of ROADS){if(r!==T.r&&r.name!==T.r.name)continue;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1];const d=Math.hypot((a[0]+b[0])/2-T.cx,(a[1]+b[1])/2-T.cz);if(d<bd){bd=d;best=[r,i]}}}
@@ -1335,7 +1358,7 @@ function closeOffice(){if(G.state!=='office')return;try{const w=officeWin();w.C3
 $('#officeBack').onclick=closeOffice;
 window.C30pause=f=>{if(G.state==='office'){const w=officeWin();if(w&&w.C30pause)w.C30pause(f);return}const w=f===undefined?!(G.state==='pause'||G.hub):!!f;G.hub=w&&G.state!=='play'&&G.state!=='pause'?false:false;if(w&&G.state==='play')pause();else if(!w&&G.state==='pause')resume()};
 window.C30isPaused=()=>G.state==='office'?!!(officeWin()&&officeWin().C30isPaused&&officeWin().C30isPaused()):G.state==='pause';window.C30save=()=>{try{const w=officeWin();w&&w.C30save&&w.C30save()}catch(e){}MEM.set('money',G.money);MEM.set('post',G.post);MEM.set('best',G.best)};
-window.__fig={get RAILS(){return RAILS},get RAIL(){return RAIL},PLACES,openPlace,nearPlace,get state(){return G.state},POLICE,updatePolice,speedLimit,get chase(){return G.chase},get LEVELX(){return LEVELX},updateTolls,updateTrain,camera,snapCam:()=>{const fx=Math.sin(P.h),fz=-Math.cos(P.h);camera.position.set(P.x-fx*16,P.y+7,P.z-fz*16)},get TRAIN(){return TRAINS[0]},STATIONS,PUMPS,TOLLS,startRide,placeName,get car(){return car},IND,W,toggleFoot,setIndMode,toggleLights,stepWalk,G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
+window.__fig={bnet:()=>{const t=performance.now();buildRoadNet();return [Math.round(performance.now()-t),RNET.N.length]},hitB:(x,z,r)=>hitBuilding(x,z,r),get RAILS(){return RAILS},get RAIL(){return RAIL},PLACES,openPlace,nearPlace,get state(){return G.state},POLICE,updatePolice,speedLimit,get chase(){return G.chase},get LEVELX(){return LEVELX},updateTolls,updateTrain,camera,snapCam:()=>{const fx=Math.sin(P.h),fz=-Math.cos(P.h);camera.position.set(P.x-fx*16,P.y+7,P.z-fz*16)},get TRAIN(){return TRAINS[0]},STATIONS,PUMPS,TOLLS,startRide,placeName,get car(){return car},IND,W,toggleFoot,setIndMode,toggleLights,stepWalk,G,P,LM,MISS,startMission,stepCar,surfaceAt,terrainH,nearRoad,B,ROADS,TRAF,recover,applyWeather};
 requestAnimationFrame(loop);
 })();
 </script>
