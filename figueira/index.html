@@ -1126,7 +1126,45 @@ const ring=new THREE.Mesh(new THREE.TorusGeometry(7,.6,8,32),new THREE.MeshBasic
 const postMeshes=POSTAIS.map(([id])=>{const l=LM[id];const t=ctex(64,96,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='#2f7fa8';g.fillRect(4,4,w-8,52);g.fillStyle='#ff8a3d';g.beginPath();g.arc(32,40,10,0,7);g.fill();g.fillStyle='#222';g.font='700 11px sans-serif';g.textAlign='center';g.fillText('POSTAL',32,78)});const m=new THREE.Mesh(new THREE.PlaneGeometry(1.6,2.4),new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}));m.position.set(l.x+8,surfaceAt(l.x+8,l.z)+2.2,l.z);scene.add(m);return m});
 
 /* ================= ÁUDIO ================= */
-let AC=null,eng=null,engG=null;function ac(){try{if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();eng=AC.createOscillator();eng.type='sawtooth';const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=700;engG=AC.createGain();engG.gain.value=0;eng.connect(f).connect(engG).connect(AC.destination);eng.start()}if(AC.state==='suspended')AC.resume()}catch(e){}return AC}
+/* Central 30 · som de motor: rotações com mudanças, dois tons desafinados + grave, rugido filtrado,
+   textura de explosões, assobio do turbo e "pops" quando se levanta o pé a alta rotação. */
+window.C30Engine=window.C30Engine||function(ac,out){
+ const now=()=>ac.currentTime,T=(p,v,k)=>{try{p.setTargetAtTime(v,now(),k)}catch(e){p.value=v}};
+ const master=ac.createGain();master.gain.value=0;master.connect(out);
+ const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=600;lp.Q.value=3.5;lp.connect(master);
+ const sh=ac.createWaveShaper();{const n=1024,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(2.6*x)*(x>0?1:.85)}sh.curve=c;sh.oversample='2x'}sh.connect(lp);
+ const mix=ac.createGain();mix.gain.value=.5;mix.connect(sh);
+ const osc=(type,g)=>{const o=ac.createOscillator();o.type=type;const gg=ac.createGain();gg.gain.value=g;o.connect(gg).connect(mix);o.start();return o};
+ const o1=osc('sawtooth',.55),o2=osc('sawtooth',.4),o3=osc('square',.32),o4=osc('triangle',.18);
+ // "batida" dos cilindros: modula o volume ao ritmo das explosões (mais notório ao ralenti)
+ const lfo=ac.createOscillator();lfo.type='sine';const lfoG=ac.createGain();lfoG.gain.value=.12;lfo.connect(lfoG).connect(mix.gain);lfo.start();
+ // ruído do escape / mecânica
+ const nb=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+ const ns=ac.createBufferSource();ns.buffer=nb;ns.loop=true;const nf=ac.createBiquadFilter();nf.type='bandpass';nf.frequency.value=180;nf.Q.value=.9;const ng=ac.createGain();ng.gain.value=0;ns.connect(nf).connect(ng).connect(master);ns.start();
+ // assobio do turbo
+ const tb=ac.createOscillator();tb.type='sine';const tg=ac.createGain();tg.gain.value=0;tb.connect(tg).connect(master);tb.start();
+ const pop=()=>{const s=ac.createBufferSource();s.buffer=nb;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=650+Math.random()*500;f.Q.value=1.4;const g=ac.createGain();const t=now()+Math.random()*.05;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.55,t+.006);g.gain.exponentialRampToValueAtTime(.001,t+.07);s.connect(f).connect(g).connect(master);s.start(t,Math.random());s.stop(t+.1)};
+ let lastSr=0,load=0,lastLoad=0,lastT=0,gear=1,shiftT=0;
+ const E={gear:1,
+  // rpm 0..1, carga 0..1 (acelerador), vol 0..1
+  update(rpm,ld,vol){clearTimeout(E._t);E._t=setTimeout(()=>E.off(),400);rpm=Math.max(0,Math.min(1.05,rpm));ld=Math.max(0,Math.min(1,ld));const f=26+rpm*150;
+   T(o1.frequency,f,.03);T(o2.frequency,f*1.007,.03);T(o3.frequency,f*.5,.03);T(o4.frequency,f*2,.03);T(lfo.frequency,f*.5,.05);T(lfoG.gain,.18*(1-rpm)+.03,.1);
+   T(lp.frequency,380+rpm*1600+ld*2200,.05);T(ng.gain,.03+ld*.09+rpm*.03,.08);T(nf.frequency,140+rpm*380,.08);
+   T(tb.frequency,1600+rpm*2600,.1);T(tg.gain,ld*rpm*rpm*.022,.15);
+   T(master.gain,vol*(.5+ld*.35+rpm*.15)*.1,.07);
+   if(lastLoad>.55&&ld<.1&&rpm>.55&&vol>0){const k=1+Math.floor(Math.random()*3);for(let i=0;i<k;i++)setTimeout(pop,i*60+Math.random()*40)}
+   lastLoad=ld},
+  // velocidade 0..1 → mudanças automáticas (5 velocidades); a carga vem da aceleração ou do acelerador
+  drive(sr,o){o=o||{};const t=performance.now()/1000,dt=Math.min(.2,Math.max(.001,t-(lastT||t)));lastT=t;sr=Math.max(0,Math.min(1,Math.abs(sr)));
+   const ed=[0,.14,.3,.5,.72,1.01];let g=1;while(g<5&&sr>ed[g])g++;if(g!==gear){shiftT=g>gear?.16:0;gear=g;E.gear=g}
+   let rpm=.2+.8*((sr-ed[g-1])/(ed[g]-ed[g-1]));if(sr<.02)rpm=.16;
+   const acc=(sr-lastSr)/dt;lastSr=sr;const want=o.throttle!=null?o.throttle:Math.max(0,Math.min(1,acc*6+(sr>.02?.15:0)));load+=(want-load)*Math.min(1,dt*6);
+   if(shiftT>0){shiftT-=dt;rpm*=.9;}
+   E.update(rpm+(o.nitro?.08:0),o.nitro?1:load,o.on===false?0:(o.vol!=null?o.vol:1))},
+  off(){T(master.gain,0,.05)}};
+ return E};
+
+let AC=null,eng=null,engG=null,ENGM=null;function ac(){try{if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();eng=AC.createOscillator();eng.type='sawtooth';const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=700;engG=AC.createGain();engG.gain.value=0;engG.connect(AC.destination);try{ENGM=C30Engine(AC,engG)}catch(e){ENGM=null}if(!ENGM){eng.connect(f).connect(engG)}eng.start()}if(AC.state==='suspended')AC.resume()}catch(e){}return AC}
 function tone(f,d,type,v,delay){const a=ac();if(!a)return;const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.1,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05)}
 const sfx={ok:()=>{tone(660,.15,'triangle',.12);tone(990,.25,'triangle',.1,.08)},win:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.35,'triangle',.11,i*.1)),bad:()=>tone(160,.35,'square',.05),hit:()=>tone(90,.18,'sine',.2),cp:()=>tone(880,.12,'triangle',.1)};
 
@@ -1170,7 +1208,7 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
   if(ty<-1&&!bridgeAt(P.x,P.z)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
   car.position.set(P.x,P.y,P.z);car.rotation.y=-P.h;const sx=terrainH(P.x+Math.sin(P.h)*2,P.z-Math.cos(P.h)*2)-terrainH(P.x-Math.sin(P.h)*2,P.z+Math.cos(P.h)*2);car.rotation.x=onRoad&&P.y>3&&Math.abs(P.x-2200)<8?0:clamp(sx/4,-.25,.25);
   setBrake(car,(brk&&fv>.5)||hand||(!gas&&Math.abs(fv)<1.5)||(!gas&&fv>2&&a<0));car.userData.wheels.forEach((w,i)=>{w.rotation.x-=fv*dt/.36;if(i<2)car.userData.pivots[i].rotation.y=steer*.35});
-  if(eng&&AC){eng.frequency.setTargetAtTime(55+Math.abs(fv)*5.5+(gas?20:0),AC.currentTime,.05);engG.gain.setTargetAtTime(G.state==='play'?.035+(gas?.03:0):0,AC.currentTime,.1)}
+  if(AC&&ENGM){ENGM.drive(Math.abs(fv)/CARS[carType].max,{throttle:gas?1:0,vol:P.fuel>0?1:.4});engG.gain.setTargetAtTime(G.state==='play'?1:0,AC.currentTime,.1)}else if(eng&&AC){eng.frequency.setTargetAtTime(55+Math.abs(fv)*5.5+(gas?20:0),AC.currentTime,.05);engG.gain.setTargetAtTime(G.state==='play'?.035+(gas?.03:0):0,AC.currentTime,.1)}
   return fv}
 
 
