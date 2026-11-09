@@ -186,7 +186,7 @@ h2{margin:0 0 10px;font-size:20px}
 <canvas id="game"></canvas>
 
 <!-- HUD do jogo -->
-<div id="hud" hidden><div class="score"><div class="tm"><i id="hc1"></i><span id="hn1">EU</span></div><div class="sc" id="hsc">0 - 0</div><div class="tm"><span id="hn2">ADV</span><i id="hc2"></i></div><div class="clk" id="hclk">0'</div></div></div>
+<div id="hud" hidden><div class="score"><div class="tm"><i id="hc1"></i><span id="hn1">EU</span></div><div class="sc" id="hsc">0 - 0</div><div class="tm"><span id="hn2">ADV</span><i id="hc2"></i></div><div class="clk" id="hclk">0'</div></div><div id="vsHud" hidden style="position:absolute;top:100%;margin-top:6px;padding:4px 10px;border-radius:999px;background:#0b1620e6;color:#ffd76a;font-weight:800;font-size:13px"></div></div>
 <button id="pauseBtn" hidden aria-label="Pausa">II</button>
 <div id="banner" hidden></div>
 <div id="hint" hidden></div>
@@ -225,7 +225,18 @@ h2{margin:0 0 10px;font-size:20px}
 <!-- ESCOLHER ADVERSÁRIO -->
 <section class="screen" id="sPlay" hidden>
   <div class="top"><button class="back" data-back>← Voltar</button><h2 style="margin:0">Escolhe o adversário</h2><div class="spacer"></div><span class="pill coins">🪙 <span class="coinsTxt">0</span></span><span class="pill">⭐ OVR <span class="ovrTxt">0</span></span></div>
+  <button class="btn" id="goVs" style="margin:0 0 12px">🌐 VS Online · joga contra outra pessoa</button>
   <div class="clubs" id="clubList"></div>
+</section>
+
+<!-- VS ONLINE -->
+<section class="screen" id="sVs" hidden>
+  <div class="top"><button class="back" data-back>← Voltar</button><h2 style="margin:0">🌐 VS Online</h2><div class="spacer"></div><span class="pill coins">🪙 <span class="coinsTxt">0</span></span><span class="pill">⭐ OVR <span class="ovrTxt">0</span></span></div>
+  <p style="color:var(--mut);margin:0 0 10px;line-height:1.5">Como o <b>VS Ataque</b> do FC Mobile: desafias alguém que está online no Craques. Cada um joga ao mesmo tempo contra a equipa do outro (4 minutos). <b>Só contam os golos que marcas</b>: no fim ganha quem marcou mais. Vitória 🪙 600 · Empate 🪙 250 · Derrota 🪙 120.</p>
+  <div id="vsInv"></div>
+  <h3 style="margin:14px 0 8px">Quem está online no Craques</h3>
+  <div id="vsList" class="clubs"></div>
+  <p id="vsMsg" style="color:var(--mut)"></p>
 </section>
 
 <!-- TORNEIO -->
@@ -367,9 +378,41 @@ function refreshTop(){
 /* =========================================================
    NAVEGAÇÃO
    ========================================================= */
-const screens=['sHome','sPlay','sSquad','sPacks','sColl','sTour'];
-function show(id){for(const s of screens)$(s).hidden=s!==id;refreshTop();if(id==='sPlay')renderClubs();if(id==='sSquad')renderSquad();if(id==='sPacks')renderPacks();if(id==='sColl')renderColl();if(id==='sTour')renderTour();}
+const screens=['sHome','sPlay','sSquad','sPacks','sColl','sTour','sVs'];
+function show(id){for(const s of screens)$(s).hidden=s!==id;refreshTop();if(id==='sPlay')renderClubs();if(id==='sSquad')renderSquad();if(id==='sPacks')renderPacks();if(id==='sColl')renderColl();if(id==='sTour')renderTour();if(id==='sVs')renderVs();}
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show('sHome'));
+
+// ===== VS Online (como o VS Ataque do FC Mobile): cada um joga contra a equipa do outro; só contam os golos marcados =====
+const VS={inv:new Map(),out:null};
+const vsOk=()=>!!(window.C30net&&typeof C30net.send==='function');
+const vsMe=()=>(window.C30net&&C30net.me)||{id:'',name:myName()};
+function vsSend(ev){if(vsOk())try{C30net.send(Object.assign({from:vsMe().id,fromName:myName()},ev))}catch(e){}}
+function vsMyTeam(){if(S.squad.some(x=>x==null))autoBest();return {name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice(),ovr:teamOVR(S.squad)}}
+function vsValidTeam(t){return t&&Array.isArray(t.ids)&&t.ids.length===11&&t.ids.every(id=>DB[id])}
+function renderVs(){const L=$('vsList'),I=$('vsInv');L.innerHTML='';I.innerHTML='';
+ if(!vsOk()){$('vsMsg').textContent='Para jogar online abre o Craques dentro da Central 30, com internet.';return}
+ const who=((window.C30net&&C30net.who)||[]).filter(p=>p.id!==vsMe().id);
+ $('vsMsg').textContent=who.length?'':'Ainda não há mais ninguém online no Craques. Pede a um amigo para abrir o Craques na Central 30 (e escolherem os dois 🌐 Com amigos).';
+ for(const p of who){const b=document.createElement('button');b.className='club';b.innerHTML='<b>'+esc(p.name)+'</b><span>'+(VS.out&&VS.out.to===p.id?'Convite enviado… à espera':'Desafiar para um VS')+'</span>';b.onclick=()=>{VS.out={to:p.id,name:p.name,at:Date.now()};vsSend({t:'cq-inv',to:p.id,team:vsMyTeam()});toast('Convite enviado a '+p.name);renderVs()};L.appendChild(b)}
+ for(const [id,iv] of VS.inv){if(Date.now()-iv.at>60000){VS.inv.delete(id);continue}const d=document.createElement('div');d.style.cssText='display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;border-radius:12px;background:#1a3a24;margin-bottom:8px';d.innerHTML='<b>⚔️ '+esc(iv.name)+' desafiou-te!</b> <span style="color:var(--mut)">OVR '+(iv.team.ovr||'?')+'</span>';const a=document.createElement('button');a.className='btn';a.textContent='Aceitar';a.onclick=()=>{VS.inv.delete(id);vsSend({t:'cq-acc',to:id,team:vsMyTeam()});vsStart(id,iv.name,iv.team)};const r=document.createElement('button');r.className='btn ghost';r.textContent='Recusar';r.onclick=()=>{VS.inv.delete(id);vsSend({t:'cq-dec',to:id});renderVs()};d.append(a,r);I.appendChild(d)}}
+const esc=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function vsStart(id,name,team){if(!vsValidTeam(team)){toast('A equipa do adversário não chegou bem. Tenta outra vez.');return}
+ const opp=Object.assign({},team,{name:String(team.name||name).slice(0,20),short:String(team.short||'ADV').slice(0,3)});startMatch(0,false,opp);
+ M.vs={id,name:String(name).slice(0,16),oppGoals:0,oppDone:false,endT:0};vsHud();toast('VS contra '+name+': marca o máximo de golos!')}
+function vsHud(){const h=$('vsHud');if(!M||!M.vs){h.hidden=true;return}h.hidden=false;h.textContent='VS · Tu '+M.score[0]+' – '+M.vs.oppGoals+' '+M.vs.name}
+function vsEnd(){M.vs.myDone=true;vsSend({t:'cq-score',to:M.vs.id,goals:M.score[0],done:true});M.vs.endT=Date.now();vsCheckEnd()}
+function vsCheckEnd(){const v=M&&M.vs;if(!v||!v.myDone)return;if(!v.oppDone&&Date.now()-v.endT<45000){$('endTitle').textContent='À espera de '+v.name+'…';$('endRes').textContent=M.score[0]+' - '+v.oppGoals;$('endTxt').textContent='Acabaste o teu jogo. Falta o adversário acabar o dele.';$('endAgain').hidden=true;$('endOk').textContent='Sair';$('mEnd').hidden=false;setTimeout(vsCheckEnd,1000);return}
+ const a=M.score[0],c=v.oppGoals,res=a>c?'w':a===c?'d':'l',coins=res==='w'?600:res==='d'?250:120;S.coins+=coins;S[res]++;save();
+ $('endTitle').textContent=res==='w'?'🏆 Ganhaste o VS!':res==='d'?'Empate no VS':'Perdeste o VS';$('endRes').textContent=a+' - '+c;
+ $('endTxt').textContent='Golos marcados: tu '+a+' · '+v.name+' '+c+(v.oppDone?'':' (o adversário não acabou a tempo)')+' · Ganhaste 🪙 '+coins;$('endAgain').hidden=true;$('endOk').textContent='Continuar';$('mEnd').hidden=false;M.vs=null;vsHud()}
+function vsOnNet(ev,from){if(!ev||typeof ev.t!=='string'||!ev.t.startsWith('cq-'))return;const me=vsMe().id;if(ev.to&&ev.to!==me)return;const fid=ev.from||from;
+ if(ev.t==='cq-inv'&&vsValidTeam(ev.team)){VS.inv.set(fid,{name:String(ev.fromName||'Amigo').slice(0,16),team:ev.team,at:Date.now()});toast('⚔️ '+(ev.fromName||'Alguém')+' desafiou-te para um VS! Vai a Jogar → VS Online');if(!$('sVs').hidden)renderVs()}
+ else if(ev.t==='cq-acc'&&VS.out&&VS.out.to===fid&&vsValidTeam(ev.team)){VS.out=null;vsStart(fid,ev.fromName||'Amigo',ev.team)}
+ else if(ev.t==='cq-dec'&&VS.out&&VS.out.to===fid){VS.out=null;toast((ev.fromName||'O adversário')+' recusou o VS.');if(!$('sVs').hidden)renderVs()}
+ else if(ev.t==='cq-score'&&M&&M.vs&&M.vs.id===fid){M.vs.oppGoals=Math.max(0,Math.min(99,+ev.goals||0));if(ev.done)M.vs.oppDone=true;vsHud()}}
+(function hook(){if(window.C30net&&C30net.on){C30net.on(vsOnNet);return}setTimeout(hook,500)})();
+setInterval(()=>{if(!$('sVs').hidden)renderVs()},3000);
+$('goVs').onclick=()=>show('sVs');
 $('goPlay').onclick=()=>show('sPlay');$('goTour').onclick=()=>show('sTour');$('goSquad').onclick=()=>show('sSquad');$('goPacks').onclick=()=>show('sPacks');$('goColl').onclick=()=>show('sColl');
 const KEYS_HTML=`<b style="grid-column:1/-1;color:var(--txt)">PC</b>
 <kbd>WASD / Setas</kbd><span>Mexer o jogador</span><kbd>Shift</kbd><span>Sprint</span>
@@ -660,12 +703,12 @@ function statsOf(card){
   if(card.role==='GK'){const [div,han,kic,ref,spd,pos]=card.stats;return {pac:spd,sho:30,pas:kic,dri:40,def:50,phy:pos,gk:(div+han+ref+pos)/4};}
   const [pac,sho,pas,dri,def,phy]=card.stats;return {pac,sho,pas,dri,def,phy,gk:20};
 }
-function startMatch(ci,tour){
+function startMatch(ci,tour,vsTeam){
   if(S.squad.some(x=>x==null)){autoBest();save();}
   if(S.squad.some(x=>x==null)){toast('Faltam jogadores na equipa');show('sSquad');return;}
   if(!renderer)initGL();
   const club=CLUBS[ci];
-  const teams=[{name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:tour?tourSquad(ci).ids:clubSquad(club)}];
+  const teams=[{name:myName(),short:myShort(),c1:'#2b6cff',c2:'#ffffff',ids:S.squad.slice()},vsTeam?{name:vsTeam.name,short:vsTeam.short,c1:vsTeam.c1||'#e53935',c2:vsTeam.c2||'#ffffff',ids:vsTeam.ids.slice()}:{name:club.n,short:club.s,c1:club.c1,c2:club.c2,ids:tour?tourSquad(ci).ids:clubSquad(club)}];
   if(teams[1].c1.toLowerCase()==='#2b6cff')teams[0].c1='#e53935';
   // remove jogadores antigos
   if(M)for(const p of M.players)scene.remove(p.mesh);
@@ -969,7 +1012,7 @@ function restart(kind,team,x,z){
   banner(kind==='lat'?'LANÇAMENTO':kind==='canto'?'CANTO':'PONTAPÉ DE BALIZA',800,true);
 }
 function goal(team){
-  M.score[team]++;M.state='goal';M.stateT=2.6;M.kickTeam=1-team;sfx('goal');
+  M.score[team]++;if(M.vs&&team===0)vsSend({t:'cq-score',to:M.vs.id,goals:M.score[0],done:false});M.state='goal';M.stateT=2.6;M.kickTeam=1-team;sfx('goal');
   banner(team===0?'GOLO!':'GOLO DO ADVERSÁRIO',2200);updateHud();
 }
 let bannerT=null;
@@ -988,6 +1031,8 @@ function shootout(){ // penáltis simulados: 5 para cada lado e morte súbita
 }
 function endMatch(){
   M.state='end';sfx('whistle');
+  if(M.vs){vsEnd();return;}
+  $('endAgain').hidden=!!M.tour;if(!M.tour)$('endOk').textContent='Continuar';
   const [a,c]=M.score,club=CLUBS[M.ci];
   if(M.tour){endTourMatch(a,c,club);return;}
   const res=a>c?'w':a===c?'d':'l';
