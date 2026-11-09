@@ -134,7 +134,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script>'use strict';
 // Recomeço geral (8 de novembro de 2026, 7.ª vez): apaga uma única vez o progresso de toda a gente, mesmo de quem
 // tinha "Guardar dados: SIM". As definições (incluindo guardar dados) ficam; a partir daqui guarda normalmente.
-try{const RESET='2026-11-08d';if(localStorage.getItem('c30.reset')!==RESET){const keep=new Set(['c30.settings','c30.reset','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN']);const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('c30.')||k.startsWith('craques3d.')||/^(vfig|patrao|jdc)\./.test(k)||k==='central30.aviso')&&!keep.has(k)&&!k.startsWith('c30.gpass.'))del.push(k);}del.forEach(k=>localStorage.removeItem(k));localStorage.setItem('c30.reset',RESET);window.__C30_DID_RESET=true;}}catch{}
+try{const RESET='2026-11-09a';if(localStorage.getItem('c30.reset')!==RESET){const keep=new Set(['c30.settings','c30.reset','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN']);const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('c30.')||k.startsWith('craques3d.')||/^(vfig|patrao|jdc)\./.test(k)||k==='central30.aviso')&&!keep.has(k)&&!k.startsWith('c30.gpass.'))del.push(k);}del.forEach(k=>localStorage.removeItem(k));localStorage.setItem('c30.reset',RESET);window.__C30_DID_RESET=true;}}catch{}
 try{const k=JSON.parse(localStorage.getItem('c30.settings')||'{}');if(!k.keepProgress)['c30.saves','c30.discoveries','c30.stats','c30.time','c30.lastGame'].forEach(x=>localStorage.removeItem(x));}catch{}
 const $=id=>document.getElementById(id);
 const GAMES=[
