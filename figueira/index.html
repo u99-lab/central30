@@ -550,7 +550,7 @@ const A17=[[2330,-596],[2380,-1200],[2440,-2600],[2450,-4000],[2550,-5500],[2700
 road('A17',A17,22,{auto:true,rural:true});
 // Nó da Figueira: rotunda no início da A17, ligada à Estrada de Tavarede, à de Buarcos e à EN109
 {const cx=2330,cz=-560,rr=34,a=[];for(let k=0;k<=24;k++){const t=k/24*Math.PI*2;a.push([cx+Math.cos(t)*rr,cz+Math.sin(t)*rr])}road('Rotunda da A17',a,10,{});}
-road('Ligação à A17',[[1960,-760],[2080,-690],[2200,-610],[2296,-566]],10,{rural:true});
+road('Ligação à A17',[[1960,-760],[2080,-735],[2200,-640],[2296,-566]],10,{rural:true});
 road('Ligação à A17',[[1900,-500],[2060,-520],[2200,-545],[2296,-556]],10,{rural:true});
 road('EN109',[[1960,-760],[1900,-1500],[1850,-2600],[1750,-4200],[1700,-5600],[1800,-6500],[1900,-8000],[2200,-9500],[2500,-11200],[3000,-12800],[3000,-13600],[3000,-14200],[3200,-15000],[3330,-15400]],10,{rural:true});
 road('Saída Tocha',[[2620,-6650],[2300,-6550],[1800,-6500]],9,{rural:true});
@@ -563,7 +563,6 @@ road('Estrada da Praia de Mira',[[2200,-9500],[1700,-9480],[1200,-9500],[shoreN(
 {const a=[];for(let z=-9500;z>=-14900;z-=280)a.push([shoreN(z)+170,z]);a.push([shoreN(-14960)+185,-14960],[shoreN(-15000)+200,-15000]);road('Estrada das Dunas',a,9,{rural:true});}
 {const x0=shoreN(-15000)+200,x1=riaE(-15000)+70,a=[];for(let x=x0;x<=x1+.1;x+=20){const t=(x-x0)/(x1-x0),y=1.6+5.6*smooth(0,.09,t)*smooth(1,.91,t);a.push([x,-15000,y])}road('Ponte da Barra',a,12,{bridge:true});}
 road('Gafanha',[[riaE(-15000)+70,-15000],[3100,-15000],[3200,-15000]],10,{rural:true});
-road('Área de Serviço',[[2785,-8050],[2880,-8150],[2895,-8350],[2815,-8450]],8,{});
 // vilas e cidade de Aveiro (ruas em grelha)
 const TOWNS=[{n:'Tocha',x:1800,z:-6500,r:260},{n:'Praia da Tocha',x:shoreN(-6500)+220,z:-6500,r:180},{n:'Mira',x:2200,z:-9500,r:300},{n:'Praia de Mira',x:shoreN(-9500)+230,z:-9500,r:220},{n:'Vagos',x:3000,z:-12800,r:280},{n:'Ílhavo',x:3010,z:-14200,r:300},{n:'Costa Nova',x:shoreN(-14300)+170,z:-14300,r:330},{n:'Barra',x:shoreN(-15100)+180,z:-15080,r:200},{n:'Gafanha da Nazaré',x:3120,z:-15080,r:200},{n:'Aveiro',x:3420,z:-15750,r:520}];
 function gridTown(name,x0,x1,z0,z1,dx,dz){for(let x=x0;x<=x1;x+=dx)road(name,[[x,z0],[x,z1]],8);for(let z=z0;z<=z1;z+=dz)road(name,[[x0,z],[x1,z]],8)}
@@ -582,11 +581,19 @@ ROADS.forEach(r=>{if(!['Estrada do Cabo Mondego','Estrada de Buarcos','Estrada d
 const SA_LIST=[];{const A=ROADS.find(r=>r.name==='A17').pts;const cum=[0];for(let i=0;i<A.length-1;i++)cum.push(cum[i]+Math.hypot(A[i+1][0]-A[i][0],A[i+1][1]-A[i][1]));
  const at=sv=>{let i=0;while(i<cum.length-2&&cum[i+1]<sv)i++;const a=A[i],b=A[i+1],L=(cum[i+1]-cum[i])||1,t=(sv-cum[i])/L;return{x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,dx:(b[0]-a[0])/L,dz:(b[1]-a[1])/L}};
  const sAtZ=z=>{let best=0,bd=1e9;for(let sv=0;sv<cum[cum.length-1];sv+=10){const p=at(sv);if(Math.abs(p.z-z)<bd){bd=Math.abs(p.z-z);best=sv}}return best};
- for(const [nome,z,sd] of [['Tocha',-4700,-1],['Vagos',-11800,1],['Gafanha',-14500,-1]]){const s0=sAtZ(z),pts=[];
-  for(const [ds,off] of [[-150,10],[-110,17],[-70,27],[-35,34],[0,36],[35,34],[70,27],[110,17],[150,10]]){const p=at(s0+ds),nx=-p.dz*sd,nz=p.dx*sd;pts.push([p.x+nx*off,p.z+nz*off])}
-  road('Área de Serviço',pts,8,{sa:nome});const c=at(s0),nx=-c.dz*sd,nz=c.dx*sd;SA_LIST.push({name:'A17 · Área de Serviço de '+nome,x:c.x+nx*36,z:c.z+nz*36,town:nome})}}
+ // uma área de cada lado (sentido Aveiro a este, sentido Figueira a oeste), ligadas por uma ponte por cima da A17
+ for(const [nome,z] of [['Tocha',-4700],['Mira',-8250],['Vagos',-11800],['Gafanha',-14500]]){const s0=sAtZ(z);
+  for(const sd of [1,-1]){const pts=[];
+   for(const [ds,off] of [[-150,10],[-110,17],[-70,27],[-35,34],[0,36],[35,34],[70,27],[110,17],[150,10]]){const p=at(s0+ds),nx=-p.dz*sd,nz=p.dx*sd;pts.push([p.x+nx*off,p.z+nz*off])}
+   road('Área de Serviço',pts,8,{sa:nome});const c=at(s0),nx=-c.dz*sd,nz=c.dx*sd;SA_LIST.push({name:'A17 · Área de Serviço de '+nome+' ('+(sd>0?'sentido Aveiro':'sentido Figueira')+')',x:c.x+nx*36,z:c.z+nz*36,town:nome,side:sd});
+   // ligação da área até à ponte
+   const lk=[];for(const [ds,off] of [[35,34],[90,48],[150,70],[200,95]]){const p=at(s0+ds),qx=-p.dz*sd,qz=p.dx*sd;lk.push([p.x+qx*off,p.z+qz*off])}road('Área de Serviço · ligação',lk,7,{rural:true})}
+  // a ponte: atravessa a A17 a 200 m do centro da área
+  {const p=at(s0+200),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*95,p.z+nz*95)+.12,y1=terrainH(p.x-nx*95,p.z-nz*95)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
+   for(let o=95;o>=-95.1;o-=7.6){const u=(95-o)/190,base=lerp(y0,y1,u),f=smooth(0,.42,u)*smooth(1,.58,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
+   road('Ponte da Área de Serviço de '+nome,br,7,{bridge:true,viaduct:true,rural:true})}}}
 // viadutos: as saídas e ligações da A17 passam POR CIMA da linha do comboio (só as estradas pequenas têm passagens de nível)
-{const XS=[['Ligação à A17',2144,-648],['Ligação à A17',2131,-533],['Saída Tocha',2081,-6528],['Saída Mira',2425,-9455],['Saída Vagos',3200,-12765],['Saída Ílhavo',3346,-14102],['Saída Aveiro',3567,-15579]];
+{const XS=[['Ligação à A17',2147,-682],['Ligação à A17',2131,-533],['Saída Tocha',2081,-6528],['Saída Mira',2425,-9455],['Saída Vagos',3200,-12765],['Saída Ílhavo',3346,-14102],['Saída Aveiro',3567,-15579]];
  const HALF=75,LIFT=7.6;
  for(const [name,cx,cz] of XS){let best=null;ROADS.forEach((r,ri)=>{if(r.name!==name||r.bridge)return;let acc=0;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),vx=b[0]-a[0],vz=b[1]-a[1],t=clamp(((cx-a[0])*vx+(cz-a[1])*vz)/(L*L),0,1),d=Math.hypot(cx-a[0]-vx*t,cz-a[1]-vz*t);if(!best||d<best.d)best={d,r,ri,sc:acc+t*L};acc+=L}});
   if(!best||best.d>3)continue;const r=best.r;const cum=[0];for(let i=0;i<r.pts.length-1;i++)cum.push(cum[i]+Math.hypot(r.pts[i+1][0]-r.pts[i][0],r.pts[i+1][1]-r.pts[i][1]));const tot=cum[cum.length-1];
@@ -765,7 +772,7 @@ zoneH=()=>5+rnd()*4;{const r=ROADS.find(r=>r.name==='EN109');for(let i=0;i<r.pts
 const LM={};function landmark(id,x,z,w,d,h,col,label){LM[id]={x,z,label};B.push({x,z,w,d,h,col,keep:true})}
 // limpar prédios que colidam com os marcos
 function clearAround(x,z,r){for(let i=B.length-1;i>=0;i--){const b=B[i];if(!b.keep&&Math.abs(b.x-x)<r+b.w/2&&Math.abs(b.z-z)<r+b.d/2)B.splice(i,1)}}
-[['casino',105,170,56,30,13,0xe8c690,'CASINO'],['mercado',760,690,58,40,10,0xf0e2c0,'MERCADO'],['escola',2060,-680,120,26,13,0xf4f2ec,'ESCOLA DR. JOAQUIM DE CARVALHO'],['camara',1100,920,40,28,15,0xf5efe0,'CÂMARA MUNICIPAL'],['empresa',1205,410,40,30,18,0xe9efe9,'A TUA EMPRESA'],['est_fig',1708,950,30,12,8,0xf3ead6,'ESTAÇÃO DA FIGUEIRA'],['est_aveiro',3600,-15985,46,16,11,0xf4f1e8,'ESTAÇÃO DE AVEIRO'],['confeitaria',3360,-15770,16,14,9,0xf2c6b6,'OVOS MOLES'],['mercado_av',3462,-15640,34,24,8,0xf6efe2,'MERCADO DO PEIXE'],['as_mira',2930,-8250,30,18,6,0xeceae4,'ÁREA DE SERVIÇO']].forEach(a=>{clearAround(a[1],a[2],Math.max(a[3],a[4])/2+6);landmark(...a)});
+[['casino',105,170,56,30,13,0xe8c690,'CASINO'],['mercado',815,690,58,40,10,0xf0e2c0,'MERCADO'],['escola',2060,-680,120,26,13,0xf4f2ec,'ESCOLA DR. JOAQUIM DE CARVALHO'],['camara',1100,920,40,28,15,0xf5efe0,'CÂMARA MUNICIPAL'],['empresa',1205,410,40,30,18,0xe9efe9,'A TUA EMPRESA'],['est_fig',1708,950,30,12,8,0xf3ead6,'ESTAÇÃO DA FIGUEIRA'],['est_aveiro',3600,-15985,46,16,11,0xf4f1e8,'ESTAÇÃO DE AVEIRO'],['confeitaria',3360,-15770,16,14,9,0xf2c6b6,'OVOS MOLES'],['mercado_av',3462,-15640,34,24,8,0xf6efe2,'MERCADO DO PEIXE'],['as_mira',2930,-8250,30,18,6,0xeceae4,'ÁREA DE SERVIÇO']].forEach(a=>{clearAround(a[1],a[2],Math.max(a[3],a[4])/2+6);landmark(...a)});
 const bMat=new THREE.MeshLambertMaterial({color:0xffffff});const bU={uNight:{value:0}};
 bMat.onBeforeCompile=sh=>{sh.uniforms.uNight=bU.uNight;
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vON;').replace('#include <project_vertex>','#include <project_vertex>\nvec4 wpp=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nwpp=instanceMatrix*wpp;\n#endif\nvWP=(modelMatrix*wpp).xyz;vON=objectNormal;');
@@ -876,12 +883,12 @@ function updateLevelX(dt){if(!TRAINS.length)return;for(const L of LEVELX){const 
   const g=new THREE.Group();g.position.set(mx,my,mz);g.rotation.order='YXZ';g.rotation.y=yaw;g.rotation.x=-pitch;scene.add(g);
   const d=new THREE.Mesh(new THREE.BoxGeometry(r.w+1.2,.9,L+.3),deckM);d.position.y=-.5;d.castShadow=true;d.receiveShadow=true;g.add(d);
   for(const sd of [-1,1]){const pa=new THREE.Mesh(new THREE.BoxGeometry(.35,1.0,L+.3),parM);pa.position.set(sd*(r.w/2+.45),.45,0);g.add(pa)}
-  if(i%2===0){const th=terrainH(a[0],a[1]),hh=a[2]-.9-th;if(hh>1.8){const rl=nearRail(a[0],a[1]);if(!rl||rl.d>6){const pl=new THREE.Mesh(new THREE.BoxGeometry(r.w*.7,hh,1.3),pilM);pl.position.set(a[0],th+hh/2,a[1]);pl.rotation.y=yaw;pl.castShadow=true;scene.add(pl)}}}}}}
+  if(i%2===0){const th=terrainH(a[0],a[1]),hh=a[2]-.9-th;if(hh>1.8){const rl=nearRail(a[0],a[1]),nr2=nearRoad(a[0],a[1]);if((!rl||rl.d>6)&&!(nr2&&!nr2.s.r.bridge&&nr2.d<nr2.s.r.w/2+1.5&&!(nr2.s.r.auto&&nr2.d<.6))){const pl=new THREE.Mesh(new THREE.BoxGeometry(r.w*.7,hh,1.3),pilM);pl.position.set(a[0],th+hh/2,a[1]);pl.rotation.y=yaw;pl.castShadow=true;scene.add(pl)}}}}}}
 // bombas de gasolina (Figueira, área de serviço da A17, Mira, Aveiro)
-{const PS=[['Figueira',1760,-140],['A17 · Área de Serviço de Mira',2885,-8250],['Mira',2420,-9560],['Aveiro',3720,-15430]].concat(SA_LIST.map(a=>[a.name,a.x,a.z]));
+{const PS=[['Figueira',1760,-140],['Mira',2420,-9560],['Aveiro',3720,-15430]].concat(SA_LIST.map(a=>[a.name,a.x,a.z]));
  PS.forEach(([n,x,z])=>{const y=terrainH(x,z),g=new THREE.Group();g.position.set(x,y,z);scene.add(g);const cn=new THREE.Mesh(new THREE.BoxGeometry(14,.6,10),lam({color:0xf3f1ea}));cn.position.y=5;g.add(cn);const st=new THREE.Mesh(new THREE.BoxGeometry(14.2,.7,10.2),lam({color:0x2e8b57}));st.position.y=4.6;g.add(st);
   for(const a of [-4.5,4.5]){const po=new THREE.Mesh(new THREE.BoxGeometry(.5,4.6,.5),lam({color:0xdadada}));po.position.set(a,2.3,0);g.add(po);const pu=new THREE.Mesh(new THREE.BoxGeometry(.9,1.6,.6),lam({color:0x2e8b57}));pu.position.set(a,.8,2);g.add(pu)}
-  const tx=ctex(256,64,(gg,w,h)=>{gg.fillStyle='#2e8b57';gg.fillRect(0,0,w,h);gg.fillStyle='#fff';gg.font='800 30px "Bricolage Grotesque",sans-serif';gg.textAlign='center';gg.textBaseline='middle';gg.fillText('COMBUSTÍVEL',w/2,h/2+1)});const sg=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));sg.position.set(0,6.3,0);g.add(sg);PUMPS.push({name:n,x,z})})}
+  const tx=ctex(256,64,(gg,w,h)=>{gg.fillStyle='#2e8b57';gg.fillRect(0,0,w,h);gg.fillStyle='#fff';gg.font='800 30px "Bricolage Grotesque",sans-serif';gg.textAlign='center';gg.textBaseline='middle';gg.fillText('COMBUSTÍVEL',w/2,h/2+1)});const sg=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));sg.position.set(0,6.3,0);g.add(sg);PUMPS.push({name:n,x,z,price:/Área de Serviço/.test(n)?2.19:/Mira/.test(n)?1.84:1.75})})}
 
 // candeeiros (só brilham à noite)
 const lampMat=new THREE.MeshBasicMaterial({color:0x333333});{const pts=[];SEGS.forEach(s=>{if(s.r.bridge||s.r.auto||s.r.rural)return;for(let t=0;t<s.len;t+=55){const x=lerp(s.ax,s.bx,t/s.len),z=lerp(s.az,s.bz,t/s.len);const nx=-(s.bz-s.az)/s.len,nz=(s.bx-s.ax)/s.len;pts.push([x+nx*(s.r.w/2+1.5),z+nz*(s.r.w/2+1.5)])}});
@@ -983,13 +990,13 @@ Object.assign(G,{money:MEM.get('money',100),post:MEM.get('post',{}),best:MEM.get
 const PRICES={car:[0,3000,2000],paint:150,casa:4000};
 G.owned=MEM.get('owned',[0]);G.casa=MEM.get('casa',false);
 const PLACES=[];var PLACE_MARKS;PLACE_MARKS=PLACE_MARKS||[];
-function freeSpot(tx,tz,names,fw,fd){let cand=[];for(const g of SEGS){if(names&&!names.includes(g.r.name))continue;if(g.r.auto||g.r.bridge)continue;for(let k=0;k<=1;k+=.1){const x=g.ax+(g.bx-g.ax)*k,z=g.az+(g.bz-g.az)*k,d=Math.hypot(x-tx,z-tz);if(d<420)cand.push([d,x,z,g])}}cand.sort((a,b)=>a[0]-b[0]);cand=cand.slice(0,600);const NB=B.filter(b=>Math.abs(b.x-tx)<500&&Math.abs(b.z-tz)<500);
+function freeSpot(tx,tz,names,fw,fd){let cand=[];for(const g of SEGS){if(names&&!names.includes(g.r.name))continue;if(g.r.auto||g.r.bridge)continue;for(let k=0;k<=1;k+=.1){const x=g.ax+(g.bx-g.ax)*k,z=g.az+(g.bz-g.az)*k,d=Math.hypot(x-tx,z-tz);if(d<420)cand.push([d,x,z,g])}}cand.sort((a,b)=>a[0]-b[0]);cand=cand.slice(0,600);const NB=B.filter(b=>Math.abs(b.x-tx)<500&&Math.abs(b.z-tz)<500);const NS=SEGS.filter(q=>!q.r.bridge&&Math.min(q.ax,q.bx)<tx+520&&Math.max(q.ax,q.bx)>tx-520&&Math.min(q.az,q.bz)<tz+520&&Math.max(q.az,q.bz)>tz-520);
  for(const [d,x,z,g] of cand){const L=Math.hypot(g.bx-g.ax,g.bz-g.az)||1,ux=(g.bx-g.ax)/L,uz=(g.bz-g.az)/L;for(const sd of [1,-1]){const nx=-uz*sd,nz=ux*sd;const off=g.r.w/2+3+fd/2;const cx=x+nx*off,cz=z+nz*off;
   // a porta fica virada para a estrada (num dos 4 lados)
   const ax=Math.abs(nx)>Math.abs(nz);const fx=ax?-Math.sign(nx):0,fz=ax?0:-Math.sign(nz);const W2=ax?fd:fw,D2=ax?fw:fd;
   if(terrainH(cx,cz)<1.2||(typeof inRia==='function'&&inRia(cx,cz)))continue;
   if(NB.some(b=>Math.abs(b.x-cx)<(b.w+W2)/2+2&&Math.abs(b.z-cz)<(b.d+D2)/2+2))continue;
-  const nr=nearRoad(cx,cz);if(nr&&nr.d<Math.min(W2,D2)/2+1.5)continue;
+  {let hit=false;for(let u=-1;u<=1&&!hit;u+=.5)for(let v=-1;v<=1&&!hit;v+=.5){const px=cx+u*(W2/2+1),pz=cz+v*(D2/2+1);for(const q of NS){const vx=q.bx-q.ax,vz=q.bz-q.az,t=clamp(((px-q.ax)*vx+(pz-q.az)*vz)/(q.len*q.len||1),0,1);if(Math.hypot(px-q.ax-vx*t,pz-q.az-vz*t)<q.r.w/2+.8){hit=true;break}}}if(hit)continue}
   const rl=nearRail(cx,cz);if(rl&&rl.d!=null&&rl.d<Math.max(W2,D2)/2+14)continue;{const dr=nearRail(cx+fx*(W2/2+4),cz+fz*(D2/2+4));if(dr&&dr.d<9)continue}
   if(PLACES.some(p=>Math.hypot(p.x-cx,p.z-cz)<40)||PUMPS.some(p=>Math.hypot(p.x-cx,p.z-cz)<25))continue;
   return {x:cx,z:cz,fx,fz,W:W2,D:D2}}}return null}
@@ -1029,11 +1036,9 @@ function buildPlace(def){const fw=def.fw||(def.big?22:14),fd=def.fd||(def.big?14
  {id:'se',noAw:true,name:'Sé de Aveiro',sign:'SÉ DE AVEIRO',ic:'⛪',x:3380,z:-15900,fw:14,fd:26,wall:0xf7f5ef,col:0xb5502e,signBg:'#6a5a3a',kind:'food',town:'Aveiro',roof:0xb5502e,tall:24,
   items:[['Acender uma vela',1,'Silêncio e paz lá dentro.'],['Visita ao claustro',2,'A Sé era o antigo convento de São Domingos, do século XV.']],
   extra:(g,fw,fd,h)=>{const t=new THREE.Mesh(new THREE.BoxGeometry(5,22,5),lam({color:0xf7f5ef}));t.position.set(fw/2-2.5,11,-fd/2+2.5);t.castShadow=true;g.add(t);const sp=new THREE.Mesh(new THREE.ConeGeometry(3.7,5,4),lam({color:0x6b6b6b}));sp.position.set(fw/2-2.5,24.5,-fd/2+2.5);sp.rotation.y=Math.PI/4;g.add(sp);const cr=new THREE.Mesh(new THREE.BoxGeometry(.3,2,.3),lam({color:0x333333}));cr.position.set(fw/2-2.5,28,-fd/2+2.5);g.add(cr)}},
- {id:'sa-mira',name:'Café da Área de Serviço de Mira',sign:'CAFÉ · A17',ic:'☕',x:2895,z:-8250,roads:['Área de Serviço'],wall:0xeef0ea,col:0x2e8b57,signBg:'#2e8b57',kind:'food',town:'A17',
-  items:[['Café',1,'Para aguentar a viagem.'],['Sandes mista',3.5,'Feita na hora.'],['Garrafa de água',1.2,'Fresquinha.'],['Pastel de nata',1.4,'Também há nas autoestradas!']]},
  {id:'mira',name:'Café Central de Mira',sign:'CAFÉ',ic:'☕',x:2200,z:-9500,wall:0xefe2c8,col:0x6a3c1c,signBg:'#4a2a12',kind:'food',town:'Mira',
   items:[['Galão',1.1,'Com espuminha.'],['Sandes de leitão',4,'Leitão da Bairrada, que é já aqui ao lado!'],['Sumo de laranja',2,'Natural.']]}
-].concat(SA_LIST.map((a,i)=>({id:'sa'+i,name:'Café da Área de Serviço de '+a.town,sign:'CAFÉ · A17',ic:'☕',x:a.x,z:a.z,roads:['Área de Serviço'],wall:0xeef0ea,col:0x2e8b57,signBg:'#2e8b57',kind:'food',town:'A17',
+].concat(SA_LIST.map((a,i)=>({id:'sa'+i,name:'Café da Área de Serviço de '+a.town+(a.side>0?' (sentido Aveiro)':' (sentido Figueira)'),sign:'CAFÉ · A17',ic:'☕',x:a.x,z:a.z,roads:['Área de Serviço'],wall:0xeef0ea,col:0x2e8b57,signBg:'#2e8b57',kind:'food',town:'A17',
   items:[['Café',1,'Para aguentar a viagem.'],['Sandes mista',3.5,'Feita na hora.'],['Garrafa de água',1.2,'Fresquinha.'],['Bolo de arroz',1.3,'Com um galão fica perfeito.']]}))).forEach(buildPlace);
 function nearPlace(){const F=focus();return PLACES.find(p=>Math.hypot(F.x-p.door.x,F.z-p.door.z)<7)}
 const eur2=n=>n.toFixed(2).replace('.',',')+' €';
@@ -1102,7 +1107,7 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
   {const na=nearRoad(P.x,P.z);if(na.s.r.auto&&na.d<12.6){const g=na.s,ux=(g.bx-g.ax)/g.len,uz=(g.bz-g.az)/g.len,side=Math.sign((P.x-na.px)*(-uz)+(P.z-na.pz)*ux)||1,nx=-uz*side,nz=ux*side;
    const wall=(lim,dirOut)=>{const tgt=lim;P.x=na.px+nx*tgt;P.z=na.pz+nz*tgt;const vn=(P.vx*nx+P.vz*nz)*dirOut;if(vn>0){P.vx-=nx*dirOut*vn*1.35;P.vz-=nz*dirOut*vn*1.35;if(vn>5){sfx.hit();shake=Math.min(1,vn/25)}}};
    if(na.d<1.05&&g.len&&na.t>.0001)wall(1.05,-1);  // separador central
-   else if(na.d>10.95&&!ROADS.some(r=>!r.auto&&r.name!=='A17'&&r.pts.some((p,i)=>i<r.pts.length-1&&(()=>{const q=r.pts[i+1],vx=q[0]-p[0],vz=q[1]-p[1],L2=vx*vx+vz*vz,t=clamp(((P.x-p[0])*vx+(P.z-p[1])*vz)/L2,0,1);return Math.hypot(P.x-p[0]-vx*t,P.z-p[1]-vz*t)<r.w/2+3})())))wall(10.95,1)}}  // rails (menos nas saídas)
+   else if(na.d>10.95&&!ROADS.some(r=>!r.auto&&!r.bridge&&r.name!=='A17'&&r.pts.some((p,i)=>i<r.pts.length-1&&(()=>{const q=r.pts[i+1],vx=q[0]-p[0],vz=q[1]-p[1],L2=vx*vx+vz*vz,t=clamp(((P.x-p[0])*vx+(P.z-p[1])*vz)/L2,0,1);return Math.hypot(P.x-p[0]-vx*t,P.z-p[1]-vz*t)<r.w/2+3})())))wall(10.95,1)}}  // rails (menos nas saídas)
   const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
   if(ty<-1&&!bridgeAt(P.x,P.z)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
   car.position.set(P.x,P.y,P.z);car.rotation.y=-P.h;const sx=terrainH(P.x+Math.sin(P.h)*2,P.z-Math.cos(P.h)*2)-terrainH(P.x-Math.sin(P.h)*2,P.z+Math.cos(P.h)*2);car.rotation.x=onRoad&&P.y>3&&Math.abs(P.x-2200)<8?0:clamp(sx/4,-.25,.25);
@@ -1147,7 +1152,7 @@ function hornOff(){const h=HORN;if(!h||!AC)return;HORN=null;h.g.gain.linearRampT
 /* ================= COSTA DE PRATA: portagens, bombas, comboio, sítio ================= */
 function callTow(){let best=null,bd=1e9;for(const q of PUMPS){const d=Math.hypot(q.x-P.x,q.z-P.z);if(d<bd){bd=d;best=q}}if(!best)return;const cost=Math.min(G.money,25);G.money-=cost;MEM.set('money',G.money);const n=nearRoad(best.x,best.z),g=n.s,L=Math.hypot(g.bx-g.ax,g.bz-g.az)||1,dx=(g.bx-g.ax)/L,dz=(g.bz-g.az)/L;Object.assign(P,{x:best.x-dx*14,z:best.z-dz*14,vx:0,vz:0,h:Math.atan2(dx,-dz)});P.y=surfaceAt(P.x,P.z)+1;P.fuel=Math.max(P.fuel,4);sfx.ok();toast('🚛 O reboque levou-te à bomba '+best.name+(cost?' (−'+euro(cost)+')':' (de graça, porque não tinhas dinheiro)')+'. Abastece com E!',false,4.5)}
 function nearPump(){const F=focus();return PUMPS.find(p=>Math.hypot(F.x-p.x,F.z-p.z)<11)}
-function refuel(){const need=100-P.fuel;if(need<2){toast('O depósito já está cheio.',false,1.4);return}const litres=need*.5,price=1.75;let cost=litres*price;let add=need;if(G.money<cost){add=Math.max(0,G.money/price/.5);cost=add*.5*price}if(add<1){toast('Não tens dinheiro para combustível. Faz uma entrega!',true,2.5);return}P.fuel+=add;G.money-=cost;MEM.set('money',G.money);sfx.ok();toast('Abasteceste '+(add*.5).toFixed(1).replace('.',',')+' L · −'+euro(cost),false,2.6)}
+function refuel(){const need=100-P.fuel;if(need<2){toast('O depósito já está cheio.',false,1.4);return}const litres=need*.5,price=(nearPump()||{}).price||1.75;let cost=litres*price;let add=need;if(G.money<cost){add=Math.max(0,G.money/price/.5);cost=add*.5*price}if(add<1){toast('Não tens dinheiro para combustível. Faz uma entrega!',true,2.5);return}P.fuel+=add;G.money-=cost;MEM.set('money',G.money);sfx.ok();toast('Abasteceste '+(add*.5).toFixed(1).replace('.',',')+' L · −'+euro(cost),false,2.6)}
 function updateTolls(){if(W.on)return;for(const T of TOLLS){const dd=(P.x-T.x)*T.dx+(P.z-T.z)*T.dz,lat=Math.abs(-(P.x-T.x)*T.dz+(P.z-T.z)*T.dx);if(lat<13&&T.prev!=null&&Math.sign(dd)!==Math.sign(T.prev)&&performance.now()-T.last>4000){T.last=performance.now();G.money=Math.max(0,G.money-.95);MEM.set('money',G.money);tone(1320,.08,'square',.04);toast('Portagem eletrónica A17: −0,95 €',false,1.8)}T.prev=lat<30?dd:null}}
 function trainNearStation(st){return TRAINS.find(T=>!T.ride&&T.stop>0&&Math.abs(T.s-st.s)<20)}
 function nearStation(){const F=focus();return STATIONS.find(st=>Math.hypot(F.x-st.x,F.z-st.z)<26)}
@@ -1295,7 +1300,7 @@ function loop(now){if(G.state==='office'){last=now;requestAnimationFrame(loop);r
   if(G.state==='play'||G.state==='train'||G.state==='office'){G.clock=((G.clock||36000)+dt*10)%86400;if(G.weather!=='chuva'){const per=periodOf(G.clock);if(per!==G.weather){applyWeather(per);setSeg('#wx','w',per)}}}
   if(G.state==='train'){updateTraffic(dt);placeTrainCam(dt)}
   if(G.state==='play'){updateTraffic(dt);updatePolice(dt);updateTolls();let fv=0;if(W.on){stepWalk(dt);placeWalkCam(dt)}else{fv=stepCar(dt);placeCam(dt,fv)}updateIndicators(dt);updateMission(dt);checkPostais();
-    const mk=nearMarker();const pr=$('#prompt');const pu=!W.on&&nearPump(),st=nearStation(),pl=nearPlace();if(!W.on&&P.fuel<=0&&!pu){pr.hidden=false;$('#promptT').textContent='Sem combustível · chamar o reboque (25 €)'}else if(W.on&&P.fuel<=0&&nearPump()){pr.hidden=false;$('#promptT').textContent='Comprar jerricã de combustível (9 €)'}else if(pl){pr.hidden=false;$('#promptT').textContent='Entrar: '+pl.name}else if(pu){pr.hidden=false;$('#promptT').textContent='Abastecer ('+Math.round(P.fuel)+'%)'}else if(st){pr.hidden=false;$('#promptT').textContent=trainNearStation(st)?'Apanhar o comboio em '+st.name:'Estação de '+st.name+' · o comboio vem a caminho'}else if(mk){pr.hidden=false;$('#promptT').textContent='Começar: '+mk.m.name}else pr.hidden=true;
+    const mk=nearMarker();const pr=$('#prompt');const pu=!W.on&&nearPump(),st=nearStation(),pl=nearPlace();if(!W.on&&P.fuel<=0&&!pu){pr.hidden=false;$('#promptT').textContent='Sem combustível · chamar o reboque (25 €)'}else if(W.on&&P.fuel<=0&&nearPump()){pr.hidden=false;$('#promptT').textContent='Comprar jerricã de combustível (9 €)'}else if(pl){pr.hidden=false;$('#promptT').textContent='Entrar: '+pl.name}else if(pu){pr.hidden=false;$('#promptT').textContent='Abastecer ('+Math.round(P.fuel)+'%) · '+pu.price.toFixed(2).replace('.',',')+' €/L'}else if(st){pr.hidden=false;$('#promptT').textContent=trainNearStation(st)?'Apanhar o comboio em '+st.name:'Estação de '+st.name+' · o comboio vem a caminho'}else if(mk){pr.hidden=false;$('#promptT').textContent='Começar: '+mk.m.name}else pr.hidden=true;
     uiT+=dt;if(uiT>.1){uiT=0;$('#kmh').textContent=W.on?0:Math.round(Math.abs(fv)*3.6);$('#gearT').textContent=W.on?'A PÉ':fv<-.5?'R':'D';$('#nitv').style.width=P.nitro+'%';$('#fuelv').style.width=P.fuel+'%';$('#fuelB').classList.toggle('low',P.fuel<15);$('#money').textContent=euro(G.money);$('#clock').textContent=hhmm(G.clock||36000);updateBoard();drawMap($('#mini'),false)}
     sun.position.set(P.x+150,300,P.z+120);sun.target.position.set(P.x,0,P.z);if(rain){rain.position.set(P.x,P.y,P.z);const a=rain.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-dt*28;if(y<0)y+=60;a.setY(i,y)}a.needsUpdate=true}}
   else if(G.state==='menu'){updateTraffic(dt);const a=TM*.05;camera.position.set(-150+Math.cos(a)*420,90,500+Math.sin(a)*420);camera.lookAt(-150,10,450);sun.position.set(0,400,300);sun.target.position.set(-150,0,450)}
