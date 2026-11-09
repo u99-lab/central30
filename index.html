@@ -88,7 +88,7 @@ html,body{max-width:100%;overflow-x:hidden}
 @media (max-width:560px){.top-right .status,#playTime{display:none}.topbar{gap:8px}#sort{max-width:100%}}
 /* Mais espaço para o jogo: em telemóveis e ecrãs baixos a barra de cima esconde-se sozinha (☰ volta a mostrá-la) */
 #c30barTog{display:none}
-@media (max-width:700px),(max-height:520px){
+@media (max-width:700px),(max-height:520px),(pointer:coarse){
  .play-view .play-bar{position:absolute;left:0;right:0;top:0;z-index:13;transform:translateY(-100%);transition:transform .25s}
  .play-view.c30bar .play-bar{transform:none}
  .play-view .game-frame{height:100%}
@@ -135,7 +135,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script>'use strict';
 // Recomeço geral (8 de novembro de 2026, 7.ª vez): apaga uma única vez o progresso de toda a gente, mesmo de quem
 // tinha "Guardar dados: SIM". As definições (incluindo guardar dados) ficam; a partir daqui guarda normalmente.
-try{const RESET='2026-11-09b';if(localStorage.getItem('c30.reset')!==RESET){const keep=new Set(['c30.reset','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN']);const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('c30.')||k.startsWith('craques3d.')||/^(vfig|patrao|jdc)\./.test(k)||k==='central30.aviso')&&!keep.has(k)&&!k.startsWith('c30.gpass.'))del.push(k);}del.forEach(k=>localStorage.removeItem(k));localStorage.setItem('c30.reset',RESET);window.__C30_DID_RESET=true;}}catch{}
+try{const RESET='2026-11-09c';if(localStorage.getItem('c30.reset')!==RESET){const keep=new Set(['c30.settings','c30.reset','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN']);const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('c30.')||k.startsWith('craques3d.')||/^(vfig|patrao|jdc)\./.test(k)||k==='central30.aviso')&&!keep.has(k)&&!k.startsWith('c30.gpass.'))del.push(k);}del.forEach(k=>localStorage.removeItem(k));localStorage.setItem('c30.reset',RESET);window.__C30_DID_RESET=true;}}catch{}
 try{const k=JSON.parse(localStorage.getItem('c30.settings')||'{}');if(!k.keepProgress)['c30.saves','c30.discoveries','c30.stats','c30.time','c30.lastGame'].forEach(x=>localStorage.removeItem(x));}catch{}
 const $=id=>document.getElementById(id);
 const GAMES=[
