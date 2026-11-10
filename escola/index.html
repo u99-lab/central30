@@ -2332,7 +2332,15 @@ function updateSky(dt) {
   scene.fog.color.copy(tmpC);
   skyMat.uniforms.hor.value.copy(tmpC); skyMat.uniforms.top.value.copy(topGrey).lerp(topDay, k); skyMat.uniforms.sunAmt.value = k;
   sky.position.copy(camera.position);
-  if (HQ) { sun.intensity = 0.6 + 1.9 * k; hemi.intensity = 0.55 + 0.05 * k; } else { sun.intensity = 0.35 + 0.6 * k; hemi.intensity = 0.65 + 0.15 * k; }
+  // dentro das salas a luz do céu é mais fraca: as paredes brancas deixam de parecer tudo branco
+  const inK = (updateSky.inK = lerp(updateSky.inK || 0, roofAbove(P.x, P.z, P.feet + 2) ? 1 : 0, Math.min(1, dt * 3)));
+  if (HQ) { sun.intensity = 0.6 + 1.9 * k; hemi.intensity = (0.55 + 0.05 * k) * (1 - 0.35 * inK); } else { sun.intensity = 0.35 + 0.6 * k; hemi.intensity = (0.65 + 0.15 * k) * (1 - 0.4 * inK); }
+  renderer.toneMappingExposure = (HQ ? 0.82 : 1.1) * (1 - 0.14 * inK);
+  if (HQ && Math.abs(inK - (updateSky.envSet ?? -1)) > 0.02) { // o reflexo do céu cinzento deixava as paredes leitosas dentro das salas
+    updateSky.envSet = inK;
+    if (!updateSky.mats || updateSky.mats.n !== scene.children.length) { const L = new Set(); scene.traverse(o => { const m = o.material; (Array.isArray(m) ? m : [m]).forEach(x => { if (x && x.isMeshStandardMaterial) { if (x.userData.env0 === undefined) x.userData.env0 = x.envMapIntensity; L.add(x); } }); }); updateSky.mats = [...L]; updateSky.mats.n = scene.children.length; }
+    for (const m of updateSky.mats) m.envMapIntensity = m.userData.env0 * (1 - 0.8 * inK);
+  }
   const ang = (G.t - 480) / (540) * Math.PI;
   sun.position.set(P.x + Math.cos(ang) * -80, 60 + Math.sin(ang) * 50, P.z + 50);
   skyMat.uniforms.sunDir.value.set(Math.cos(ang) * -80, 60 + Math.sin(ang) * 50, 50).normalize();
