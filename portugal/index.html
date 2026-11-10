@@ -85,7 +85,16 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 .btn.ghost{background:transparent;color:var(--paper);box-shadow:inset 0 0 0 1px #34505f;font-size:15px;padding:11px 16px}
 .facts{font-size:12.5px;color:var(--muted);line-height:1.5;border-top:1px solid #23394a;padding-top:10px}
 #mapWrap{display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%}.ptbox{display:grid;gap:8px;justify-items:center}.legend{display:grid;gap:4px;font:600 11px var(--fm);color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:4px;border-radius:2px;display:inline-block}.legend i.dash{background:repeating-linear-gradient(90deg,#ddd 0 3px,transparent 3px 6px)}
-#mapScroll{max-height:calc(100vh - 150px);overflow-y:auto;overflow-x:hidden;border-radius:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#mapScroll{max-height:calc(100vh - 215px);max-height:calc(100dvh - 215px);overflow-y:auto;overflow-x:hidden;border-radius:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.gorow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.gorow .btn{justify-self:auto}
+#tpBtn.on{box-shadow:inset 0 0 0 2px var(--sun);color:var(--sun)}
+#pickWrap{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%}
+#pickScroll{max-height:calc(100vh - 250px);max-height:calc(100dvh - 250px);overflow-y:auto;overflow-x:hidden;border-radius:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#pickMap{display:block;width:400px;max-width:calc(100vw - 48px);height:auto;border-radius:10px;border:1px solid #23394a;background:#0b1f2c;cursor:crosshair;touch-action:manipulation}
+#pickList{display:flex;flex-wrap:wrap;gap:6px;max-width:440px;max-height:calc(100vh - 250px);max-height:calc(100dvh - 250px);overflow-y:auto;align-content:flex-start}
+#pickList button{font:700 13px var(--fd);padding:7px 10px;border-radius:8px;border:1px solid #34505f;background:rgba(255,255,255,.04);color:var(--paper);cursor:pointer;text-align:left}
+#pickList button:hover{border-color:var(--sun)}
+#pickGo:disabled{opacity:.45;cursor:default}
 #mapBig{display:block;width:420px;max-width:calc(100vw - 32px);height:auto;border-radius:10px;border:1px solid #23394a;background:#0b1f2c}
 .tb{position:fixed;z-index:7;border:2px solid var(--sand);background:rgba(10,22,32,.55);color:var(--sand);font:800 13px var(--fd);touch-action:none;border-radius:50%;width:74px;height:74px}
 .tb.on{background:var(--sand);color:var(--ink)}
@@ -131,9 +140,9 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 
 <div class="screen" id="menu">
   <div class="card">
-    <div class="eyebrow">PORTUGAL CONTINENTAL · E DEPOIS O MUNDO DE AVIÃO</div>
+    <div class="eyebrow" id="menuEye">PORTUGAL E ESPANHA DE CARRO · O MUNDO DE AVIÃO</div>
     <h1>Explora e <em>Acelera</em></h1>
-    <p class="lead">Conduz por <b>Portugal inteiro</b>: <b>Lisboa</b> e a Ponte 25 de Abril, o <b>Porto</b> e o Douro, Braga, Coimbra, Aveiro, Évora, o <b>Algarve</b>, a Serra da Estrela… pelas autoestradas <b>A1, A2, A22, A3, A4, A23, A25</b> e muitas mais. Apanha o <b>comboio</b> de Faro a Braga, voa nos <b>aeroportos</b> de Lisboa, Porto e Faro, faz entregas, foge à polícia e descobre os monumentos.</p>
+    <p class="lead" id="menuLead">Conduz por <b>Portugal inteiro</b>: <b>Lisboa</b> e a Ponte 25 de Abril, o <b>Porto</b> e o Douro, Braga, Coimbra, Aveiro, Évora, o <b>Algarve</b>, a Serra da Estrela… pelas autoestradas <b>A1, A2, A22, A3, A4, A23, A25</b> e muitas mais. Apanha o <b>comboio</b> de Faro a Braga, voa nos <b>aeroportos</b> de Lisboa, Porto e Faro, faz entregas, foge à polícia e descobre os monumentos.</p>
     <div class="row">
       <div><span class="lbl2">Carro</span><div class="seg" id="cars"><button data-c="0" aria-pressed="true">Citadino<small>ágil</small></button><button data-c="1" aria-pressed="false">Desportivo<small>rápido</small></button><button data-c="2" aria-pressed="false">Carrinha<small>pesada</small></button></div></div>
       <div><span class="lbl2">Cor</span><div class="sw" id="colors"></div></div>
@@ -143,7 +152,7 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
       <div><span class="lbl2">Câmara (C)</span><div class="seg" id="cams"><button data-k="0" aria-pressed="true">Atrás</button><button data-k="1" aria-pressed="false">Longe</button><button data-k="2" aria-pressed="false">Capô</button></div></div>
     </div>
     <div class="keys"><div><kbd>W</kbd>/<kbd>↑</kbd> acelerar · <kbd>S</kbd>/<kbd>↓</kbd> travar e marcha-atrás</div><div><kbd>A</kbd><kbd>D</kbd> virar · <kbd>Shift</kbd> travão de mão (a pé: correr)</div><div><kbd>Espaço</kbd> nitro · <kbd>E</kbd> missão, abastecer, comboio</div><div><kbd>F</kbd> sair do carro / entrar · <kbd>C</kbd> câmara</div><div><kbd>Z</kbd>/<kbd>7</kbd> pisca esq. · <kbd>X</kbd>/<kbd>9</kbd> pisca dir. · <kbd>H</kbd>/<kbd>8</kbd> 4 piscas</div><div><kbd>L</kbd>/<kbd>0</kbd> faróis · <kbd>N</kbd> buzina</div><div><kbd>R</kbd> voltar à estrada · <kbd>M</kbd> mapa · <kbd>P</kbd>/<kbd>Esc</kbd> pausa</div></div>
-    <div><button class="btn" id="go">Conduzir</button></div>
+    <div class="gorow"><button class="btn" id="go">Conduzir</button><button class="btn ghost" id="pickBtn">📍 Escolher onde começar</button></div><div class="facts" id="startAt" style="margin-top:-4px"></div>
     <div class="facts" id="best"></div>
   </div>
 </div>
@@ -151,7 +160,8 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 <div class="screen" id="placeS" hidden><div class="card"><div class="eyebrow" id="placeE">SÍTIO</div><h2 id="placeH">Sítio</h2><p class="lead" id="placeP"></p><div id="placeL" style="display:grid;gap:8px"></div><div><button class="btn" id="placeClose">Sair</button></div></div></div>
 <div class="screen" id="flyS" hidden><div class="card"><div class="eyebrow" id="flyE">AEROPORTO</div><h2>Para onde queres voar?</h2><p class="lead" id="flyP">O teu carro vai contigo no porão. ✈</p><div id="flyList" style="display:grid;gap:8px"></div><div><button class="btn ghost" id="flyClose">Ficar aqui</button></div></div></div>
 <div class="screen" id="trainS" hidden><div class="card"><div class="eyebrow">ESTAÇÃO · COMBOIO DA COSTA DE PRATA</div><h2>Para onde vais?</h2><p class="lead">O carro segue contigo no comboio. O bilhete custa 2,50 €.</p><div id="trainList" style="display:grid;gap:8px"></div><div><button class="btn ghost" id="trainClose">Ficar aqui</button></div></div></div>
-<div class="screen" id="mapS" hidden><div class="card" style="justify-items:center;gap:10px;max-width:980px"><h2>Mapa · Explora e Acelera</h2><div id="mapWrap"><div class="ptbox"><div class="legend"><span><i style="background:#5b8fd6"></i>Autoestradas</span><span><i style="background:#e9e3d4"></i>Estradas</span><span><i class="dash"></i>Comboio</span><span><i style="background:#2e8b57"></i>Bombas</span><span><i style="background:#173a6b"></i>Estações</span></div></div><div id="mapScroll"><canvas id="mapBig" width="420" height="1260"></canvas></div></div><button class="btn" id="mapClose">Fechar (M)</button></div></div>
+<div class="screen" id="pickS" hidden><div class="card" style="justify-items:center;gap:10px;max-width:980px"><div class="eyebrow">TELETRANSPORTE · ESCOLHE NO MAPA</div><h2>Onde queres começar?</h2><p class="lead" id="pickP" style="text-align:center"></p><div id="pickWrap"><div id="pickScroll"><canvas id="pickMap" width="480" height="800"></canvas></div><div id="pickList"></div></div><div class="gorow" style="justify-content:center"><button class="btn" id="pickGo">Começar aqui</button><button class="btn ghost" id="pickClose">Voltar</button></div></div></div>
+<div class="screen" id="mapS" hidden><div class="card" style="justify-items:center;gap:10px;max-width:980px"><h2>Mapa · Explora e Acelera</h2><div id="mapWrap"><div class="ptbox"><div class="legend"><span><i style="background:#5b8fd6"></i>Autoestradas</span><span><i style="background:#e9e3d4"></i>Estradas</span><span><i class="dash"></i>Comboio</span><span><i style="background:#2e8b57"></i>Bombas</span><span><i style="background:#173a6b"></i>Estações</span></div></div><div id="mapScroll"><canvas id="mapBig" width="420" height="1260"></canvas></div></div><p class="lead" id="tpHint" hidden style="margin:0;color:var(--sun)">Toca no mapa no sítio para onde te queres teletransportar.</p><div class="gorow" style="justify-content:center"><button class="btn ghost" id="tpBtn">📍 Teletransportar</button><button class="btn" id="mapClose">Fechar (M)</button></div></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -245,16 +255,50 @@ const REGIONS={
 (()=>{const W=WORLD_OUT,L=k=>W[k]?W[k].land:[],F=k=>W[k]?W[k].foreign:[];
 const lm=(id,lon,lat,label,w,d,fn)=>()=>{const g=lmGroup(id,lon,lat,label,w,d);fn(g)};
 Object.assign(REGIONS,{
- es:{name:'Espanha',flag:'🇪🇸',lon0:-3.7,lat0:40.2,scale:40,box:[-9.4,35.9,3.4,43.9],drive:'right',price:120,land:L('es'),foreign:F('es'),foreignName:'Portugal e França',seaName:'MAR MEDITERRÂNEO',police:['POLICÍA','GUARDIA CIVIL'],start:'Madrid',
+ es:{name:'Espanha',flag:'🇪🇸',lon0:-3.7,lat0:40.2,scale:40,box:[-9.4,35.9,3.4,43.9],drive:'right',price:120,land:L('es'),foreign:F('es'),foreignName:'França',seaName:'MAR MEDITERRÂNEO',police:['POLICÍA','GUARDIA CIVIL'],start:'Madrid',
   relief:()=>.9,
-  mounts:[[0.5,42.6,140,1400],[-1,42.85,100,1000],[1.8,42.4,110,900],[-3.3,37.05,140,900],[-4.85,43.2,110,900],[-4.3,40.6,90,1200],[-5.5,40.35,80,900],[-6,43.0,80,1100],[-2.5,41.9,60,900]],
-  rivers:[{name:'Ebro',pts:[[0.8,40.7],[0.5,40.9],[-0.3,41.4],[-0.89,41.66],[-1.6,42.0],[-2.4,42.4]],w:[30]},{name:'Guadalquivir',pts:[[-6.35,36.80],[-6.1,37.1],[-5.99,37.38],[-5.2,37.7],[-4.78,37.88],[-3.8,37.98]],w:[40,34,30,28,26,24]},{name:'Tejo',pts:[[-6.9,39.65],[-5.6,39.75],[-4.02,39.85],[-3.6,40.05],[-2.5,40.4]],w:[30]},{name:'Douro',pts:[[-6.9,41.0],[-6.2,41.4],[-5.75,41.5],[-4.7,41.55],[-3.7,41.6],[-2.6,41.75]],w:[26]}],
-  cities:[{n:'Madrid',lon:-3.70,lat:40.42,r:420,big:2,blk:120},{n:'Barcelona',lon:2.15,lat:41.40,r:360,big:2},{n:'Valência',lon:-0.38,lat:39.47,r:280,big:1},{n:'Sevilha',lon:-5.98,lat:37.39,r:280,big:1},{n:'Saragoça',lon:-0.89,lat:41.65,r:240},{n:'Málaga',lon:-4.42,lat:36.72,r:240},{n:'Bilbau',lon:-2.93,lat:43.26,r:230},{n:'Granada',lon:-3.60,lat:37.18,r:200},{n:'Salamanca',lon:-5.66,lat:40.97,r:180},{n:'Valladolid',lon:-4.72,lat:41.65,r:200},{n:'Badajoz',lon:-6.97,lat:38.88,r:170},{n:'Vigo',lon:-8.72,lat:42.24,r:180},{n:'Santiago de Compostela',lon:-8.54,lat:42.88,r:170},{n:'Alicante',lon:-0.48,lat:38.35,r:200},{n:'Córdoba',lon:-4.78,lat:37.89,r:190},{n:'Toledo',lon:-4.02,lat:39.86,r:150},{n:'San Sebastián',lon:-1.98,lat:43.32,r:160},{n:'Burgos',lon:-3.70,lat:42.34,r:160}],
-  highways:[{name:'A-1',dest:['Madrid','Burgos','San Sebastián'],pts:[[-3.70,40.45],[-3.65,41.0],[-3.70,42.34],[-2.70,42.85],[-1.98,43.30]]},{name:'A-2',dest:['Madrid','Saragoça','Barcelona'],pts:[[-3.65,40.43],[-2.7,40.8],[-1.6,41.3],[-0.9,41.63],[0.6,41.6],[1.5,41.5],[2.13,41.40]]},{name:'A-3',dest:['Madrid','Valência'],pts:[[-3.66,40.40],[-2.3,39.7],[-1.0,39.5],[-0.40,39.47]]},{name:'A-4',dest:['Madrid','Córdoba','Sevilha'],pts:[[-3.70,40.38],[-3.6,39.5],[-3.9,38.6],[-4.77,37.90],[-5.95,37.40]]},{name:'A-5',dest:['Madrid','Badajoz','Lisboa'],pts:[[-3.72,40.40],[-4.6,40.0],[-6.0,39.4],[-6.95,38.88]]},{name:'A-6',dest:['Madrid','Valladolid','Santiago de Compostela'],pts:[[-3.75,40.45],[-4.72,41.62],[-6.0,42.4],[-7.6,42.7],[-8.54,42.87]]},{name:'A-7',dest:['Barcelona','Valência','Alicante','Málaga'],pts:[[2.13,41.37],[0.8,40.8],[-0.37,39.48],[-0.49,38.36],[-1.1,37.6],[-2.4,36.85],[-3.6,36.75],[-4.40,36.73]]},{name:'A-44',dest:['Granada','Málaga'],pts:[[-3.80,38.0],[-3.62,37.20],[-4.0,36.85],[-4.40,36.74]]},{name:'A-66',dest:['Salamanca','Sevilha'],pts:[[-5.66,40.95],[-6.0,39.4],[-6.3,38.5],[-5.98,37.42]]},{name:'A-62',dest:['Valladolid','Salamanca'],pts:[[-4.72,41.62],[-5.66,40.97]]}],
-  rail:[[-5.98,37.39],[-4.78,37.89],[-3.9,38.7],[-3.69,40.41],[-2.6,40.9],[-0.89,41.65],[0.9,41.4],[2.14,41.38]],stations:[['Sevilha',-5.98,37.39],['Córdoba',-4.78,37.89],['Madrid',-3.69,40.41],['Saragoça',-0.89,41.65],['Barcelona',2.14,41.38]],
-  airports:[{id:'MAD',n:'Aeroporto de Madrid-Barajas',lon:-3.57,lat:40.49,rot:.3,city:'Madrid'},{id:'BCN',n:'Aeroporto de Barcelona',lon:2.08,lat:41.30,rot:.5,city:'Barcelona'},{id:'AGP',n:'Aeroporto de Málaga',lon:-4.50,lat:36.68,rot:-.3,city:'Málaga'}],
-  landmarks:()=>[lm('palacioreal',-3.714,40.418,'Palácio Real de Madrid',50,40,g=>{box(g,50,18,40,0xefe9dc);box(g,10,26,10,0xefe9dc,-20,0,-15);box(g,10,26,10,0xefe9dc,20,0,-15)}),lm('sagrada',2.174,41.403,'Sagrada Família',40,40,g=>{box(g,34,22,34,0xd8c9a8);for(const [x,z] of [[-12,-12],[12,-12],[-12,12],[12,12],[0,-14],[0,14]])cyl(g,2.2,3,60,0xcdb991,x,0,z,10);cone(g,3.4,10,0xcdb991,0,60,0,10)}),lm('alhambra',-3.588,37.176,'Alhambra',60,30,g=>{box(g,60,12,30,0xc98a5a);for(const x of [-25,0,25])box(g,8,20,8,0xc98a5a,x,0,0)}),lm('guggenheim',-2.934,43.268,'Museu Guggenheim',40,30,g=>{const m=box(g,30,18,20,0xc7cdd3);m.rotation.y=.4;const n=box(g,20,24,14,0xd8dde2,6,0,4);n.rotation.y=-.3}),lm('plazaesp',-5.987,37.377,'Plaza de España (Sevilha)',70,40,g=>{box(g,70,12,8,0xd88a5a,0,0,-16);box(g,8,30,8,0xd88a5a,-34,0,-16);box(g,8,30,8,0xd88a5a,34,0,-16)}),lm('bernabeu',-3.688,40.453,'Estádio Santiago Bernabéu',60,50,g=>{box(g,60,22,50,0xe9e9e9);box(g,46,23,36,0x3d8a3a)}),lm('artes',-0.35,39.455,'Cidade das Artes e Ciências',50,30,g=>{const m=cyl(g,14,14,10,0xf4f8fb,0,0,0,24);m.scale.z=2})],
-  bridgeNames:[]},
+  mounts:[[0.5,42.6,140,1400],[-1,42.85,100,1000],[1.8,42.4,110,900],[-3.3,37.05,140,900],[-4.85,43.2,110,900],[-4.3,40.6,90,1200],[-5.5,40.35,80,900],[-6,43.0,80,1100],[-2.5,41.9,60,900],[-4.4,38.3,120,500],[-1.6,40.4,90,700],[-6.9,42.5,90,800]],
+  rivers:[{name:'Ebro',pts:[[0.8,40.7],[0.5,40.9],[-0.3,41.4],[-0.89,41.66],[-1.6,42.0],[-2.4,42.4]],w:[30]},{name:'Guadalquivir',pts:[[-6.35,36.80],[-6.1,37.1],[-5.99,37.38],[-5.2,37.7],[-4.78,37.88],[-3.8,37.98]],w:[40,34,30,28,26,24]},{name:'Tejo',pts:[[-6.9,39.65],[-5.6,39.75],[-4.02,39.85],[-3.6,40.05],[-2.5,40.4]],w:[30]},{name:'Douro',pts:[[-6.9,41.0],[-6.2,41.4],[-5.75,41.5],[-4.7,41.55],[-3.7,41.6],[-2.6,41.75]],w:[26]},{name:'Guadiana',pts:[[-7.0,38.87],[-6.34,38.91],[-5.6,39.0],[-4.5,39.1],[-3.6,39.1]],w:[26]},{name:'Minho',pts:[[-8.64,42.04],[-8.4,42.1],[-8.1,42.15],[-7.86,42.34],[-7.6,42.7],[-7.56,43.0]],w:[30,26,24,22,20,18]},{name:'Segura',pts:[[-0.65,38.1],[-1.13,37.99],[-1.6,38.1],[-2.1,38.2]],w:[18]}],
+  cities:[{n:'Madrid',lon:-3.70,lat:40.42,r:420,big:2,blk:120},{n:'Barcelona',lon:2.15,lat:41.40,r:360,big:2},{n:'Valência',lon:-0.38,lat:39.47,r:280,big:1},{n:'Sevilha',lon:-5.98,lat:37.39,r:280,big:1},{n:'Saragoça',lon:-0.89,lat:41.65,r:240,big:1},{n:'Málaga',lon:-4.42,lat:36.72,r:240,big:1},{n:'Bilbau',lon:-2.93,lat:43.26,r:230,big:1},{n:'Granada',lon:-3.60,lat:37.18,r:200},{n:'Salamanca',lon:-5.66,lat:40.97,r:180},{n:'Valladolid',lon:-4.72,lat:41.65,r:200},{n:'Badajoz',lon:-6.97,lat:38.88,r:150},{n:'Vigo',lon:-8.72,lat:42.24,r:180},{n:'Santiago de Compostela',lon:-8.54,lat:42.88,r:170},{n:'Alicante',lon:-0.48,lat:38.35,r:200},{n:'Córdoba',lon:-4.78,lat:37.89,r:190},{n:'Toledo',lon:-4.02,lat:39.86,r:150},{n:'San Sebastián',lon:-1.98,lat:43.32,r:160},{n:'Burgos',lon:-3.70,lat:42.34,r:160},
+   {n:'Corunha',lon:-8.41,lat:43.36,r:170},{n:'Ourense',lon:-7.86,lat:42.34,r:130},{n:'Oviedo',lon:-5.85,lat:43.36,r:160},{n:'Gijón',lon:-5.66,lat:43.53,r:150},{n:'Santander',lon:-3.81,lat:43.46,r:160},{n:'Leão',lon:-5.57,lat:42.60,r:150},{n:'Pamplona',lon:-1.64,lat:42.81,r:160},{n:'Logroño',lon:-2.45,lat:42.47,r:130},{n:'Vitória',lon:-2.67,lat:42.85,r:140},{n:'Lérida',lon:0.62,lat:41.61,r:140},{n:'Tarragona',lon:1.25,lat:41.12,r:140},{n:'Girona',lon:2.82,lat:41.98,r:130},{n:'Castelló',lon:-0.05,lat:39.99,r:140},{n:'Múrcia',lon:-1.13,lat:37.99,r:200},{n:'Cartagena',lon:-0.98,lat:37.61,r:130},{n:'Almería',lon:-2.46,lat:36.84,r:150},{n:'Jaén',lon:-3.79,lat:37.77,r:130},{n:'Jerez',lon:-6.14,lat:36.69,r:140},{n:'Cádis',lon:-6.27,lat:36.51,r:110},{n:'Huelva',lon:-6.95,lat:37.26,r:130},{n:'Marbella',lon:-4.88,lat:36.51,r:130},{n:'Cáceres',lon:-6.37,lat:39.47,r:140},{n:'Mérida',lon:-6.34,lat:38.92,r:120},{n:'Ciudad Real',lon:-3.93,lat:38.99,r:120},{n:'Albacete',lon:-1.86,lat:38.99,r:140},{n:'Segóvia',lon:-4.12,lat:40.95,r:120},{n:'Ávila',lon:-4.70,lat:40.66,r:110},{n:'Guadalajara',lon:-3.17,lat:40.63,r:110},{n:'Zamora',lon:-5.75,lat:41.50,r:110}],
+  highways:[{name:'A-1',dest:['Madrid','Burgos','Vitória','San Sebastián'],pts:[[-3.70,40.45],[-3.65,41.0],[-3.70,42.34],[-2.70,42.85],[-1.98,43.30]]},
+   {name:'A-2',dest:['Madrid','Guadalajara','Saragoça','Lérida','Barcelona'],pts:[[-3.65,40.43],[-3.17,40.63],[-2.4,41.0],[-1.6,41.3],[-0.9,41.63],[0.62,41.61],[1.5,41.5],[2.13,41.40]]},
+   {name:'A-3',dest:['Madrid','Valência'],pts:[[-3.66,40.40],[-2.9,40.1],[-2.3,39.7],[-1.0,39.5],[-0.40,39.47]]},
+   {name:'A-4',dest:['Madrid','Córdoba','Sevilha','Jerez','Cádis'],pts:[[-3.70,40.38],[-3.6,39.5],[-3.75,38.6],[-3.85,38.2],[-4.77,37.90],[-5.95,37.40],[-6.12,36.72],[-6.25,36.54]]},
+   {name:'A-5',dest:['Madrid','Mérida','Badajoz','Portugal'],pts:[[-3.72,40.40],[-4.6,40.0],[-5.5,39.6],[-6.34,38.93],[-6.95,38.88],[-7.06,38.89]]},
+   {name:'A-6',dest:['Madrid','Corunha'],pts:[[-3.75,40.45],[-4.4,40.75],[-5.0,41.5],[-5.7,42.0],[-6.05,42.45],[-6.9,42.6],[-7.56,43.0],[-8.40,43.35]]},
+   {name:'AP-9',dest:['Corunha','Santiago de Compostela','Vigo'],pts:[[-8.40,43.33],[-8.54,42.88],[-8.65,42.43],[-8.72,42.25]]},
+   {name:'A-55',dest:['Vigo','Tui','Portugal'],pts:[[-8.72,42.22],[-8.66,42.12],[-8.645,42.04]]},
+   {name:'A-52',dest:['Vigo','Ourense','Benavente'],pts:[[-8.70,42.23],[-8.2,42.3],[-7.86,42.33],[-7.0,42.2],[-6.2,42.0],[-5.7,42.0]]},
+   {name:'A-62',dest:['Burgos','Valladolid','Salamanca','Portugal'],pts:[[-3.70,42.33],[-4.2,42.0],[-4.72,41.63],[-5.3,41.3],[-5.66,40.97],[-6.3,40.7],[-6.83,40.61]]},
+   {name:'A-66',dest:['Gijón','Oviedo','Leão','Salamanca','Cáceres','Mérida','Sevilha'],pts:[[-5.66,43.52],[-5.85,43.35],[-5.6,42.95],[-5.57,42.60],[-5.7,42.0],[-5.75,41.5],[-5.66,40.95],[-6.0,40.2],[-6.37,39.47],[-6.34,38.93],[-6.3,38.3],[-5.98,37.42]]},
+   {name:'A-8',dest:['Oviedo','Santander','Bilbau','San Sebastián'],pts:[[-5.85,43.37],[-4.8,43.42],[-3.81,43.44],[-3.0,43.27],[-2.4,43.28],[-1.98,43.31]]},
+   {name:'AP-68',dest:['Bilbau','Logroño','Saragoça'],pts:[[-2.93,43.24],[-2.8,43.0],[-2.45,42.47],[-1.6,42.05],[-0.9,41.67]]},
+   {name:'A-15',dest:['Pamplona','Tudela'],pts:[[-1.64,42.80],[-1.7,42.3],[-1.6,42.06]]},
+   {name:'A-7',dest:['Girona','Barcelona','Tarragona','Castelló','Valência','Alicante','Múrcia','Almería','Málaga','Marbella'],pts:[[2.82,41.97],[2.4,41.6],[2.13,41.37],[1.25,41.13],[0.8,40.8],[-0.05,39.99],[-0.37,39.48],[-0.49,38.36],[-1.13,37.98],[-1.9,37.4],[-2.46,36.86],[-3.6,36.75],[-4.40,36.73],[-4.88,36.52]]},
+   {name:'A-30',dest:['Albacete','Múrcia','Cartagena'],pts:[[-1.86,38.98],[-1.5,38.5],[-1.13,37.99],[-0.98,37.63]]},
+   {name:'A-31',dest:['Albacete','Alicante'],pts:[[-2.3,39.7],[-1.86,38.99],[-1.0,38.6],[-0.49,38.36]]},
+   {name:'A-92',dest:['Sevilha','Granada','Almería'],pts:[[-5.95,37.38],[-5.0,37.25],[-4.2,37.15],[-3.62,37.18],[-3.0,37.25],[-2.46,36.86]]},
+   {name:'A-44',dest:['Jaén','Granada','Málaga'],pts:[[-3.85,38.2],[-3.79,37.77],[-3.62,37.20],[-4.0,36.85],[-4.40,36.74]]},
+   {name:'A-49',dest:['Sevilha','Huelva','Portugal'],pts:[[-6.0,37.38],[-6.5,37.3],[-6.95,37.27],[-7.2,37.24],[-7.39,37.22]]},
+   {name:'A-43',dest:['Mérida','Ciudad Real'],pts:[[-6.34,38.92],[-5.0,38.95],[-3.93,38.99],[-3.75,38.9]]}],
+  nroads:[{name:'AP-61 · Segóvia',pts:[[-4.4,40.75],[-4.2,40.85],[-4.12,40.94]]},{name:'A-50 · Ávila',pts:[[-4.4,40.75],[-4.70,40.66]]},{name:'A-42 · Toledo',pts:[[-3.71,40.37],[-3.9,40.1],[-4.02,39.87]]},{name:'N-122 · Zamora–Bragança',pts:[[-5.75,41.50],[-6.2,41.65],[-6.74,41.79]]},{name:'N-525 · Ourense–Chaves',pts:[[-7.86,42.33],[-7.6,42.1],[-7.45,41.92]]}],
+  rail:[[-6.27,36.52],[-6.14,36.69],[-5.98,37.39],[-4.78,37.89],[-3.93,38.99],[-3.69,40.41],[-3.17,40.63],[-0.89,41.65],[0.62,41.61],[1.2,41.2],[2.14,41.38],[2.82,41.98]],stations:[['Cádis',-6.27,36.52],['Jerez',-6.14,36.69],['Sevilha',-5.98,37.39],['Córdoba',-4.78,37.89],['Ciudad Real',-3.93,38.99],['Madrid',-3.69,40.41],['Guadalajara',-3.17,40.63],['Saragoça',-0.89,41.65],['Lérida',0.62,41.61],['Tarragona',1.2,41.2],['Barcelona',2.14,41.38],['Girona',2.82,41.98]],
+  airports:[{id:'MAD',n:'Aeroporto de Madrid-Barajas',lon:-3.57,lat:40.49,rot:.3,city:'Madrid'},{id:'BCN',n:'Aeroporto de Barcelona',lon:2.08,lat:41.30,rot:.5,city:'Barcelona'},{id:'AGP',n:'Aeroporto de Málaga',lon:-4.50,lat:36.68,rot:-.3,city:'Málaga'},{id:'VLC',n:'Aeroporto de Valência',lon:-0.48,lat:39.49,rot:.9,city:'Valência'},{id:'SVQ',n:'Aeroporto de Sevilha',lon:-5.89,lat:37.42,rot:.2,city:'Sevilha'},{id:'BIO',n:'Aeroporto de Bilbau',lon:-2.91,lat:43.30,rot:-.5,city:'Bilbau'},{id:'SCQ',n:'Aeroporto de Santiago',lon:-8.42,lat:42.90,rot:.6,city:'Santiago de Compostela'}],
+  landmarks:()=>[lm('palacioreal',-3.714,40.418,'Palácio Real de Madrid',50,40,g=>{box(g,50,18,40,0xefe9dc);box(g,10,26,10,0xefe9dc,-20,0,-15);box(g,10,26,10,0xefe9dc,20,0,-15)}),lm('sagrada',2.174,41.403,'Sagrada Família',40,40,g=>{box(g,34,22,34,0xd8c9a8);for(const [x,z] of [[-12,-12],[12,-12],[-12,12],[12,12],[0,-14],[0,14]])cyl(g,2.2,3,60,0xcdb991,x,0,z,10);cone(g,3.4,10,0xcdb991,0,60,0,10)}),lm('alhambra',-3.588,37.176,'Alhambra',60,30,g=>{box(g,60,12,30,0xc98a5a);for(const x of [-25,0,25])box(g,8,20,8,0xc98a5a,x,0,0)}),lm('guggenheim',-2.934,43.268,'Museu Guggenheim',40,30,g=>{const m=box(g,30,18,20,0xc7cdd3);m.rotation.y=.4;const n=box(g,20,24,14,0xd8dde2,6,0,4);n.rotation.y=-.3}),lm('plazaesp',-5.987,37.377,'Plaza de España (Sevilha)',70,40,g=>{box(g,70,12,8,0xd88a5a,0,0,-16);box(g,8,30,8,0xd88a5a,-34,0,-16);box(g,8,30,8,0xd88a5a,34,0,-16)}),lm('bernabeu',-3.688,40.453,'Estádio Santiago Bernabéu',60,50,g=>{box(g,60,22,50,0xe9e9e9);box(g,46,23,36,0x3d8a3a)}),lm('artes',-0.35,39.455,'Cidade das Artes e Ciências',50,30,g=>{const m=cyl(g,14,14,10,0xf4f8fb,0,0,0,24);m.scale.z=2}),
+   lm('mezquita',-4.779,37.879,'Mesquita de Córdoba',60,60,g=>{box(g,60,10,60,0xd9b98a);box(g,8,40,8,0xd9b98a,24,0,-24);cone(g,4,6,0xc9a35a,24,40,-24)}),
+   lm('giralda',-5.993,37.386,'Giralda (Sevilha)',16,16,g=>{box(g,12,70,12,0xd8a873);box(g,9,14,9,0xe9d2a8,0,70);cone(g,5,8,0xc9a35a,0,84)}),
+   lm('acueducto',-4.118,40.948,'Aqueduto de Segóvia',60,8,g=>{for(let i=-3;i<=3;i++)box(g,3,22,4,0xb59b74,i*9,0,0);box(g,64,4,4,0xb59b74,0,22,0)}),
+   lm('catsantiago',-8.544,42.880,'Catedral de Santiago',40,50,g=>{box(g,36,24,46,0xc9b48f);for(const x of [-12,12]){box(g,8,58,8,0xc9b48f,x,0,-22);cone(g,5,10,0x9c8a68,x,58,-22)}}),
+   lm('catburgos',-3.705,42.340,'Catedral de Burgos',30,50,g=>{box(g,26,26,46,0xe8dcc4);for(const x of [-8,8]){cyl(g,2,3,48,0xe8dcc4,x,0,-20,8);cone(g,3,14,0xd8ccb4,x,48,-20,8)}}),
+   lm('hercules',-8.406,43.386,'Torre de Hércules',14,14,g=>{box(g,12,50,12,0xcfc4ad);box(g,8,8,8,0xcfc4ad,0,50)}),
+   lm('alcazar',-4.020,39.858,'Alcázar de Toledo',40,40,g=>{box(g,40,22,40,0xd8c39a);for(const [x,z] of [[-18,-18],[18,-18],[-18,18],[18,18]]){box(g,7,32,7,0xd8c39a,x,0,z);cone(g,5,8,0x3a3f46,x,32,z)}}),
+   lm('pilar',-0.878,41.657,'Basílica do Pilar',60,30,g=>{box(g,60,24,30,0xd9c09a);for(const x of [-15,0,15])cyl(g,6,6,6,0x2f7d5a,x,24,0,12);for(const [x,z] of [[-28,-12],[28,-12],[-28,12],[28,12]])box(g,6,56,6,0xd9c09a,x,0,z)}),
+   lm('campnou',2.123,41.381,'Camp Nou',60,50,g=>{box(g,60,22,50,0xd9d9d9);box(g,46,23,36,0x3d8a3a)}),
+   lm('avila',-4.700,40.656,'Muralhas de Ávila',60,60,g=>{for(const [w,d,x,z] of [[60,4,0,-28],[60,4,0,28],[4,60,-28,0],[4,60,28,0]])box(g,w,10,d,0xc4a676,x,0,z);for(const [x,z] of [[-28,-28],[28,-28],[-28,28],[28,28],[0,-28],[0,28]])cyl(g,4,4,14,0xc4a676,x,0,z,10)}),
+   lm('plazamayor',-5.664,40.965,'Plaza Mayor de Salamanca',50,50,g=>{for(const [w,d,x,z] of [[50,6,0,-22],[50,6,0,22],[6,50,-22,0],[6,50,22,0]])box(g,w,14,d,0xd9a65c,x,0,z);box(g,10,22,6,0xd9a65c,0,0,-22)}),
+   lm('catleon',-5.567,42.599,'Catedral de Leão',26,44,g=>{box(g,22,24,40,0xe6dcc8);for(const x of [-7,7]){box(g,7,46,7,0xe6dcc8,x,0,-18);cone(g,4.5,10,0xc9bfa9,x,46,-18)}})],
+  bridgeNames:[['Ponte do Guadiana',-7.40,37.20,''],['Ponte da Amizade (Tui)',-8.645,42.04,''],['Ponte do Alamillo',-5.99,37.41,'vgama']]},
  fr:{name:'França',flag:'🇫🇷',lon0:2.4,lat0:46.6,scale:45,box:[-5.0,42.3,8.3,51.1],drive:'right',price:140,land:L('fr'),foreign:F('fr'),foreignName:'os países vizinhos',seaName:'OCEANO ATLÂNTICO',police:['POLICE','GENDARMERIE'],start:'Paris',relief:()=>.8,
   mounts:[[6.6,45.8,170,1300],[6.9,45.0,150,1100],[6.2,44.3,110,1000],[0.5,42.75,140,1300],[-1.0,43.0,90,900],[2.0,42.55,110,900],[2.9,45.4,90,1300],[7.0,48.0,70,700],[6.0,46.6,70,700]],
   rivers:[{name:'Sena',pts:[[0.1,49.45],[0.8,49.4],[1.5,49.1],[2.1,48.9],[2.29,48.86],[2.35,48.855],[2.45,48.82],[3.0,48.5],[4.0,48.3]],w:[60,40,32,28,26,26,26,24,22]},{name:'Loire',pts:[[-2.2,47.28],[-1.55,47.21],[-0.5,47.4],[0.69,47.40],[1.9,47.9],[2.8,47.4],[3.1,46.8]],w:[40,32,28]},{name:'Ródano',pts:[[4.8,43.4],[4.80,44.2],[4.85,45.0],[4.84,45.75],[5.5,46.1],[6.1,46.25]],w:[36,32]},{name:'Garona',pts:[[-0.75,45.3],[-0.56,44.84],[0.3,44.4],[1.43,43.6]],w:[50,32,28]}],
@@ -331,7 +375,11 @@ const MG=50,MX0=WB.x0,MZ0=WB.z0,MNX=Math.ceil((WB.x1-WB.x0)/MG)+1,MNZ=Math.ceil(
 const MASK=new Int8Array(MNX*MNZ),DCO=new Float32Array(MNX*MNZ);// 1 = país, 2 = estrangeiro (terra), 0 = mar
 {// preenchimento por linhas (rápido): para cada linha, cruzamentos com as arestas do contorno
  const fill=(polys,val,over)=>{for(let j=0;j<MNZ;j++){const z=MZ0+j*MG;for(const poly of polys){const xs=[];for(let i=0,k=poly.length-1;i<poly.length;k=i++){const a=poly[i],b=poly[k];if((a[1]>z)!==(b[1]>z))xs.push(a[0]+(z-a[1])*(b[0]-a[0])/(b[1]-a[1]))}xs.sort((u,v)=>u-v);for(let q=0;q+1<xs.length;q+=2){const i0=Math.max(0,Math.ceil((xs[q]-MX0)/MG)),i1=Math.min(MNX-1,Math.floor((xs[q+1]-MX0)/MG));for(let i=i0;i<=i1;i++){const k2=j*MNX+i;if(over||!MASK[k2])MASK[k2]=val}}}}};
- fill(SPAINP,2,true);fill(LANDP,1,true);if(RG.landFn)for(let j=0;j<MNZ;j++)for(let i=0;i<MNX;i++){const k=j*MNX+i;if(!MASK[k]&&RG.landFn(MX0+i*MG,MZ0+j*MG))MASK[k]=1}
+ fill(SPAINP,2,true);fill(LANDP,1,true);
+ // o contorno do país e o do vizinho nem sempre encaixam: a tira de "mar" entre os dois passa a ser terra do vizinho (fronteira sem buracos)
+ {const R=Math.ceil(260/MG),N=MNX*MNZ,d1=new Float32Array(N),d2=new Float32Array(N);for(let k=0;k<N;k++){d1[k]=MASK[k]===1?0:1e9;d2[k]=MASK[k]===2?0:1e9}
+  for(const d of [d1,d2]){for(let j=0;j<MNZ;j++)for(let i=0;i<MNX;i++){const k=j*MNX+i;if(i>0)d[k]=Math.min(d[k],d[k-1]+1);if(j>0)d[k]=Math.min(d[k],d[k-MNX]+1)}for(let j=MNZ-1;j>=0;j--)for(let i=MNX-1;i>=0;i--){const k=j*MNX+i;if(i<MNX-1)d[k]=Math.min(d[k],d[k+1]+1);if(j<MNZ-1)d[k]=Math.min(d[k],d[k+MNX]+1)}}
+  for(let k=0;k<N;k++)if(!MASK[k]&&d1[k]<=R&&d2[k]<=R&&d1[k]+d2[k]<=R*1.5)MASK[k]=2}if(RG.landFn)for(let j=0;j<MNZ;j++)for(let i=0;i<MNX;i++){const k=j*MNX+i;if(!MASK[k]&&RG.landFn(MX0+i*MG,MZ0+j*MG))MASK[k]=1}
  // distância à costa (positiva em terra, negativa no mar), por varrimentos
  const INF=1e9;for(let k=0;k<MASK.length;k++)DCO[k]=INF;
  for(let j=0;j<MNZ;j++)for(let i=0;i<MNX;i++){const k=j*MNX+i,l=MASK[k]>0;let edge=false;for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=MNX||jj>=MNZ)continue;if((MASK[jj*MNX+ii]>0)!==l){edge=true;break}}if(edge)DCO[k]=MG*.5}
@@ -411,13 +459,18 @@ function cutRoad(r,s0,s1){const cum=[0];for(let i=0;i<r.pts.length-1;i++)cum.pus
  const at=sv=>{sv=clamp(sv,0,tot);let i=0;while(i<cum.length-2&&cum[i+1]<sv)i++;const a=r.pts[i],b=r.pts[i+1],t=(sv-cum[i])/((cum[i+1]-cum[i])||1);return[lerp(a[0],b[0],t),lerp(a[1],b[1],t)]};
  const before=[],after=[];for(let i=0;i<r.pts.length;i++){if(cum[i]<s0-1)before.push(r.pts[i]);else if(cum[i]>s1+1)after.push(r.pts[i])}if(s0>2)before.push(at(s0));if(s1<tot-2)after.unshift(at(s1));
  const ri=ROADS.indexOf(r),ex=Object.assign({},r);delete ex.name;delete ex.pts;delete ex.w;ROADS.splice(ri,1);if(before.length>1&&s0>15)road(r.name,before,r.w,Object.assign({},ex,{deadEnd:true}));if(after.length>1&&tot-s1>15)road(r.name,after,r.w,Object.assign({},ex,{deadEnd:true}));return true}
+// autoestradas que acabam perto da fronteira: continuam até lá (para se poder passar para o outro país de carro)
+for(const r of ROADS.filter(r=>r.auto))for(const end of [0,1]){const P=r.pts;if(P.length<2)continue;const e=end?P[P.length-1]:P[0],q=end?P[P.length-2]:P[1];const L=Math.hypot(e[0]-q[0],e[1]-q[1])||1,ux=(e[0]-q[0])/L,uz=(e[1]-q[1])/L;
+ let hit=-1;for(let d=20;d<=3000;d+=20){const x=e[0]+ux*d,z=e[1]+uz*d;const m=maskAt(x,z);if(m===2){hit=d;break}if(m!==1)break}
+ if(hit>0){const ext=[];for(let d=20;d<=hit+60;d+=20)ext.push([e[0]+ux*d,e[1]+uz*d]);if(end)r.pts=P.concat(ext);else r.pts=ext.reverse().concat(P);r.toBorder=true;(r.bEnds=r.bEnds||{})[end]=1}}
 // autoestradas que começam ou acabam soltas (ou dentro de água, ex.: Lisboa à beira do Tejo): prolongar até à rua em terra mais perto
 {const wetP=(x,z)=>rawH(x,z)<-.5||(riverAt(x,z)||{e:9}).e<2;
- for(const r of ROADS.filter(r=>r.auto&&!r.bridge))for(const end of [0,1]){const P=r.pts,e=end?P[P.length-1]:P[0];const linked=ROADS.some(q=>q!==r&&q.pts.some(p=>Math.hypot(p[0]-e[0],p[1]-e[1])<60));if(linked&&!wetP(e[0],e[1]))continue;
+ for(const r of ROADS.filter(r=>r.auto&&!r.bridge))for(const end of [0,1]){if(r.bEnds&&r.bEnds[end])continue;const P=r.pts,e=end?P[P.length-1]:P[0];const linked=ROADS.some(q=>q!==r&&q.pts.some(p=>Math.hypot(p[0]-e[0],p[1]-e[1])<60));if(linked&&!wetP(e[0],e[1]))continue;
   let best=null,bd=1500;for(const q of ROADS){if(q===r||q.bridge||q.auto)continue;for(const p of q.pts){const d=Math.hypot(p[0]-e[0],p[1]-e[1]);if(d<bd&&!wetP(p[0],p[1])){bd=d;best=p}}}
   if(!best)continue;const ext=dens([e,[best[0],best[1]]],12).slice(1);if(end)r.pts=P.concat(ext);else r.pts=ext.reverse().concat(P);JUNCTIONS.push({x:best[0],z:best[1]})}}
 const BRNAMES=(RG.bridgeNames||[]).map(b=>{const p=PJ(b[1],b[2]);return{n:b[0],x:p[0],z:p[1],kind:b[3]||''}});
 {let guard=0;for(let pass=0;pass<4;pass++){let changed=false;for(const r of ROADS.slice().sort((a,b)=>(b.auto?1:0)-(a.auto?1:0))){if(r.bridge||guard>4000||!ROADS.includes(r))continue;const P=dens(r.pts.map(p=>[p[0],p[1]]),6);let acc=0,wet0=-1,spans=[];for(let i=0;i<P.length;i++){if(i>0)acc+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);const wet=rawH(P[i][0],P[i][1])<-.5||(riverAt(P[i][0],P[i][1])||{e:9}).e<2;if(wet&&wet0<0)wet0=acc;if(!wet&&wet0>=0){spans.push([wet0,acc]);wet0=-1}}if(wet0>=0)spans.push([wet0,acc]);
+   for(let i=spans.length-1;i>0;i--)if(spans[i][0]-spans[i-1][1]<350){spans[i-1][1]=spans[i][1];spans.splice(i,1)} // bocados de terra pelo meio: uma ponte só (sem ondas)
    if(!spans.length)continue;const sp=spans[0],mx=(sp[0]+sp[1])/2;
    // nome: a ponte famosa mais perto, senão "Ponte sobre o rio"
    const cum=[0];for(let i=0;i<r.pts.length-1;i++)cum.push(cum[i]+Math.hypot(r.pts[i+1][0]-r.pts[i][0],r.pts[i+1][1]-r.pts[i][1]));let mi=0;while(mi<cum.length-2&&cum[mi+1]<mx)mi++;const mp=r.pts[mi];
@@ -444,6 +497,14 @@ const VIAS=[];const nearRoad0=(x,z,L)=>{let best=null,bd=1e9;for(const r of L)fo
 
 /* ---- linha do comboio ---- */
 let RAIL=chaikin(PJL(RG.rail||[[LON0,LAT0],[LON0+.01,LAT0]]),3);
+// o comboio não passa por cima das pontes de estrada: quando vão lado a lado, a linha fica numa ponte própria ao lado
+{const BRR=ROADS.filter(r=>r.bridge);const off=new Float32Array(RAIL.length),ox=new Float32Array(RAIL.length),oz=new Float32Array(RAIL.length);
+ for(let i=0;i<RAIL.length;i++){const p=RAIL[i],q=RAIL[Math.min(RAIL.length-1,i+1)],o=RAIL[Math.max(0,i-1)];let tx=q[0]-o[0],tz=q[1]-o[1];const tl=Math.hypot(tx,tz)||1;tx/=tl;tz/=tl;
+  for(const r of BRR){for(let k=0;k<r.pts.length-1;k++){const a=r.pts[k],b=r.pts[k+1],vx=b[0]-a[0],vz=b[1]-a[1],L=Math.hypot(vx,vz)||1,t=clamp(((p[0]-a[0])*vx+(p[1]-a[1])*vz)/(L*L),0,1),px=a[0]+vx*t,pz=a[1]+vz*t,d=Math.hypot(p[0]-px,p[1]-pz),need=r.w/2+12;
+   if(d<need&&Math.abs(tx*vx/L+tz*vz/L)>.6){let nx=-vz/L,nz=vx/L;if((p[0]-px)*nx+(p[1]-pz)*nz<0){nx=-nx;nz=-nz}const push=need-d;if(push>off[i]){off[i]=push;ox[i]=nx;oz[i]=nz}}}}}
+ // suavizar o desvio para a linha não ficar aos esses
+ const sm=new Float32Array(RAIL.length),sx=new Float32Array(RAIL.length),sz=new Float32Array(RAIL.length);for(let i=0;i<RAIL.length;i++){let w=0,a=0,bx=0,bz=0;for(let j=-12;j<=12;j++){const k=i+j;if(k<0||k>=RAIL.length||!off[k])continue;const f=1-Math.abs(j)/13;a=Math.max(a,off[k]*f);bx+=ox[k]*f;bz+=oz[k]*f;w+=f}if(w){const l=Math.hypot(bx,bz)||1;sm[i]=a;sx[i]=bx/l;sz[i]=bz/l}}
+ for(let i=0;i<RAIL.length;i++)if(sm[i]){RAIL[i]=[RAIL[i][0]+sx[i]*sm[i],RAIL[i][1]+sz[i]*sm[i]]}}
 const RAILS=[];let railLen=0;for(let i=0;i<RAIL.length-1;i++){const a=RAIL[i],b=RAIL[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);RAILS.push({ax:a[0],az:a[1],bx:b[0],bz:b[1],len:L,s0:railLen});railLen+=L}
 const RG_RAIL=new Map(),RGC=400;RAILS.forEach(s=>{const x0=Math.floor((Math.min(s.ax,s.bx)-40)/RGC),x1=Math.floor((Math.max(s.ax,s.bx)+40)/RGC),z0=Math.floor((Math.min(s.az,s.bz)-40)/RGC),z1=Math.floor((Math.max(s.az,s.bz)+40)/RGC);for(let i=x0;i<=x1;i++)for(let j=z0;j<=z1;j++){const k=i+','+j;(RG_RAIL.get(k)||RG_RAIL.set(k,[]).get(k)).push(s)}});
 function nearRail(x,z){const L=RG_RAIL.get(Math.floor(x/RGC)+','+Math.floor(z/RGC));let best=null,bd=1e9;const src=L&&L.length?L:RAILS;for(const s of src){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len),0,1),px=s.ax+vx*t,pz=s.az+vz*t,d=Math.hypot(x-px,z-pz);if(d<bd){bd=d;best={s,t,d,px,pz,sAt:s.s0+s.len*t}}}if(!L||!L.length)best.d=Math.max(best.d,RGC);return best}
@@ -453,8 +514,8 @@ function railWet(x,z){return rawH(x,z)<-.5||(riverAt(x,z)||{e:9}).e<3}
 const RAILY=new Float32Array(Math.ceil(railLen/6)+2);
 // autoestradas por cima da linha (viadutos automáticos)
 {const segI=(a,b,c,d)=>{const r=(b[0]-a[0])*(d[1]-c[1])-(b[1]-a[1])*(d[0]-c[0]);if(Math.abs(r)<1e-9)return null;const t=((c[0]-a[0])*(d[1]-c[1])-(c[1]-a[1])*(d[0]-c[0]))/r,u=((c[0]-a[0])*(b[1]-a[1])-(c[1]-a[1])*(b[0]-a[0]))/r;return t>0&&t<1&&u>0&&u<1?{t}:null};
- for(let pass=0;pass<4;pass++){let ch=false;for(const r of ROADS.slice()){if(!r.auto&&!r.link&&r.urb)continue;if(r.bridge)continue;let acc=0,hit=null;for(let i=0;i<r.pts.length-1&&hit==null;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);for(const s of RAILS){const q=segI(a,b,[s.ax,s.az],[s.bx,s.bz]);if(q){hit=acc+q.t*L;break}}acc+=L}
-   if(hit==null)continue;if(!r.auto&&!r.link)continue;if(hit<50||acc-hit<50)continue;if(splitBridge(r,hit-75,hit+75,7.6,'Viaduto · '+r.name))ch=true}if(!ch)break}}
+ for(let pass=0;pass<4;pass++){let ch=false;for(const r of ROADS.slice()){if(!r.auto&&!r.link&&r.urb)continue;if(r.bridge)continue;let acc=0,hit=null,hsin=1;for(let i=0;i<r.pts.length-1&&hit==null;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);for(const s of RAILS){const q=segI(a,b,[s.ax,s.az],[s.bx,s.bz]);if(q){hit=acc+q.t*L;hsin=Math.abs(((b[0]-a[0])*(s.bz-s.az)-(b[1]-a[1])*(s.bx-s.ax))/(L*s.len||1));break}}acc+=L}
+   if(hit==null)continue;if(!r.auto&&!r.link)continue;const HV=Math.min(380,Math.max(75,(r.w/2+8)/Math.max(.05,hsin)+50));if(hit<50||acc-hit<50)continue;if(splitBridge(r,hit-HV,hit+HV,7.6,'Viaduto · '+r.name))ch=true}if(!ch)break}}
 // estrutura de consulta: segmentos
 const SEGS=SEGS0();
 const SG=new Map(),SGC=250;SEGS.forEach(s=>{const x0=Math.floor((Math.min(s.ax,s.bx)-30)/SGC),x1=Math.floor((Math.max(s.ax,s.bx)+30)/SGC),z0=Math.floor((Math.min(s.az,s.bz)-30)/SGC),z1=Math.floor((Math.max(s.az,s.bz)+30)/SGC);for(let i=x0;i<=x1;i++)for(let j=z0;j<=z1;j++){const k=i+','+j;(SG.get(k)||SG.set(k,[]).get(k)).push(s)}});
@@ -469,9 +530,9 @@ function surfaceAt(x,z,curY){const b=bridgeAt(x,z,curY);if(b&&(curY==null||Math.
 function roadLiftY(x,z){const t=terrainH(x,z);if(typeof SEGS==='undefined'||!SEGS.length)return t;const n=nearRoad(x,z);if(!n||n.s.r.bridge||n.d>n.s.r.w/2+.6)return t;const m=meshH(n.px,n.pz);if(m<=-.5)return t;return Math.max(t,Math.max(m,-.2)+.1+(m>4?.15:0))}
 /* ================= RENDER ================= */
 const canvas=$('#c');const renderer=new THREE.WebGLRenderer({canvas,antialias:true});const mobile=matchMedia('(pointer:coarse)').matches;
-renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.4:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const PRMAX=Math.min(devicePixelRatio||1,2);let PR=PRMAX;renderer.setPixelRatio(PR);const PRF={n:0,t:0,good:0};renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(65,1,.3,5200);
-const hemi=new THREE.HemisphereLight(0xcfe6ff,0x8a7a5a,.75);scene.add(hemi);const sun=new THREE.DirectionalLight(0xfff0d8,.9);sun.castShadow=true;sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);Object.assign(sun.shadow.camera,{left:-120,right:120,top:120,bottom:-120,near:10,far:900});sun.shadow.bias=-.0005;scene.add(sun,sun.target);
+const hemi=new THREE.HemisphereLight(0xcfe6ff,0x8a7a5a,.75);scene.add(hemi);const sun=new THREE.DirectionalLight(0xfff0d8,.9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-120,right:120,top:120,bottom:-120,near:10,far:900});sun.shadow.bias=-.0005;scene.add(sun,sun.target);
 scene.fog=new THREE.Fog(0xbcd8e6,500,4500);
 const lam=o=>new THREE.MeshLambertMaterial(o);
 const unitBox=new THREE.BoxGeometry(1,1,1);unitBox.translate(0,.5,0);
@@ -548,12 +609,15 @@ function gantry(x,z,dx,dz,texN,texS,toll){const a=Math.atan2(dx,dz),y=terrainH(x
    if(n%5===3){const t=panel([['PORTAGEM ELETRÓNICA'],['Classe 1','1,20 €']],9,3.2,'#2a6a3a');gantry(x,z,dx,dz,t,t,true);return}
    gantry(x,z,dx,dz,ahead.length?panel([[r.name+'  ↑'],...ahead.map(c=>[c.n,kmTo(x,z,c)])],9,3.2):null,back.length?panel([[r.name+'  ↓'],...back.map(c=>[c.n,kmTo(x,z,c)])],9,3.2):null,false)})})}
 // pontes: tabuleiro, guardas e pilares (e as famosas com a sua forma)
+// há estrada (ou linha do comboio) por baixo deste ponto? (as pontes não contam) — para não pôr pilares em cima dela
+function roadUnder(x,z,pad){const ci=Math.floor(x/SGC),cj=Math.floor(z/SGC);for(let i=ci-1;i<=ci+1;i++)for(let j=cj-1;j<=cj+1;j++){const L=SG.get(i+','+j);if(!L)continue;for(const g of L){if(g.r.bridge)continue;const vx=g.bx-g.ax,vz=g.bz-g.az,t=clamp(((x-g.ax)*vx+(z-g.az)*vz)/(g.len*g.len||1),0,1);if(Math.hypot(x-g.ax-vx*t,z-g.az-vz*t)<g.r.w/2+pad)return true}}
+ const rl=typeof nearRail==='function'?nearRail(x,z):null;return !!(rl&&rl.d<2.6+pad&&railY(rl.sAt)<terrainH(x,z)+2)}
 {const deckM=lam({color:0xb9b4aa}),parM=lam({color:0xd9d6cf}),pilM=lam({color:0xa8a39a}),red=lam({color:0xb3261e}),steel=lam({color:0x6d7780});
  for(const r of ROADS){if(!r.viaduct)continue;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),yaw=Math.atan2(b[0]-a[0],b[1]-a[1]),pitch=Math.atan2(b[2]-a[2],L),mx=(a[0]+b[0])/2,mz=(a[1]+b[1])/2,my=(a[2]+b[2])/2;
   const g=new THREE.Group();g.position.set(mx,my,mz);g.rotation.order='YXZ';g.rotation.y=yaw;g.rotation.x=-pitch;scene.add(g);
   const d=new THREE.Mesh(new THREE.BoxGeometry(r.w+1.2,.9,L+.3),r.kind==='25abril'?red:deckM);d.position.y=-.5;d.receiveShadow=true;g.add(d);
   for(const sd of [-1,1]){const pa=new THREE.Mesh(new THREE.BoxGeometry(.35,1.0,L+.3),parM);pa.position.set(sd*(r.w/2+.45),.45,0);g.add(pa)}
-  if(i%3===0){const th=terrainH(a[0],a[1]),hh=a[2]-.9-th;if(hh>1.8){const nr2=nearRoad(a[0],a[1]);if(!(nr2&&!nr2.s.r.bridge&&nr2.d<nr2.s.r.w/2+1.5)){const pl=new THREE.Mesh(new THREE.BoxGeometry(r.w*.7,hh+3,1.6),pilM);pl.position.set(a[0],th+hh/2-1.5,a[1]);pl.rotation.y=yaw;scene.add(pl)}}}}
+  if(i%3===0){const th=terrainH(a[0],a[1]),hh=a[2]-.9-th;if(hh>1.8){const px=Math.cos(yaw),pz=-Math.sin(yaw),hw=r.w*.35;let blocked=false;for(let u=-1;u<=1&&!blocked;u+=.25)if(roadUnder(a[0]+px*hw*u,a[1]+pz*hw*u,2))blocked=true;if(!blocked){const pl=new THREE.Mesh(new THREE.BoxGeometry(r.w*.7,hh+3,1.6),pilM);pl.position.set(a[0],th+hh/2-1.5,a[1]);pl.rotation.y=yaw;scene.add(pl)}}}}
   // Ponte 25 de Abril: torres vermelhas e cabos; Vasco da Gama: mastros com tirantes; Luís I / Arrábida: arco
   if(r.kind&&r.pts.length>6){const P=r.pts,n=P.length,yaw0=Math.atan2(P[n-1][0]-P[0][0],P[n-1][1]-P[0][1]);
    if(r.kind==='25abril'){const ti=[Math.floor(n*.33),Math.floor(n*.67)],tops=[];for(const k of ti){const p=P[k];for(const sd of [-1,1]){const t=new THREE.Mesh(new THREE.BoxGeometry(1.6,46,2.2),red);const nx=Math.cos(yaw0)*sd*(r.w/2+1.2),nz=-Math.sin(yaw0)*sd*(r.w/2+1.2);t.position.set(p[0]+nx,p[2]+20,p[1]+nz);t.rotation.y=yaw0;scene.add(t);tops.push([p[0]+nx,p[2]+43,p[1]+nz,sd])}}
@@ -566,9 +630,14 @@ function gantry(x,z,dx,dz,texN,texS,toll){const a=Math.atan2(dx,dz),y=terrainH(x
 /* ================= COMBOIO ================= */
 // altura da linha (nas pontes fica por cima da água)
 {const N=RAILY.length,G=new Float32Array(N),WET=new Uint8Array(N);for(let k=0;k<N;k++){const p=railPoint(k*6);G[k]=TH0(p.x,p.z);WET[k]=railWet(p.x,p.z)?1:0}
+ {let last=-1;for(let k=0;k<N;k++)if(WET[k]){if(last>=0&&k-last>1&&k-last<75)for(let j=last+1;j<k;j++)WET[j]=1;last=k}} // terra curta entre águas: a ponte do comboio segue direita (sem ondas)
  // por cima da água o carril fica a 8 m; rampas de 6 % para cada lado
  for(let k=0;k<N;k++)RAILY[k]=Math.max(G[k],.5);const SL=6*.06;let lastWet=-1e9;
  for(let k=0;k<N;k++){if(WET[k])lastWet=k;RAILY[k]=Math.max(RAILY[k],(WET[k]?8:8-(k-lastWet)*SL))}lastWet=1e9;for(let k=N-1;k>=0;k--){if(WET[k])lastWet=k;RAILY[k]=Math.max(RAILY[k],WET[k]?8:8-(lastWet-k)*SL)}
+ // onde a linha cruza por baixo de uma ponte de estrada, desce o suficiente para passar por baixo (com rampas suaves)
+ {const cap=new Float32Array(N).fill(1e9);for(let k=0;k<N;k++){const p=railPoint(k*6);const bb=bridgeAt(p.x,p.z);if(!bb)continue;const fl=WET[k]?1.6:G[k]+.05,tg=bb.y-7;if(RAILY[k]>tg&&tg>=fl)cap[k]=tg}
+  for(let k=1;k<N;k++)cap[k]=Math.min(cap[k],cap[k-1]+SL);for(let k=N-2;k>=0;k--)cap[k]=Math.min(cap[k],cap[k+1]+SL);
+  for(let k=0;k<N;k++)if(cap[k]<RAILY[k])RAILY[k]=Math.max(cap[k],WET[k]?1.6:G[k])}
  for(let k=0;k<N;k++)if(!WET[k]&&RAILY[k]<G[k]+.05)RAILY[k]=-999}
 function railY(sv){const k=clamp(Math.round(sv/6),0,RAILY.length-1),v=RAILY[k];if(v>-998)return v;const p=railPoint(sv);return terrainH(p.x,p.z)}
 {const P=[];for(let sv=0;sv<railLen;sv+=6){const p=railPoint(sv);p.y=railY(sv);P.push(p)}const pos=[],idx=[];P.forEach((p,i)=>{const nx=-p.dz,nz=p.dx,y=p.y+.12;for(const sd of [-1,1])pos.push(p.x+nx*sd*2.3,y,p.z+nz*sd*2.3);if(i>0){const b=(i-1)*2;idx.push(b,b+2,b+1,b+1,b+2,b+3)}});
@@ -577,7 +646,7 @@ function railY(sv){const k=clamp(Math.round(sv/6),0,RAILY.length-1),v=RAILY[k];i
  const rl=[];for(let sv=0;sv<railLen;sv+=6){const p=railPoint(sv+3);p.y=railY(sv+3);rl.push(p)}const rg=new THREE.BoxGeometry(.09,.14,6.05);for(const sd of [-.72,.72])inst(rg,lam({color:0x9a9ea3}),rl,(d,p)=>{d.position.set(p.x-p.dz*sd,p.y+.34,p.z+p.dx*sd);d.rotation.y=Math.atan2(p.dx,p.dz)},0);
  // tabuleiros e pilares das pontes do comboio
  const bd=[];for(let sv=0;sv<railLen;sv+=12){const y=railY(sv),p=railPoint(sv);if(y>TH0(p.x,p.z)+2.5){p.y=y;bd.push(p)}}const dg=new THREE.BoxGeometry(6,1.1,12.4);inst(dg,lam({color:0xb9b4aa}),bd,(d,p)=>{d.position.set(p.x,p.y-.5,p.z);d.rotation.y=Math.atan2(p.dx,p.dz)},2);
- const pg=new THREE.BoxGeometry(3,1,2);inst(pg,lam({color:0xa8a39a}),bd.filter((p,i)=>i%2===0),(d,p)=>{const g=TH0(p.x,p.z);d.position.set(p.x,g-2,p.z);d.scale.y=Math.max(1,p.y-g+1.5);d.rotation.y=Math.atan2(p.dx,p.dz)},0)}
+ const pg=new THREE.BoxGeometry(3,1,2);inst(pg,lam({color:0xa8a39a}),bd.filter((p,i)=>i%2===0&&!roadUnder(p.x,p.z,2.5)),(d,p)=>{const g=TH0(p.x,p.z);d.position.set(p.x,g-2,p.z);d.scale.y=Math.max(1,p.y-g+1.5);d.rotation.y=Math.atan2(p.dx,p.dz)},0)}
 /* ================= EDIFÍCIOS (instâncias com janelas por shader) ================= */
 const B=[];// {x,z,w,d,h,col}
 const PALS={def:[0xf3efe6,0xf6e7c8,0xe9eef0,0xf1d9c4,0xdfe8e1,0xf5f0dc,0xe3d4bd,0xcfdde6],lisboa:[0xf3d9a4,0xf2c6b6,0xe9eef0,0xf6efe2,0xd9e6ef,0xf1e3b3,0xe7c9a9],porto:[0xd9d3c7,0xc9c2b3,0xe8e1d0,0xb8b1a3,0xefe6d2,0xd8c3a5],aveiro:[0x9fc6d9,0xf2c6b6,0xf3e2a0,0xb9dcc2,0xe8b5c8,0xf6efe2],alentejo:[0xfbfbf7,0xf7f5ee,0xfdfcf8,0xf1ead8],algarve:[0xfdfdfb,0xf8f6f0,0xfbf4e6,0xf3efe9]};
@@ -691,10 +760,28 @@ AIRPORTS.forEach(a=>{LM['a_'+a.id]={x:a.door.x,z:a.door.z,label:a.n}});
 const SA_LIST=PUMPS.filter(p=>/Área de Serviço/.test(p.name)).map(p=>({x:p.x,z:p.z,town:p.name.split(' · ')[0],side:1,name:p.name}));
 const A17=[],A17LEN=0;
 // onde se começa (ou onde se chega de avião)
-const SPAWN=(()=>{let x,z;const ap=ARRIVE&&AIRPORTS.find(a=>a.id===ARRIVE);if(ap){const c=Math.cos(ap.rot),s=Math.sin(ap.rot);x=ap.door.x+c*40;z=ap.door.z-s*40}else{const c=CITIES.find(c=>c.n===RG.start)||CITIES[0];x=c.x+25;z=c.z+15}
+// chegada de carro pela fronteira (Portugal <-> Espanha): começa na estrada mais perto do sítio por onde passaste
+const BORDER_AT=(()=>{try{const v=sessionStorage.getItem('ea.at');sessionStorage.removeItem('ea.at');return v?JSON.parse(v):null}catch(e){return null}})();
+const unPJ=(x,z)=>[x/KX+LON0,LAT0-z/KY];
+const inPolyLL=(lon,lat,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>lat)!==(b[1]>lat)&&lon<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
+function borderSpot(x,z){let best=null,bd=1e9;for(const g of SEGS){if(g.r.bridge)continue;for(let t=0;t<=1;t+=.25){const px=g.ax+(g.bx-g.ax)*t,pz=g.az+(g.bz-g.az)*t;const d=Math.hypot(px-x,pz-z)+(g.r.auto?0:60);if(d<bd&&!foreignAt(px,pz)){bd=d;best={g,px,pz}}}}
+ if(!best)return null;const g=best.g,L=g.len||1;let ux=(g.bx-g.ax)/L,uz=(g.bz-g.az)/L;
+ // virado para dentro do país (para longe da fronteira)
+ const fw=k=>{let n=0;for(let d=40;d<=400;d+=40)if(foreignAt(best.px+ux*d*k,best.pz+uz*d*k))n++;return n};if(fw(1)>fw(-1)){ux=-ux;uz=-uz}
+ const px=best.px,pz=best.pz;
+ return{x:px-uz*g.r.w*.25*DRV+ux*30,z:pz+ux*g.r.w*.25*DRV+uz*30,h:Math.atan2(ux,-uz)}}
+const SPAWN=(()=>{let x,z;const ap=ARRIVE&&AIRPORTS.find(a=>a.id===ARRIVE);if(BORDER_AT){const [bx,bz]=PJ(BORDER_AT.lon,BORDER_AT.lat);const sp=borderSpot(bx,bz);if(sp)return sp}if(ap){const c=Math.cos(ap.rot),s=Math.sin(ap.rot);x=ap.door.x+c*40;z=ap.door.z-s*40}else{const c=CITIES.find(c=>c.n===RG.start)||CITIES[0];x=c.x+25;z=c.z+15}
  const n=nearRoad(x,z),g=n.s,ux=(g.bx-g.ax)/(g.len||1),uz=(g.bz-g.az)/(g.len||1);return{x:n.px-uz*g.r.w*.25*DRV,z:n.pz+ux*g.r.w*.25*DRV,h:Math.atan2(ux,-uz)}})();
 // fronteira: para ir a outro país apanha-se um avião
-function borderPush(){if(!foreignAt(P.x,P.z))return false;const n=nearRoad(P.x,P.z);let bx=P.x,bz=P.z;for(let k=0;k<40&&foreignAt(bx,bz);k++){const g=SG;bx+=(SPAWN.x-bx)*.02;bz+=(SPAWN.z-bz)*.02}const dx=bx-P.x,dz=bz-P.z,L=Math.hypot(dx,dz)||1;P.x+=dx/L*1.2;P.z+=dz/L*1.2;const vn=(P.vx*dx+P.vz*dz)/L;if(vn<0){P.vx-=dx/L*vn*1.6;P.vz-=dz/L*vn*1.6}
+// fronteira Portugal <-> Espanha: passa-se de carro (carrega o outro país e continuas lá)
+const LINKED={pt:'es',es:'pt'};let crossing=false;
+function crossBorder(){if(crossing)return true;const [lon,lat]=unPJ(P.x,P.z);let to=null;
+ if(REGION_ID==='pt')to='es';else if(REGION_ID==='es'&&(inPolyLL(lon,lat,PT_OUTLINE)||(lon<-6.1&&lat>36.95)))to='pt';if(!to||!REGIONS[to])return false;
+ crossing=true;P.vx*=.2;P.vz*=.2;
+ try{sessionStorage.setItem('ea.region',to);sessionStorage.setItem('ea.at',JSON.stringify({lon,lat}));sessionStorage.setItem('ea.carry',JSON.stringify({money:G.money,fuel:P.fuel,owned:G.owned,clock:G.clock,car:carType,col:carColor,casa:G.casa,from:RG.name,road:1}));sessionStorage.setItem('ea.autostart','1')}catch(e){}
+ const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:99;display:grid;place-items:center;background:rgba(10,22,32,.88);color:#f3efe6;font:800 30px "Bricolage Grotesque",sans-serif;text-align:center;padding:20px';ov.innerHTML=REGIONS[to].flag+'<br>A entrar em '+REGIONS[to].name+'…<div style="font:600 14px \'IBM Plex Mono\',monospace;opacity:.75;margin-top:10px">Bem-vindo! O carro, o dinheiro e o combustível vão contigo.</div>';document.body.appendChild(ov);
+ try{window.C30save&&window.C30save()}catch(e){}setTimeout(()=>location.reload(),350);return true}
+function borderPush(){if(!foreignAt(P.x,P.z))return false;if(crossBorder())return true;const n=nearRoad(P.x,P.z);let bx=P.x,bz=P.z;for(let k=0;k<40&&foreignAt(bx,bz);k++){const g=SG;bx+=(SPAWN.x-bx)*.02;bz+=(SPAWN.z-bz)*.02}const dx=bx-P.x,dz=bz-P.z,L=Math.hypot(dx,dz)||1;P.x+=dx/L*1.2;P.z+=dz/L*1.2;const vn=(P.vx*dx+P.vz*dz)/L;if(vn<0){P.vx-=dx/L*vn*1.6;P.vz-=dz/L*vn*1.6}
  if(!borderPush.t||performance.now()-borderPush.t>4000){borderPush.t=performance.now();toast('Fronteira com '+(RG.foreignName||'outro país')+': para ir a outro país, apanha um avião num aeroporto ✈',true,3.5)}return true}
 
 // missões e sítios automáticos para os países sem lista própria
@@ -908,16 +995,16 @@ const ring=new THREE.Mesh(new THREE.TorusGeometry(7,.6,8,32),new THREE.MeshBasic
 const postMeshes=POSTAIS.map(([id])=>{const l=LM[id];const t=ctex(64,96,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='#2f7fa8';g.fillRect(4,4,w-8,52);g.fillStyle='#ff8a3d';g.beginPath();g.arc(32,40,10,0,7);g.fill();g.fillStyle='#222';g.font='700 11px sans-serif';g.textAlign='center';g.fillText('POSTAL',32,78)});const m=new THREE.Mesh(new THREE.PlaneGeometry(1.6,2.4),new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}));m.position.set(l.x+8,surfaceAt(l.x+8,l.z)+2.2,l.z);scene.add(m);return m});
 
 /* ================= ÁUDIO ================= */
-/* Central 30 · som de motor: rotações com mudanças, dois tons desafinados + grave, rugido filtrado,
-   textura de explosões, assobio do turbo e "pops" quando se levanta o pé a alta rotação. */
+/* Central 30 · som de motor: rotações com mudanças, tons graves e quentes (menos zumbido), rugido filtrado,
+   textura de explosões suave e "pops" discretos quando se levanta o pé a alta rotação. */
 window.C30Engine=window.C30Engine||function(ac,out){
  const now=()=>ac.currentTime,T=(p,v,k)=>{try{p.setTargetAtTime(v,now(),k)}catch(e){p.value=v}};
  const master=ac.createGain();master.gain.value=0;master.connect(out);
- const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=600;lp.Q.value=3.5;lp.connect(master);
- const sh=ac.createWaveShaper();{const n=1024,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(2.6*x)*(x>0?1:.85)}sh.curve=c;sh.oversample='2x'}sh.connect(lp);
+ const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=420;lp.Q.value=1.1;lp.connect(master);
+ const sh=ac.createWaveShaper();{const n=1024,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(1.5*x)*(x>0?1:.9)}sh.curve=c;sh.oversample='2x'}sh.connect(lp);
  const mix=ac.createGain();mix.gain.value=.5;mix.connect(sh);
  const osc=(type,g)=>{const o=ac.createOscillator();o.type=type;const gg=ac.createGain();gg.gain.value=g;o.connect(gg).connect(mix);o.start();return o};
- const o1=osc('sawtooth',.55),o2=osc('sawtooth',.4),o3=osc('square',.32),o4=osc('triangle',.18);
+ const o1=osc('sawtooth',.34),o2=osc('triangle',.42),o3=osc('sine',.55),o4=osc('triangle',.08);
  // "batida" dos cilindros: modula o volume ao ritmo das explosões (mais notório ao ralenti)
  const lfo=ac.createOscillator();lfo.type='sine';const lfoG=ac.createGain();lfoG.gain.value=.12;lfo.connect(lfoG).connect(mix.gain);lfo.start();
  // ruído do escape / mecânica
@@ -925,16 +1012,16 @@ window.C30Engine=window.C30Engine||function(ac,out){
  const ns=ac.createBufferSource();ns.buffer=nb;ns.loop=true;const nf=ac.createBiquadFilter();nf.type='bandpass';nf.frequency.value=180;nf.Q.value=.9;const ng=ac.createGain();ng.gain.value=0;ns.connect(nf).connect(ng).connect(master);ns.start();
  // assobio do turbo
  const tb=ac.createOscillator();tb.type='sine';const tg=ac.createGain();tg.gain.value=0;tb.connect(tg).connect(master);tb.start();
- const pop=()=>{const s=ac.createBufferSource();s.buffer=nb;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=650+Math.random()*500;f.Q.value=1.4;const g=ac.createGain();const t=now()+Math.random()*.05;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.55,t+.006);g.gain.exponentialRampToValueAtTime(.001,t+.07);s.connect(f).connect(g).connect(master);s.start(t,Math.random());s.stop(t+.1)};
+ const pop=()=>{const s=ac.createBufferSource();s.buffer=nb;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=380+Math.random()*260;f.Q.value=1.4;const g=ac.createGain();const t=now()+Math.random()*.05;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.22,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+.07);s.connect(f).connect(g).connect(master);s.start(t,Math.random());s.stop(t+.1)};
  let lastSr=0,load=0,lastLoad=0,lastT=0,gear=1,shiftT=0;
  const E={gear:1,
   // rpm 0..1, carga 0..1 (acelerador), vol 0..1
-  update(rpm,ld,vol){clearTimeout(E._t);E._t=setTimeout(()=>E.off(),400);rpm=Math.max(0,Math.min(1.05,rpm));ld=Math.max(0,Math.min(1,ld));const f=26+rpm*150;
-   T(o1.frequency,f,.03);T(o2.frequency,f*1.007,.03);T(o3.frequency,f*.5,.03);T(o4.frequency,f*2,.03);T(lfo.frequency,f*.5,.05);T(lfoG.gain,.18*(1-rpm)+.03,.1);
-   T(lp.frequency,380+rpm*1600+ld*2200,.05);T(ng.gain,.03+ld*.09+rpm*.03,.08);T(nf.frequency,140+rpm*380,.08);
-   T(tb.frequency,1600+rpm*2600,.1);T(tg.gain,ld*rpm*rpm*.022,.15);
-   T(master.gain,vol*(.5+ld*.35+rpm*.15)*.1,.07);
-   if(lastLoad>.55&&ld<.1&&rpm>.55&&vol>0){const k=1+Math.floor(Math.random()*3);for(let i=0;i<k;i++)setTimeout(pop,i*60+Math.random()*40)}
+  update(rpm,ld,vol){clearTimeout(E._t);E._t=setTimeout(()=>E.off(),400);rpm=Math.max(0,Math.min(1.05,rpm));ld=Math.max(0,Math.min(1,ld));const f=24+rpm*112;
+   T(o1.frequency,f,.04);T(o2.frequency,f*1.004,.04);T(o3.frequency,f*.5,.04);T(o4.frequency,f*1.5,.04);T(lfo.frequency,f*.5,.05);T(lfoG.gain,.2*(1-rpm)+.04,.1);
+   T(lp.frequency,260+rpm*700+ld*650,.06);T(ng.gain,.02+ld*.045+rpm*.015,.08);T(nf.frequency,110+rpm*220,.08);
+   T(tb.frequency,700+rpm*900,.1);T(tg.gain,ld*rpm*rpm*.004,.15);
+   T(master.gain,vol*(.55+ld*.3+rpm*.1)*.085,.08);
+   if(lastLoad>.6&&ld<.1&&rpm>.7&&vol>0&&Math.random()<.5){const k=1+Math.floor(Math.random()*2);for(let i=0;i<k;i++)setTimeout(pop,i*60+Math.random()*40)}
    lastLoad=ld},
   // velocidade 0..1 → mudanças automáticas (5 velocidades); a carga vem da aceleração ou do acelerador
   drive(sr,o){o=o||{};const t=performance.now()/1000,dt=Math.min(.2,Math.max(.001,t-(lastT||t)));lastT=t;sr=Math.max(0,Math.min(1,Math.abs(sr)));
@@ -986,7 +1073,7 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
   {const na=nearRoad(P.x,P.z),onBr=bridgeAt(P.x,P.z,P.y);if(na.s.r.auto&&na.d<12.6&&!(onBr&&P.y>terrainH(P.x,P.z)+2)&&!nearJunction(P.x,P.z,55)){const g=na.s,ux=(g.bx-g.ax)/g.len,uz=(g.bz-g.az)/g.len,side=Math.sign((P.x-na.px)*(-uz)+(P.z-na.pz)*ux)||1,nx=-uz*side,nz=ux*side;
    const wall=(lim,dirOut)=>{const tgt=lim;P.x=na.px+nx*tgt;P.z=na.pz+nz*tgt;const vn=(P.vx*nx+P.vz*nz)*dirOut;if(vn>0){P.vx-=nx*dirOut*vn*1.35;P.vz-=nz*dirOut*vn*1.35;if(vn>5){sfx.hit();shake=Math.min(1,vn/25)}}};
    if(na.d<1.05&&g.len&&na.t>.0001)wall(1.05,-1);  // separador central
-   else if(na.d>10.95&&!nearOtherRoad(P.x,P.z))wall(10.95,1)}}  // rails (menos nas saídas)
+   else if(na.d>10.95&&!nearOtherRoad(P.x,P.z)&&!roadEnd(na))wall(10.95,1)}}  // rails (menos nas saídas)
   if(borderPush()){}
   const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z,P.y);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
   if(ty<-1&&!bridgeAt(P.x,P.z,P.y)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
@@ -1032,6 +1119,7 @@ function hornOff(){const h=HORN;if(!h||!AC)return;HORN=null;h.g.gain.linearRampT
 /* ================= COSTA DE PRATA: portagens, bombas, comboio, sítio ================= */
 function callTow(){let best=null,bd=1e9;for(const q of PUMPS){const d=Math.hypot(q.x-P.x,q.z-P.z);if(d<bd){bd=d;best=q}}if(!best)return;const cost=Math.min(G.money,25);G.money-=cost;MEM.set('money',G.money);const n=nearRoad(best.x,best.z),g=n.s,L=Math.hypot(g.bx-g.ax,g.bz-g.az)||1,dx=(g.bx-g.ax)/L,dz=(g.bz-g.az)/L;Object.assign(P,{x:best.x-dx*14,z:best.z-dz*14,vx:0,vz:0,h:Math.atan2(dx,-dz)});P.y=surfaceAt(P.x,P.z)+1;P.fuel=Math.max(P.fuel,4);sfx.ok();toast('🚛 O reboque levou-te à bomba '+best.name+(cost?' (−'+euro(cost)+')':' (de graça, porque não tinhas dinheiro)')+'. Abastece com E!',false,4.5)}
 function nearOtherRoad(x,z){const L=SG.get(Math.floor(x/SGC)+','+Math.floor(z/SGC));if(!L)return false;for(const g of L){if(g.r.auto||g.r.bridge)continue;const vx=g.bx-g.ax,vz=g.bz-g.az,t=clamp(((x-g.ax)*vx+(z-g.az)*vz)/(g.len*g.len||1),0,1);if(Math.hypot(x-g.ax-vx*t,z-g.az-vz*t)<g.r.w/2+3)return true}return false}
+function roadEnd(na){const r=na.s.r,P=r.pts,A=P[0],Z=P[P.length-1];return (na.t>=.999&&Math.abs(na.s.bx-Z[0])<.01&&Math.abs(na.s.bz-Z[1])<.01)||(na.t<=.001&&Math.abs(na.s.ax-A[0])<.01&&Math.abs(na.s.az-A[1])<.01)}
 function nearPump(){const F=focus();return PUMPS.find(p=>Math.hypot(F.x-p.x,F.z-p.z)<11)}
 function refuel(){const need=100-P.fuel;if(need<2){toast('O depósito já está cheio.',false,1.4);return}const litres=need*TANK[carType]/100,price=(nearPump()||{}).price||1.75;let cost=litres*price;let add=need;if(G.money<cost){add=Math.max(0,G.money/price/(TANK[carType]/100));cost=add*TANK[carType]/100*price}if(add<1){toast('Não tens dinheiro para combustível. Faz uma entrega!',true,2.5);return}P.fuel+=add;G.money-=cost;MEM.set('money',G.money);sfx.ok();toast('Abasteceste '+(add*TANK[carType]/100).toFixed(1).replace('.',',')+' L · −'+euro(cost),false,2.6)}
 function updateTolls(){if(W.on)return;for(const T of TOLLS){const dd=(P.x-T.x)*T.dx+(P.z-T.z)*T.dz,lat=Math.abs(-(P.x-T.x)*T.dz+(P.z-T.z)*T.dx);if(lat<13&&T.prev!=null&&Math.sign(dd)!==Math.sign(T.prev)&&performance.now()-T.last>4000){T.last=performance.now();G.money=Math.max(0,G.money-1.2);MEM.set('money',G.money);tone(1320,.08,'square',.04);toast('Portagem eletrónica: −1,20 €',false,1.8)}T.prev=lat<30?dd:null}}
@@ -1126,11 +1214,11 @@ function drawMap(cv,full){const g=cv.getContext('2d'),W=cv.width,H=cv.height;g.f
    const km=1000/SCALE*25*scale;g.fillStyle='rgba(255,253,245,.9)';g.fillRect(10,H-34,km+24,24);g.fillStyle='#1b2a33';g.fillRect(22,H-20,km/2,5);g.strokeStyle='#1b2a33';g.lineWidth=1;g.strokeRect(22,H-20,km,5);g.font='700 10px "IBM Plex Mono",monospace';g.textAlign='left';g.fillText('25 km',22,H-24);
    g.fillStyle='rgba(13,26,36,.82)';g.fillRect(8,8,176,44);g.fillStyle='#ff8a3d';g.font='800 16px "Bricolage Grotesque",sans-serif';g.fillText('EXPLORA E ACELERA',18,28);g.fillStyle='#e6e1d2';g.font='600 10px "IBM Plex Mono",monospace';g.fillText(RG.flag+' '+RG.name,18,44)}
   if(W.on){const [cx,cy]=pr(P.x,P.z);g.fillStyle='#ffa21a';g.fillRect(cx-3,cy-3,6,6)}const FF=focus();const [X,Y]=pr(FF.x,FF.z);g.save();g.translate(X,Y);g.rotate(W.on?W.yaw:P.h);g.fillStyle='#fff';g.strokeStyle='#0d1a24';g.lineWidth=2;g.beginPath();g.moveTo(0,-9);g.lineTo(6,7);g.lineTo(0,4);g.lineTo(-6,7);g.closePath();g.fill();g.stroke();g.restore()}
-function openMap(){if(G.state!=='play')return;G.state='map';$('#mapS').hidden=false;const cv=$('#mapBig');drawMap(cv,true);requestAnimationFrame(()=>{const sc=$('#mapScroll'),F=focus(),k=cv.clientHeight/cv.height,scale=Math.min(cv.width/MW,cv.height/MH);sc.scrollTop=(F.z-Z0)*scale*k-sc.clientHeight/2})}function closeMap(){G.state='play';$('#mapS').hidden=true;canvas.focus()}$('#mapClose').onclick=closeMap;
+function openMap(){if(G.state!=='play')return;G.state='map';setTp(false);$('#mapS').hidden=false;const cv=$('#mapBig');drawMap(cv,true);requestAnimationFrame(()=>{const sc=$('#mapScroll'),F=focus(),k=cv.clientHeight/cv.height,scale=Math.min(cv.width/MW,cv.height/MH);sc.scrollTop=(F.z-Z0)*scale*k-sc.clientHeight/2})}function closeMap(){G.state='play';$('#mapS').hidden=true;canvas.focus()}$('#mapClose').onclick=closeMap;
 
 /* ================= AVIÕES: voar entre aeroportos (e para outros países) ================= */
 // o que se leva na viagem para outro país (dinheiro, combustível, carros…)
-(()=>{try{const v=sessionStorage.getItem('ea.carry');if(!v)return;sessionStorage.removeItem('ea.carry');const c=JSON.parse(v);if(typeof c.money==='number')G.money=c.money;if(typeof c.fuel==='number')P.fuel=c.fuel;if(Array.isArray(c.owned))G.owned=c.owned;if(typeof c.clock==='number')G.clock=c.clock;if(typeof c.car==='number')carType=c.car;if(typeof c.col==='number')carColor=c.col;G.casa=!!c.casa;G.fromFlight=c.from||null}catch(e){}})();
+(()=>{try{const v=sessionStorage.getItem('ea.carry');if(!v)return;sessionStorage.removeItem('ea.carry');const c=JSON.parse(v);if(typeof c.money==='number')G.money=c.money;if(typeof c.fuel==='number')P.fuel=c.fuel;if(Array.isArray(c.owned))G.owned=c.owned;if(typeof c.clock==='number')G.clock=c.clock;if(typeof c.car==='number')carType=c.car;if(typeof c.col==='number')carColor=c.col;G.casa=!!c.casa;G.fromFlight=c.from||null;G.byRoad=!!c.road}catch(e){}})();
 function nearAirport(){const F=focus();return AIRPORTS.find(a=>Math.hypot(F.x-a.door.x,F.z-a.door.z)<10)}
 const flyPrice=(a,b)=>Math.round(29+Math.hypot(a.x-b.x,a.z-b.z)*SCALE/1000*.12);
 function openFly(ap){G.state='flymenu';G.flyFrom=ap;$('#flyS').hidden=false;$('#touch').hidden=true;if(engG)engG.gain.value=0;$('#flyE').textContent='✈ '+ap.n.toUpperCase()+' · '+hhmm(G.clock||36000)+' · tens '+euro(G.money);
@@ -1197,7 +1285,7 @@ function placeWalkCam(dt){const fx=Math.sin(W.yaw),fz=-Math.cos(W.yaw),tx=W.x-fx
 function placeCam(dt,fv){const fx=Math.sin(P.h),fz=-Math.cos(P.h);let dist=[9,16,0][G.cam],hgt=[3.6,7,1.25][G.cam];
   if(G.cam===2){camera.position.set(P.x+fx*.4,P.y+hgt,P.z+fz*.4);_v.set(P.x+fx*20,P.y+1,P.z+fz*20);camera.lookAt(_v)}else{const tx=P.x-fx*dist,tz=P.z-fz*dist;const ty=Math.max(P.y+hgt,surfaceAt(tx,tz)+1.5);const k=Math.min(1,dt*6);camera.position.x=lerp(camera.position.x,tx,k);camera.position.z=lerp(camera.position.z,tz,k);camera.position.y=lerp(camera.position.y,ty,k);_v.set(P.x+fx*4,P.y+1.2,P.z+fz*4);camera.lookAt(_v)}
   if(shake>0){camera.position.x+=(Math.random()-.5)*shake*.6;camera.position.y+=(Math.random()-.5)*shake*.4;shake=Math.max(0,shake-dt*2)}camera.fov=lerp(camera.fov,65+clamp(Math.abs(fv)/60,0,1)*12,Math.min(1,dt*3));camera.updateProjectionMatrix()}
-function loop(now){if(G.state==='office'){last=now;requestAnimationFrame(loop);return}const dt=Math.min(.05,(now-last)/1000);last=now;TM+=dt;waterU.uT.value=TM;
+function loop(now){if(G.state==='office'){last=now;requestAnimationFrame(loop);return}const dt=Math.min(.05,(now-last)/1000);last=now;if(G.state==='play'&&!document.hidden){PRF.n++;PRF.t+=(now-(PRF.l||now))/1000;PRF.l=now;if(PRF.t>2.5){const fps=PRF.n/PRF.t;PRF.n=0;PRF.t=0;let np=PR;if(fps<40&&PR>1)np=Math.max(1,PR-.25);else if(fps>56){PRF.good++;if(PRF.good>=2&&PR<PRMAX){np=Math.min(PRMAX,PR+.25);PRF.good=0}}else PRF.good=0;if(np!==PR){PR=np;renderer.setPixelRatio(PR);resize()}}}else PRF.l=now;TM+=dt;waterU.uT.value=TM;
   if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}
   markers.forEach((mk,i)=>{mk.o.visible=!G.mission;mk.o.material.opacity=.18+Math.sin(TM*3+i)*.06});postMeshes.forEach((m,i)=>{m.rotation.y+=dt*1.5});if(window.__lamp)window.__lamp.material.color.setHSL(.14,1,.6+Math.sin(TM*2)*.25);
   updateTrain(dt);updateBoats(dt);updateLevelX(dt);
@@ -1220,14 +1308,48 @@ document.querySelectorAll('#cams button').forEach(b=>b.onclick=()=>{G.cam=+b.dat
 $('#colors').innerHTML=PAINT.map((c,i)=>`<button aria-label="Cor ${i+1}" data-i="${i}" style="background:#${c.toString(16).padStart(6,'0')}" aria-pressed="${i===0}"></button>`).join('');
 document.querySelectorAll('#colors button').forEach(b=>b.onclick=()=>{carColor=+b.dataset.i;document.querySelectorAll('#colors button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
 {const s=MEM.get('setup',null);if(s){carType=s.c||0;carColor=s.col||0;G.cam=s.cam||0;setSeg('#cars','c',carType);setSeg('#cams','k',G.cam);document.querySelectorAll('#colors button').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.i===carColor)))}}
-function showBest(){const n=Object.keys(G.post).length;$('#best').textContent=(IN_C30?'Saldo '+euro(G.money)+' · postais '+n+'/10. ':'')+'Mapa inspirado na Figueira da Foz real, com distâncias encurtadas para caber num jogo. Fora da Central 30 o jogo não guarda nada; dentro, segue a opção «Guardar dados».'}
+function showBest(){const n=Object.keys(G.post).length;$('#best').textContent=(IN_C30?'Saldo '+euro(G.money)+' · postais '+n+'/10. ':'')+'Mapa feito a partir dos contornos reais dos países, com as distâncias encurtadas para caber num jogo. Fora da Central 30 o jogo não guarda nada; dentro, segue a opção «Guardar dados».'}
 showBest();applyWeather('dia');
 function start(){ac();if(!G.owned.includes(carType))carType=0;if(car)scene.remove(car);car=carModel(carType,PAINT[carColor]);scene.add(car);MEM.set('setup',{c:carType,col:carColor,cam:G.cam});
-  Object.assign(P,{x:SPAWN.x,z:SPAWN.z,h:SPAWN.h,vx:0,vz:0,nitro:100,inWater:0,fuel:G.fromFlight?P.fuel:100});P.y=surfaceAt(P.x,P.z);camera.position.set(P.x,P.y+4,P.z+10);applyWeather(G.weather);
-  if(!G.fromFlight)G.clock={dia:10,por:18.6,noite:22,chuva:15}[G.weather]*3600;IND.mode='';IND.lightsAuto=true;if(W.on){W.on=false;if(W.m)W.m.visible=false}G.state='play';G.mission=null;G.target=null;$('#menu').hidden=true;['#tl','#mapw','#spd'].forEach(s=>$(s).hidden=false);if(touchOn)$('#touch').hidden=false;canvas.focus();toast(G.fromFlight?'Bem-vindo a '+RG.name+' '+RG.flag+'! Chegaste de avião.':'Bem-vindo a '+(RG.start||RG.name)+'! Os marcadores coloridos são missões e ✈ são aeroportos.',false,4)}
+  Object.assign(P,{x:SPAWN.x,z:SPAWN.z,h:SPAWN.h,vx:0,vz:0,nitro:100,inWater:0,fuel:G.fromFlight?P.fuel:100});P.y=surfaceAt(P.x,P.z);camera.position.set(P.x,P.y+4,P.z+10);if(START&&!G.fromFlight)placeAt(START);applyWeather(G.weather);
+  if(!G.fromFlight)G.clock={dia:10,por:18.6,noite:22,chuva:15}[G.weather]*3600;IND.mode='';IND.lightsAuto=true;if(W.on){W.on=false;if(W.m)W.m.visible=false}G.state='play';G.mission=null;G.target=null;$('#menu').hidden=true;['#tl','#mapw','#spd'].forEach(s=>$(s).hidden=false);if(touchOn)$('#touch').hidden=false;canvas.focus();toast(G.fromFlight?'Bem-vindo a '+RG.name+' '+RG.flag+(G.byRoad?'! Entraste de carro pela fronteira.':'! Chegaste de avião.'):'Bem-vindo a '+(START?START.t:(RG.start||RG.name))+'! Os marcadores coloridos são missões e ✈ são aeroportos.',false,4)}
 function pause(){if(G.state!=='play')return;G.state='pause';$('#pause').hidden=false;$('#pauseInfo').textContent='Saldo '+euro(G.money)+' · entregas '+G.stats.entregas+' · corridas '+G.stats.corridas+' · turnos de táxi '+G.stats.taxis+' · postais '+Object.keys(G.post).length+'/'+POSTAIS.length;$('#touch').hidden=true;if(engG)engG.gain.value=0}
 function resume(){if(G.state!=='pause')return;G.state='play';$('#pause').hidden=true;if(touchOn)$('#touch').hidden=false;canvas.focus()}
-$('#go').onclick=start;$('#resume').onclick=resume;$('#quit').onclick=()=>{G.state='menu';$('#pause').hidden=true;['#tl','#mapw','#spd','#prompt','#postal'].forEach(s=>$(s).hidden=true);$('#touch').hidden=true;$('#menu').hidden=false;showBest();if(engG)engG.gain.value=0};
+$('#go').onclick=start;
+/* ================= ESCOLHER ONDE COMEÇAR / TELETRANSPORTE NO MAPA ================= */
+let START=null;// {x,z,h,t}
+function roadSpot(x,z){const n=nearRoad(x,z),g=n.s,L=g.len||1,ux=(g.bx-g.ax)/L,uz=(g.bz-g.az)/L,o=(g.r.auto?6.9:g.r.w*.25)*DRV;let bc=null,bd=1e9;for(const c of CITIES){const d=Math.hypot(c.x-n.px,c.z-n.pz)-c.r;if(d<bd){bd=d;bc=c}}const pn=placeName(n.px,n.pz),t=bc&&bd<0?bc.n:bc&&bd<2500?'perto de '+bc.n+(pn&&pn!==bc.n?' ('+pn+')':''):pn;return{x:n.px-uz*o,z:n.pz+ux*o,h:Math.atan2(ux,-uz),t}}
+function placeAt(sp){Object.assign(P,{x:sp.x,z:sp.z,h:sp.h,vx:0,vz:0,inWater:0});P.y=surfaceAt(P.x,P.z);P.lastSafe={x:P.x,z:P.z,h:P.h};const fx=Math.sin(P.h),fz=-Math.cos(P.h);camera.position.set(P.x-fx*16,P.y+7,P.z-fz*16);if(car){car.position.set(P.x,P.y,P.z);car.rotation.y=-P.h}}
+function pickList(){const L=[];CITIES.slice().sort((a,b)=>(b.big||0)-(a.big||0)).forEach(c=>L.push({ic:'🏙️',t:c.n,x:c.x,z:c.z}));AIRPORTS.forEach(a=>L.push({ic:'✈️',t:a.n,x:a.door.x,z:a.door.z}));LMKS.forEach(l=>L.push({ic:'⭐',t:l.label,x:l.x,z:l.z}));return L}
+const mapScale=cv=>Math.min(cv.width/MW,cv.height/MH);
+function mapToWorld(cv,e){const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*cv.width/r.width,py=(e.clientY-r.top)*cv.height/r.height,s=mapScale(cv);return[W0+px/s,Z0+py/s]}
+function drawPin(cv,x,z){const s=mapScale(cv),g=cv.getContext('2d'),X=(x-W0)*s,Y=(z-Z0)*s;g.save();g.fillStyle='rgba(255,138,61,.25)';g.beginPath();g.arc(X,Y,22,0,7);g.fill();g.fillStyle='#ff8a3d';g.strokeStyle='#fff';g.lineWidth=2.5;g.beginPath();g.moveTo(X,Y);g.bezierCurveTo(X-12,Y-14,X-10,Y-30,X,Y-30);g.bezierCurveTo(X+10,Y-30,X+12,Y-14,X,Y);g.fill();g.stroke();g.fillStyle='#fff';g.beginPath();g.arc(X,Y-20,4.5,0,7);g.fill();g.restore()}
+let pickSel=null;
+function sizePickMap(){const cv=$('#pickMap');const w=480,h=Math.round(Math.min(1400,w*MH/MW));if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}}
+function drawPick(){const cv=$('#pickMap');drawMap(cv,true);if(pickSel)drawPin(cv,pickSel.x,pickSel.z);$('#pickP').textContent=pickSel?'📍 Vais começar em: '+pickSel.t:'Toca no mapa onde queres começar, ou escolhe um sítio da lista.';$('#pickGo').disabled=!pickSel}
+function openPick(){if(G.state!=='menu')return;sizePickMap();pickSel=START;$('#menu').hidden=true;$('#pickS').hidden=false;
+ $('#pickList').innerHTML=pickList().map((p,i)=>`<button data-i="${i}">${p.ic} ${p.t}</button>`).join('');
+ const L=pickList();document.querySelectorAll('#pickList button').forEach(b=>b.onclick=()=>{const p=L[+b.dataset.i];const sp=roadSpot(p.x,p.z);sp.t=p.t;pickSel=sp;drawPick();scrollPickTo(sp)});
+ drawPick();if(pickSel)scrollPickTo(pickSel)}
+function scrollPickTo(sp){requestAnimationFrame(()=>{const cv=$('#pickMap'),sc=$('#pickScroll'),k=cv.clientHeight/cv.height;sc.scrollTop=(sp.z-Z0)*mapScale(cv)*k-sc.clientHeight/2})}
+function closePick(){$('#pickS').hidden=true;$('#menu').hidden=false;showStartAt()}
+function showStartAt(){const el=$('#startAt');if(el)el.textContent=START?'📍 Começas em: '+START.t:'📍 Começas em: '+(G.fromFlight?'aeroporto (chegaste de avião)':(RG.start||RG.name))}
+$('#pickMap').addEventListener('click',e=>{const [x,z]=mapToWorld($('#pickMap'),e);pickSel=roadSpot(x,z);drawPick()});
+$('#pickBtn').onclick=openPick;$('#pickClose').onclick=closePick;
+$('#pickGo').onclick=()=>{if(!pickSel)return;START=pickSel;G.fromFlight=null;$('#pickS').hidden=true;showStartAt();start()};
+{const lead=$('#menuLead'),eye=$('#menuEye');const cs=CITIES.slice().sort((a,b)=>(b.big||0)-(a.big||0)).map(c=>c.n);
+ if(REGION_ID==='pt')lead.innerHTML='Conduz por <b>Portugal inteiro</b>: de <b>Viana do Castelo</b>, Guimarães e Bragança a <b>Viseu</b>, Covilhã e Castelo Branco, do Alentejo (<b>Évora</b>, Beja, Elvas) ao Algarve (<b>Tavira</b>, Lagos, Portimão). Pela <b>A22, A6, A25, A4 ou A3</b> passas de carro para <b>Espanha</b>. Comboio, aeroportos, entregas, polícia e monumentos.';
+ else if(REGION_ID==='es'){eye.textContent='ESPANHA · E PORTUGAL MESMO AO LADO';lead.innerHTML='Conduz por <b>Espanha</b>: <b>Madrid</b>, <b>Barcelona</b>, <b>Sevilha</b>, Granada, Córdoba, <b>Santiago de Compostela</b>, Corunha, Oviedo, <b>Bilbau</b>, San Sebastián, Pamplona, <b>Valência</b>, Múrcia, Málaga, Cádis… Pela fronteira voltas de carro a <b>Portugal</b>. AVE de Cádis a Girona, 7 aeroportos e monumentos como a Sagrada Família, a Alhambra e o Aqueduto de Segóvia.'}
+ else{eye.textContent=(RG.name+' · '+RG.flag).toUpperCase();lead.innerHTML='Conduz por <b>'+RG.name+'</b>: '+cs.slice(0,9).map((n,i)=>i<3?'<b>'+n+'</b>':n).join(', ')+'… Autoestradas, pontes, aeroportos, entregas, polícia e monumentos.'}}
+showStartAt();
+// teletransporte durante o jogo: no mapa grande (M)
+let tpMode=false;
+function setTp(on){tpMode=on;$('#tpBtn').textContent=on?'❌ Cancelar teletransporte':'📍 Teletransportar';$('#tpBtn').classList.toggle('on',on);$('#mapBig').style.cursor=on?'crosshair':'';$('#tpHint').hidden=!on}
+$('#tpBtn').onclick=()=>{if(W.on){toast('Entra no carro primeiro (F) para te teletransportares.',true,2.4);return}setTp(!tpMode)};
+$('#mapBig').addEventListener('click',e=>{if(!tpMode||G.state!=='map')return;const [x,z]=mapToWorld($('#mapBig'),e);const sp=roadSpot(x,z);
+ if(G.mission)endMission(false,'Missão cancelada: teletransportaste-te.');if(G.chase)endChase();placeAt(sp);setTp(false);closeMap();toast('📍 Teletransportado para '+sp.t+'!',false,2.6);sfx.click&&sfx.click()});
+
+$('#resume').onclick=resume;$('#quit').onclick=()=>{G.state='menu';$('#pause').hidden=true;['#tl','#mapw','#spd','#prompt','#postal'].forEach(s=>$(s).hidden=true);$('#touch').hidden=true;$('#menu').hidden=false;showBest();if(engG)engG.gain.value=0};
 
 /* ================= O PATRÃO: o escritório no centro ================= */
 let officeEl=null;const officeWin=()=>officeEl&&officeEl.contentWindow;
