@@ -604,44 +604,49 @@ gridTown('Aveiro',3160,3760,-16150,-15360,120,110);
 ROADS.forEach(r=>{if(!['Estrada do Cabo Mondego','Estrada de Buarcos','Estrada de Tavarede','Estrada da Gala','A17','Ligação à A17','EN109','Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Estrada da Praia da Tocha','Estrada da Praia de Mira','Estrada das Dunas','Área de Serviço'].includes(r.name))return;let P=r.pts;for(let k=0;k<3;k++){const Q=[P[0]];for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];Q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}Q.push(P[P.length-1]);P=Q}r.pts=P});
 // estrutura de consulta: segmentos
 // mais áreas de serviço na A17 (de vez em quando): saída, parque, bombas e café
-const SA_LIST=[];{const A=ROADS.find(r=>r.name==='A17').pts;const cum=[0];for(let i=0;i<A.length-1;i++)cum.push(cum[i]+Math.hypot(A[i+1][0]-A[i][0],A[i+1][1]-A[i][1]));
+const SA_LIST=[];{const A=ROADS.find(r=>r.name==='A17').pts;
+ const NOZ=['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro'].map(n=>ROADS.find(r=>r.name===n)).filter(Boolean).map(r=>r.pts[0]);
+const cum=[0];for(let i=0;i<A.length-1;i++)cum.push(cum[i]+Math.hypot(A[i+1][0]-A[i][0],A[i+1][1]-A[i][1]));
  const at=sv=>{let i=0;while(i<cum.length-2&&cum[i+1]<sv)i++;const a=A[i],b=A[i+1],L=(cum[i+1]-cum[i])||1,t=(sv-cum[i])/L;return{x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,dx:(b[0]-a[0])/L,dz:(b[1]-a[1])/L}};
+ const SA_DIR=s0=>{let best=1,bd=-1;for(const d of [1,-1]){const q=at(s0+d*260);let m=1e9;for(const n of NOZ)m=Math.min(m,Math.hypot(n[0]-q.x,n[1]-q.z));if(m>bd){bd=m;best=d}}return best};
  const sAtZ=z=>{let best=0,bd=1e9;for(let sv=0;sv<cum[cum.length-1];sv+=10){const p=at(sv);if(Math.abs(p.z-z)<bd){bd=Math.abs(p.z-z);best=sv}}return best};
  // uma área de cada lado (sentido Aveiro a este, sentido Figueira a oeste), ligadas por uma ponte por cima da A17
  for(const [nome,z] of [['Tocha',-4700],['Mira',-8250],['Vagos',-11800],['Gafanha',-14500]]){const s0=sAtZ(z);
   for(const sd of [1,-1]){const pts=[];
    for(let ds=-160;ds<=160.1;ds+=8){const off=10+26*Math.pow(Math.cos(ds/160*Math.PI/2),2),p=at(s0+ds),nx=-p.dz*sd,nz=p.dx*sd;pts.push([p.x+nx*off,p.z+nz*off])}
    road('Área de Serviço',pts,8,{sa:nome});const c=at(s0),nx=-c.dz*sd,nz=c.dx*sd;SA_LIST.push({name:'A17 · Área de Serviço de '+nome+' ('+(sd>0?'sentido Aveiro':'sentido Figueira')+')',x:c.x+nx*36,z:c.z+nz*36,town:nome,side:sd});
-   // ligação da área até à ponte
-   const lk=[],B3=(a,b,c,d,t)=>{const u=1-t;return u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d};const off0=10+26*Math.pow(Math.cos(24/160*Math.PI/2),2),RR=38;const push=(ds,off)=>{const p=at(s0+ds),qx=-p.dz*sd,qz=p.dx*sd;lk.push([p.x+qx*off,p.z+qz*off])};
-   for(let k=0;k<=16;k++){const t=k/16;push(B3(24,150,200+2*RR,200+2*RR,t),B3(off0,off0,70,120,t))}
-   for(let k=1;k<=14;k++){const a=k/14*Math.PI;push(200+RR+RR*Math.cos(a),120+RR*Math.sin(a))}road('Área de Serviço · ligação',lk,7,{rural:true})}
-  // a ponte: atravessa a A17 a 200 m do centro da área
-  {const p=at(s0+200),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*120,p.z+nz*120)+.12,y1=terrainH(p.x-nx*120,p.z-nz*120)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
-   for(let o=120;o>=-120.1;o-=8){const u=(120-o)/240,base=lerp(y0,y1,u),f=smooth(0,.42,u)*smooth(1,.58,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
+   // ligação da área até à ponte: sai da área, afasta-se e faz UMA curva larga até à ponte (sem laços nem cruzamentos)
+   {const dir=SA_DIR(s0),B3=(a,b,c,d,t)=>{const u=1-t;return u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d},o40=10+26*Math.pow(Math.cos(40/160*Math.PI/2),2),lk=[];const push=(ds,off)=>{const p=at(s0+dir*ds),qx=-p.dz*sd,qz=p.dx*sd;lk.push([p.x+qx*off,p.z+qz*off])};
+    for(let k=0;k<=14;k++){const t=k/14;push(B3(40,110,150,200,t),B3(o40,o40+25,150,150,t))}
+    for(let k=1;k<=10;k++){const a=k/10*Math.PI/2;push(200+60*Math.sin(a),90+60*Math.cos(a))}road('Área de Serviço · ligação',lk,7,{rural:true})}}
+  // a ponte: atravessa a A17 a 260 m do centro da área, já depois do fim das áreas
+  {const p=at(s0+SA_DIR(s0)*260),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*90,p.z+nz*90)+.12,y1=terrainH(p.x-nx*90,p.z-nz*90)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
+   for(let o=90;o>=-90.1;o-=6){const u=(90-o)/180,base=lerp(y0,y1,u),f=smooth(0,.4,u)*smooth(1,.6,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
    road('Ponte da Área de Serviço de '+nome,br,7,{bridge:true,viaduct:true,rural:true})}}}
-// nós com ponte em cada saída: quem vem no sentido Aveiro (faixa de este) sai, dá a volta, passa POR CIMA da A17
-// e chega à estrada da cidade; daí vai para a cidade ou volta à autoestrada no outro sentido (sem contramão)
+var NO_SIGNS=[];
+// nós simples em cada saída (diamante): uma rampa de cada lado da A17 em forma de arco, e uma ponte RETA por cima da A17
+// que liga o meio das duas rampas. Quem sai num sentido pode ir para a cidade ou passar a ponte e voltar no outro sentido.
 {const A=ROADS.find(r=>r.name==='A17').pts;const cum=[0];for(let i=0;i<A.length-1;i++)cum.push(cum[i]+Math.hypot(A[i+1][0]-A[i][0],A[i+1][1]-A[i][1]));const TOT=cum[cum.length-1];
  const at=sv=>{sv=clamp(sv,0,TOT);let i=0;while(i<cum.length-2&&cum[i+1]<sv)i++;const a=A[i],b=A[i+1],L=(cum[i+1]-cum[i])||1,t=(sv-cum[i])/L;return{x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,dx:(b[0]-a[0])/L,dz:(b[1]-a[1])/L}};
- const sNear=(x,z)=>{let best=0,bd=1e9;for(let sv=0;sv<TOT;sv+=8){const p=at(sv),d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;best=sv}}return best};
+ const sNear=(x,z)=>{let best=0,bd=1e9;for(let sv=0;sv<TOT;sv+=4){const p=at(sv),d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;best=sv}}return best};
  const B3=(a,b,c,d,t)=>{const u=1-t;return u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d};
- for(const nm of ['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro']){const S=ROADS.find(r=>r.name===nm);if(!S)continue;const p0=S.pts[0],s0=sNear(p0[0],p0[1]),c0=at(s0);
-  // para que lado (ao longo da A17) vai a estrada da cidade: a ponte fica do outro lado
-  const far=S.pts[Math.min(S.pts.length-1,Math.floor(S.pts.length*.35))],along=(far[0]-c0.x)*c0.dx+(far[1]-c0.z)*c0.dz;const sB=s0+(along>0?-90:90),sL=sB-200;
+ const HL=250,AP=120;
+ const P0=(sv,off)=>{const p=at(sv);return{x:p.x-p.dz*off,z:p.z+p.dx*off,a:Math.atan2(p.dx,p.dz)}};
+ for(const nm of ['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro']){const S=ROADS.find(r=>r.name===nm);if(!S)continue;const p0=S.pts[0],s0=sNear(p0[0],p0[1]);
   const P=(sv,off)=>{const p=at(sv),nx=-p.dz,nz=p.dx;return[p.x+nx*off,p.z+nz*off]};
-  // volta do lado de este (sai antes, junta-se depois)
-  const loop=[];for(let ds=-160;ds<=160.1;ds+=8)loop.push(P(sL+ds,10+26*Math.pow(Math.cos(ds/160*Math.PI/2),2)));road('Nó de Acesso',loop,8,{rural:true});
-  // ligação redonda até à ponte
-  const off0=10+26*Math.pow(Math.cos(24/160*Math.PI/2),2),RR=38,lk=[];for(let k=0;k<=16;k++){const t=k/16;lk.push(P(sL+B3(24,150,200+2*RR,200+2*RR,t),B3(off0,off0,70,120,t)))}
-  for(let k=1;k<=14;k++){const a=k/14*Math.PI;lk.push(P(sL+200+RR+RR*Math.cos(a),120+RR*Math.sin(a)))}road('Nó de Acesso',lk,7,{rural:true});
-  // a ponte por cima da A17
-  {const p=at(sB),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*120,p.z+nz*120)+.12,y1=terrainH(p.x-nx*120,p.z-nz*120)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
-   for(let o=120;o>=-120.1;o-=8){const u=(120-o)/240,base=lerp(y0,y1,u),f=smooth(0,.42,u)*smooth(1,.58,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
-   road('Ponte do Nó '+nm.replace('Saída ','de '),br,7,{bridge:true,viaduct:true,rural:true})}
-  // do outro lado: curva até à estrada da cidade
-  {let acc=0,Q=S.pts[S.pts.length-1],qd=[-1,0];for(let i=0;i<S.pts.length-1;i++){const a=S.pts[i],b=S.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(acc+L>=230){const t=(230-acc)/L;Q=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];qd=[(b[0]-a[0])/L,(b[1]-a[1])/L];break}acc+=L}
-   const W=P(sB,-120),p=at(sB),ox=p.dz,oz=-p.dx,cn=[];for(let k=0;k<=18;k++){const t=k/18;cn.push([B3(W[0],W[0]+ox*70,Q[0]-qd[0]*80,Q[0],t),B3(W[1],W[1]+oz*70,Q[1]-qd[1]*80,Q[1],t)])}road('Nó de Acesso',cn,7,{rural:true})}}}
+  // rampas: arco suave que sai da A17, chega ao meio (onde está a ponte) e volta a entrar
+  const HA=Math.min(HL,s0-5),HB=Math.min(HL,TOT-s0-5);for(const sd of [1,-1]){const ar=[];for(let k=0;k<=50;k++){const ds=k<25?-HA*(1-k/25):HB*(k-25)/25,c=Math.cos((ds<0?ds/HA:ds/HB)*Math.PI/2);ar.push(P(s0+ds,sd*(10.5+(AP-10.5)*c*c)))}road('Nó de Acesso',ar,8,{rural:true})}
+  NO_SIGNS.push({n:nm.replace('Saída ',''),p:[s0-HA-90>0?P0(s0-HA-90,14):null,s0+HB+90<TOT?P0(s0+HB+90,-14):null].filter(Boolean)});
+  // a ponte reta por cima da A17
+  {const p=at(s0),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*AP,p.z+nz*AP)+.12,y1=terrainH(p.x-nx*AP,p.z-nz*AP)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
+   for(let o=AP;o>=-AP-.1;o-=6){const u=(AP-o)/(2*AP),base=lerp(y0,y1,u),f=smooth(0,.4,u)*smooth(1,.6,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
+   road('Ponte do Nó '+nm.replace('Saída ','de '),br,8,{bridge:true,viaduct:true,rural:true})}
+  // a estrada da cidade começa no meio da rampa do lado da cidade (já não toca na A17)
+  {const far=S.pts[Math.min(S.pts.length-1,Math.floor(S.pts.length*.5))],side=((far[0]-at(s0).x)*-at(s0).dz+(far[1]-at(s0).z)*at(s0).dx)>0?1:-1;
+   let acc=0,qi=S.pts.length-1;for(let i=0;i<S.pts.length-1;i++){acc+=Math.hypot(S.pts[i+1][0]-S.pts[i][0],S.pts[i+1][1]-S.pts[i][1]);if(acc>=AP+170){qi=i+1;break}}
+   const Q=S.pts[qi],Qn=S.pts[Math.min(qi+1,S.pts.length-1)],qL=Math.hypot(Qn[0]-Q[0],Qn[1]-Q[1])||1,qd=[(Qn[0]-Q[0])/qL,(Qn[1]-Q[1])/qL];
+   const W=P(s0,side*AP),p=at(s0),ox=-p.dz*side,oz=p.dx*side,cn=[];for(let k=0;k<=16;k++){const t=k/16;cn.push([B3(W[0],W[0]+ox*70,Q[0]-qd[0]*70,Q[0],t),B3(W[1],W[1]+oz*70,Q[1]-qd[1]*70,Q[1],t)])}
+   S.pts=cn.concat(S.pts.slice(qi+1))}}}
 // viadutos: as saídas e ligações da A17 passam POR CIMA da linha do comboio (só as estradas pequenas têm passagens de nível)
 {const XS=[['Ligação à A17',2147,-682],['Ligação à A17',2131,-533],['Saída Tocha',2081,-6528],['Saída Mira',2425,-9455],['Saída Vagos',3200,-12765],['Saída Ílhavo',3346,-14102],['Saída Aveiro',3567,-15579]];
  const HALF=75,LIFT=7.6;
@@ -656,12 +661,12 @@ const SG=new Map(),SGC=250;SEGS.forEach(s=>{const x0=Math.floor((Math.min(s.ax,s
 function nearRoad(x,z){const ci=Math.floor(x/SGC),cj=Math.floor(z/SGC);for(let rr=1;rr<=3;rr++){let best=null,bd=1e9;for(let i=ci-rr;i<=ci+rr;i++)for(let j=cj-rr;j<=cj+rr;j++){const L=SG.get(i+','+j);if(!L)continue;for(const s of L){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),px=s.ax+vx*t,pz=s.az+vz*t,d=Math.hypot(x-px,z-pz);if(d<bd){bd=d;best={s,t,d,px,pz}}}}if(best&&bd<rr*SGC)return best}return nearRoadAll(x,z)}
 function nearRoadAll(x,z){let best=null,bd=1e9;for(const s of SEGS){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),px=s.ax+vx*t,pz=s.az+vz*t,d=Math.hypot(x-px,z-pz);if(d<bd){bd=d;best={s,t,d,px,pz}}}return best}
 const BRIDGES=ROADS.filter(r=>r.bridge).map(r=>{const xs=r.pts.map(p=>p[0]),zs=r.pts.map(p=>p[1]);return{r,x0:Math.min(...xs)-12,x1:Math.max(...xs)+12,z0:Math.min(...zs)-12,z1:Math.max(...zs)+12,deck:r.name==='Ponte Edgar Cardoso'?7.9:r.w/2+1}});
-function bridgeAt(x,z){for(const B of BRIDGES){if(x<B.x0||x>B.x1||z<B.z0||z>B.z1)continue;const P=B.r.pts;for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],vx=b[0]-a[0],vz=b[1]-a[1],L2=vx*vx+vz*vz,t=((x-a[0])*vx+(z-a[1])*vz)/L2;if(t<0||t>1)continue;const px=a[0]+vx*t,pz=a[1]+vz*t,lat=Math.hypot(x-px,z-pz);if(lat<B.deck){const L=Math.sqrt(L2);return{y:a[2]+(b[2]-a[2])*t,lat,px,pz,nx:(x-px)/(lat||1),nz:(z-pz)/(lat||1),half:B.deck-1}}}}return null}
+function bridgeAt(x,z,cy){let best=null,bs=1e9;for(const B of BRIDGES){if(x<B.x0||x>B.x1||z<B.z0||z>B.z1)continue;const P=B.r.pts;for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],vx=b[0]-a[0],vz=b[1]-a[1],L2=vx*vx+vz*vz;if(!L2)continue;const t0=((x-a[0])*vx+(z-a[1])*vz)/L2;if(t0<-.5||t0>1.5)continue;const t=t0<0?0:t0>1?1:t0;const px=a[0]+vx*t,pz=a[1]+vz*t,lat=Math.hypot(x-px,z-pz);if(lat<B.deck){const y=a[2]+(b[2]-a[2])*t;const sc=(cy==null?0:Math.abs(y-cy)*4)+(lat>B.deck-1?20+lat:lat*.1);if(sc<bs){bs=sc;best={y,lat,px,pz,nx:(x-px)/(lat||1),nz:(z-pz)/(lat||1),half:B.deck-1}}}}}return best}
 function onBridgeXZ(x,z){return !!bridgeAt(x,z)}
 function bridgeY(z,x){const b=bridgeAt(x==null?2200:x,z);return b?b.y:0}
 function targetY(x,z){const b=bridgeAt(x,z);return b?b.y:Math.max(roadLiftY(x,z),-.4)}
 function surfaceAt(x,z,curY){ // altura onde o carro está (pontes primeiro)
-  const b=bridgeAt(x,z);if(b&&(curY==null||Math.abs(curY-b.y)<4))return b.y;
+  const b=bridgeAt(x,z,curY);if(b&&(curY==null||Math.abs(curY-b.y)<4))return b.y;
   return Math.max(roadLiftY(x,z),-3)}
 function roadLiftY(x,z){const t=terrainH(x,z);if(typeof SEGS==='undefined'||!SEGS.length)return t;const n=nearRoad(x,z);if(!n||n.s.r.bridge||n.d>n.s.r.w/2+.6)return t;const m=meshH(n.px,n.pz);if(m<=-.5)return t;return Math.max(t,Math.max(m,-.2)+.1+(m>4?.15:0))}
 /* ---- linha do comboio (Figueira → Aveiro) ---- */
@@ -780,7 +785,7 @@ const TOLLS=[];
  // pórticos de portagem eletrónica (com câmaras)
  alongRoad('A17',1e9,()=>{});[0.3,0.68].forEach(f=>{alongRoad('A17',A17LEN*f,(x,z,dx,dz,sAt)=>{if(sAt>0&&Math.abs(sAt-A17LEN*f)<5){const t=panel([['PORTAGEM ELETRÓNICA'],['Classe 1','0,95 €']],9,3.2,'#2a6a3a');gantry(x,z,dx,dz,t,t,true)}})});
  // placas de saída nas bermas
- ['Tocha','Mira','Vagos','Ílhavo','Aveiro'].forEach((n,i)=>{const r=ROADS.find(r=>r.name==='Saída '+n),p=r.pts[0];const tex=panel([['SAÍDA '+(i+2)],[n]],4,2.2);const m=new THREE.Mesh(new THREE.PlaneGeometry(4,2.2),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));m.position.set(p[0]+14,terrainH(p[0],p[1])+3.4,p[1]+90);scene.add(m);const po=new THREE.Mesh(new THREE.BoxGeometry(.15,2.6,.15),lam({color:0x8a9096}));po.position.set(p[0]+14,terrainH(p[0],p[1])+1.3,p[1]+90);scene.add(po)})}
+ ['Tocha','Mira','Vagos','Ílhavo','Aveiro'].forEach((n,i)=>{const ns=NO_SIGNS.find(q=>q.n===n);if(!ns)return;const tex=panel([['SAÍDA '+(i+2)],[n]],4,2.2);for(const q of ns.p){const m=new THREE.Mesh(new THREE.PlaneGeometry(4,2.2),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));m.position.set(q.x,terrainH(q.x,q.z)+3.4,q.z);m.rotation.y=q.a;scene.add(m);const po=new THREE.Mesh(new THREE.BoxGeometry(.15,2.6,.15),lam({color:0x8a9096}));po.position.set(q.x,terrainH(q.x,q.z)+1.3,q.z);scene.add(po)}})}
 // Ponte da Barra: tabuleiro baixo e comprido com pilares sobre a Ria
 {const r=ROADS.find(r=>r.name==='Ponte da Barra'),g=new THREE.Group(),con=lam({color:0xd4d0c6});for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);const d=new THREE.Mesh(unitBox,con);d.scale.set(L+.4,1,15);d.position.set((a[0]+b[0])/2,(a[2]+b[2])/2-1.05,a[1]);g.add(d);
   for(const sd of [-1,1]){const rl=new THREE.Mesh(unitBox,lam({color:0xf3f1ea}));rl.scale.set(L+.4,1.05,.25);rl.position.set((a[0]+b[0])/2,(a[2]+b[2])/2,a[1]+sd*7.3);g.add(rl)}if(i%3===0&&a[2]>3){const pi=new THREE.Mesh(unitBox,con);pi.scale.set(2.4,a[2]+3,6);pi.position.set(a[0],-3,a[1]);g.add(pi)}}
@@ -1077,6 +1082,7 @@ function freeSpot(tx,tz,names,fw,fd){let cand=[];for(const g of SEGS){if(names&&
   const ax=Math.abs(nx)>Math.abs(nz);const fx=ax?-Math.sign(nx):0,fz=ax?0:-Math.sign(nz);const W2=ax?fd:fw,D2=ax?fw:fd;
   if(terrainH(cx,cz)<1.2||(typeof inRia==='function'&&inRia(cx,cz)))continue;
   if(NB.some(b=>Math.abs(b.x-cx)<(b.w+W2)/2+2&&Math.abs(b.z-cz)<(b.d+D2)/2+2))continue;
+  if([[0,0],[-1,-1],[1,-1],[-1,1],[1,1]].some(([u,v])=>bridgeAt(cx+u*(W2/2+3),cz+v*(D2/2+3))))continue; // nunca debaixo de uma ponte
   {let hit=false;for(let u=-1;u<=1&&!hit;u+=.5)for(let v=-1;v<=1&&!hit;v+=.5){const px=cx+u*(W2/2+1),pz=cz+v*(D2/2+1);for(const q of NS){const vx=q.bx-q.ax,vz=q.bz-q.az,t=clamp(((px-q.ax)*vx+(pz-q.az)*vz)/(q.len*q.len||1),0,1);if(Math.hypot(px-q.ax-vx*t,pz-q.az-vz*t)<q.r.w/2+.8){hit=true;break}}}if(hit)continue}
   const rl=nearRail(cx,cz);if(rl&&rl.d!=null&&rl.d<Math.max(W2,D2)/2+14)continue;{const dr=nearRail(cx+fx*(W2/2+4),cz+fz*(D2/2+4));if(dr&&dr.d<9)continue}
   if(PLACES.some(p=>Math.hypot(p.x-cx,p.z-cz)<40)||PUMPS.some(p=>Math.hypot(p.x-cx,p.z-cz)<25))continue;
@@ -1222,13 +1228,13 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
   const nx=P.x+P.vx*dt,nz=P.z+P.vz*dt;const r=c.wid*.6;let b=hitBuilding(nx,nz,r);if(b&&!b.hidden&&P.y>terrainH(nx,nz)+(b.h||0)+.5)b=null;
   if(b){const ox=nx-b.x,oz=nz-b.z,px=b.w/2+r-Math.abs(ox),pz=b.d/2+r-Math.abs(oz);const imp=Math.hypot(P.vx,P.vz);if(px<pz){P.vx=-P.vx*.3;P.vz*=.7}else{P.vz=-P.vz*.3;P.vx*=.7}if(imp>6){sfx.hit();shake=Math.min(1,imp/25)}}
   else{let carHit=null;for(const T of TRAF){if(T.x==null)continue;const tc=CARS[T.type],rx=nx-T.x,rz=nz-T.z,a1=Math.abs(rx*T.dx+rz*T.dz),s1=Math.abs(-rx*T.dz+rz*T.dx);const pa=Math.abs(Math.sin(P.h)*T.dx-Math.cos(P.h)*T.dz);const ext=c.wid/2+(c.len/2-c.wid/2)*pa,exs=c.wid/2+(c.len/2-c.wid/2)*(1-pa);if(a1<tc.len/2+ext*.9&&s1<tc.wid/2+exs*.9){const ty=T.m?T.m.position.y:(T.y!=null?T.y:terrainH(T.x,T.z));if(Math.abs(ty-P.y)>3)continue;carHit=T;break}}if(carHit){const dx=nx-carHit.x,dz=nz-carHit.z,L=Math.hypot(dx,dz)||1,imp=Math.hypot(P.vx,P.vz);P.vx=dx/L*Math.max(2,imp*.35);P.vz=dz/L*Math.max(2,imp*.35);if(imp>5){sfx.hit();shake=Math.min(1,imp/25)}}else{P.x=nx;P.z=nz}}
-  {const bA=bridgeAt(P.x,P.z);if(bA&&Math.abs(P.y-bA.y)<4&&bA.lat>bA.half){const push=bA.lat-bA.half;P.x-=bA.nx*push;P.z-=bA.nz*push;const vn=P.vx*bA.nx+P.vz*bA.nz;if(vn>0){P.vx-=1.25*vn*bA.nx;P.vz-=1.25*vn*bA.nz;if(vn>6){sfx.hit();shake=.4}}}}
-  {const na=nearRoad(P.x,P.z),onBr=bridgeAt(P.x,P.z);if(na.s.r.auto&&na.d<12.6&&!(onBr&&P.y>terrainH(P.x,P.z)+2)){const g=na.s,ux=(g.bx-g.ax)/g.len,uz=(g.bz-g.az)/g.len,side=Math.sign((P.x-na.px)*(-uz)+(P.z-na.pz)*ux)||1,nx=-uz*side,nz=ux*side;
+  {const bA=bridgeAt(P.x,P.z,P.y);if(bA&&Math.abs(P.y-bA.y)<4&&bA.lat>bA.half&&bA.y-terrainH(bA.px,bA.pz)>1.2){const push=bA.lat-bA.half;P.x-=bA.nx*push;P.z-=bA.nz*push;const vn=P.vx*bA.nx+P.vz*bA.nz;if(vn>0){P.vx-=1.25*vn*bA.nx;P.vz-=1.25*vn*bA.nz;if(vn>6){sfx.hit();shake=.4}}}}
+  {const na=nearRoad(P.x,P.z),onBr=bridgeAt(P.x,P.z,P.y);if(na.s.r.auto&&na.d<12.6&&!(onBr&&P.y>terrainH(P.x,P.z)+2)){const g=na.s,ux=(g.bx-g.ax)/g.len,uz=(g.bz-g.az)/g.len,side=Math.sign((P.x-na.px)*(-uz)+(P.z-na.pz)*ux)||1,nx=-uz*side,nz=ux*side;
    const wall=(lim,dirOut)=>{const tgt=lim;P.x=na.px+nx*tgt;P.z=na.pz+nz*tgt;const vn=(P.vx*nx+P.vz*nz)*dirOut;if(vn>0){P.vx-=nx*dirOut*vn*1.35;P.vz-=nz*dirOut*vn*1.35;if(vn>5){sfx.hit();shake=Math.min(1,vn/25)}}};
    if(na.d<1.05&&g.len&&na.t>.0001)wall(1.05,-1);  // separador central
    else if(na.d>10.95&&!ROADS.some(r=>!r.auto&&!r.bridge&&r.name!=='A17'&&r.pts.some((p,i)=>i<r.pts.length-1&&(()=>{const q=r.pts[i+1],vx=q[0]-p[0],vz=q[1]-p[1],L2=vx*vx+vz*vz,t=clamp(((P.x-p[0])*vx+(P.z-p[1])*vz)/L2,0,1);return Math.hypot(P.x-p[0]-vx*t,P.z-p[1]-vz*t)<r.w/2+3})())))wall(10.95,1)}}  // rails (menos nas saídas)
-  const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
-  if(ty<-1&&!bridgeAt(P.x,P.z)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
+  const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z,P.y);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
+  if(ty<-1&&!bridgeAt(P.x,P.z,P.y)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
   car.position.set(P.x,P.y,P.z);car.rotation.y=-P.h;const sx=terrainH(P.x+Math.sin(P.h)*2,P.z-Math.cos(P.h)*2)-terrainH(P.x-Math.sin(P.h)*2,P.z+Math.cos(P.h)*2);car.rotation.x=onRoad&&P.y>3&&Math.abs(P.x-2200)<8?0:clamp(sx/4,-.25,.25);
   setBrake(car,(brk&&fv>.5)||hand||(!gas&&Math.abs(fv)<1.5)||(!gas&&fv>2&&a<0));car.userData.wheels.forEach((w,i)=>{w.rotation.x-=fv*dt/.36;if(i<2)car.userData.pivots[i].rotation.y=steer*.35});
   if(AC&&ENGM){ENGM.drive(Math.abs(fv)/CARS[carType].max,{throttle:gas?1:0,vol:P.fuel>0?1:.4});engG.gain.setTargetAtTime(G.state==='play'?1:0,AC.currentTime,.1)}else if(eng&&AC){eng.frequency.setTargetAtTime(55+Math.abs(fv)*5.5+(gas?20:0),AC.currentTime,.05);engG.gain.setTargetAtTime(G.state==='play'?.035+(gas?.03:0):0,AC.currentTime,.1)}
