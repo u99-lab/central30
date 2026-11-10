@@ -620,6 +620,28 @@ const SA_LIST=[];{const A=ROADS.find(r=>r.name==='A17').pts;const cum=[0];for(le
   {const p=at(s0+200),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*120,p.z+nz*120)+.12,y1=terrainH(p.x-nx*120,p.z-nz*120)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
    for(let o=120;o>=-120.1;o-=8){const u=(120-o)/240,base=lerp(y0,y1,u),f=smooth(0,.42,u)*smooth(1,.58,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
    road('Ponte da Área de Serviço de '+nome,br,7,{bridge:true,viaduct:true,rural:true})}}}
+// nós com ponte em cada saída: quem vem no sentido Aveiro (faixa de este) sai, dá a volta, passa POR CIMA da A17
+// e chega à estrada da cidade; daí vai para a cidade ou volta à autoestrada no outro sentido (sem contramão)
+{const A=ROADS.find(r=>r.name==='A17').pts;const cum=[0];for(let i=0;i<A.length-1;i++)cum.push(cum[i]+Math.hypot(A[i+1][0]-A[i][0],A[i+1][1]-A[i][1]));const TOT=cum[cum.length-1];
+ const at=sv=>{sv=clamp(sv,0,TOT);let i=0;while(i<cum.length-2&&cum[i+1]<sv)i++;const a=A[i],b=A[i+1],L=(cum[i+1]-cum[i])||1,t=(sv-cum[i])/L;return{x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,dx:(b[0]-a[0])/L,dz:(b[1]-a[1])/L}};
+ const sNear=(x,z)=>{let best=0,bd=1e9;for(let sv=0;sv<TOT;sv+=8){const p=at(sv),d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;best=sv}}return best};
+ const B3=(a,b,c,d,t)=>{const u=1-t;return u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d};
+ for(const nm of ['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro']){const S=ROADS.find(r=>r.name===nm);if(!S)continue;const p0=S.pts[0],s0=sNear(p0[0],p0[1]),c0=at(s0);
+  // para que lado (ao longo da A17) vai a estrada da cidade: a ponte fica do outro lado
+  const far=S.pts[Math.min(S.pts.length-1,Math.floor(S.pts.length*.35))],along=(far[0]-c0.x)*c0.dx+(far[1]-c0.z)*c0.dz;const sB=s0+(along>0?-90:90),sL=sB-200;
+  const P=(sv,off)=>{const p=at(sv),nx=-p.dz,nz=p.dx;return[p.x+nx*off,p.z+nz*off]};
+  // volta do lado de este (sai antes, junta-se depois)
+  const loop=[];for(let ds=-160;ds<=160.1;ds+=8)loop.push(P(sL+ds,10+26*Math.pow(Math.cos(ds/160*Math.PI/2),2)));road('Nó de Acesso',loop,8,{rural:true});
+  // ligação redonda até à ponte
+  const off0=10+26*Math.pow(Math.cos(24/160*Math.PI/2),2),RR=38,lk=[];for(let k=0;k<=16;k++){const t=k/16;lk.push(P(sL+B3(24,150,200+2*RR,200+2*RR,t),B3(off0,off0,70,120,t)))}
+  for(let k=1;k<=14;k++){const a=k/14*Math.PI;lk.push(P(sL+200+RR+RR*Math.cos(a),120+RR*Math.sin(a)))}road('Nó de Acesso',lk,7,{rural:true});
+  // a ponte por cima da A17
+  {const p=at(sB),nx=-p.dz,nz=p.dx,br=[];const y0=terrainH(p.x+nx*120,p.z+nz*120)+.12,y1=terrainH(p.x-nx*120,p.z-nz*120)+.12,top=Math.max(terrainH(p.x,p.z),y0,y1)+7;
+   for(let o=120;o>=-120.1;o-=8){const u=(120-o)/240,base=lerp(y0,y1,u),f=smooth(0,.42,u)*smooth(1,.58,u);br.push([p.x+nx*o,p.z+nz*o,base+(top-base)*f])}
+   road('Ponte do Nó '+nm.replace('Saída ','de '),br,7,{bridge:true,viaduct:true,rural:true})}
+  // do outro lado: curva até à estrada da cidade
+  {let acc=0,Q=S.pts[S.pts.length-1],qd=[-1,0];for(let i=0;i<S.pts.length-1;i++){const a=S.pts[i],b=S.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(acc+L>=230){const t=(230-acc)/L;Q=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];qd=[(b[0]-a[0])/L,(b[1]-a[1])/L];break}acc+=L}
+   const W=P(sB,-120),p=at(sB),ox=p.dz,oz=-p.dx,cn=[];for(let k=0;k<=18;k++){const t=k/18;cn.push([B3(W[0],W[0]+ox*70,Q[0]-qd[0]*80,Q[0],t),B3(W[1],W[1]+oz*70,Q[1]-qd[1]*80,Q[1],t)])}road('Nó de Acesso',cn,7,{rural:true})}}}
 // viadutos: as saídas e ligações da A17 passam POR CIMA da linha do comboio (só as estradas pequenas têm passagens de nível)
 {const XS=[['Ligação à A17',2147,-682],['Ligação à A17',2131,-533],['Saída Tocha',2081,-6528],['Saída Mira',2425,-9455],['Saída Vagos',3200,-12765],['Saída Ílhavo',3346,-14102],['Saída Aveiro',3567,-15579]];
  const HALF=75,LIFT=7.6;
@@ -738,7 +760,7 @@ const _ID=new THREE.Object3D();function inst(geo,mat,list,fn,shadow){const m=new
 function alongRoad(name,step,fn){const r=ROADS.find(r=>r.name===name);let acc=0,next=0;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),dx=(b[0]-a[0])/L,dz=(b[1]-a[1])/L;while(next<=acc+L){const t=(next-acc)/L;fn(lerp(a[0],b[0],t),lerp(a[1],b[1],t),dx,dz,next);next+=step}acc+=L}return acc}
 const A17LEN=alongRoad('A17',1e9,()=>{});
 // separador central (betão) e rails metálicos nas bermas, em instâncias
-{const bar=[],rail=[];alongRoad('A17',8,(x,z,dx,dz,sv)=>{if(sv<24)return;const nx=-dz,nz=dx;bar.push({x,z,a:Math.atan2(dx,dz)});for(const sd of [-1,1]){const px=x+nx*sd*11.3,pz=z+nz*sd*11.3;const near=['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Área de Serviço'].some(n=>ROADS.filter(r=>r.name===n).some(r=>Math.hypot(px-r.pts[0][0],pz-r.pts[0][1])<70||Math.hypot(px-r.pts[r.pts.length-1][0],pz-r.pts[r.pts.length-1][1])<70));if(!near)rail.push({x:px,z:pz,a:Math.atan2(dx,dz)})}});
+{const bar=[],rail=[];alongRoad('A17',8,(x,z,dx,dz,sv)=>{if(sv<24)return;const nx=-dz,nz=dx;bar.push({x,z,a:Math.atan2(dx,dz)});for(const sd of [-1,1]){const px=x+nx*sd*11.3,pz=z+nz*sd*11.3;const near=['Saída Tocha','Saída Mira','Saída Vagos','Saída Ílhavo','Saída Aveiro','Área de Serviço','Nó de Acesso'].some(n=>ROADS.filter(r=>r.name===n).some(r=>Math.hypot(px-r.pts[0][0],pz-r.pts[0][1])<70||Math.hypot(px-r.pts[r.pts.length-1][0],pz-r.pts[r.pts.length-1][1])<70));if(!near)rail.push({x:px,z:pz,a:Math.atan2(dx,dz)})}});
  const bg=new THREE.BoxGeometry(.6,.85,8.1);bg.translate(0,.42,0);inst(bg,lam({color:0xc9c5bb}),bar,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a});
  const rg=new THREE.BoxGeometry(.12,.32,8.1);rg.translate(0,.62,0);inst(rg,lam({color:0xb8bec4}),rail,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a});
  const pg=new THREE.BoxGeometry(.1,.7,.1);pg.translate(0,.35,0);inst(pg,lam({color:0x8a9096}),rail,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z)+.12,t.z);d.rotation.y=t.a})}
