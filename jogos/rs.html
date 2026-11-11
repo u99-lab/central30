@@ -186,6 +186,7 @@ body.touch #toasts{top:calc(var(--gt) + 60px)}
 <body>
 
 <canvas id="gl"></canvas>
+<div id="loading"><h1>ROTA DO SOL</h1><div id="loadBar"><i id="loadFill"></i></div><div id="loadTxt">A preparar…</div></div>
 
 <div class="hud" id="topR">
   <div class="chip num" id="credits"><small>CR</small><span id="crVal">0</span></div>
@@ -294,7 +295,7 @@ body.touch #toasts{top:calc(var(--gt) + 60px)}
   </div>
 </div>
 
-<div id="loading"><h1>ROTA DO SOL</h1><div id="loadBar"><i id="loadFill"></i></div><div id="loadTxt">A preparar…</div></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
@@ -1582,7 +1583,7 @@ const KEYS_SKY = {
 };
 const _c1 = new THREE.Color(), _c2 = new THREE.Color(), sunDir = new THREE.Vector3();
 function updateSky(dt, forceEnv) {
-  tod = (tod + dt * TIME_SPEED) % 24;
+  tod = NET.peers.size ? (17.4 + netNow() / 1000 * TIME_SPEED) % 24 : (tod + dt * TIME_SPEED) % 24;
   const a = (tod - 6) / 24 * TAU, elev = Math.sin(a);
   sunDir.set(Math.cos(a) * 0.85, elev, 0.42).normalize();
   daylight = smooth(-0.14, 0.22, sunDir.y); night = 1 - smooth(-0.12, 0.06, sunDir.y);
@@ -2096,7 +2097,9 @@ addEventListener('message', e => {
   for (const p of d.list || []) {
     if (!p || typeof p.id !== 'string' || !p.st || !Array.isArray(p.st.p) || !p.st.p.every(Number.isFinite)) continue;
     seen.add(p.id);
-    NET.peers.set(p.id, { id: p.id, name: String(p.name || 'Amigo').slice(0, 18), color: /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#52f0a0', x: p.st.p[0], y: p.st.p[1], z: p.st.p[2], at: now });
+    const m = typeof p.st.m === 'string' && p.st.m.startsWith('rs|') ? p.st.m.split('|') : null;
+    NET.peers.set(p.id, { id: p.id, name: String(p.name || 'Amigo').slice(0, 18), color: /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#52f0a0', x: p.st.p[0], y: p.st.p[1], z: p.st.p[2], q: Array.isArray(p.st.q) && p.st.q.length === 4 ? p.st.q : null,
+      ci: m ? clamp(parseInt(m[1], 10) || 0, 0, CARS.length - 1) : 0, paint: m && /^[0-9a-f]{6}$/i.test(m[2]) ? '#' + m[2] : null, a: Array.isArray(p.st.a) ? p.st.a : [0, 0, 0], at: now });
   }
   for (const k of [...NET.peers.keys()]) if (!seen.has(k)) NET.peers.delete(k);
 });
@@ -2113,6 +2116,45 @@ function netListen() {
     } else if (ev.t === 'prog' && typeof ev.ev === 'string') {
       NET.racers.set(String(from || who), { name: who, ev: ev.ev, prog: +ev.prog || 0, done: !!ev.done, time: +ev.time || 0, at: performance.now() });
     }
+  });
+}
+// my car for the other players (the game sends it itself, so friends see the right car, colour and wheels)
+let netLastSend = 0;
+const _nq = new THREE.Quaternion();
+function netSendMe() {
+  if (parent === window || !car.mesh) return;
+  const now = performance.now(); if (now - netLastSend < 90) return; netLastSend = now;
+  car.mesh.getWorldQuaternion(_nq);
+  const st = { k: 'obj', p: [car.x, car.y, car.z].map(v => Math.round(v * 100) / 100), q: [_nq.x, _nq.y, _nq.z, _nq.w].map(v => Math.round(v * 1e4) / 1e4), s: 1,
+    m: 'rs|' + car.ci + '|' + carColor(car.ci).replace('#', ''), a: [Math.round((car.vF || 0) * 10) / 10, Math.round(car.steer * 100) / 100, car.brake > 0 ? 1 : 0] };
+  try { parent.postMessage({ c30: true, session: window.__C30_SESSION__, type: 'ghost-me', st }, '*'); } catch (e) { }
+}
+const FRIEND_CARS = new Map();
+function nameTag(name, color) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d');
+  x.font = '700 30px "Chakra Petch",sans-serif'; const w = Math.min(250, x.measureText(name).width + 30);
+  x.fillStyle = 'rgba(12,10,26,.8)'; x.beginPath(); x.rect(128 - w / 2, 8, w, 48); x.fill(); x.fillStyle = color; x.fillRect(128 - w / 2, 52, w, 4);
+  x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(name, 128, 32);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); sp.scale.set(4.4, 1.1, 1); sp.renderOrder = 999; return sp;
+}
+const _fq = new THREE.Quaternion(), _fe = new THREE.Euler();
+function updateFriendCars(dt) {
+  for (const [id, fc] of FRIEND_CARS) if (!NET.peers.has(id)) { scene.remove(fc.mesh); FRIEND_CARS.delete(id); }
+  NET.peers.forEach((f, id) => {
+    let fc = FRIEND_CARS.get(id); const paint = f.paint || f.color;
+    if (fc && (fc.ci !== f.ci || fc.paint !== paint || fc.name !== f.name)) { scene.remove(fc.mesh); fc = null; }
+    if (!fc) {
+      const mesh = makeCarMesh(f.ci, paint), tag = nameTag(f.name, f.color); tag.position.y = 3.2; mesh.add(tag);
+      mesh.position.set(f.x, f.y, f.z); scene.add(mesh); fc = { mesh, ci: f.ci, paint, name: f.name, tag }; FRIEND_CARS.set(id, fc);
+    }
+    const m = fc.mesh, k = 1 - Math.exp(-12 * dt);
+    if (Math.hypot(m.position.x - f.x, m.position.z - f.z) > 40) m.position.set(f.x, f.y, f.z); else m.position.lerp(_v.set(f.x, f.y, f.z), k);
+    if (f.q) m.quaternion.slerp(_fq.set(f.q[0], f.q[1], f.q[2], f.q[3]), k);
+    const vF = +f.a[0] || 0, st = +f.a[1] || 0;
+    m.cd.wheels.forEach(w => { w.spin.rotation.x += vF / m.cd.spec.wr * dt; if (w.front) w.pivot.rotation.y = -st * 0.5; });
+    m.cd.tail.emissiveIntensity = f.a[2] ? 3 : 0.4 + night * 1.2;
+    const d = camera.position.distanceTo(m.position); fc.tag.scale.set(4.4 * Math.max(1, d / 40), 1.1 * Math.max(1, d / 40), 1);
   });
 }
 let netChipN = -1;
@@ -2305,6 +2347,7 @@ function onKey(code) {
   if (code === 'KeyM') setState('map');
   if (code === 'KeyH') horn(true);
   if (code === 'KeyN') { setRadio(!save.radio); toast('Rádio Sol FM', save.radio ? 'Ligado' : 'Desligado', '#9b6bff'); }
+  if (code === 'KeyT' && NET.peers.size) { toast('Hora do dia', 'Com amigos online a hora é igual para todos', '#ffb22e'); return; }
   if (code === 'KeyT') { tod = (tod + 2) % 24; updateSky(0, true); toast('Hora do dia', $('clock').textContent, '#ffb22e'); }
   if (code === 'Enter') tryStartEvent();
 }
@@ -2427,6 +2470,7 @@ function update(dt) {
     const locked = state !== 'drive' || (race && race.state === 'count');
     for (let i = 0; i < steps; i++) drifting = updatePlayer(sdt, locked) || drifting;
     if (state === 'drive') { updateSkills(dt, drifting); updateFreeRoam(dt); updateRace(dt); nearMiss(dt); netTick(dt); }
+    netSendMe();
     effects(dt, drifting);
     // prompt
     nearEvent = null;
@@ -2444,6 +2488,7 @@ function update(dt) {
   else car.mesh.position.y = car.y;
   car.mesh.cd.tail.emissiveIntensity = car.brake > 0 ? 3 : 0.4 + night * 1.2;
   updateTraffic(dt, !!race);
+  updateFriendCars(dt);
   if (frame % 15 === 0) { const vd = [1100, 1600, 2200][save.quality]; VEG_CHUNKS.forEach(m => { m.visible = Math.abs(m.position.x - camera.position.x) < vd && Math.abs(m.position.z - camera.position.z) < vd; }); }
   updateSmash(dt);
   updateParticles(dt, 0.4 + daylight * 0.6);
@@ -2499,7 +2544,7 @@ async function boot() {
   await step(96, 'A aquecer os motores…');
   if (!save.owned.includes(save.sel)) save.sel = 0;
   if (matchMedia('(pointer:coarse)').matches && !save.qualitySet) { save.quality = 1; save.qualitySet = true; }
-  spawnAtFestival(); setPlayerCar(save.sel); applyQuality(); updateSky(0, true); updateCreditsUI(); setRadio(save.radio); setupTouch();
+  spawnAtFestival(); setPlayerCar(window.__COVERCAR ?? save.sel); applyQuality(); updateSky(0, true); updateCreditsUI(); setRadio(save.radio); setupTouch();
   renderer.compile(scene, camera);
   $('loading').style.transition = 'opacity .6s'; $('loading').style.opacity = 0; setTimeout(() => $('loading').remove(), 650);
   setState('menu');
