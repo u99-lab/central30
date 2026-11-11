@@ -337,7 +337,7 @@ function fbm(n, x, z, o) { let a = 1, f = 1, s = 0, t = 0; for (let i = 0; i < o
 
 // ---------- world constants ----------
 const WORLD = 13000, HALF = WORLD / 2, GRID = 1000, CELL = WORLD / GRID, GW = GRID + 1;
-const ROAD_W = 14, GRAV = 22, BRIDGE_Y = 15;
+const ROAD_W = 14, GRAV = 22, BRIDGE_Y = 15, ROAD_LIFT = 0.08;
 const FEST = { x: 10, z: 430, y: 0, r: 125 };
 // archipelago: the original island plus three new ones
 const ISLANDS = [
@@ -458,18 +458,26 @@ function buildRoad(def, ri) {
       bd = Math.sqrt(bd); if (bd < 90) ys[i] = lerp(ys[i], by, smooth(90, 8, bd));
     }
   }
-  const G = 0.22;
+  const G = 0.22, K = R.closed ? 2 * n : n; // closed loops also limit the slope across the seam
   for (let it = 0; it < 4; it++) {
-    for (let i = 1; i < n; i++) ys[i] = clamp(ys[i], ys[i - 1] - G, ys[i - 1] + G);
-    for (let i = n - 2; i >= 0; i--) ys[i] = clamp(ys[i], ys[i + 1] - G, ys[i + 1] + G);
+    for (let k = 1; k < K; k++) { const i = k % n, p = (k - 1) % n; ys[i] = clamp(ys[i], ys[p] - G, ys[p] + G); }
+    for (let k = K - 2; k >= 0; k--) { const i = k % n, q = (k + 1) % n; ys[i] = clamp(ys[i], ys[q] - G, ys[q] + G); }
   }
   // bridges: hold the deck high above the sea and ramp up to it on land
   const minB = R.isBridge ? BRIDGE_Y : 7;
   for (let i = 0; i < n; i++) if (S[i].bridge) ys[i] = Math.max(ys[i], minB);
   for (let it = 0; it < 2; it++) {
-    for (let i = 1; i < n; i++) ys[i] = Math.max(ys[i], ys[i - 1] - G * 0.8);
-    for (let i = n - 2; i >= 0; i--) ys[i] = Math.max(ys[i], ys[i + 1] - G * 0.8);
+    for (let k = 1; k < K; k++) { const i = k % n; ys[i] = Math.max(ys[i], ys[(k - 1) % n] - G * 0.8); }
+    for (let k = K - 2; k >= 0; k--) { const i = k % n; ys[i] = Math.max(ys[i], ys[(k + 1) % n] - G * 0.8); }
   }
+  // junctions: make both ends meet the road they join at exactly the same height
+  if (!R.closed && ri > 0) [0, n - 1].forEach(e => {
+    let bd = 900, by = null;
+    for (let q = 0; q < ROADS.length; q++) { const M = ROADS[q]; for (let k = 0; k < M.n; k++) { const p = M.S[k], d = (p.x - S[e].x) ** 2 + (p.z - S[e].z) ** 2; if (d < bd) { bd = d; by = p.y; } } }
+    if (by === null) return;
+    const d = by - ys[e], L = Math.max(160, Math.abs(d) / 0.07);
+    for (let i = 0; i < n; i++) { const dist = Math.abs(i - e) * R.ds; if (dist < L) ys[i] += d * smooth(L, 0, dist); }
+  });
   for (let i = 0; i < n; i++) S[i].y = ys[i];
   const vlim = new Float32Array(n), LAT = 13, BRK = 13;
   for (let i = 0; i < n; i++) {
@@ -550,7 +558,7 @@ function buildHeights() {
     const fd = Math.hypot(x - FEST.x, z - FEST.z);
     if (fd < FEST.r + 60) h = lerp(h, FEST.y - 0.1, smooth(FEST.r + 60, FEST.r - 5, fd));
     const nr = nearestRoad(x, z); let lat = 999;
-    if (nr) { lat = nr.d; if (lat < 54 && !ROADS[nr.r].S[nr.i].bridge) h = lerp(h, nr.y - 0.12, smooth(54, 15, lat)); else if (lat < 44) lat = 999; }
+    if (nr) { lat = nr.d; if (lat < 54 && !ROADS[nr.r].S[nr.i].bridge) h = lerp(h, nr.y - 0.25, smooth(54, 15, lat)); else if (lat < 44) lat = 999; }
     H[j * GW + i] = h; ROADLAT[j * GW + i] = lat;
   }
 }
@@ -566,7 +574,7 @@ const _g = { h: 0, onRoad: false, ramp: false, water: false };
 function groundAt(x, z) {
   let h = terrainH(x, z), onRoad = false, ramp = false;
   const nr = nearestRoad(x, z);
-  if (nr && nr.d < ROAD_W / 2 + 0.6) { h = nr.y + 0.06; onRoad = true; }
+  if (nr && nr.d < ROAD_W / 2 + 0.6) { h = nr.y + ROAD_LIFT; onRoad = true; }
   for (let k = 0; k < RAMPS.length; k++) {
     const r = RAMPS[k], dx = x - r.x, dz = z - r.z;
     const lz = dx * Math.sin(r.a) + dz * Math.cos(r.a), lx = dx * Math.cos(r.a) - dz * Math.sin(r.a);
@@ -724,7 +732,7 @@ function buildRoadMeshes(scene) {
   ROADS.forEach((R, ri) => {
     const cnt = R.closed ? R.n + 1 : R.n, pos = new Float32Array(cnt * 6), uv = new Float32Array(cnt * 4), idx = [];
     for (let k = 0; k < cnt; k++) {
-      const s = R.S[k % R.n], rx = -s.tz, rz = s.tx, hw = ROAD_W / 2, y = s.y + 0.06 + ri * 0.015;
+      const s = R.S[k % R.n], rx = -s.tz, rz = s.tx, hw = ROAD_W / 2, y = s.y + ROAD_LIFT;
       pos.set([s.x - rx * hw, y, s.z - rz * hw, s.x + rx * hw, y, s.z + rz * hw], k * 6);
       const v = (k * R.ds) / 24; uv.set([0, v, 1, v], k * 4);
       if (k < cnt - 1) { const a = k * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
@@ -1069,7 +1077,7 @@ function stripMesh(S, profile, mat) {
   const pos = [], idx = []; let base = 0;
   for (let e = 0; e < profile.length - 1; e++) {
     const a = profile[e], b = profile[e + 1];
-    S.forEach(s => { const rx = -s.tz, rz = s.tx; [a, b].forEach(q => pos.push(s.x + rx * q[0], s.y + 0.06 + q[1], s.z + rz * q[0])); });
+    S.forEach(s => { const rx = -s.tz, rz = s.tx; [a, b].forEach(q => pos.push(s.x + rx * q[0], s.y + ROAD_LIFT + q[1], s.z + rz * q[0])); });
     for (let k = 0; k < S.length - 1; k++) { const o = base + k * 2; idx.push(o, o + 1, o + 2, o + 1, o + 3, o + 2); }
     base += S.length * 2;
   }
@@ -1464,7 +1472,7 @@ function updateTraffic(dt, hidden) {
     if (!R.closed && (t.s < 5 || t.s > R.len - 5)) { t.dir *= -1; t.s = clamp(t.s, 5, R.len - 5); }
     const p = roadPoint(R, t.s, 3.4 * t.dir);
     t.x = p.x; t.z = p.z; t.h = p.hdg + (t.dir < 0 ? Math.PI : 0);
-    if (Math.abs(t.x - car.x) < 400 && Math.abs(t.z - car.z) < 400) updateCarVisual(dt, t.m, p.x, p.y + 0.06, p.z, t.h, t.cv, 0, false);
+    if (Math.abs(t.x - car.x) < 400 && Math.abs(t.z - car.z) < 400) updateCarVisual(dt, t.m, p.x, p.y + ROAD_LIFT, p.z, t.h, t.cv, 0, false);
     else { t.m.position.set(p.x, p.y, p.z); t.m.rotation.set(0, t.h, 0); }
   }
 }
@@ -1996,7 +2004,7 @@ function updateRace(dt) {
     // collide with player
     const dx = car.x - a.x, dz = car.z - a.z, d = Math.hypot(dx, dz);
     if (d < 2.4 && d > 0.01) { const nx = dx / d, nz = dz / d, pen = 2.4 - d; car.x += nx * pen * 0.8; car.z += nz * pen * 0.8; const vn = car.vx * nx + car.vz * nz; if (vn < 0) { car.vx -= 1.1 * vn * nx; car.vz -= 1.1 * vn * nz; } a.latT = clamp(a.lat - Math.sign(nx * -p.tz + nz * p.tx) * 1.5, -4.5, 4.5); }
-    updateCarVisual(dt, a.m, p.x, p.y + 0.06, p.z, a.h, a.v, clamp(angDiff(p.hdg, a.h) * 3, -1, 1), false);
+    updateCarVisual(dt, a.m, p.x, p.y + ROAD_LIFT, p.z, a.h, a.v, clamp(angDiff(p.hdg, a.h) * 3, -1, 1), false);
   });
   // position
   let pos = 1; AI.forEach(a => { if (a.done ? (!rc.done || a.time < rc.playerTime) : a.s > rc.prog) pos++; });
@@ -2388,7 +2396,7 @@ async function boot() {
   window.C30me = () => (state === 'drive' || state === 'results' || state === 'pause') ? car.mesh : null;
   window.C30pause = force => { if (force) { if (state === 'drive') setState('pause'); } else onKey('Escape'); };
   window.C30isPaused = () => state === 'pause';
-  if (window.__DBG) window.__G = { renderer, scene, camera, car, EVENTS, ROADS, startRace, setState, TRAFFIC, placeCar, roadPoint, get race() { return race; }, get state() { return state; }, set tod(v) { tod = v; }, sim(sec, inp) { simInput = inp; for (let i = 0; i < sec * 60; i++) update(1 / 60); simInput = null; }, chain, save };
+  if (window.__DBG) window.__G = { renderer, scene, camera, car, EVENTS, ROADS, startRace, setState, TRAFFIC, placeCar, roadPoint, get race() { return race; }, get state() { return state; }, set tod(v) { tod = v; }, ground: (x, z) => groundAt(x, z).h, terrain: (x, z) => terrainH(x, z), sim(sec, inp) { simInput = inp; for (let i = 0; i < sec * 60; i++) update(1 / 60); simInput = null; }, chain, save };
   requestAnimationFrame(t => { last = t; loop(t); });
 }
 boot().catch(err => { $('loadTxt').textContent = 'Erro ao carregar: ' + err.message; console.error(err); });
