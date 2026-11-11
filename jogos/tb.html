@@ -983,6 +983,7 @@ function loop(now){
 setTheme('dia');
 buildCarMenu();
 setShow(selCar);
+window.C30me=()=>player&&player.mesh&&player.mesh.isObject3D?player.mesh:null; // Central 30 online: este é o teu carro
 requestAnimationFrame(loop);
 })();
 </script>
