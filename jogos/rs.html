@@ -2098,7 +2098,13 @@ addEventListener('message', e => {
     if (!p || typeof p.id !== 'string' || !p.st || !Array.isArray(p.st.p) || !p.st.p.every(Number.isFinite)) continue;
     seen.add(p.id);
     const m = typeof p.st.m === 'string' && p.st.m.startsWith('rs|') ? p.st.m.split('|') : null;
-    NET.peers.set(p.id, { id: p.id, name: String(p.name || 'Amigo').slice(0, 18), color: /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#52f0a0', x: p.st.p[0], y: p.st.p[1], z: p.st.p[2], q: Array.isArray(p.st.q) && p.st.q.length === 4 ? p.st.q : null,
+    const old = NET.peers.get(p.id); let vel = old ? old.vel : [0, 0, 0], pAt = old ? old.pAt : now;
+    if (!old || old.x !== p.st.p[0] || old.y !== p.st.p[1] || old.z !== p.st.p[2]) {
+      const dtm = (now - pAt) / 1000;
+      if (old && dtm > 0.02 && dtm < 1) { const vx = (p.st.p[0] - old.x) / dtm, vy = (p.st.p[1] - old.y) / dtm, vz = (p.st.p[2] - old.z) / dtm; vel = Math.hypot(vx, vz) > 120 ? [0, 0, 0] : [vel[0] * 0.35 + vx * 0.65, vel[1] * 0.35 + vy * 0.65, vel[2] * 0.35 + vz * 0.65]; } else vel = [0, 0, 0];
+      pAt = now;
+    }
+    NET.peers.set(p.id, { vel, pAt, id: p.id, name: String(p.name || 'Amigo').slice(0, 18), color: /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#52f0a0', x: p.st.p[0], y: p.st.p[1], z: p.st.p[2], q: Array.isArray(p.st.q) && p.st.q.length === 4 ? p.st.q : null,
       ci: m ? clamp(parseInt(m[1], 10) || 0, 0, CARS.length - 1) : 0, paint: m && /^[0-9a-f]{6}$/i.test(m[2]) ? '#' + m[2] : null, a: Array.isArray(p.st.a) ? p.st.a : [0, 0, 0], at: now });
   }
   for (const k of [...NET.peers.keys()]) if (!seen.has(k)) NET.peers.delete(k);
@@ -2130,6 +2136,8 @@ function netSendMe() {
   try { parent.postMessage({ c30: true, session: window.__C30_SESSION__, type: 'ghost-me', st }, '*'); } catch (e) { }
 }
 const FRIEND_CARS = new Map();
+// where the friend is now: last known position plus their speed times the network delay
+function predicted(f) { const ah = Math.min(0.45, (performance.now() - f.pAt) / 1000 + 0.12), v = f.vel || [0, 0, 0]; return [f.x + v[0] * ah, f.y + v[1] * ah * 0.5, f.z + v[2] * ah]; }
 function nameTag(name, color) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d');
   x.font = '700 30px "Chakra Petch",sans-serif'; const w = Math.min(250, x.measureText(name).width + 30);
@@ -2148,8 +2156,9 @@ function updateFriendCars(dt) {
       const mesh = makeCarMesh(f.ci, paint), tag = nameTag(f.name, f.color); tag.position.y = 3.2; mesh.add(tag);
       mesh.position.set(f.x, f.y, f.z); scene.add(mesh); fc = { mesh, ci: f.ci, paint, name: f.name, tag }; FRIEND_CARS.set(id, fc);
     }
-    const m = fc.mesh, k = 1 - Math.exp(-12 * dt);
-    if (Math.hypot(m.position.x - f.x, m.position.z - f.z) > 40) m.position.set(f.x, f.y, f.z); else m.position.lerp(_v.set(f.x, f.y, f.z), k);
+    const m = fc.mesh, k = 1 - Math.exp(-20 * dt), pp = predicted(f);
+    if (Math.hypot(m.position.x - pp[0], m.position.z - pp[2]) > 40) m.position.set(pp[0], pp[1], pp[2]); else m.position.lerp(_v.set(pp[0], pp[1], pp[2]), k);
+    f.px = m.position.x; f.pz = m.position.z;
     if (f.q) m.quaternion.slerp(_fq.set(f.q[0], f.q[1], f.q[2], f.q[3]), k);
     const vF = +f.a[0] || 0, st = +f.a[1] || 0;
     m.cd.wheels.forEach(w => { w.spin.rotation.x += vF / m.cd.spec.wr * dt; if (w.front) w.pivot.rotation.y = -st * 0.5; });
@@ -2164,7 +2173,7 @@ function netTick(dt) {
   // other players' cars are solid: bump into them
   NET.peers.forEach(f => {
     if (Math.abs(f.y - car.y) > 3) return;
-    const dx = car.x - f.x, dz = car.z - f.z, d = Math.hypot(dx, dz);
+    const dx = car.x - (f.px ?? f.x), dz = car.z - (f.pz ?? f.z), d = Math.hypot(dx, dz);
     if (d < 2.6 && d > 0.01) { const nx = dx / d, nz = dz / d; car.x += nx * (2.6 - d); car.z += nz * (2.6 - d); const vn = car.vx * nx + car.vz * nz; if (vn < 0) { car.vx -= 1.2 * vn * nx; car.vz -= 1.2 * vn * nz; if (-vn > 5) { car.shake = Math.min(0.6, -vn / 25); sfxThump(-vn / 25); } } }
   });
   const n = NET.peers.size;

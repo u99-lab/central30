@@ -1669,7 +1669,7 @@ addEventListener('resize',resize);resize();
 placeItems();
 requestAnimationFrame(loop);
 document.querySelectorAll('#genero button').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.g===(LOOK.girl|0))));
-window.C30me=()=>G.state==='drive'&&typeof pCar!=='undefined'?pCar:avatar;
+window.C30me=()=>G.state==='drive'&&typeof pCar!=='undefined'?pCar:(['play','map','talk','pause'].includes(G.state)?avatar:null);
 window.__dbg={openTalk,talkPick,closeTalk,npcNear,TL,MEM,IN_C30,NPCS,P,G,start,ITEMS,MISSIONS,CROMOS,startExam,startBasket,shoot,startPhase,report,tryMove,setCam,doAction,startDrive,pickDlg,currentAction,homeAction};
 })();
 </script>
