@@ -347,7 +347,7 @@ body{overflow:hidden;background:#1a1a2e;font-family:'Courier New',monospace}
 <body>
 <script>
 /* Central 30 · som de motor: rotações com mudanças, tons graves e quentes (menos zumbido), rugido filtrado,
-   textura de explosões suave e "pops" discretos quando se levanta o pé a alta rotação. */
+   textura de explosões suave, "pops" discretos quando se levanta o pé e o nitro bem audível (mais rotação, sopro e escape). */
 window.C30Engine=window.C30Engine||function(ac,out){
  const now=()=>ac.currentTime,T=(p,v,k)=>{try{p.setTargetAtTime(v,now(),k)}catch(e){p.value=v}};
  const master=ac.createGain();master.gain.value=0;master.connect(out);
@@ -367,11 +367,11 @@ window.C30Engine=window.C30Engine||function(ac,out){
  let lastSr=0,load=0,lastLoad=0,lastT=0,gear=1,shiftT=0;
  const E={gear:1,
   // rpm 0..1, carga 0..1 (acelerador), vol 0..1
-  update(rpm,ld,vol){clearTimeout(E._t);E._t=setTimeout(()=>E.off(),400);rpm=Math.max(0,Math.min(1.05,rpm));ld=Math.max(0,Math.min(1,ld));const f=24+rpm*112;
+  update(rpm,ld,vol,nit){nit=nit?1:0;clearTimeout(E._t);E._t=setTimeout(()=>E.off(),400);rpm=Math.max(0,Math.min(1.05,rpm));ld=Math.max(0,Math.min(1,ld));const f=(24+rpm*112)*(1+nit*.07);
    T(o1.frequency,f,.04);T(o2.frequency,f*1.004,.04);T(o3.frequency,f*.5,.04);T(o4.frequency,f*1.5,.04);T(lfo.frequency,f*.5,.05);T(lfoG.gain,.2*(1-rpm)+.04,.1);
-   T(lp.frequency,260+rpm*700+ld*650,.06);T(ng.gain,.02+ld*.045+rpm*.015,.08);T(nf.frequency,110+rpm*220,.08);
-   T(tb.frequency,700+rpm*900,.1);T(tg.gain,ld*rpm*rpm*.004,.15);
-   T(master.gain,vol*(.55+ld*.3+rpm*.1)*.085,.08);
+   T(lp.frequency,260+rpm*700+ld*650+nit*1100,.06);T(ng.gain,.02+ld*.045+rpm*.015+nit*.09,.08);T(nf.frequency,110+rpm*220+nit*520,.08);
+   T(tb.frequency,700+rpm*900+nit*400,.1);T(tg.gain,ld*rpm*rpm*.004+nit*.018,.12);
+   T(master.gain,vol*(.55+ld*.3+rpm*.1+nit*.35)*.085,.08);
    if(lastLoad>.6&&ld<.1&&rpm>.7&&vol>0&&Math.random()<.5){const k=1+Math.floor(Math.random()*2);for(let i=0;i<k;i++)setTimeout(pop,i*60+Math.random()*40)}
    lastLoad=ld},
   // velocidade 0..1 → mudanças automáticas (5 velocidades); a carga vem da aceleração ou do acelerador
@@ -380,7 +380,7 @@ window.C30Engine=window.C30Engine||function(ac,out){
    let rpm=.2+.8*((sr-ed[g-1])/(ed[g]-ed[g-1]));if(sr<.02)rpm=.16;
    const acc=(sr-lastSr)/dt;lastSr=sr;const want=o.throttle!=null?o.throttle:Math.max(0,Math.min(1,acc*6+(sr>.02?.15:0)));load+=(want-load)*Math.min(1,dt*6);
    if(shiftT>0){shiftT-=dt;rpm*=.9;}
-   E.update(rpm+(o.nitro?.08:0),o.nitro?1:load,o.on===false?0:(o.vol!=null?o.vol:1))},
+   E.update(rpm+(o.nitro?.1:0),o.nitro?1:load,o.on===false?0:(o.vol!=null?o.vol:1),o.nitro)},
   off(){T(master.gain,0,.05)}};
  return E};
 
