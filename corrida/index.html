@@ -270,6 +270,11 @@ input[type=range]{accent-color:var(--locker);width:180px}
           <button data-d="normal" aria-pressed="true">Normal<small>seta amarela</small></button>
           <button data-d="dificil" aria-pressed="false">Difícil<small>sem seta · 2 auxiliares</small></button>
         </div></div>
+      <div class="field"><span class="lbl2">Modo</span>
+        <div class="seg" id="modos">
+          <button data-m="missoes" aria-pressed="true">Com missões<small>+0,5 valores por missão</small></button>
+          <button data-m="livre" aria-pressed="false">Sem missões<small>só aulas e testes</small></button>
+        </div></div>
       <div class="field"><span class="lbl2">Câmara (tecla C)</span>
         <div class="seg" id="cams">
           <button data-c="0" aria-pressed="false">1.ª pessoa<small>vês com os teus olhos</small></button>
@@ -811,7 +816,7 @@ const G={state:'menu',phase:0,pt:0,real:240,bell:false,grace:0,frozen:0,caught:0
 // memória: só dentro da Central 30, e só se a opção «Guardar dados» da coleção estiver ligada
 // (a coleção substitui o armazenamento do browser pelo dela). Fora da coleção não se guarda nada.
 const IN_C30=typeof window.__C30_SESSION__==='string';
-const MEM={get(k,d){if(!IN_C30)return d;try{const v=localStorage.getItem('jdc.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+let MODO='missoes';const MEM={get(k,d){if(!IN_C30)return d;try{const v=localStorage.getItem('jdc.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
   set(k,v){if(!IN_C30)return;try{localStorage.setItem('jdc.'+k,JSON.stringify(v))}catch(e){}}};
 const SHIRTS=['#f2b705','#c0392b','#2f6db5','#2e8b6e','#7a4a9a','#ececec'],SKINS=[0xf0caa8,0xe8bd9a,0xd9a27c,0xb97c57,0x8d5a3b],HAIRS=['#1a1a1a','#4a2e18','#8a5a2a','#d8b060'];
 const LOOK={name:'',shirt:0,skin:1,hair:0,parent:'mae',girl:0};
@@ -1183,10 +1188,10 @@ function resetGame(){const cfg=DIFF[diff];Object.assign(P,{x:63,z:113,y:0,camY:0
   AUXES.forEach((a,i)=>{a.x=a.path[0][0];a.z=a.path[0][1];a.i=1;a.pause=0;a.cool=0;a.active=i===0||cfg.aux2;a.g.visible=a.active;a.g.position.y=a.y});
   $('#difflbl').textContent=cfg.label;buildAvatar();resetHome();startPhase(0,true)}
 function startPhase(i,first){G.phase=i;if(i>0)ITEMS.forEach(it=>{if(!it.got)it.obj.visible=it.ring.visible=it.beam.visible=false});G.pt=0;G.bell=false;G.grace=0;G.real=phaseReal(i);G.sel=0;placeSeat();
-  if(i===1||i===2)G.offers[i-1].forEach(m=>{m.st='offer';m.bang=bangFor()});
+  if((i===1||i===2)&&MODO==='missoes')G.offers[i-1].forEach(m=>{m.st='offer';m.bang=bangFor()});
   $('#phlbl').textContent=PH[i].title;
   if(i===3&&!G.lunch){G.hungry=true;toast('Saltaste o almoço... estás com fome e cansas-te mais depressa.',true,3.5)}
-  else if(i>=4)setupPhase(i);else if(!first)toast(i===2?'Hora de almoço! Vai à cantina e vê as missões.':'Intervalo! Há missões novas no painel.',false,3);
+  else if(i>=4)setupPhase(i);else if(!first)toast(i===2?(MODO==='missoes'?'Hora de almoço! Vai à cantina e vê as missões.':'Hora de almoço! Vai à cantina.'):(MODO==='missoes'?'Intervalo! Há missões novas no painel.':'Intervalo!'),false,3);
   renderObj(true)}
 function startClass(){const k=PH[G.phase].cls,c=CLASSES[k];G.late=G.bell;
   if(c.type==='quiz')startExam(k);else startBasket('ef')}
@@ -1229,11 +1234,11 @@ $('#snd').addEventListener('change',e=>{soundOn=e.target.checked;if(!soundOn&&AC
 function report(){G.state='end';hideHud();sfx.win();const keys=['mat','pt','ef','fq'];let sum=0,lates=0,faltas=0;
   $('#reprows').innerHTML=keys.map(k=>{const g=G.grades[k]||{nota:0,falta:true};sum+=g.nota;if(g.late)lates++;if(g.falta)faltas++;
     return `<tr><td>${CLASSES[k].name}</td><td class="n ${g.nota<10?'low':''}">${g.falta?'F':g.nota}</td><td class="o">${g.falta?'Falta de presença':g.late?'Chegou atrasado (−2)':g.nota>=16?'Muito bom':g.nota>=10?'Satisfaz':'Não satisfaz'}</td></tr>`}).join('');
-  const media=sum/4,beh=G.caught===0?'Exemplar':G.caught<=2?'Bom':'A melhorar';
+  const bonusM=MODO==='missoes'?Math.min(2,G.mDone*.5):0,media=Math.min(20,sum/4+bonusM),beh=G.caught===0?'Exemplar':G.caught<=2?'Bom':'A melhorar';
   const hs=homeScore();const stars=1+(media>=12&&faltas===0?1:0)+(hs>=5&&media>=10?1:0);
   $('#enddiff').textContent=DIFF[diff].label;$('#endwho').textContent=(LOOK.name||'Aluno')+' · 7.º B · Escola Secundária Dr. Joaquim de Carvalho';
   $('#stars').innerHTML=[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">★</span>`).join('');
-  $('#endstats').innerHTML=`<dt>Média do dia</dt><dd>${media.toFixed(1)} valores</dd><dt>Assiduidade</dt><dd>${faltas} falta${faltas===1?'':'s'} · ${lates} atraso${lates===1?'':'s'}</dd><dt>Comportamento</dt><dd>${beh} (${G.caught}× a correr)</dd><dt>Missões</dt><dd>${MISSIONS.filter(m=>m.st==='done').length} de 4</dd><dt>Desafio do Tiago</dt><dd>${G.tiago?'Ganhaste':G.tiago===false?'Perdeste':'Não jogaste'}</dd><dt>Almoço</dt><dd>${G.lunch?'Sim':'Não'}</dd><dt>Cromos</dt><dd>${G.cromos} de ${CROMOS.length}</dd>`;
+  $('#endstats').innerHTML=`<dt>Média do dia</dt><dd>${media.toFixed(1)} valores</dd><dt>Assiduidade</dt><dd>${faltas} falta${faltas===1?'':'s'} · ${lates} atraso${lates===1?'':'s'}</dd><dt>Comportamento</dt><dd>${beh} (${G.caught}× a correr)</dd><dt>Missões</dt><dd>${MODO==='missoes'?MISSIONS.filter(m=>m.st==='done').length+' de 4'+(bonusM?' (+'+bonusM.toFixed(1).replace('.',',')+' na média)':''):'Modo sem missões'}</dd><dt>Desafio do Tiago</dt><dd>${G.tiago?'Ganhaste':G.tiago===false?'Perdeste':'Não jogaste'}</dd><dt>Almoço</dt><dd>${G.lunch?'Sim':'Não'}</dd><dt>Cromos</dt><dd>${G.cromos} de ${CROMOS.length}</dd>`;
 
   {const H=G.home||{};const dish=['bacalhau à Brás','arroz de pato','sopa e peixe grelhado'][G.drive&&G.drive.ans.jantar!=null?G.drive.ans.jantar:2];
    $('#homestats').innerHTML=`<dt>Boletim</dt><dd>${H.boletim?'Mostrado':'Ficou na mochila'}</dd>${H.react?`<dt>Reação</dt><dd style="font-family:inherit;font-weight:500">«${H.react}»</dd>`:''}<dt>Trabalhos de casa</dt><dd>${H.tpc==null?'Por fazer':H.tpc+'/3 certas'}</dd><dt>Jantar</dt><dd>${H.jantar?'Sim, '+dish:'Não jantaste'}</dd><dt>Bolacha, o gato</dt><dd>${H.gato===2?'Alimentado':'Ficou com fome'}</dd><dt>Mochila para amanhã</dt><dd>${H.mochila?'Pronta':'Por arrumar'}</dd><dt>Consola com o Tomás</dt><dd>${H.tv?'Sim':'Não'}</dd><dt>Bola de Berlim</dt><dd>${G.lanche?'Comida':'Não'}</dd><dt>Hora de dormir</dt><dd>${H.slept!=null?fmtClock(H.slept)+(H.sleepNote?' · '+H.sleepNote:H.slept<=HM(22,30)?' · a horas':' · tarde'):'—'}</dd><dt>Treino de futebol</dt><dd>${G.treino==='done'?G.treinoGolos+' de 5 golos':'Não foste'}</dd><dt>Para casa</dt><dd>${G.driver==='pe'?'A pé':G.driver==='pai'?'Com o pai, de carro':'Com a mãe, de carro'}</dd><dt>${G.drive&&G.drive.walk?'À chegada':'No carro'}</dt><dd>${honest()?'Disseste a verdade':'Contaste uma mentira'}</dd><dt>Pontuação em casa</dt><dd>${hs} de 7</dd>`;
@@ -1243,6 +1248,7 @@ function report(){G.state='end';hideHud();sfx.win();const keys=['mat','pt','ef',
   {const prev=MEM.get('best-'+diff,null);if(!prev||media>prev.media||(media===prev.media&&G.cromos>prev.cromos))MEM.set('best-'+diff,{media,cromos:G.cromos})}
   $('#endh').innerHTML='Fim de <em>'+dayLabel().toLowerCase()+'</em>';{const nx=G.wday+1;$('#again').textContent='Continuar a semana: '+DIAS[nx]+(nx===5?' (fim de semana)':'');MEM.set('wday',nx>4?0:nx)}
   $('#end').hidden=false;showBest()}
+MODO=MEM.get('modo','missoes')==='livre'?'livre':'missoes';document.querySelectorAll('#modos button').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.m===MODO));b.addEventListener('click',()=>{MODO=b.dataset.m;MEM.set('modo',MODO);document.querySelectorAll('#modos button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.m===MODO)))})});
 $('#go').addEventListener('click',start);$('#again').addEventListener('click',()=>{G.wday++;if(G.wday>=5){startWeekend();return}start()});$('#newweek').addEventListener('click',()=>{G.wday=0;MEM.set('wday',0);start()});$('#wkgo').addEventListener('click',wkGo);
 $('#tomenu').addEventListener('click',()=>{G.state='menu';$('#end').hidden=true;$('#menu').hidden=false;showBest()});
 
@@ -1629,7 +1635,7 @@ function update(dt){
     const n=ITEMS.filter(i=>i.got).length;toast('+ '+it.name+(n===ITEMS.length?' · Agora vai para a Sala 19!':` (${n}/${ITEMS.length})`));renderObj(true)}});
   // missões
   MISSIONS.forEach(m=>{if(m.st==='active'&&Math.hypot(P.x-m.x,P.z-m.z)<1.8&&Math.abs(P.y+.9-m.y)<1.7){m.st='carry';setMarker(m,0,0,0,false);sfx.pick();toast('+ '+m.item+' · leva a '+(m.toPt?m.toPt.label:m.to),false,2.6);renderObj(true)}
-    else if(m.st==='carry'){const d=m.toPt||(()=>{const n=npc(m.to);return {x:n.g.position.x,z:n.g.position.z,y:n.y}})();if(near(d,2.4)){m.st='done';G.mDone++;sfx.win();toast('Missão cumprida: '+m.title+'!',false,2.8);renderObj(true)}}});
+    else if(m.st==='carry'){const d=m.toPt||(()=>{const n=npc(m.to);return {x:n.g.position.x,z:n.g.position.z,y:n.y}})();if(near(d,2.4)){m.st='done';G.mDone++;sfx.win();toast('Missão cumprida: '+m.title+'! +0,5 valores na média',false,2.8);renderObj(true)}}});
   // cromos
   CROMOS.forEach(cr=>{if(cr.got)return;if(Math.hypot(P.x-cr.x,P.z-cr.z)<2.2&&Math.abs(P.y+.9-cr.y)<2.2){cr.got=true;cr.m.visible=false;G.cromos++;sfx.cromo();toast(`Cromo ${G.cromos}/${CROMOS.length}: ${cr.n}!`,false,2.6)}});
   $('#cromon').textContent='Cromos '+G.cromos+'/'+CROMOS.length;

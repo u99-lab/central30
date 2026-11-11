@@ -789,15 +789,15 @@ const REGION_ID=(()=>{try{return sessionStorage.getItem('ea.region')||'pt'}catch
 const ARRIVE=(()=>{try{const v=sessionStorage.getItem('ea.arrive');sessionStorage.removeItem('ea.arrive');return v}catch(e){return null}})();
 const RG=REGIONS[REGION_ID]||REGIONS.pt;
 var AIRBASE=[];// pistas dos aeroportos (terreno plano por baixo)
-const LON0=RG.lon0||-8.0,LAT0=RG.lat0||39.5,SCALE=(RG.scale||25)*.55,WU=1/.55,KX=111320*Math.cos(LAT0*Math.PI/180)/SCALE,KY=110540/SCALE;
+const LON0=RG.lon0||-8.0,LAT0=RG.lat0||39.5,WS=.42,SCALE=(RG.scale||25)*WS,WU=1/WS,KX=111320*Math.cos(LAT0*Math.PI/180)/SCALE,KY=110540/SCALE;
 const PJ=(lon,lat)=>[(lon-LON0)*KX,-(lat-LAT0)*KY];
 const PJL=a=>a.map(p=>PJ(p[0],p[1]));
-const WB=RG.bounds?{x0:Math.round(RG.bounds.x0/.55),x1:Math.round(RG.bounds.x1/.55),z0:Math.round(RG.bounds.z0/.55),z1:Math.round(RG.bounds.z1/.55)}:(()=>{const a=PJ(RG.box[0],RG.box[3]),b=PJ(RG.box[2],RG.box[1]);return{x0:Math.round(a[0]),x1:Math.round(b[0]),z0:Math.round(a[1]),z1:Math.round(b[1])}})(); // {x0,x1,z0,z1}
+const WB=RG.bounds?{x0:Math.round(RG.bounds.x0/WS),x1:Math.round(RG.bounds.x1/WS),z0:Math.round(RG.bounds.z0/WS),z1:Math.round(RG.bounds.z1/WS)}:(()=>{const a=PJ(RG.box[0],RG.box[3]),b=PJ(RG.box[2],RG.box[1]);return{x0:Math.round(a[0]),x1:Math.round(b[0]),z0:Math.round(a[1]),z1:Math.round(b[1])}})(); // {x0,x1,z0,z1}
 const DRV=RG.drive==='left'?-1:1;
 // ---- terra e mar: máscara de terra rasterizada (50 m) com distância à costa ----
 const LANDP=(RG.land||[]).map(PJL),SPAINP=(RG.foreign||[]).map(PJL);
 function inPoly(x,z,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if(((a[1]>z)!==(b[1]>z))&&(x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1]+1e-9)+a[0]))c=!c}return c}
-const MG=50,MX0=WB.x0,MZ0=WB.z0,MNX=Math.ceil((WB.x1-WB.x0)/MG)+1,MNZ=Math.ceil((WB.z1-WB.z0)/MG)+1;
+const MG=Math.round(50*.55/WS),MX0=WB.x0,MZ0=WB.z0,MNX=Math.ceil((WB.x1-WB.x0)/MG)+1,MNZ=Math.ceil((WB.z1-WB.z0)/MG)+1;
 const MASK=new Int8Array(MNX*MNZ),DCO=new Float32Array(MNX*MNZ);// 1 = país, 2 = estrangeiro (terra), 0 = mar
 {// preenchimento por linhas (rápido): para cada linha, cruzamentos com as arestas do contorno
  const fill=(polys,val,over)=>{for(let j=0;j<MNZ;j++){const z=MZ0+j*MG;for(const poly of polys){const xs=[];for(let i=0,k=poly.length-1;i<poly.length;k=i++){const a=poly[i],b=poly[k];if((a[1]>z)!==(b[1]>z))xs.push(a[0]+(z-a[1])*(b[0]-a[0])/(b[1]-a[1]))}xs.sort((u,v)=>u-v);for(let q=0;q+1<xs.length;q+=2){const i0=Math.max(0,Math.ceil((xs[q]-MX0)/MG)),i1=Math.min(MNX-1,Math.floor((xs[q+1]-MX0)/MG));for(let i=i0;i<=i1;i++){const k2=j*MNX+i;if(over||!MASK[k2])MASK[k2]=val}}}}};
@@ -820,7 +820,7 @@ const RIVERS=(RG.rivers||[]).map(r=>{const P=PJL(r.pts);const segs=[];let acc=0;
 function riverAt(x,z){let best=null;for(const R of RIVERS){if(x<R.x0||x>R.x1||z<R.z0||z>R.z1)continue;for(const s of R.segs){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),d=Math.hypot(x-s.ax-vx*t,z-s.az-vz*t),w=lerp(s.w0,s.w1,t);const e=d-w/2;if(!best||e<best.e)best={e,w,R}}}return best}
 // ---- montanhas e cidades ----
 const MOUNTS=(RG.mounts||[]).map(m=>{const p=PJ(m[0],m[1]);return{x:p[0],z:p[1],h:m[2],r:m[3]}});
-const CITIES=(RG.cities||[]).map(c=>{const p=PJ(c.lon,c.lat);return Object.assign({},c,{x:p[0],z:p[1],r:Math.round((c.r||150)*1.8)})});// cidades maiores
+const CITIES=(RG.cities||[]).map(c=>{const p=PJ(c.lon,c.lat);return Object.assign({},c,{x:p[0],z:p[1],r:Math.round((c.r||150)*2.4),blk:Math.round((c.blk||110)*1.3)})});// cidades maiores (e quarteirões maiores, para os prédios serem maiores)
 const PARKS=(RG.parks||[]).map(([lon,lat,L,Wd,rot])=>{const p=PJ(lon,lat);return{x:p[0],z:p[1],hl:L/SCALE/2,hw:Wd/SCALE/2,ux:Math.sin(rot),uz:-Math.cos(rot)}});
 function inPark(x,z,m){m=m||0;for(const k of PARKS){const dx=x-k.x,dz=z-k.z,u=dx*k.ux+dz*k.uz,v=-dx*k.uz+dz*k.ux;if(Math.abs(u)<k.hl+m&&Math.abs(v)<k.hw+m)return true}return false}
 const TOWNS=CITIES.map(c=>({n:c.n,x:c.x,z:c.z,r:c.r}));
@@ -893,8 +893,9 @@ for(const r of ROADS.filter(r=>r.auto))for(const end of [0,1]){const P=r.pts;if(
 {const inP=(lon,lat,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>lat)!==(b[1]>lat)&&lon<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
  const NBL=[];{const nb=RG.nb||{};for(const k in nb)for(const poly of nb[k])if(!inP(LON0,LAT0,poly))NBL.push(poly)}const inNb=(x,z)=>{const lon=x/KX+LON0,lat=LAT0-z/KY;for(const poly of NBL)if(inP(lon,lat,poly))return true;return false};
  const foreignish=(x,z)=>{const m=maskAt(x,z);return m===2||(m===1&&inNb(x,z))};
- for(const r of ROADS.filter(r=>r.auto&&!r.bridge&&/ · /.test(r.name)&&!r.toBorder)){let bestE=null,bd=1e9,bt=null;for(const end of [0,1]){const P=r.pts;if(P.length<2)continue;const e=end?P[P.length-1]:P[0];
-   for(let rad=30;rad<=3000*WU&&rad<bd;rad+=30){const n=Math.max(12,Math.round(rad/40));for(let k=0;k<n;k++){const a=k/n*Math.PI*2,x=e[0]+Math.cos(a)*rad,z=e[1]+Math.sin(a)*rad;if(!foreignish(x,z))continue;let ok=true;for(let t=20;t<rad;t+=20){const m=maskAt(e[0]+Math.cos(a)*t,e[1]+Math.sin(a)*t);if(m===0||rawH(e[0]+Math.cos(a)*t,e[1]+Math.sin(a)*t)<-.5){ok=false;break}}if(ok&&rad<bd){bd=rad;bestE=end;bt=[x,z,Math.cos(a),Math.sin(a)]}}if(bt)break}}
+ const endsF=r=>{const P=r.pts;return [P[0],P[P.length-1]].some(e=>maskAt(e[0],e[1])===2)};
+ for(const r of ROADS.filter(r=>r.auto&&!r.bridge&&/ · /.test(r.name)&&!(r.toBorder&&endsF(r)))){let bestE=null,bd=1e9,bt=null;for(const end of [0,1]){const P=r.pts;if(P.length<2)continue;const e=end?P[P.length-1]:P[0];
+   for(let rad=30;rad<=6000*WU&&rad<bd;rad+=30){const n=Math.max(12,Math.round(rad/40));for(let k=0;k<n;k++){const a=k/n*Math.PI*2,x=e[0]+Math.cos(a)*rad,z=e[1]+Math.sin(a)*rad;if(!foreignish(x,z))continue;let ok=true;for(let t=20;t<rad;t+=20){const m=maskAt(e[0]+Math.cos(a)*t,e[1]+Math.sin(a)*t);if(m===0||rawH(e[0]+Math.cos(a)*t,e[1]+Math.sin(a)*t)<-.5){ok=false;break}}if(ok&&rad<bd){bd=rad;bestE=end;bt=[x,z,Math.cos(a),Math.sin(a)]}}if(bt)break}}
   if(bt){const P=r.pts,e=bestE?P[P.length-1]:P[0];const ext=[];for(let d=20;d<=bd+60;d+=20)ext.push([e[0]+bt[2]*d,e[1]+bt[3]*d]);if(bestE)r.pts=P.concat(ext);else r.pts=ext.reverse().concat(P);r.toBorder=true;(r.bEnds=r.bEnds||{})[bestE]=1}}}
 // autoestradas que começam ou acabam soltas (ou dentro de água, ex.: Lisboa à beira do Tejo): prolongar até à rua em terra mais perto
 {const wetP=(x,z)=>rawH(x,z)<-.5||(riverAt(x,z)||{e:9}).e<2;
@@ -960,7 +961,7 @@ function onBridgeXZ(x,z){return !!bridgeAt(x,z)}
 function bridgeY(z,x){const b=bridgeAt(x==null?0:x,z);return b?b.y:0}
 function targetY(x,z){const b=bridgeAt(x,z);return b?b.y:Math.max(roadLiftY(x,z),-.4)}
 function surfaceAt(x,z,curY){const b=bridgeAt(x,z,curY);if(b&&(curY==null||Math.abs(curY-b.y)<4))return b.y;return Math.max(roadLiftY(x,z),-3)}
-function roadLiftY(x,z){const t=terrainH(x,z);if(typeof SEGS==='undefined'||!SEGS.length)return t;const n=nearRoad(x,z);if(!n||n.s.r.bridge||n.d>n.s.r.w/2+.6)return t;const m=meshH(n.px,n.pz);if(m<=-.5)return t;return Math.max(t,Math.max(m,-.2)+.1+(m>4?.15:0))}
+function roadLiftY(x,z){const t=terrainH(x,z);if(typeof SEGS==='undefined'||!SEGS.length)return t;const n=nearRoad(x,z);if(!n||n.s.r.bridge||n.d>n.s.r.w/2+.6)return t;const g=n.s,gl=g.len||1,ex=-(g.bz-g.az)/gl*g.r.w/2,ez=(g.bx-g.ax)/gl*g.r.w/2;const m0=meshH(n.px,n.pz);if(m0<=-.5)return t;const m=Math.max(m0,meshH(n.px+ex,n.pz+ez),meshH(n.px-ex,n.pz-ez));return Math.max(t,Math.max(m,-.2)+.1+(m>4?.15:0))}
 /* ================= RENDER ================= */
 const canvas=$('#c');const renderer=new THREE.WebGLRenderer({canvas,antialias:true});const mobile=matchMedia('(pointer:coarse)').matches;
 const PRMAX=Math.min(devicePixelRatio||1,2);let PR=PRMAX;renderer.setPixelRatio(PR);const PRF={n:0,t:0,good:0};renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -977,7 +978,7 @@ const lam=o=>new THREE.MeshLambertMaterial(o);
 const unitBox=new THREE.BoxGeometry(1,1,1);unitBox.translate(0,.5,0);
 function ctex(w,h,draw,rx,ry){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());if(rx){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry||rx)}return t}
 // terreno: uma malha para o país todo (alisada por baixo das estradas e da linha; o carro usa a mesma altura que se vê)
-const TH0=terrainH,TNX=mobile?220:330,TNZ=Math.round(TNX*(WB.z1-WB.z0)/(WB.x1-WB.x0)),TCX=(WB.x1-WB.x0)/TNX,TCZ=(WB.z1-WB.z0)/TNZ,HV=new Float32Array((TNX+1)*(TNZ+1));
+const TH0=terrainH,TNX=mobile?290:430,TNZ=Math.round(TNX*(WB.z1-WB.z0)/(WB.x1-WB.x0)),TCX=(WB.x1-WB.x0)/TNX,TCZ=(WB.z1-WB.z0)/TNZ,HV=new Float32Array((TNX+1)*(TNZ+1));
 function meshH(x,z){const fx=(x-WB.x0)/TCX,fz=(z-WB.z0)/TCZ;if(fx<0||fz<0||fx>=TNX||fz>=TNZ)return -3;const ix=Math.floor(fx),iz=Math.floor(fz),u=fx-ix,v=fz-iz,N=TNX+1;
  const ha=HV[iz*N+ix],hb=HV[(iz+1)*N+ix],hc=HV[(iz+1)*N+ix+1],hd=HV[iz*N+ix+1];return u+v<=1?ha+u*(hd-ha)+v*(hb-ha):hc+(1-u)*(hb-hc)+(1-v)*(hd-hc)}
 const PAL={sand:[.93,.86,.66],grass:[.42,.54,.30],dry:[.66,.62,.38],forest:[.30,.42,.24],rock:[.55,.52,.46],town:[.70,.68,.62],snow:[.95,.96,.98],foreign:[.58,.61,.46]};const DESERT=['eg','ae'].includes(REGION_ID);
@@ -1004,7 +1005,7 @@ const roadMat=lam({map:roadTex,side:THREE.DoubleSide,polygonOffset:true,polygonO
 {const G={a:{pos:[],uv:[],idx:[]},r:{pos:[],uv:[],idx:[]}};
  ROADS.forEach((r,ri)=>{const P=[];for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/8));for(let k=0;k<n;k++){const t=k/n;P.push([lerp(a[0],b[0],t),lerp(a[1],b[1],t),a[2]!=null?lerp(a[2],b[2],t):null])}}const e=r.pts[r.pts.length-1];P.push([e[0],e[1],e[2]!=null?e[2]:null]);
   const o=r.auto?G.a:G.r,base=o.pos.length/3;let acc=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[Math.min(P.length-1,i+1)],pp=P[Math.max(0,i-1)];let dx=q[0]-pp[0],dz=q[1]-pp[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;const nx=-dz,nz=dx;if(i>0)acc+=Math.hypot(p[0]-P[i-1][0],p[1]-P[i-1][1]);
-   for(const s of [-1,1]){const x=p[0]+nx*s*r.w/2,z=p[1]+nz*s*r.w/2,mh=meshH(p[0],p[1]),y=p[2]!=null?p[2]:Math.max(mh,-.2)+.1+(mh>4?.15:0)+(ri%7)*.0006;o.pos.push(x,y,z);o.uv.push(s<0?0:1,acc/(r.auto?40:14))}
+   const mh=Math.max(meshH(p[0],p[1]),meshH(p[0]+nx*r.w/2,p[1]+nz*r.w/2),meshH(p[0]-nx*r.w/2,p[1]-nz*r.w/2));for(const s of [-1,1]){const x=p[0]+nx*s*r.w/2,z=p[1]+nz*s*r.w/2,y=p[2]!=null?p[2]:Math.max(mh,-.2)+.1+(mh>4?.15:0)+(ri%7)*.0006;o.pos.push(x,y,z);o.uv.push(s<0?0:1,acc/(r.auto?40:14))}
    if(i>0){const b=base+(i-1)*2;o.idx.push(b,b+2,b+1,b+1,b+2,b+3)}}});
  for(const k of ['a','r']){const o=G[k];if(!o.idx.length)continue;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(o.pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(o.uv,2));g.setIndex(o.idx);g.computeVertexNormals();const m=new THREE.Mesh(g,k==='a'?autoMat:roadMat);m.receiveShadow=true;scene.add(m)}}
 // passeios com lancil nas ruas das cidades
@@ -1122,8 +1123,8 @@ if(REGION_ID!=='pt')PALS.def=CSTY.pal;
 const COLS=PALS.def;
 function addB(x,z,w,d,h,col){B.push({x,z,w,d,h,col:col!=null?col:COLS[Math.floor(rnd()*COLS.length)]})}
 let zoneH=()=>10,zonePal=COLS;
-function yield_(x,z,w,d){if(inPark(x,z,Math.max(w,d)/2+4))return;if(nearRail(x,z).d<14+Math.max(w,d)/2)return;if(zoneAt(x,z)!=='terra')return;if(foreignAt(x,z))return;const n=nearRoad(x,z);if(n.d<n.s.r.w/2+3+Math.max(w,d)/2*.75)return;B.push({x,z,w,d,h:zoneH(x,z),col:zonePal[Math.floor(rnd()*zonePal.length)]})}
-function freeArea(x0,z0,x1,z1){const m=8;for(let x=x0+m;x<x1-m-6;){const w=10+rnd()*16;if(x+w>x1-m)break;for(let z=z0+m;z<z1-m-6;){const d=10+rnd()*14;if(z+d>z1-m)break;yield_(x+w/2,z+d/2,w-1.5,d-1.5);z+=d}x+=w}}
+function yield_(x,z,w,d){if(inPark(x,z,Math.max(w,d)/2+4))return;if(nearRail(x,z).d<14+Math.max(w,d)/2)return;if(zoneAt(x,z)!=='terra')return;if(foreignAt(x,z))return;const n=nearRoad(x,z);if(n.d<n.s.r.w/2+3+Math.max(w,d)/2*.75)return;B.push({x,z,w,d,h:zoneH(x,z)*1.25,col:zonePal[Math.floor(rnd()*zonePal.length)]})}
+function freeArea(x0,z0,x1,z1){const m=10;for(let x=x0+m;x<x1-m-8;){const w=13+rnd()*21;if(x+w>x1-m)break;for(let z=z0+m;z<z1-m-8;){const d=13+rnd()*18;if(z+d>z1-m)break;yield_(x+w/2,z+d/2,w-1.5,d-1.5);z+=d}x+=w}}
 CITIES.forEach(c=>{const blk=c.blk||110,n=Math.floor(c.r/blk);zonePal=PALS[c.pal]||PALS.def;
  zoneH=(x,z)=>{const d=Math.hypot(x-c.x,z-c.z)/c.r;const big=c.big||0;const T=c.tall||CSTY.tall||1;return big===2?T*(d<.35?22+rnd()*38:d<.7?12+rnd()*16:7+rnd()*8):big===1?(d<.4?12+rnd()*16:7+rnd()*9):(c.pal==='alentejo'||c.pal==='algarve')?5+rnd()*4:6+rnd()*8};
  for(let i=-n;i<n;i++)for(let j=-n;j<n;j++){const x=c.x+i*blk,z=c.z+j*blk;if(Math.hypot(x+blk/2-c.x,z+blk/2-c.z)>c.r-20)continue;freeArea(x,z,x+blk,z+blk)}});
