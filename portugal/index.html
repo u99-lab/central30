@@ -85,7 +85,7 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 .btn.ghost{background:transparent;color:var(--paper);box-shadow:inset 0 0 0 1px #34505f;font-size:15px;padding:11px 16px}
 .facts{font-size:12.5px;color:var(--muted);line-height:1.5;border-top:1px solid #23394a;padding-top:10px}
 #mapWrap{display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%}.ptbox{display:grid;gap:8px;justify-items:center}.legend{display:grid;gap:4px;font:600 11px var(--fm);color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:4px;border-radius:2px;display:inline-block}.legend i.dash{background:repeating-linear-gradient(90deg,#ddd 0 3px,transparent 3px 6px)}
-#mapScroll{max-height:calc(100vh - 215px);max-height:calc(100dvh - 215px);overflow-y:auto;overflow-x:hidden;border-radius:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#mapScroll{max-height:calc(100vh - 150px);overflow-y:auto;overflow-x:hidden;border-radius:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .gorow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.gorow .btn{justify-self:auto}
 #tpBtn.on{box-shadow:inset 0 0 0 2px var(--sun);color:var(--sun)}
 #pickWrap{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%}
@@ -161,7 +161,7 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 <div class="screen" id="flyS" hidden><div class="card"><div class="eyebrow" id="flyE">AEROPORTO</div><h2>Para onde queres voar?</h2><p class="lead" id="flyP">O teu carro vai contigo no porão. ✈</p><div id="flyList" style="display:grid;gap:8px"></div><div><button class="btn ghost" id="flyClose">Ficar aqui</button></div></div></div>
 <div class="screen" id="trainS" hidden><div class="card"><div class="eyebrow">ESTAÇÃO · COMBOIO DA COSTA DE PRATA</div><h2>Para onde vais?</h2><p class="lead">O carro segue contigo no comboio. O bilhete custa 2,50 €.</p><div id="trainList" style="display:grid;gap:8px"></div><div><button class="btn ghost" id="trainClose">Ficar aqui</button></div></div></div>
 <div class="screen" id="pickS" hidden><div class="card" style="justify-items:center;gap:10px;max-width:980px"><div class="eyebrow">TELETRANSPORTE · ESCOLHE NO MAPA</div><h2>Onde queres começar?</h2><p class="lead" id="pickP" style="text-align:center"></p><div id="pickWrap"><div id="pickScroll"><canvas id="pickMap" width="480" height="800"></canvas></div><div id="pickList"></div></div><div class="gorow" style="justify-content:center"><button class="btn" id="pickGo">Começar aqui</button><button class="btn ghost" id="pickClose">Voltar</button></div></div></div>
-<div class="screen" id="mapS" hidden><div class="card" style="justify-items:center;gap:10px;max-width:980px"><h2>Mapa · Explora e Acelera</h2><div id="mapWrap"><div class="ptbox"><div class="legend"><span><i style="background:#5b8fd6"></i>Autoestradas</span><span><i style="background:#e9e3d4"></i>Estradas</span><span><i class="dash"></i>Comboio</span><span><i style="background:#2e8b57"></i>Bombas</span><span><i style="background:#173a6b"></i>Estações</span></div></div><div id="mapScroll"><canvas id="mapBig" width="420" height="1260"></canvas></div></div><p class="lead" id="tpHint" hidden style="margin:0;color:var(--sun)">Toca no mapa no sítio para onde te queres teletransportar.</p><div class="gorow" style="justify-content:center"><button class="btn ghost" id="tpBtn">📍 Teletransportar</button><button class="btn" id="mapClose">Fechar (M)</button></div></div></div>
+<div class="screen" id="mapS" hidden><div class="card" style="justify-items:center;gap:10px;max-width:980px"><h2>Mapa · Explora e Acelera</h2><div id="mapWrap"><div class="ptbox"><div class="legend"><span><i style="background:#5b8fd6"></i>Autoestradas</span><span><i style="background:#e9e3d4"></i>Estradas</span><span><i class="dash"></i>Comboio</span><span><i style="background:#2e8b57"></i>Bombas</span><span><i style="background:#173a6b"></i>Estações</span></div></div><div id="mapScroll"><canvas id="mapBig" width="420" height="1260"></canvas></div></div><button class="btn" id="mapClose">Fechar (M)</button></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -796,18 +796,20 @@ const A17=[],A17LEN=0;
 const BORDER_AT=(()=>{try{const v=sessionStorage.getItem('ea.at');sessionStorage.removeItem('ea.at');return v?JSON.parse(v):null}catch(e){return null}})();
 const unPJ=(x,z)=>[x/KX+LON0,LAT0-z/KY];
 const inPolyLL=(lon,lat,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>lat)!==(b[1]>lat)&&lon<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
-function borderSpot(x,z){let best=null,bd=1e9;for(const g of SEGS){if(g.r.bridge)continue;for(let t=0;t<=1;t+=.25){const px=g.ax+(g.bx-g.ax)*t,pz=g.az+(g.bz-g.az)*t;const d=Math.hypot(px-x,pz-z)+(g.r.auto?0:60);if(d<bd&&!foreignAt(px,pz)){bd=d;best={g,px,pz}}}}
+function borderSpot(x,z){// estrada a pelo menos 250 m da fronteira (para não voltar logo para trás), o mais perto possível de onde se passou
+ const farFromBorder=(px,pz)=>{for(let a=0;a<8;a++){const c=Math.cos(a*Math.PI/4),s=Math.sin(a*Math.PI/4);for(const d of [80,160,250])if(foreignAt(px+c*d,pz+s*d))return false}return true};
+ let best=null,bd=1e9;for(const g of SEGS){if(g.r.bridge)continue;const n=Math.max(1,Math.ceil(g.len/40));for(let k=0;k<=n;k++){const t=k/n,px=g.ax+(g.bx-g.ax)*t,pz=g.az+(g.bz-g.az)*t;const d=Math.hypot(px-x,pz-z)+(g.r.auto?0:80);if(d<bd&&d<4000&&!foreignAt(px,pz)&&farFromBorder(px,pz)){bd=d;best={g,px,pz}}}}
  if(!best)return null;const g=best.g,L=g.len||1;let ux=(g.bx-g.ax)/L,uz=(g.bz-g.az)/L;
- // virado para dentro do país (para longe da fronteira)
- const fw=k=>{let n=0;for(let d=40;d<=400;d+=40)if(foreignAt(best.px+ux*d*k,best.pz+uz*d*k))n++;return n};if(fw(1)>fw(-1)){ux=-ux;uz=-uz}
- const px=best.px,pz=best.pz;
- return{x:px-uz*g.r.w*.25*DRV+ux*30,z:pz+ux*g.r.w*.25*DRV+uz*30,h:Math.atan2(ux,-uz)}}
+ // virado para dentro do país: o lado que se afasta da fronteira
+ const fw=k=>{let m=1e9;for(let d=50;d<=1500;d+=50){const q=nearRoad(best.px+ux*d*k,best.pz+uz*d*k);if(foreignAt(q.px,q.pz)){m=d;break}}return m};if(fw(1)<fw(-1)){ux=-ux;uz=-uz}
+ const o=(g.r.auto?6.9:g.r.w*.25)*DRV;return{x:best.px-uz*o,z:best.pz+ux*o,h:Math.atan2(ux,-uz)}}
 const SPAWN=(()=>{let x,z;const ap=ARRIVE&&AIRPORTS.find(a=>a.id===ARRIVE);if(BORDER_AT){const [bx,bz]=PJ(BORDER_AT.lon,BORDER_AT.lat);const sp=borderSpot(bx,bz);if(sp)return sp}if(ap){const c=Math.cos(ap.rot),s=Math.sin(ap.rot);x=ap.door.x+c*40;z=ap.door.z-s*40}else{const c=CITIES.find(c=>c.n===RG.start)||CITIES[0];x=c.x+25;z=c.z+15}
  const n=nearRoad(x,z),g=n.s,ux=(g.bx-g.ax)/(g.len||1),uz=(g.bz-g.az)/(g.len||1);return{x:n.px-uz*g.r.w*.25*DRV,z:n.pz+ux*g.r.w*.25*DRV,h:Math.atan2(ux,-uz)}})();
 // fronteira: para ir a outro país apanha-se um avião
 // fronteira Portugal <-> Espanha: passa-se de carro (carrega o outro país e continuas lá)
 const LINKED={pt:['es'],es:['pt','fr'],fr:['es']};let crossing=false;
-function crossBorder(){if(crossing)return true;const [lon,lat]=unPJ(P.x,P.z);let to=null;
+let BLOCK=BORDER_AT?{x:SPAWN.x,z:SPAWN.z}:null;// sítio de chegada pela fronteira: só se pode voltar a passar depois de nos afastarmos dele
+function crossBorder(){if(crossing)return true;if(BLOCK){if(Math.hypot(P.x-BLOCK.x,P.z-BLOCK.z)<320)return false;BLOCK=null}const [lon,lat]=unPJ(P.x,P.z);let to=null;
  if(REGION_ID==='pt')to='es';else if(REGION_ID==='es'&&(inPolyLL(lon,lat,PT_OUTLINE)||(lon<-6.1&&lat>36.95)))to='pt';else if(REGION_ID==='es'&&lat>42.2&&lon>-2.1)to='fr';else if(REGION_ID==='fr'&&lat<43.45&&lon<3.4&&lon>-2.2)to='es';if(!to||!REGIONS[to])return false;
  crossing=true;P.vx*=.2;P.vz*=.2;
  try{sessionStorage.setItem('ea.region',to);sessionStorage.setItem('ea.at',JSON.stringify({lon,lat}));sessionStorage.setItem('ea.carry',JSON.stringify({money:G.money,fuel:P.fuel,owned:G.owned,clock:G.clock,car:carType,col:carColor,casa:G.casa,from:RG.name,road:1}));sessionStorage.setItem('ea.autostart','1')}catch(e){}
@@ -1246,7 +1248,7 @@ function drawMap(cv,full){const g=cv.getContext('2d'),W=cv.width,H=cv.height;g.f
    const km=1000/SCALE*25*scale;g.fillStyle='rgba(255,253,245,.9)';g.fillRect(10,H-34,km+24,24);g.fillStyle='#1b2a33';g.fillRect(22,H-20,km/2,5);g.strokeStyle='#1b2a33';g.lineWidth=1;g.strokeRect(22,H-20,km,5);g.font='700 10px "IBM Plex Mono",monospace';g.textAlign='left';g.fillText('25 km',22,H-24);
    g.fillStyle='rgba(13,26,36,.82)';g.fillRect(8,8,176,44);g.fillStyle='#ff8a3d';g.font='800 16px "Bricolage Grotesque",sans-serif';g.fillText('EXPLORA E ACELERA',18,28);g.fillStyle='#e6e1d2';g.font='600 10px "IBM Plex Mono",monospace';g.fillText(RG.flag+' '+RG.name,18,44)}
   if(W.on){const [cx,cy]=pr(P.x,P.z);g.fillStyle='#ffa21a';g.fillRect(cx-3,cy-3,6,6)}const FF=focus();const [X,Y]=pr(FF.x,FF.z);g.save();g.translate(X,Y);g.rotate(W.on?W.yaw:P.h);g.fillStyle='#fff';g.strokeStyle='#0d1a24';g.lineWidth=2;g.beginPath();g.moveTo(0,-9);g.lineTo(6,7);g.lineTo(0,4);g.lineTo(-6,7);g.closePath();g.fill();g.stroke();g.restore()}
-function openMap(){if(G.state!=='play')return;G.state='map';setTp(false);$('#mapS').hidden=false;const cv=$('#mapBig');drawMap(cv,true);requestAnimationFrame(()=>{const sc=$('#mapScroll'),F=focus(),k=cv.clientHeight/cv.height,scale=Math.min(cv.width/MW,cv.height/MH);sc.scrollTop=(F.z-Z0)*scale*k-sc.clientHeight/2})}function closeMap(){G.state='play';$('#mapS').hidden=true;canvas.focus()}$('#mapClose').onclick=closeMap;
+function openMap(){if(G.state!=='play')return;G.state='map';$('#mapS').hidden=false;const cv=$('#mapBig');drawMap(cv,true);requestAnimationFrame(()=>{const sc=$('#mapScroll'),F=focus(),k=cv.clientHeight/cv.height,scale=Math.min(cv.width/MW,cv.height/MH);sc.scrollTop=(F.z-Z0)*scale*k-sc.clientHeight/2})}function closeMap(){G.state='play';$('#mapS').hidden=true;canvas.focus()}$('#mapClose').onclick=closeMap;
 
 /* ================= AVIÕES: voar entre aeroportos (e para outros países) ================= */
 // o que se leva na viagem para outro país (dinheiro, combustível, carros…)
@@ -1256,8 +1258,17 @@ const flyPrice=(a,b)=>Math.round(29+Math.hypot(a.x-b.x,a.z-b.z)*SCALE/1000*.12);
 function openFly(ap){G.state='flymenu';G.flyFrom=ap;$('#flyS').hidden=false;$('#touch').hidden=true;if(engG)engG.gain.value=0;$('#flyE').textContent='✈ '+ap.n.toUpperCase()+' · '+hhmm(G.clock||36000)+' · tens '+euro(G.money);
  const L=$('#flyList');L.innerHTML='';const add=(txt,price,fn,dis)=>{const b=document.createElement('button');b.className='btn ghost';b.style.cssText='justify-self:stretch;display:flex;justify-content:space-between;gap:12px;font-size:16px;padding:12px 16px';b.innerHTML='<span>'+txt+'</span><b>'+price+'</b>';if(dis)b.disabled=true;b.onclick=fn;L.appendChild(b)};
  AIRPORTS.filter(a=>a!==ap).forEach(a=>{const pr=flyPrice(ap,a);add('🇵'.length&&RG.flag+' '+a.n,euro(pr),()=>{if(G.money<pr){toast('O bilhete custa '+euro(pr)+'. Faz entregas para ganhar dinheiro!',true,2.5);return}G.money-=pr;MEM.set('money',G.money);startFlight(ap,a,null)})});
- Object.keys(REGIONS).filter(k=>k!==REGION_ID).forEach(k=>{const R2=REGIONS[k];(R2.airports||[]).slice(0,1).forEach(a=>{const pr=R2.price||180;add(R2.flag+' '+R2.name+' · '+a.n,euro(pr),()=>{if(G.money<pr){toast('O bilhete custa '+euro(pr)+'. Faz entregas para ganhar dinheiro!',true,2.5);return}G.money-=pr;MEM.set('money',G.money);startFlight(ap,null,{region:k,airport:a.id,name:R2.name})})})});
+ const hd=t=>{const h=document.createElement('div');h.className='eyebrow';h.style.cssText='margin-top:6px';h.textContent=t;L.appendChild(h)};
+ if(AIRPORTS.length>1)L.insertBefore(Object.assign(document.createElement('div'),{className:'eyebrow',textContent:RG.flag+' '+RG.name.toUpperCase()+' · VOOS NO PAÍS'}),L.firstChild);
+ const others=Object.keys(REGIONS).filter(k=>k!==REGION_ID&&(REGIONS[k].airports||[]).length);
+ if(others.length){hd('🌍 OUTROS PAÍSES · ESCOLHE O PAÍS E DEPOIS A CIDADE');
+  others.forEach(k=>{const R2=REGIONS[k],pr=R2.price||180;add(R2.flag+' '+R2.name+' <small style="opacity:.7">('+R2.airports.length+(R2.airports.length>1?' cidades':' cidade')+')</small>','desde '+euro(pr)+' ›',()=>flyCountry(ap,k))})}
  if(Object.keys(REGIONS).length<2)$('#flyP').textContent='O teu carro vai contigo no porão. ✈ Em breve: voos para outros países!'}
+// segundo passo: as cidades (com aeroporto) do país escolhido
+function flyCountry(ap,k){const R2=REGIONS[k],L=$('#flyList');L.innerHTML='';$('#flyP').textContent=R2.flag+' '+R2.name+': escolhe a cidade onde queres aterrar. O carro vai contigo no porão.';
+ const base=R2.price||180;R2.airports.forEach((a,i)=>{const pr=base+i*15;const b=document.createElement('button');b.className='btn ghost';b.style.cssText='justify-self:stretch;display:flex;justify-content:space-between;gap:12px;font-size:16px;padding:12px 16px';b.innerHTML='<span>✈ '+(a.city||a.n)+' <small style="opacity:.7">· '+a.n+'</small></span><b>'+euro(pr)+'</b>';
+  b.onclick=()=>{if(G.money<pr){toast('O bilhete custa '+euro(pr)+'. Faz entregas para ganhar dinheiro!',true,2.5);return}G.money-=pr;MEM.set('money',G.money);startFlight(ap,null,{region:k,airport:a.id,name:(a.city||R2.name)+' ('+R2.name+')'})};L.appendChild(b)});
+ const bk=document.createElement('button');bk.className='btn ghost';bk.style.cssText='justify-self:stretch;font-size:15px';bk.textContent='‹ Outros países';bk.onclick=()=>{$('#flyP').textContent='O teu carro vai contigo no porão. ✈';openFly(ap)};L.appendChild(bk)}
 function closeFly(){G.state='play';$('#flyS').hidden=true;if(touchOn)$('#touch').hidden=false;canvas.focus()}
 let FL=null;const flyPlane=planeModel(0x1d4fa0);flyPlane.visible=false;scene.add(flyPlane);
 function startFlight(from,to,abroad){$('#flyS').hidden=true;G.state='fly';car.visible=false;if(W.m)W.m.visible=false;['#tl','#prompt','#spd','#mapw'].forEach(s=>$(s).hidden=true);$('#touch').hidden=true;sfx.ok();
@@ -1375,12 +1386,7 @@ $('#pickGo').onclick=()=>{if(!pickSel)return;START=pickSel;G.fromFlight=null;$('
  else if(REGION_ID==='fr'){eye.textContent='FRANÇA · ESPANHA E PORTUGAL DE CARRO';lead.innerHTML='Conduz por <b>França</b>: <b>Paris</b>, <b>Lyon</b>, <b>Marselha</b>, Nice, Cannes, <b>Bordéus</b>, Biarritz, Toulouse, Carcassonne, Estrasburgo, Rouen, o Mont Saint-Michel e Chamonix nos Alpes… Pela <b>A63</b> (Bayonne) ou pela <b>A9</b> (Perpignan) passas de carro para <b>Espanha</b>, e daí para <b>Portugal</b>. Torre Eiffel, Viaduto de Millau, Ponte do Gard e 7 aeroportos.'}
  else{eye.textContent=(RG.name+' · '+RG.flag).toUpperCase();lead.innerHTML='Conduz por <b>'+RG.name+'</b>: '+cs.slice(0,9).map((n,i)=>i<3?'<b>'+n+'</b>':n).join(', ')+'… Autoestradas, pontes, aeroportos, entregas, polícia e monumentos.'}}
 showStartAt();
-// teletransporte durante o jogo: no mapa grande (M)
-let tpMode=false;
-function setTp(on){tpMode=on;$('#tpBtn').textContent=on?'❌ Cancelar teletransporte':'📍 Teletransportar';$('#tpBtn').classList.toggle('on',on);$('#mapBig').style.cursor=on?'crosshair':'';$('#tpHint').hidden=!on}
-$('#tpBtn').onclick=()=>{if(W.on){toast('Entra no carro primeiro (F) para te teletransportares.',true,2.4);return}setTp(!tpMode)};
-$('#mapBig').addEventListener('click',e=>{if(!tpMode||G.state!=='map')return;const [x,z]=mapToWorld($('#mapBig'),e);const sp=roadSpot(x,z);
- if(G.mission)endMission(false,'Missão cancelada: teletransportaste-te.');if(G.chase)endChase();placeAt(sp);setTp(false);closeMap();toast('📍 Teletransportado para '+sp.t+'!',false,2.6);sfx.click&&sfx.click()});
+// fim da escolha do sítio
 
 $('#resume').onclick=resume;$('#quit').onclick=()=>{G.state='menu';$('#pause').hidden=true;['#tl','#mapw','#spd','#prompt','#postal'].forEach(s=>$(s).hidden=true);$('#touch').hidden=true;$('#menu').hidden=false;showBest();if(engG)engG.gain.value=0};
 
