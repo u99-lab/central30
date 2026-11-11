@@ -291,7 +291,7 @@ input[type=range]{accent-color:var(--locker);width:180px}
       <div><kbd>M</kbd> mapa · <kbd>C</kbd> câmara · <kbd>P</kbd> pausa</div>
     </div>
     <div class="warn">Não corras perto das auxiliares. Se chegares depois do toque levas atraso (−2 valores). Se não apareceres de todo, levas falta.</div>
-    <div class="btnrow"><button class="btn" id="go">Começar o dia</button></div>
+    <div class="btnrow"><button class="btn" id="go">Começar o dia</button><button class="btn ghost" id="goNew" hidden>Nova semana (segunda-feira)</button></div>
     <div class="best" id="best"></div>
     <div class="facts"><b>Sobre a escola.</b> Fica em Tavarede, na Figueira da Foz, e tem o nome de Joaquim de Carvalho (1892–1958), filósofo e historiador das ideias nascido na Figueira. O edifício foi requalificado pelo atelier Inês Lobo Arquitectos. No corredor do piso 0 há uma exposição com fotografias da escola.</div>
   </div>
@@ -1167,7 +1167,8 @@ function endBasket(){const B=G.bk;$('#bk').hidden=true;$('#ebtn').textContent='E
   else{G.tiago=B.made>=3;if(G.tiago){G.mDone++;sfx.win()}G.state='play';showHud();P.yaw=Math.PI/2;toast(G.tiago?`Ganhaste ao Tiago com ${B.made} cestos!`:`Só ${B.made} cestos... o Tiago ganhou.`,!G.tiago,3)}}
 
 /* ---------------- FLUXO DO DIA ---------------- */
-function showBest(){const b=MEM.get('best-'+diff,null);$('#best').textContent=IN_C30?(b?`O teu melhor dia no ${DIFF[diff].label}: média ${(+b.media).toFixed(1)} valores, ${b.cromos}/${CROMOS.length} cromos.`:'A memória segue a opção «Guardar dados» da Central 30.'):'Cada dia começa do zero: fora da Central 30 o jogo não guarda nada.'}
+function updGo(){try{const d=G.wday|0;if(d>0){$('#go').textContent='▶ Continuar a semana · '+DIAS[d];$('#goNew').hidden=false}else{$('#go').textContent='Começar o dia · Segunda-feira';$('#goNew').hidden=true}}catch(e){}}
+function showBest(){updGo();const b=MEM.get('best-'+diff,null);$('#best').textContent=IN_C30?(b?`O teu melhor dia no ${DIFF[diff].label}: média ${(+b.media).toFixed(1)} valores, ${b.cromos}/${CROMOS.length} cromos.`:'A memória segue a opção «Guardar dados» da Central 30.'):'Cada dia começa do zero: fora da Central 30 o jogo não guarda nada.'}
 function seg(sel,attr,val){document.querySelectorAll(sel+' button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset[attr]===String(val))))}
 function setDiff(d){diff=d;seg('#diffs','d',d);showBest()}
 document.querySelectorAll('#diffs button').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.d)));setDiff(diff);
@@ -1249,7 +1250,7 @@ function report(){G.state='end';hideHud();sfx.win();const keys=['mat','pt','ef',
   $('#endh').innerHTML='Fim de <em>'+dayLabel().toLowerCase()+'</em>';{const nx=G.wday+1;$('#again').textContent='Continuar a semana: '+DIAS[nx]+(nx===5?' (fim de semana)':'');MEM.set('wday',nx>4?0:nx)}
   $('#end').hidden=false;showBest()}
 MODO=MEM.get('modo','missoes')==='livre'?'livre':'missoes';document.querySelectorAll('#modos button').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.m===MODO));b.addEventListener('click',()=>{MODO=b.dataset.m;MEM.set('modo',MODO);document.querySelectorAll('#modos button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.m===MODO)))})});
-$('#go').addEventListener('click',start);$('#again').addEventListener('click',()=>{G.wday++;if(G.wday>=5){startWeekend();return}start()});$('#newweek').addEventListener('click',()=>{G.wday=0;MEM.set('wday',0);start()});$('#wkgo').addEventListener('click',wkGo);
+$('#go').addEventListener('click',start);$('#goNew').addEventListener('click',()=>{G.wday=0;MEM.set('wday',0);start()});setTimeout(updGo,0);$('#again').addEventListener('click',()=>{G.wday++;if(G.wday>=5){startWeekend();return}start()});$('#newweek').addEventListener('click',()=>{G.wday=0;MEM.set('wday',0);start()});$('#wkgo').addEventListener('click',wkGo);
 $('#tomenu').addEventListener('click',()=>{G.state='menu';$('#end').hidden=true;$('#menu').hidden=false;showBest()});
 
 /* ---------------- AÇÕES (E) ---------------- */

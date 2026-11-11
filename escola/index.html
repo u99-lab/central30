@@ -213,6 +213,7 @@ kbd { display: inline-block; background: var(--acc); color: #111; border-radius:
     <div class="row"><span>Cabelo</span><div class="sw txt" id="hairs"><button class="on" data-l="0">Curto</button><button data-l="1">Comprido</button></div></div>
     <div class="row"><span>Câmara</span><div class="sw txt" id="camstart"><button class="on" data-c="0">1.ª pessoa</button><button data-c="1">3.ª pessoa</button><button data-c="2">Aérea</button></div></div>
   </div>
+  <button class="btn" id="cont" style="display:none">▶ Continuar o dia</button>
   <button class="btn" id="play">▶ Começar o dia</button>
 </div></div>
 <div id="pause" class="overlay"><div class="startcard"><h1>Pausa</h1><p class="sub">O tempo na escola parou.</p>
@@ -2197,6 +2198,7 @@ function timeRate() {
   return 1 / 6;                              // intervalo de 20 min ≈ 2 min reais
 }
 function endDay() {
+  try { localStorage.removeItem(SAVE_K); } catch (e) { }
   G.over = true; if (isTouch) $('touch').style.display = 'none'; document.exitPointerLock && document.exitPointerLock();
   const done = Object.values(MISSIONS).filter(m => m.step === 'done').length;
   const aulas = Object.keys(G.attended).length;
@@ -2410,7 +2412,22 @@ document.querySelectorAll('#camstart button').forEach(b => b.classList.toggle('o
 $('optCam').onchange = e => setCam(+e.target.value, true);
 $('optSens').oninput = e => { G.sens = +e.target.value; saveSettings(); };
 $('optQual').onchange = e => { G.quality = +e.target.value; applyQuality(); saveSettings(); };
+// ---- continuar o dia (como o «Continuar mundo» da Cubolândia): guarda a hora, as aulas, as missões, o que já apanhaste e onde estás ----
+const SAVE_K = 'jdc_save'; let CONT_DAY = false;
+function saveDay() { try { if (!G.started || G.over) return; const s = { v: 1, t: G.t, pts: G.pts, faltas: G.faltas, inv: [...G.inv], attended: G.attended, missed: G.missed, cromos: G.cromos, goals: G.goals, baskets: G.baskets, money: G.money, tracked: G.tracked, name: G.name, mis: Object.fromEntries(Object.entries(MISSIONS).map(([k, m]) => [k, m.step])), taken: pickups.map(q => q.taken ? 1 : 0), pud: puddles.map(q => q.done ? 1 : 0), P: { x: P.x, z: P.z, feet: P.feet, yaw: P.yaw } }; localStorage.setItem(SAVE_K, JSON.stringify(s)); } catch (e) { } }
+function loadDay() { try { const s = JSON.parse(localStorage.getItem(SAVE_K) || 'null'); return s && s.v === 1 && typeof s.t === 'number' ? s : null; } catch (e) { return null; } }
+window.C30save = saveDay; setInterval(saveDay, 5000); addEventListener('pagehide', saveDay);
+function restoreDay(s) {
+  Object.assign(G, { t: s.t, pts: s.pts | 0, faltas: s.faltas | 0, attended: s.attended || {}, missed: s.missed || {}, cromos: s.cromos | 0, goals: s.goals | 0, baskets: s.baskets | 0, money: s.money || 0, tracked: s.tracked || null }); G.inv = new Set(s.inv || []);
+  for (const k in (s.mis || {})) { const m = MISSIONS[k]; if (!m) continue; const st = s.mis[k]; if (st !== -1 && st !== 'done' && m.step === -1) { if (k === 'campo') { NPCS.tiago.mesh.position.set(FIELD.cx, 0, FIELD.z1 + 3); NPCS.tiago.mesh.rotation.y = Math.PI; } if (k === 'lanche') NPCS.ines.mesh.position.set(70, 0, 53); } m.step = st; }
+  if (MISSIONS.livro && MISSIONS.livro.step === 1) book.m.visible = true;
+  (s.taken || []).forEach((t, i) => { if (t && pickups[i]) { pickups[i].taken = true; pickups[i].m.visible = false; } });
+  (s.pud || []).forEach((d, i) => { if (d && puddles[i]) { puddles[i].done = true; puddles[i].m.visible = false; } });
+}
+{ const sv = loadDay(); if (sv) { $('cont').style.display = ''; $('cont').textContent = '▶ Continuar o dia (' + fmt(sv.t) + ')'; $('play').textContent = '↺ Começar um dia novo'; if (sv.name && !$('pname').value) $('pname').value = sv.name; } }
+$('cont').onclick = () => { const sv = loadDay(); if (!sv) { $('play').onclick(); return; } restoreDay(sv); CONT_DAY = true; $('play').onclick(); CONT_DAY = false; if (sv.P) { P.x = sv.P.x; P.z = sv.P.z; P.feet = sv.P.feet || 0; P.yaw = sv.P.yaw || 0; } toast('Continuas o dia às ' + fmt(G.t) + '. Bom regresso!', 'good'); };
 $('play').onclick = () => {
+  if (!CONT_DAY) { try { localStorage.removeItem(SAVE_K); } catch (e) { } }
   audioInit();
   G.name = ($('pname').value || '').trim().slice(0, 16) || 'Aluno';
   buildAvatar(Object.assign({ pants: 0x2a3b5f, bag: 0x222222 }, LOOK));
@@ -2420,7 +2437,7 @@ $('play').onclick = () => {
   if (isTouch) $('touch').style.display = 'block';
   P.yaw = -Math.PI / 2; P.pitch = 0;
   if (!isTouch) canvas.requestPointerLock && canvas.requestPointerLock();
-  say([['', `Olá, ${G.name}! 08:20 — Chegaste à Escola Secundária Vale Verde, na Ribeira Alta. Choveu toda a noite…`],
+  if (!CONT_DAY) say([['', `Olá, ${G.name}! 08:20 — Chegaste à Escola Secundária Vale Verde, na Ribeira Alta. Choveu toda a noite…`],
   ['', 'A entrada é pelo portão do lado poente. A tua primeira aula é Matemática na Sala 1.04 (Bloco A, 1.º piso) às 08:30. Segue a seta amarela!'],
   ['', isTouch ? 'iPad: arrasta com o dedo no lado ESQUERDO do ecrã para andar e no lado DIREITO para olhar. Botão E para falar e apanhar coisas (ou toca no aviso), ⚽ para chutar e lançar, 📷 câmara, II pausa e opções.'
     : 'Controlos: WASD mover (em 3.ª pessoa A/D rodam) · ← → rodar · Rato olhar · Shift correr · Espaço saltar · E interagir · C mudar câmara · M mapa · Q mudar missão · Esc pausa (opções)']]);
