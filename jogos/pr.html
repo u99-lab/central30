@@ -1598,7 +1598,7 @@ function botTimes(field, key) {
   const r = mulberry32(hashStr(key)), dk = DIFF[career.diff].k;
   return field.map(b => {
     const id = S.ideal[carIdx(b.car)];
-    let t = id.total * REF * b.skill * dk * (1 + gauss(r) * 0.011), note = '';
+    let t = id.total * REF * b.skill * dk * (1 + gauss(r) * 0.024) * (1 + (r() - 0.5) * 0.03), note = ''; // forma do dia: os lugares mudam de prova para prova
     const x = r();
     if (x < 0.035) { t += 6 + r() * 16; note = 'pião'; } else if (x < 0.047) { t += 30 + r() * 30; note = 'furo'; }
     const splits = id.splits.map(sp => sp / id.total * t);

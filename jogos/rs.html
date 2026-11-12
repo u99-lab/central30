@@ -2484,7 +2484,35 @@ function loop(now) {
   requestAnimationFrame(loop);
   let dt = Math.min(0.05, (now - last) / 1000); last = now;
   update(dt);
+  cullFar();
   renderer.render(scene, camera);
+}
+// menos travado no PC: as coisas pequenas que estão muito longe deixam de se desenhar e só o que está perto faz sombra
+let CULL = null, cullT = 0;
+const _cp = new THREE.Vector3();
+function cullFar() {
+  const now = performance.now(); if (now - cullT < 250) return; cullT = now;
+  if (!CULL || now - CULL.at > 6000) {
+    const L = [];
+    scene.traverse(o => {
+      if (!o.isMesh || o.isSkinnedMesh || !o.geometry) return;
+      const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); if (!g.boundingSphere) return;
+      o.updateWorldMatrix(true, false); const sc = o.matrixWorld.getMaxScaleOnAxis(), r = g.boundingSphere.radius * sc;
+      if (o.isInstancedMesh ? (r > 520 || r < 1) : r > 60) return; // terreno, mar, estradas grandes: ficam sempre
+      if (o.userData.cs0 === undefined) o.userData.cs0 = !!o.castShadow;
+      L.push({ o, r, c: g.boundingSphere.center.clone(), inst: !!o.isInstancedMesh });
+    });
+    CULL = { at: now, L, off: CULL ? CULL.off : new Set() };
+  }
+  const cx = camera.position.x, cz = camera.position.z;
+  for (const it of CULL.L) {
+    const o = it.o; _cp.copy(it.c).applyMatrix4(o.matrixWorld);
+    const d = Math.max(0, Math.hypot(_cp.x - cx, _cp.z - cz) - (it.inst ? it.r : 0));
+    const far = it.inst ? d > 900 : d > 950 + it.r * 35;
+    if (far) { if (o.visible) { o.visible = false; CULL.off.add(o); } }
+    else if (CULL.off.has(o)) { o.visible = true; CULL.off.delete(o); }
+    if (o.userData.cs0) o.castShadow = it.inst ? d < 220 : d < 260 + it.r * 4;
+  }
 }
 function update(dt) {
   T += dt; frame++;
