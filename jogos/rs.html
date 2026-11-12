@@ -126,7 +126,7 @@ kbd{font-family:var(--display);background:var(--sun);color:#1a1020;border-radius
 #mapLegend{position:absolute;left:10px;bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-size:13px;line-height:1.7;pointer-events:none}
 #mapLegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 #mapClose{position:absolute;right:10px;top:10px;background:linear-gradient(90deg,var(--hot),#ff7a3d);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700;letter-spacing:.06em;font-size:15px}
-@media (max-width:640px){body.touch body.touch #mapTip{position:absolute;right:10px;bottom:10px;color:var(--mute);font-size:13px;background:var(--panel);padding:6px 10px;border-radius:6px}
+#mapTip{position:absolute;right:10px;bottom:10px;color:var(--mute);font-size:13px;background:var(--panel);padding:6px 10px;border-radius:6px}
 
 #results .big{font-family:var(--display);font-weight:700;font-style:italic;font-size:72px;line-height:1}
 #resList{margin:12px 0;font-size:15px}
@@ -180,6 +180,15 @@ body.touch #tCam{top:calc(var(--gt) + 52px)}
 body.touch #tEnter{bottom:calc(var(--gb) + 140px)}
 body.touch #prompt{bottom:calc(var(--gb) + 196px)}
 body.touch #toasts{top:calc(var(--gt) + 60px)}
+/* garage on short (landscape phone) screens: panel on the right, car stays visible on the left */
+@media (max-height:560px){
+  #garage{align-items:stretch;justify-content:flex-end}
+  #garage .panel{width:min(48%,390px);max-height:100%;overflow:auto;padding:12px 14px}
+  #garage .panel h2{font-size:18px}
+  .stats{grid-template-columns:1fr;gap:4px;margin:8px 0}
+  .gFoot .btn{min-width:0;padding:9px 10px;font-size:14px}
+  .sw{width:24px;height:24px}
+}
 @media (prefers-reduced-motion:reduce){.toast,.toast.out{animation:none}}
 </style>
 </head>
@@ -2303,8 +2312,14 @@ function updateCamera(dt, t) {
     const a = t * 0.15 + (state === 'garage' ? 0.6 : 0), dist = state === 'garage' ? 7.5 : 9.5;
     const ox = state === 'menu' ? -2.5 : 0;
     camera.position.set(car.x + Math.sin(a) * dist + Math.cos(a) * ox, car.y + (state === 'garage' ? 2.0 : 2.6), car.z + Math.cos(a) * dist - Math.sin(a) * ox);
-    camera.lookAt(car.x, car.y + 0.9, car.z); camera.fov = 50; camera.updateProjectionMatrix(); camSnap = true; return;
+    camera.lookAt(car.x, car.y + 0.9, car.z); camera.fov = 50;
+    // keep the car in the part of the screen the garage panel doesn't cover
+    const W = innerWidth, Hh = innerHeight, pnl = state === 'garage' ? document.querySelector('#garage .panel') : null;
+    if (pnl) { const r = pnl.getBoundingClientRect(); if (r.left > W * 0.35) camera.setViewOffset(W, Hh, (W - r.left) / 2, 0, W, Hh); else camera.setViewOffset(W, Hh, 0, Math.max(0, (Hh - r.top) / 2), W, Hh); }
+    else if (camera.view && camera.view.enabled) camera.clearViewOffset();
+    camera.updateProjectionMatrix(); camSnap = true; return;
   }
+  if (camera.view && camera.view.enabled) camera.clearViewOffset();
   const velA = Math.atan2(car.vx, car.vz);
   const target = car.speed > 4 && car.vF > 0 ? car.h + angDiff(car.h, velA) * 0.45 : car.h;
   camYaw += angDiff(camYaw, target) * (camSnap ? 1 : 1 - Math.exp(-5 * dt));
