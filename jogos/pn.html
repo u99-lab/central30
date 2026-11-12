@@ -119,6 +119,9 @@ body { touch-action: none; -webkit-touch-callout: none; -webkit-tap-highlight-co
 body.swapc .tcluster { right: auto !important; left: max(18px, env(safe-area-inset-left, 0px)) !important; }
 body.swapc #hint { left: auto !important; right: max(22px, env(safe-area-inset-right, 0px)) !important; }
 body.swapc #dpad { left: auto !important; right: max(18px, env(safe-area-inset-right, 0px)) !important; }
+body:not(.arrows) #dpad { display: none !important; }
+.popts { display: flex; flex-direction: column; gap: 8px; align-items: center; margin-top: 14px; }
+#swapBtn, .optbtn { pointer-events: auto; display: block; margin-top: 10px; font: 700 15px var(--ui); color: #fff; background: rgba(10,12,16,.6); border: 2px solid rgba(255,255,255,.45); border-radius: 22px; padding: 9px 18px; cursor: pointer; }
 #swapBtn { pointer-events: auto; display: block; margin-top: 12px; font: 700 15px var(--ui); color: #fff; background: rgba(10,12,16,.6); border: 2px solid rgba(255,255,255,.45); border-radius: 22px; padding: 9px 18px; cursor: pointer; }
 .tcluster { position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(2, 68px); gap: 12px; align-items: end; justify-items: center; }
 .ttop { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
@@ -223,8 +226,8 @@ body.touch #doorNav { top: calc(58px + env(safe-area-inset-top, 0px)); font-size
     <div>
       <p class="pitch">Uma cidade inteira à tua mercê: rouba carros, foge à polícia, aceita trabalhos do Tio Zé e da Rita "Turbo" e enche os bolsos antes que as estrelas te apanhem.</p>
       <button id="play" type="button">Jogar</button>
-      <button id="swapBtn" type="button" hidden></button>
-      <div id="touchwarn" hidden>Controlos táteis: a pé, joystick à esquerda; no carro, setas à esquerda, arrasta à direita para olhar, botões para disparar e entrar em carros. Joga na horizontal.</div>
+      <button id="swapBtn" type="button" hidden></button><button id="arrowsBtn" type="button" class="optbtn" hidden></button>
+      <div id="touchwarn" hidden>Controlos táteis: joystick à esquerda a pé e no carro (podes escolher setas no carro), arrasta à direita para olhar, botões para disparar e entrar em carros. Joga na horizontal.</div>
     </div>
     <dl class="controls">
       <h3>A pé</h3>
@@ -239,7 +242,7 @@ body.touch #doorNav { top: calc(58px + env(safe-area-inset-top, 0px)); font-size
     </dl>
   </div>
 </div>
-<div id="pause" hidden><div><h2>PAUSA</h2><p>Clica ou toca para continuar</p><div id="brightbox" hidden style="display:none"><label for="bright">Brilho</label><input id="bright" type="range" min="0.5" max="1.8" step="0.05" value="1"><output id="brightval">100%</output></div></div></div>
+<div id="pause" hidden><div><h2>PAUSA</h2><p>Clica ou toca para continuar</p><div class="popts"><button id="arrowsBtn2" type="button" class="optbtn" hidden></button><button id="swapBtn2" type="button" class="optbtn" hidden></button></div><div id="brightbox" hidden style="display:none"><label for="bright">Brilho</label><input id="bright" type="range" min="0.5" max="1.8" step="0.05" value="1"><output id="brightval">100%</output></div></div></div>
 
 <script>
 // show any startup failure on the loading screen instead of hanging silently
@@ -5626,12 +5629,16 @@ if (IS_TOUCH) {
     if (d > R) { dx *= R / d; dy *= R / d; }
     knob.style.transform = `translate(${dx}px, ${dy}px)`;
     TOUCH.mx = dx / R; TOUCH.my = dy / R; TOUCH.mag = Math.min(1, d / R);
+    // no carro, o joystick faz de setas (acelerar, travar e virar)
+    if (document.body.classList.contains('incar') && !CAR_ARROWS) stickKeys(TOUCH.mx, TOUCH.my);
   };
+  const SK = {};
+  function stickKeys(mx, my) { const want = { KeyW: my < -0.25, KeyS: my > 0.35, KeyA: mx < -0.28, KeyD: mx > 0.28 }; for (const k in want) { if (want[k] && !SK[k]) { if (!keys[k]) pressed[k] = true; keys[k] = true; SK[k] = true; } else if (!want[k] && SK[k]) { keys[k] = false; SK[k] = false; } } }
   layer.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse') return;
     TOUCH.used = true; document.body.classList.add('touch');
     if (e.target.closest('.tbtn')) return;
-    if (!document.body.classList.contains('incar') && (SWAPC ? e.clientX > innerWidth * 0.58 : e.clientX < innerWidth * 0.42) && TOUCH.stickId === null) {
+    if ((!document.body.classList.contains('incar') || !CAR_ARROWS) && (SWAPC ? e.clientX > innerWidth * 0.58 : e.clientX < innerWidth * 0.42) && TOUCH.stickId === null) {
       TOUCH.stickId = e.pointerId; TOUCH.sx = e.clientX; TOUCH.sy = e.clientY;
       base.style.left = (e.clientX - R) + 'px'; base.style.top = (e.clientY - R) + 'px'; base.hidden = false; setStick(e.clientX, e.clientY);
     } else if (TOUCH.camId === null) { TOUCH.camId = e.pointerId; TOUCH.lx = e.clientX; TOUCH.ly = e.clientY; }
@@ -5647,7 +5654,7 @@ if (IS_TOUCH) {
     e.preventDefault();
   });
   const end = e => {
-    if (e.pointerId === TOUCH.stickId) { TOUCH.stickId = null; TOUCH.mx = TOUCH.my = TOUCH.mag = 0; base.hidden = true; knob.style.transform = ''; }
+    if (e.pointerId === TOUCH.stickId) { TOUCH.stickId = null; TOUCH.mx = TOUCH.my = TOUCH.mag = 0; base.hidden = true; knob.style.transform = ''; stickKeys(0, 0); }
     if (e.pointerId === TOUCH.camId) TOUCH.camId = null;
   };
   layer.addEventListener('pointerup', end); layer.addEventListener('pointercancel', end);
@@ -8113,9 +8120,11 @@ window.C30pause = force => {
 };
 window.C30isPaused = () => GAME.state === 'pause';
 // controlos táteis trocados de lado (pedido): joystick e setas à direita, botões à esquerda; no menu dá para voltar ao normal
-let SWAPC = true; try { SWAPC = localStorage.getItem('pn.swap') !== '0'; } catch (e) { }
-function paintSwap() { document.body.classList.toggle('swapc', SWAPC); const b = $('swapBtn'); if (b) { b.textContent = '⇄ Controlos: ' + (SWAPC ? 'joystick à direita, botões à esquerda' : 'joystick à esquerda, botões à direita'); b.hidden = !IS_TOUCH; } }
-$('swapBtn').addEventListener('click', () => { SWAPC = !SWAPC; try { localStorage.setItem('pn.swap', SWAPC ? '1' : '0'); } catch (e) { } paintSwap(); });
+let SWAPC = false, CAR_ARROWS = false; try { SWAPC = localStorage.getItem('pn.swap') === '1'; CAR_ARROWS = localStorage.getItem('pn.arrows') === '1'; } catch (e) { }
+function paintSwap() { document.body.classList.toggle('swapc', SWAPC); document.body.classList.toggle('arrows', CAR_ARROWS); for (const id of ['swapBtn', 'swapBtn2']) { const b = $(id); if (b) { b.textContent = '⇄ Lado: ' + (SWAPC ? 'joystick à direita, botões à esquerda' : 'joystick à esquerda, botões à direita'); b.hidden = !IS_TOUCH; } } for (const id of ['arrowsBtn', 'arrowsBtn2']) { const b = $(id); if (b) { b.textContent = '🚗 No carro: ' + (CAR_ARROWS ? 'setas' : 'joystick'); b.hidden = !IS_TOUCH; } } }
+const togSwap = e => { if (e) e.stopPropagation(); SWAPC = !SWAPC; try { localStorage.setItem('pn.swap', SWAPC ? '1' : '0'); } catch (err) { } paintSwap(); };
+const togArrows = e => { if (e) e.stopPropagation(); CAR_ARROWS = !CAR_ARROWS; try { localStorage.setItem('pn.arrows', CAR_ARROWS ? '1' : '0'); } catch (err) { } paintSwap(); };
+for (const [id, f] of [['swapBtn', togSwap], ['swapBtn2', togSwap], ['arrowsBtn', togArrows], ['arrowsBtn2', togArrows]]) { const b = $(id); if (b) { b.addEventListener('click', f); b.addEventListener('pointerdown', e => e.stopPropagation()); } }
 paintSwap();
 // prepara os gráficos (texturas e shaders) enquanto está o menu, para não travar quando se começa a jogar
 function warmGfx() { try { scene.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'alphaMap']) if (m && m[k] && renderer.initTexture) renderer.initTexture(m[k]); }); renderer.compile(scene, camera); } catch (e) { } }
@@ -8131,7 +8140,7 @@ $('play').addEventListener('click', () => {
   GAME.state = 'play'; GAME.clock = 10.5; envTimer = 0; lastEnvClock = -99; // luz do céu atualizada logo (antes ficava tudo branco nos primeiros segundos)
   finishReloadFor('pistol'); updateWeaponHud();
   if (!IS_TOUCH) requestLock();
-  showHint(IS_TOUCH ? 'Bem-vindo a <b>Porto Neon</b>. Joystick '+(SWAPC?'à direita':'à esquerda')+' para andar (no carro aparecem setas), arrasta '+(SWAPC?'à esquerda':'à direita')+' para olhar. Os marcadores <b style="color:#ffd23a">amarelos</b> são missões.' : 'Bem-vindo a <b>Porto Neon</b>. Os marcadores <b style="color:#ffd23a">amarelos</b> no mapa são missões. <kbd>M</kbd> abre o mapa.', 7);
+  showHint(IS_TOUCH ? 'Bem-vindo a <b>Porto Neon</b>. Joystick '+(SWAPC?'à direita':'à esquerda')+' para andar e conduzir (setas no carro: escolhe no menu ou na pausa), arrasta '+(SWAPC?'à esquerda':'à direita')+' para olhar. Os marcadores <b style="color:#ffd23a">amarelos</b> são missões.' : 'Bem-vindo a <b>Porto Neon</b>. Os marcadores <b style="color:#ffd23a">amarelos</b> no mapa são missões. <kbd>M</kbd> abre o mapa.', 7);
   last = performance.now();
 });
 if (IS_TOUCH) $('touchwarn').hidden = false;
