@@ -821,7 +821,7 @@ const RIVERS=(RG.rivers||[]).map(r=>{const P=PJL(r.pts);const segs=[];let acc=0;
 function riverAt(x,z){let best=null;for(const R of RIVERS){if(x<R.x0||x>R.x1||z<R.z0||z>R.z1)continue;for(const s of R.segs){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),d=Math.hypot(x-s.ax-vx*t,z-s.az-vz*t),w=lerp(s.w0,s.w1,t);const e=d-w/2;if(!best||e<best.e)best={e,w,R}}}return best}
 // ---- montanhas e cidades ----
 const MOUNTS=(RG.mounts||[]).map(m=>{const p=PJ(m[0],m[1]);return{x:p[0],z:p[1],h:m[2],r:m[3]}});
-const CITIES=(RG.cities||[]).map(c=>{const p=PJ(c.lon,c.lat);return Object.assign({},c,{x:p[0],z:p[1],r:Math.round((c.r||150)*2.4),blk:Math.round((c.blk||110)*1.3)})});// cidades maiores (e quarteirões maiores, para os prédios serem maiores)
+const CITIES=(RG.cities||[]).map(c=>{const p=PJ(c.lon,c.lat);return Object.assign({},c,{x:p[0],z:p[1],r:Math.round((c.r||150)*2.9),blk:Math.round((c.blk||110)*1.5)})});// cidades maiores (e quarteirões maiores, para os prédios serem maiores)
 const PARKS=(RG.parks||[]).map(([lon,lat,L,Wd,rot])=>{const p=PJ(lon,lat);return{x:p[0],z:p[1],hl:L/SCALE/2,hw:Wd/SCALE/2,ux:Math.sin(rot),uz:-Math.cos(rot)}});
 function inPark(x,z,m){m=m||0;for(const k of PARKS){const dx=x-k.x,dz=z-k.z,u=dx*k.ux+dz*k.uz,v=-dx*k.uz+dz*k.ux;if(Math.abs(u)<k.hl+m&&Math.abs(v)<k.hw+m)return true}return false}
 const TOWNS=CITIES.map(c=>({n:c.n,x:c.x,z:c.z,r:c.r}));
@@ -1124,8 +1124,8 @@ if(REGION_ID!=='pt')PALS.def=CSTY.pal;
 const COLS=PALS.def;
 function addB(x,z,w,d,h,col){B.push({x,z,w,d,h,col:col!=null?col:COLS[Math.floor(rnd()*COLS.length)]})}
 let zoneH=()=>10,zonePal=COLS;
-function yield_(x,z,w,d){if(inPark(x,z,Math.max(w,d)/2+4))return;if(nearRail(x,z).d<14+Math.max(w,d)/2)return;if(zoneAt(x,z)!=='terra')return;if(foreignAt(x,z))return;const n=nearRoad(x,z);if(n.d<n.s.r.w/2+3+Math.max(w,d)/2*.75)return;B.push({x,z,w,d,h:zoneH(x,z)*1.25,col:zonePal[Math.floor(rnd()*zonePal.length)]})}
-function freeArea(x0,z0,x1,z1){const m=10;for(let x=x0+m;x<x1-m-8;){const w=13+rnd()*21;if(x+w>x1-m)break;for(let z=z0+m;z<z1-m-8;){const d=13+rnd()*18;if(z+d>z1-m)break;yield_(x+w/2,z+d/2,w-1.5,d-1.5);z+=d}x+=w}}
+function yield_(x,z,w,d){if(inPark(x,z,Math.max(w,d)/2+4))return;if(nearRail(x,z).d<14+Math.max(w,d)/2)return;if(zoneAt(x,z)!=='terra')return;if(foreignAt(x,z))return;const n=nearRoad(x,z);if(n.d<n.s.r.w/2+3+Math.max(w,d)/2*.75)return;B.push({x,z,w,d,h:zoneH(x,z)*1.5,col:zonePal[Math.floor(rnd()*zonePal.length)]})}
+function freeArea(x0,z0,x1,z1){const m=11;for(let x=x0+m;x<x1-m-9;){const w=15+rnd()*24;if(x+w>x1-m)break;for(let z=z0+m;z<z1-m-9;){const d=15+rnd()*21;if(z+d>z1-m)break;yield_(x+w/2,z+d/2,w-1.5,d-1.5);z+=d}x+=w}}
 CITIES.forEach(c=>{const blk=c.blk||110,n=Math.floor(c.r/blk);zonePal=PALS[c.pal]||PALS.def;
  zoneH=(x,z)=>{const d=Math.hypot(x-c.x,z-c.z)/c.r;const big=c.big||0;const T=c.tall||CSTY.tall||1;return big===2?T*(d<.35?22+rnd()*38:d<.7?12+rnd()*16:7+rnd()*8):big===1?(d<.4?12+rnd()*16:7+rnd()*9):(c.pal==='alentejo'||c.pal==='algarve')?5+rnd()*4:6+rnd()*8};
  for(let i=-n;i<n;i++)for(let j=-n;j<n;j++){const x=c.x+i*blk,z=c.z+j*blk;if(Math.hypot(x+blk/2-c.x,z+blk/2-c.z)>c.r-20)continue;freeArea(x,z,x+blk,z+blk)}});
@@ -1182,13 +1182,15 @@ function label(text,x,y,z,ry,w,h,bg,fg){const t=ctex(512,Math.round(512*h/w),(g,
 CITIES.forEach(c=>{const n=nearRoad(c.x+c.r*.85,c.z);const x=c.x+c.r*.92,z=c.z;if(zoneAt(x,z)!=='terra')return;label(c.n.toUpperCase(),x,terrainH(x,z)+3.2,z,Math.PI/2,Math.min(14,4+c.n.length*.7),1.6,'#f4f1e8','#1b2a33');const po=new THREE.Mesh(new THREE.BoxGeometry(.15,2.4,.15),lam({color:0x8a9096}));po.position.set(x,terrainH(x,z)+1.2,z);scene.add(po)});
 
 /* ---- árvores: pinhal, eucaliptos, sobreiros e oliveiras (em instâncias) ---- */
-{const PIN=[],ROUND=[],CON=[],N=mobile?5000:14000;let tries=0;while((PIN.length+ROUND.length+CON.length)<N&&tries<N*5){tries++;const x=WB.x0+rnd()*(WB.x1-WB.x0),z=WB.z0+rnd()*(WB.z1-WB.z0);if(maskAt(x,z)!==1)continue;const h=TH0(x,z);if(h<1.2||h>140)continue;const dc=coastD(x,z);if(dc<45)continue;
+{const PALMR=['pt','es','it','gr','mt','cy','tr','ma','eg','ae','in','th','sg','br','mx','usla','au','za','mc','al','hr','me'].includes(REGION_ID);const PIN=[],ROUND=[],CON=[],PALM=[],N=mobile?5000:14000;let tries=0;while((PIN.length+ROUND.length+CON.length+PALM.length)<N&&tries<N*5){tries++;const x=WB.x0+rnd()*(WB.x1-WB.x0),z=WB.z0+rnd()*(WB.z1-WB.z0);if(maskAt(x,z)!==1)continue;const h=TH0(x,z);if(h<1.2||h>140)continue;const dc=coastD(x,z);if(dc<45)continue;
   const f=fbm(x/700+3,z/700-2);if(f<.48&&rnd()<.75)continue;if(cityAt(x,z)||!roadClear(x,z,4)||nearRail(x,z).d<9||hitBuilding(x,z,4))continue;
-  const al=Math.abs(LAT0-z/KY),south=clamp((45-al)/7,0,1);(al>48&&rnd()<clamp((al-48)/6,0,.9)?CON:rnd()<south*.8?ROUND:PIN).push({x,z,s:.7+rnd()*.7})}
+  const al=Math.abs(LAT0-z/KY),south=clamp((45-al)/7,0,1);(PALMR&&al<40&&rnd()<clamp((40-al)/4,.15,.6)?PALM:al>48&&rnd()<clamp((al-48)/6,0,.9)?CON:rnd()<south*.8?ROUND:PIN).push({x,z,s:.7+rnd()*.7})}
  const tg=new THREE.CylinderGeometry(.3,.42,6,5);tg.translate(0,3,0);const cg=new THREE.SphereGeometry(3.4,7,5);cg.scale(1,.5,1);cg.translate(0,7,0);
  inst(tg,lam({color:0x7a5a3a}),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cg,lam({color:0x355f2e}),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);
  const tg2=new THREE.CylinderGeometry(.35,.5,3,5);tg2.translate(0,1.5,0);const rg=new THREE.SphereGeometry(3,7,5);rg.scale(1,.7,1);rg.translate(0,4.2,0);
  inst(tg2,lam({color:0x5a4030}),ROUND,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(rg,lam({color:0x56682f}),ROUND,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);
+ // palmeiras nos países quentes: tronco alto e fino e copa achatada de folhas
+ if(PALM.length){const pt=new THREE.CylinderGeometry(.22,.34,9,6);pt.translate(0,4.5,0);const pc=new THREE.ConeGeometry(3.4,1.6,7);pc.rotateX(Math.PI);pc.translate(0,9.4,0);const pc2=new THREE.SphereGeometry(.7,6,4);pc2.translate(0,9.2,0);inst(pt,lam({color:0x8a6a48}),PALM,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s);d.rotation.z=(t.s-1)*.25},1);inst(pc,lam({color:0x3f7a2c}),PALM,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s);d.rotation.z=(t.s-1)*.25},1)}
  // abetos (pinheiros do norte), em forma de cone
  if(CON.length){const ct=new THREE.CylinderGeometry(.25,.35,2.4,5);ct.translate(0,1.2,0);const cc=new THREE.ConeGeometry(2.6,8.5,7);cc.translate(0,6.2,0);inst(ct,lam({color:0x5a4030}),CON,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cc,lam({color:0x2a4a2c}),CON,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1)}}
 
@@ -1263,6 +1265,18 @@ function planeModel(c1){const g=new THREE.Group(),wm=lam({color:0xf4f6f8}),cm=la
    const pm=new THREE.Mesh(pole,poleM);pm.position.y=1.5;grp.add(pm);
    const tx=ctex(256,128,(q,W,H)=>{q.fillStyle=s[0];q.fillRect(0,0,W,H);q.strokeStyle=s[2];q.lineWidth=12;q.strokeRect(10,10,W-20,H-20);q.fillStyle=s[1];let fs=46;q.font='800 '+fs+'px "Bricolage Grotesque",sans-serif';const tw=q.measureText(c.n).width;if(tw>W-44){fs=Math.floor(fs*(W-44)/tw);q.font='800 '+fs+'px "Bricolage Grotesque",sans-serif'}q.textAlign='center';q.textBaseline='middle';q.fillText(c.n,W/2,H/2+2)});
    const pl=new THREE.Mesh(new THREE.PlaneGeometry(3.6,1.8),new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));pl.position.y=3.3;grp.add(pl);scene.add(grp);(window.__csign=window.__csign||[]).push([px,pz,ux,uz]);k++;n++}}}
+
+/* ---- placa de boas-vindas à entrada do país, na língua de lá (para quem chega pela fronteira) ---- */
+{const LN={pt:'Portugal',es:'España',fr:'France',de:'Deutschland',it:'Italia',uk:'United Kingdom',ie:'Éire · Ireland',nl:'Nederland',be:'Belgique · België',lu:'Lëtzebuerg',ch:'Schweiz · Suisse',at:'Österreich',pl:'Polska',cz:'Česko',sk:'Slovensko',dk:'Danmark',no:'Norge',se:'Sverige',fi:'Suomi',ee:'Eesti',lv:'Latvija',lt:'Lietuva',by:'Беларусь',ua:'Україна',ru:'Россия',kz:'Қазақстан',md:'Moldova',ro:'România',bg:'България',gr:'Ελλάδα',al:'Shqipëri',mk:'Северна Македонија',xk:'Kosova',me:'Crna Gora',rs:'Србија',ba:'Bosna i Hercegovina',hr:'Hrvatska',si:'Slovenija',hu:'Magyarország',tr:'Türkiye',sm:'San Marino',va:'Città del Vaticano',mc:'Monaco',ad:'Andorra',li:'Liechtenstein'};
+ const WL={pt:'BEM-VINDO',es:'BIENVENIDO',fr:'BIENVENUE',de:'WILLKOMMEN',it:'BENVENUTI',en:'WELCOME',nl:'WELKOM',pl:'WITAMY',cs:'VÍTEJTE',sk:'VITAJTE',da:'VELKOMMEN',no:'VELKOMMEN',sv:'VÄLKOMMEN',fi:'TERVETULOA',et:'TERE TULEMAST',lv:'LAIPNI LŪDZAM',lt:'SVEIKI ATVYKĘ',be:'САРДЭЧНА ЗАПРАШАЕМ',uk:'ЛАСКАВО ПРОСИМО',ru:'ДОБРО ПОЖАЛОВАТЬ',kk:'ҚОШ КЕЛДІҢІЗ',ro:'BUN VENIT',bg:'ДОБРЕ ДОШЛИ',el:'ΚΑΛΩΣ ΗΡΘΑΤΕ',sq:'MIRË SE VINI',mk:'ДОБРЕДОЈДОВТЕ',sr:'ДОБРОДОШЛИ',bs:'DOBRODOŠLI',hr:'DOBRODOŠLI',sl:'DOBRODOŠLI',hu:'ÜDVÖZÖLJÜK',tr:'HOŞ GELDİNİZ',ca:'BENVINGUTS',is:'VELKOMIN'};
+ const lang=LANGOF[REGION_ID]||(RG.lang)||'pt',name=LN[REGION_ID];
+ if(name){let n=0;for(const r of ROADS){if(!r.auto||r.bridge||!r.bEnds||n>=12)continue;for(const end of [0,1]){if(!r.bEnds[end])continue;const P=end?r.pts.slice().reverse():r.pts;// P[0] é a ponta da fronteira
+   let i=0;while(i<P.length-1&&maskAt(P[i][0],P[i][1])!==1)i++;let acc=0;while(i<P.length-1&&acc<90){acc+=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);i++}if(i>=P.length-1)continue;
+   const a=P[i],b=P[Math.max(0,i-1)];const L=Math.hypot(b[0]-a[0],b[1]-a[1])||1,ux=(a[0]-b[0])/L,uz=(a[1]-b[1])/L;// sentido de quem entra no país
+   const nx=-uz*DRV,nz=ux*DRV,o=(r.w/2+3),px=a[0]-nx*o,pz=a[1]-nz*o;const y=surfaceAt(px,pz);const g=new THREE.Group();g.position.set(px,y,pz);g.rotation.y=Math.atan2(-ux,-uz);
+   for(const s of [-1,1]){const pm=new THREE.Mesh(new THREE.BoxGeometry(.18,4.2,.18),lam({color:0x8a9096}));pm.position.set(s*2.2,2.1,0);g.add(pm)}
+   const tx=ctex(512,256,(q,W,H)=>{q.fillStyle='#1d4fa0';q.fillRect(0,0,W,H);q.strokeStyle='#ffd23f';q.lineWidth=10;q.strokeRect(14,14,W-28,H-28);q.fillStyle='#ffd23f';q.font='800 48px "Bricolage Grotesque",sans-serif';q.textAlign='center';q.textBaseline='middle';let t=WL[lang]||'WELCOME';let fs=48;while(q.measureText(t).width>W-60&&fs>20){fs-=2;q.font='800 '+fs+'px "Bricolage Grotesque",sans-serif'}q.fillText(t,W/2,H*.34);q.fillStyle='#fff';fs=56;q.font='800 '+fs+'px "Bricolage Grotesque",sans-serif';while(q.measureText(name).width>W-60&&fs>20){fs-=2;q.font='800 '+fs+'px "Bricolage Grotesque",sans-serif'}q.fillText(name,W/2,H*.66)});
+   const pl=new THREE.Mesh(new THREE.PlaneGeometry(5,2.5),new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));pl.position.y=4.6;g.add(pl);scene.add(g);(window.__bsign=window.__bsign||[]).push([px,pz,ux,uz]);n++}}}}
 // pontos com nome para as missões: centro das cidades e portas dos aeroportos
 CITIES.forEach(c=>{const n=nearRoad(c.x,c.z);LM['c_'+c.n]={x:n.px,z:n.pz,label:c.n}});
 AIRPORTS.forEach(a=>{LM['a_'+a.id]={x:a.door.x,z:a.door.z,label:a.n}});
@@ -1950,6 +1964,27 @@ let rain=null;function applyWeather(w){G.weather=w;const night=w==='noite',sunse
   if(wet&&!rain){const n=mobile?1500:3500,pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=(Math.random()-.5)*160;pos[i*3+1]=Math.random()*60;pos[i*3+2]=(Math.random()-.5)*160}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));rain=new THREE.Points(g,new THREE.PointsMaterial({color:0xaab4bd,size:.25,transparent:true,opacity:.6}));scene.add(rain)}if(rain)rain.visible=wet;
   if(car){if(night&&!car.userData.spot){const s=new THREE.SpotLight(0xfff4d0,1.4,90,.5,.6);s.position.set(0,1,-1);s.target.position.set(0,0,-20);car.add(s,s.target);car.userData.spot=s}if(car.userData.spot)car.userData.spot.visible=night}const dark=night||wet;TRAF_DARK=dark;TRAF.forEach(t=>{const m=t.m;if(m&&m.userData.beam){m.userData.beam.material.opacity=dark?.32:0;m.userData.headGlow.opacity=dark?1:0}});if(typeof applyLights==='function'){applyLights();renderIndHud()}}
 
+
+/* ================= CLIMA DE CADA PAÍS: chuva, neve, calor e névoa como lá ================= */
+const CLIMA=(()=>{const C={
+ chuvoso:{rain:.5,fog:0xb8c2c8,far:2600,msg:'🌧️ Está a chover, como é costume aqui.'},
+ frio:{snow:.55,rain:.15,fog:0xd9e2ea,far:2400,msg:'❄️ Está a nevar! Aqui o inverno é a sério.'},
+ alpino:{snow:.3,rain:.2,fog:0xd4dee6,far:3000,msg:'❄️ Neve nas montanhas!'},
+ deserto:{fog:0xe6d3a8,far:2600,sun:0xffe2b0,msg:'☀️ Está muito calor, o ar até treme.'},
+ tropical:{rain:.35,fog:0xc8dccc,far:2800,msg:'🌦️ Calor húmido e aguaceiros tropicais.'},
+ sul:{rain:.08,fog:0xc9dde8,far:3800},
+ normal:{rain:.25,fog:0xbcd8e6,far:3400}};
+ const M={uk:'chuvoso',ie:'chuvoso',nl:'chuvoso',be:'chuvoso',dk:'chuvoso',lu:'chuvoso',no:'frio',se:'frio',fi:'frio',is:'frio',ee:'frio',lv:'frio',lt:'frio',by:'frio',ru:'frio',kz:'frio',kz2:'frio',ca:'frio',
+  ch:'alpino',at:'alpino',li:'alpino',ad:'alpino',si:'alpino',eg:'deserto',ae:'deserto',ma:'deserto',in:'deserto',th:'tropical',sg:'tropical',br:'tropical',mx:'tropical',
+  pt:'sul',es:'sul',it:'sul',gr:'sul',mt:'sul',cy:'sul',tr:'sul',al:'sul',hr:'sul',me:'sul',mc:'sul',sm:'sul',va:'sul',usla:'sul',au:'sul',za:'sul',ar:'sul'};
+ return C[M[REGION_ID]||'normal']})();
+let snow=null;
+function setSnow(on){if(on&&!snow){const n=mobile?1200:2600,pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=(Math.random()-.5)*170;pos[i*3+1]=Math.random()*60;pos[i*3+2]=(Math.random()-.5)*170}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));snow=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:.55,transparent:true,opacity:.9,depthWrite:false}));scene.add(snow)}if(snow)snow.visible=!!on;G.snow=!!on}
+function updSnow(dt){if(!snow||!snow.visible)return;snow.position.set(P.x,P.y,P.z);const a=snow.geometry.attributes.position,t=performance.now()/1000;for(let i=0;i<a.count;i++){let y=a.getY(i)-dt*(3+(i%5));if(y<0)y+=60;a.setY(i,y);a.setX(i,a.getX(i)+Math.sin(t+i)*dt*.6)}a.needsUpdate=true}
+// o tempo do menu "Dia" passa a ser o tempo típico do país (chuva, neve, névoa de calor); os outros ficam como escolheste
+{const AW=applyWeather;applyWeather=function(w){AW(w);if(w!=='noite'&&w!=='por'){scene.fog.color.set(w==='chuva'?0x8b98a2:G.snow?0xdfe6ec:CLIMA.fog);scene.fog.far=w==='chuva'?1500:G.snow?1600:CLIMA.far;if(CLIMA.sun&&w==='dia')sun.color.set(CLIMA.sun)}}}
+function climaStart(){try{if(G.weather!=='dia')return setSnow(false);const r=Math.random();if(CLIMA.snow&&r<CLIMA.snow){setSnow(true);applyWeather('dia');P.wet=true;if(CLIMA.msg)toast(CLIMA.msg,false,3.5)}else if(CLIMA.rain&&r<(CLIMA.snow||0)+CLIMA.rain){setSnow(false);applyWeather('chuva');G.clock=15*3600;toast('🌧️ Está a chover '+emP(REGION_ID).replace(/^(no|na|nos|em) /,m=>m)+'.',false,3)}else{setSnow(false);if(CLIMA.msg&&!CLIMA.snow&&!CLIMA.rain)toast(CLIMA.msg,false,3)}}catch(e){}}
+
 /* ================= CICLO ================= */
 let last=performance.now(),TM=0,uiT=0;const _v=new THREE.Vector3();
 function placeWalkCam(dt){const fx=Math.sin(W.yaw),fz=-Math.cos(W.yaw),tx=W.x-fx*4.6,tz=W.z-fz*4.6,ty=Math.max(W.y+2.4,surfaceAt(tx,tz)+1.2),k=Math.min(1,dt*7);camera.position.x=lerp(camera.position.x,tx,k);camera.position.z=lerp(camera.position.z,tz,k);camera.position.y=lerp(camera.position.y,ty,k);_v.set(W.x+fx*2,W.y+1.5,W.z+fz*2);camera.lookAt(_v);camera.fov=lerp(camera.fov,62,Math.min(1,dt*3));camera.updateProjectionMatrix()}
@@ -1967,7 +2002,7 @@ function loop(now){if(G.state==='office'){last=now;requestAnimationFrame(loop);r
   if(G.state==='play'){updateTraffic(dt);updatePolice(dt);updateTolls();let fv=0;if(W.on){stepWalk(dt);placeWalkCam(dt)}else{fv=stepCar(dt);placeCam(dt,fv)}updateIndicators(dt);updateMission(dt);checkPostais();
     const mk=nearMarker();const pr=$('#prompt');const pu=!W.on&&nearPump(),st=nearStation(),pl=nearPlace(),apn=nearAirport();if(apn){pr.hidden=false;$('#promptT').textContent='✈ '+apn.n+' · comprar um voo'}else if(!W.on&&P.fuel<=0&&!pu){pr.hidden=false;$('#promptT').textContent='Sem combustível · chamar o reboque (25 €)'}else if(W.on&&P.fuel<=0&&nearPump()){pr.hidden=false;$('#promptT').textContent='Comprar jerricã de combustível (9 €)'}else if(pl){pr.hidden=false;$('#promptT').textContent='Entrar: '+pl.name}else if(pu){pr.hidden=false;$('#promptT').textContent='Abastecer ('+Math.round(P.fuel)+'%) · '+pu.price.toFixed(2).replace('.',',')+' €/L'}else if(st){pr.hidden=false;$('#promptT').textContent=trainNearStation(st)?'Apanhar o comboio em '+st.name:'Estação de '+st.name+' · o comboio vem a caminho'}else if(mk){pr.hidden=false;$('#promptT').textContent='Começar: '+mk.m.name}else pr.hidden=true;
     uiT+=dt;if(uiT>.1){uiT=0;$('#kmh').textContent=W.on?0:Math.round(Math.abs(fv)*3.6);$('#gearT').textContent=W.on?'A PÉ':fv<-.5?'R':G.manual?String(G.gear):'D';$('#nitv').style.width=P.nitro+'%';$('#fuelv').style.width=P.fuel+'%';$('#fuelB').classList.toggle('low',P.fuel<15);$('#money').textContent=euro(G.money);$('#clock').textContent=hhmm(G.clock||36000);updateBoard();drawMap($('#mini'),false)}
-    sun.position.set(P.x+150,300,P.z+120);sun.target.position.set(P.x,0,P.z);if(rain){rain.position.set(P.x,P.y,P.z);const a=rain.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-dt*28;if(y<0)y+=60;a.setY(i,y)}a.needsUpdate=true}}
+    sun.position.set(P.x+150,300,P.z+120);sun.target.position.set(P.x,0,P.z);updSnow(dt);if(rain){rain.position.set(P.x,P.y,P.z);const a=rain.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-dt*28;if(y<0)y+=60;a.setY(i,y)}a.needsUpdate=true}}
   else if(G.state==='menu'){updateTraffic(dt);const a=TM*.05;camera.position.set(-150+Math.cos(a)*420,90,500+Math.sin(a)*420);camera.lookAt(-150,10,450);sun.position.set(0,400,300);sun.target.position.set(-150,0,450)}
   if(!G.hub)renderer.render(scene,camera);requestAnimationFrame(loop)}
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
@@ -1986,7 +2021,7 @@ showBest();applyWeather('dia');
 function roomClock(){try{if(window.__C30_SEED__==null)return;const t=(Date.now()+(window.__C30_TIME_OFF__||0))/1000;G.clock=(t*16+((window.__C30_SEED__>>>0)%86400))%86400}catch(e){}}
 function start(){ac();setTimeout(roomClock,0);if(!G.owned.includes(carType))carType=0;if(car)scene.remove(car);car=carModel(carType,PAINT[carColor]);scene.add(car);MEM.set('setup',{c:carType,col:carColor,cam:G.cam});
   Object.assign(P,{x:SPAWN.x,z:SPAWN.z,h:SPAWN.h,vx:0,vz:0,nitro:100,inWater:0,fuel:G.fromFlight?P.fuel:100});P.y=surfaceAt(P.x,P.z);camera.position.set(P.x,P.y+4,P.z+10);if(START&&!G.fromFlight)placeAt(START);applyWeather(G.weather);
-  if(!G.fromFlight)G.clock={dia:10,por:18.6,noite:22,chuva:15}[G.weather]*3600;IND.mode='';IND.lightsAuto=true;if(W.on){W.on=false;if(W.m)W.m.visible=false}G.state='play';G.mission=null;G.target=null;$('#menu').hidden=true;['#tl','#mapw','#spd'].forEach(s=>$(s).hidden=false);if(touchOn)$('#touch').hidden=false;canvas.focus();toast(G.fromFlight?'Bem-vindo '+aoP(REGION_ID)+' '+RG.flag+(G.byRoad?'! Entraste de carro pela fronteira.':'! Chegaste de avião.'):'Bem-vindo a '+(START?START.t:(G.pickName||RG.start||RG.name))+'! Os marcadores coloridos são missões e ✈ são aeroportos.',false,4)}
+  if(!G.fromFlight)G.clock={dia:10,por:18.6,noite:22,chuva:15}[G.weather]*3600;climaStart();IND.mode='';IND.lightsAuto=true;if(W.on){W.on=false;if(W.m)W.m.visible=false}G.state='play';G.mission=null;G.target=null;$('#menu').hidden=true;['#tl','#mapw','#spd'].forEach(s=>$(s).hidden=false);if(touchOn)$('#touch').hidden=false;canvas.focus();toast(G.fromFlight?'Bem-vindo '+aoP(REGION_ID)+' '+RG.flag+(G.byRoad?'! Entraste de carro pela fronteira.':'! Chegaste de avião.'):'Bem-vindo a '+(START?START.t:(G.pickName||RG.start||RG.name))+'! Os marcadores coloridos são missões e ✈ são aeroportos.',false,4)}
 function pause(){if(G.state!=='play')return;G.state='pause';$('#pause').hidden=false;$('#pauseInfo').textContent='Saldo '+euro(G.money)+' · entregas '+G.stats.entregas+' · corridas '+G.stats.corridas+' · turnos de táxi '+G.stats.taxis+' · postais '+Object.keys(G.post).length+'/'+POSTAIS.length;$('#touch').hidden=true;if(engG)engG.gain.value=0}
 function resume(){if(G.state!=='pause')return;G.state='play';$('#pause').hidden=true;if(touchOn)$('#touch').hidden=false;canvas.focus()}
 $('#go').onclick=start;
