@@ -157,6 +157,7 @@ body.touch #hudBtns{display:flex;top:auto;bottom:calc(200px + env(safe-area-inse
 .back{background:none;border:0;color:var(--mute);font-family:var(--f-display);font-weight:700;letter-spacing:.12em;font-size:14px;padding:4px 0}
 .back:hover{color:var(--chalk)}
 .card.wide{width:min(860px,calc(100% - 32px))}
+.card>*{flex-shrink:0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .two>div{min-width:0}
 .tblwrap{overflow-x:auto;margin-top:6px}
@@ -194,6 +195,7 @@ body.touch #hudBtns{display:flex;top:auto;bottom:calc(200px + env(safe-area-inse
 .carpick{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .chip{padding:6px 10px;border-radius:4px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-family:var(--f-display);font-weight:700;font-size:15px}
 .chip.sel{border-color:var(--amber);background:rgba(255,182,39,.15)}
+.bonusline{padding:8px 12px;border-radius:5px;background:rgba(95,211,138,.12);border:1px solid rgba(95,211,138,.35);font-size:14px}
 .pos{font-family:var(--f-display);font-weight:700;font-size:15px;color:var(--amber);margin-top:4px;min-height:1em}
 .dmg{display:flex;align-items:center;gap:8px;margin-top:8px;font-family:var(--f-display);font-weight:700;font-size:11px;letter-spacing:.12em;color:var(--mute)}
 .dmg .bar{flex:1;height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
@@ -375,6 +377,22 @@ const THEMES = {
     road: { base: '#dfe6ee', dark: '#9fb0c2', light: '#f8fbfd', stone: '#c1ccd8' },
     dust: 0xffffff, dustAmt: 1.5, flora: 'snow', trees: 3800, rocks: 160, hills: 46, hillScale: 400, width: 8.6, snowbank: true, night: false
   },
+  asfalto: {
+    surface: 'Asfalto', grip: 1.16, offGrip: 0.66,
+    skyTop: 0x4f8ed8, skyHor: 0xdfe6e8, fog: 0xcfd9dc, fogNear: 90, fogFar: 680,
+    sunColor: 0xfff4dc, sunInt: 1.1, sunDir: [0.4, 0.75, 0.4], hemiSky: 0xc8dcff, hemiGround: 0x5c5a44, hemiInt: 0.6,
+    ground: [0x587a34, 0x7a8a40, 0x8a7a56], rock: 0x8a857a, shoulder: 0x6f6a5c, leaf: [0.18, 0.27, 0.35],
+    road: { base: '#4b4d50', dark: '#2f3133', light: '#6a6c70', stone: '#3c3e41', tarmac: true },
+    dust: 0x9a9a9a, dustAmt: 0.12, flora: 'forest', trees: 3600, rocks: 300, hills: 40, hillScale: 420, width: 7.6, snowbank: false, night: false, broadShare: 0.5
+  },
+  lama: {
+    surface: 'Lama', grip: 0.78, offGrip: 0.55,
+    skyTop: 0x7d8fa6, skyHor: 0xc9ced2, fog: 0xbcc3c6, fogNear: 50, fogFar: 480,
+    sunColor: 0xf0eee6, sunInt: 0.75, sunDir: [0.3, 0.6, 0.5], hemiSky: 0xc4ccd8, hemiGround: 0x3e3424, hemiInt: 0.65,
+    ground: [0x3f5a28, 0x52662e, 0x5a4630], rock: 0x6a645a, shoulder: 0x5a4430, leaf: [0.2, 0.3, 0.3],
+    road: { base: '#5e4630', dark: '#3e2c1c', light: '#7a5e44', stone: '#4a3828' },
+    dust: 0x5a4632, dustAmt: 1.3, flora: 'forest', trees: 4000, rocks: 200, hills: 30, hillScale: 380, width: 8, snowbank: false, night: false
+  },
   noite: {
     surface: 'Gravilha · noite', grip: 0.96, offGrip: 0.70,
     skyTop: 0x04060c, skyHor: 0x172233, fog: 0x0c121b, fogNear: 25, fogFar: 300,
@@ -405,12 +423,20 @@ const STAGES = [
   { id: 's4', pec: 4, name: 'Mata Escura', theme: 'noite', seed: 4404, len: 3700, twist: 0.6, hairpin: 0.07, bound: 650, jumps: 2 },
   { id: 's5', pec: 5, name: 'Vale Dourado', theme: 'outono', seed: 6110, len: 4000, twist: 0.5, hairpin: 0.05, bound: 680, jumps: 3 },
   { id: 's6', pec: 6, name: 'Savana Larga', theme: 'savana', seed: 3321, len: 4800, twist: 0.34, hairpin: 0.02, bound: 760, jumps: 4, rain: false },
+  { id: 's7', pec: 7, name: 'Estrada da Madeira', theme: 'asfalto', seed: 7071, len: 4200, twist: 0.6, hairpin: 0.08, bound: 680, jumps: 1 },
+  { id: 's8', pec: 8, name: 'Lamaçal do Norte', theme: 'lama', seed: 8128, len: 3600, twist: 0.55, hairpin: 0.06, bound: 650, jumps: 2 },
+  { id: 's9', pec: 9, name: 'Dunas do Sul', theme: 'namibe', seed: 9191, len: 5200, twist: 0.3, hairpin: 0.01, bound: 800, jumps: 5 },
+  { id: 's10', pec: 10, name: 'Encosta do Douro', theme: 'outono', seed: 1010, len: 3900, twist: 0.58, hairpin: 0.07, bound: 660, jumps: 2, rain: true },
+  { id: 's11', pec: 11, name: 'Asfalto Molhado', theme: 'asfalto', seed: 1111, len: 3800, twist: 0.62, hairpin: 0.07, bound: 660, jumps: 1, rain: true },
+  { id: 's12', pec: 12, name: 'Fiorde Branco', theme: 'gelo', seed: 1212, len: 4400, twist: 0.45, hairpin: 0.04, bound: 720, jumps: 3 },
+  { id: 's13', pec: 13, name: 'Cacimbo', theme: 'savana', seed: 1313, len: 4000, twist: 0.5, hairpin: 0.05, bound: 700, jumps: 3, rain: true },
+  { id: 's14', pec: 14, name: 'Breu Total', theme: 'noite', seed: 1414, len: 4100, twist: 0.65, hairpin: 0.09, bound: 680, jumps: 2, rain: true },
 ];
 const RANDOM_NAMES = ['Vale do Lobo', 'Alto da Chela', 'Ribeira Funda', 'Monte Cuca', 'Lagoa Seca', 'Pedra Furada', 'Curva do Diabo', 'Planalto Ventoso'];
 function randomStage() {
   const r = Math.random, themes = Object.keys(THEMES);
   const theme = themes[Math.floor(r() * themes.length)];
-  return { id: 'rnd', pec: '?', name: RANDOM_NAMES[Math.floor(r() * RANDOM_NAMES.length)], theme, seed: 1 + Math.floor(r() * 99999), len: 3600 + Math.floor(r() * 1400), twist: 0.4 + r() * 0.25, hairpin: 0.03 + r() * 0.06, bound: 700, jumps: 2 + Math.floor(r() * 3), rain: theme !== 'gelo' && theme !== 'namibe' && r() < 0.25, random: true };
+  return { id: 'rnd', pec: '?', name: RANDOM_NAMES[Math.floor(r() * RANDOM_NAMES.length)], theme, seed: 1 + Math.floor(r() * 99999), len: 3600 + Math.floor(r() * 1400), twist: 0.4 + r() * 0.25, hairpin: 0.03 + r() * 0.06, bound: 700, jumps: 2 + Math.floor(r() * 3), rain: theme !== 'gelo' && theme !== 'namibe' && theme !== 'lama' && r() < 0.25, random: true };
 }
 const LIVERIES = [
   { name: 'Atlântico', base: '#f1f1ec', a: '#1f4fa3', b: '#e8b923' },
@@ -429,6 +455,13 @@ const CARS = [
   { id: 'mistral', name: 'Mistral R4', cls: 'R4', cv: 265, tq: 380, mass: 1230, grip: 1.02, front: 0.45, price: 82000, shape: { len: 4.1, wid: 1.78, hgt: 1.0, wing: 1 }, desc: 'Primeiro 4x4 a sério. Tração em todo o lado.' },
   { id: 'atlas', name: 'Atlas Rally2', cls: 'Rally2', cv: 290, tq: 420, mass: 1230, grip: 1.05, front: 0.45, price: 135000, shape: { len: 4.1, wid: 1.82, hgt: 1.0, wing: 1 }, desc: 'A arma dos campeonatos internacionais.' },
   { id: 'corvo', name: 'Corvo WRC', cls: 'WRC', cv: 380, tq: 470, mass: 1190, grip: 1.08, front: 0.45, price: 230000, shape: { len: 4.2, wid: 1.86, hgt: 0.98, wing: 1 }, desc: 'Topo de gama do Mundial. Aerodinâmica e motor turbo enorme.' },
+  { id: 'pardal', name: 'Pardal 1.0', cls: 'R1', cv: 75, tq: 100, mass: 820, grip: 0.92, front: 1, price: 6000, shape: { len: 3.4, wid: 1.56, hgt: 1.06, wing: 0 }, desc: 'O mais barato de todos. Leve como uma pena e lento como uma pena.' },
+  { id: 'sardinha', name: 'Sardinha 1600', cls: 'Clássico', cv: 160, tq: 190, mass: 960, grip: 0.93, front: 0, price: 22000, shape: { len: 3.9, wid: 1.6, hgt: 1.06, wing: 0 }, desc: 'Clássico dos anos 70 com tração atrás. Barato e cheio de alma.' },
+  { id: 'cabrito', name: 'Cabrito R3', cls: 'R3', cv: 210, tq: 270, mass: 1080, grip: 1.01, front: 1, price: 38000, shape: { len: 4.0, wid: 1.76, hgt: 0.99, wing: 1 }, desc: 'O melhor tração à frente: diferencial autoblocante e caixa sequencial.' },
+  { id: 'faisca', name: 'Faísca Kit Car', cls: 'Kit Car', cv: 255, tq: 260, mass: 990, grip: 1.04, front: 1, price: 70000, shape: { len: 3.95, wid: 1.84, hgt: 0.96, wing: 1 }, desc: 'Leve, largo e com motor que grita. Em asfalto bate os 4x4.' },
+  { id: 'lobo', name: 'Lobo Grupo A', cls: 'Grupo A', cv: 300, tq: 440, mass: 1260, grip: 1.03, front: 0.42, price: 160000, shape: { len: 4.3, wid: 1.8, hgt: 1.02, wing: 1 }, desc: 'O 4x4 turbo dos anos 90. Robusto e rápido em qualquer piso.' },
+  { id: 'kudu', name: 'Kudu Raid 4x4', cls: 'T1', cv: 360, tq: 560, mass: 1650, grip: 1.06, front: 0.48, price: 200000, shape: { len: 4.7, wid: 1.96, hgt: 1.14, wing: 0 }, desc: 'Pick-up de rali-raide. Pesada, mas passa por cima de tudo.' },
+  { id: 'aguia', name: 'Águia Rally1 Híbrido', cls: 'Rally1', cv: 520, tq: 560, mass: 1260, grip: 1.1, front: 0.45, price: 520000, shape: { len: 4.25, wid: 1.88, hgt: 0.96, wing: 2 }, desc: 'O carro mais rápido do Mundial atual: turbo mais motor elétrico.' },
   { id: 'furacao', name: 'Furacão B', cls: 'Grupo B', cv: 500, tq: 520, mass: 1100, grip: 1.03, front: 0.38, price: 360000, shape: { len: 4.0, wid: 1.86, hgt: 0.94, wing: 2 }, desc: 'Monstro dos anos 80. Potência a mais, juízo a menos.' },
 ];
 const carById = id => CARS.find(c => c.id === id) || CARS[0];
@@ -438,17 +471,29 @@ const driveName = c => c.front === 1 ? 'Tração à frente' : c.front === 0 ? 'T
 /* championships: each rally is three special stages */
 const CHAMPS = [
   {
-    id: 'nac', name: 'Campeonato Nacional', scope: 'Portugal', mult: 1, botCars: [0, 0, 1, 1, 2, 3], skill: [0.97, 1.15], unlock: null,
+    id: 'nac', name: 'Campeonato Nacional', scope: 'Portugal', mult: 1, fee: 600, botCars: [0, 0, 1, 1, 2, 3], skill: [0.97, 1.15], unlock: null,
     bots: [['Tiago Ferraz', 'PT'], ['Inês Sobral', 'PT'], ['Duarte Lobo', 'PT'], ['Marta Quintas', 'PT'], ['Hugo Barreiros', 'PT'], ['Sara Pinho', 'PT'], ['Nuno Calado', 'PT'], ['Joana Viegas', 'PT'], ['Paulo Freixo', 'PT'], ['Bruno Teles', 'PT'], ['Carla Mourão', 'PT']],
     rallies: [
       { name: 'Rali da Figueira', place: 'Figueira da Foz', theme: 'serra', seed: 101, stages: [['Serra da Boa Viagem', 3000], ['Quiaios', 2800], ['Tavarede', 3200]] },
       { name: 'Rali do Alentejo', place: 'Mértola', theme: 'savana', seed: 202, stages: [['Montado', 3400], ['Guadiana', 3000], ['Planície', 3600]] },
       { name: 'Rali da Serra da Estrela', place: 'Seia', theme: 'gelo', seed: 303, stages: [['Torre', 2800], ['Lagoa Comprida', 3000], ['Sabugueiro', 2600]] },
       { name: 'Rali do Minho', place: 'Ponte de Lima', theme: 'noite', seed: 404, rain: true, stages: [['Lima à noite', 2800], ['Arcos', 3000], ['Soajo', 3000]] },
+      { name: 'Rali Vinho da Madeira', place: 'Funchal', theme: 'asfalto', seed: 405, stages: [['Paul da Serra', 3000], ['Encumeada', 2800], ['Boaventura', 3200]] },
     ]
   },
   {
-    id: 'eur', name: 'Europeu de Ralis', scope: 'Europa', mult: 2.5, botCars: [2, 3, 4, 4, 5, 5], skill: [0.94, 1.09], unlock: { champ: 'nac', pos: 3 },
+    id: 'lus', name: 'Taça Lusófona', scope: 'Angola, Moçambique, Brasil, Cabo Verde', mult: 1.6, botCars: [1, 2, 10, 3, 4, 4], skill: [0.96, 1.12], unlock: { champ: 'nac', pos: 5 }, fee: 1500,
+    bots: [['Mateus Gonga', 'AO'], ['Edson Tembe', 'MZ'], ['Rafaela Lins', 'BR'], ['Nelson Fortes', 'CV'], ['Domingos Cassule', 'AO'], ['Lucas Andrade', 'BR'], ['Inocência Mabote', 'MZ'], ['Paulo Kiluange', 'AO'], ['Júlia Barreto', 'BR'], ['Admilson Tavares', 'CV'], ['Teresa Nhaca', 'MZ']],
+    rallies: [
+      { name: 'Rali de Luanda', place: 'Angola', theme: 'savana', seed: 711, stages: [['Cacuaco', 3200], ['Funda', 3000], ['Kifangondo', 3400]] },
+      { name: 'Rali de Maputo', place: 'Moçambique', theme: 'lama', seed: 722, rain: true, stages: [['Marracuene', 3000], ['Boane', 2800], ['Namaacha', 3200]] },
+      { name: 'Rali da Serra Gaúcha', place: 'Brasil', theme: 'serra', seed: 733, stages: [['Erechim', 3400], ['Três Arroios', 3000], ['Paulo Bento', 3200]] },
+      { name: 'Rali de Santiago', place: 'Cabo Verde', theme: 'asfalto', seed: 744, stages: [['Assomada', 3000], ['Serra Malagueta', 3200], ['Tarrafal', 2800]] },
+      { name: 'Rali do Huambo à Noite', place: 'Angola', theme: 'noite', seed: 755, stages: [['Caála', 3000], ['Bailundo', 3200], ['Chianga', 3000]] },
+    ]
+  },
+  {
+    id: 'eur', name: 'Europeu de Ralis', scope: 'Europa', mult: 2.5, fee: 3500, botCars: [2, 10, 3, 4, 11, 5], skill: [0.94, 1.09], unlock: { champ: 'nac', pos: 3 },
     bots: [['Javier Ortún', 'ES'], ['Lukas Brenner', 'DE'], ['Matteo Rinaldi', 'IT'], ['Anna Kowalska', 'PL'], ['Pierre Dumas', 'FR'], ['Aino Laaksonen', 'FI'], ['Sofia Lindqvist', 'SE'], ['Tomás Král', 'CZ'], ['Elena Vidal', 'ES'], ['Jonas Berg', 'NO'], ['Ivan Horvat', 'HR']],
     rallies: [
       { name: 'Rali de Espanha', place: 'Catalunha', theme: 'outono', seed: 511, stages: [['Coll de Bracons', 3200], ['La Riba', 3000], ['Savallà', 3400]] },
@@ -456,10 +501,12 @@ const CHAMPS = [
       { name: 'Rali da Sardenha', place: 'Itália', theme: 'namibe', seed: 533, stages: [['Monte Lerno', 3400], ['Tula', 3000], ['Coiluna', 3600]] },
       { name: 'Rali da Polónia', place: 'Masúria', theme: 'serra', seed: 544, rain: true, stages: [['Mikołajki', 3200], ['Baranowo', 3000], ['Świętajno', 3400]] },
       { name: 'Rali da Croácia', place: 'Zagreb', theme: 'noite', seed: 555, stages: [['Kostanjevac', 3000], ['Platak', 3000], ['Ravna Gora', 3200]] },
+      { name: 'Rali de Ypres', place: 'Bélgica', theme: 'asfalto', seed: 566, rain: true, stages: [['Kemmelberg', 3000], ['Hollebeke', 2800], ['Westouter', 3200]] },
+      { name: 'Rali de Gales', place: 'Reino Unido', theme: 'lama', seed: 577, rain: true, stages: [['Hafren', 3400], ['Sweet Lamb', 3000], ['Brenig', 3200]] },
     ]
   },
   {
-    id: 'mun', name: 'Mundial de Ralis', scope: 'Mundo', mult: 5, botCars: [4, 5, 5, 6, 6, 7], skill: [0.93, 1.06], unlock: { champ: 'eur', pos: 3 },
+    id: 'mun', name: 'Mundial de Ralis', scope: 'Mundo', mult: 5, fee: 9000, botCars: [5, 11, 6, 6, 14, 13], skill: [0.93, 1.06], unlock: { champ: 'eur', pos: 3 },
     bots: [['Kenji Arai', 'JP'], ['Amani Otieno', 'KE'], ['Pedro Kiala', 'AO'], ['Oliver Grant', 'GB'], ['Lucas Moreau', 'FR'], ['Ana Valente', 'PT'], ['Erik Halvorsen', 'NO'], ['Diego Salas', 'MX'], ['Hiro Tanabe', 'JP'], ['Mateus Gonga', 'AO'], ['Chloe Barton', 'AU']],
     rallies: [
       { name: 'Safari Rali', place: 'Quénia', theme: 'savana', seed: 611, stages: [['Naivasha', 3600], ['Soysambu', 3400], ['Hell’s Gate', 3800]] },
@@ -468,13 +515,18 @@ const CHAMPS = [
       { name: 'Rali do Namibe', place: 'Angola', theme: 'namibe', seed: 644, stages: [['Tômbwa', 3800], ['Iona', 3600], ['Curoca', 4000]] },
       { name: 'Rali de Portugal', place: 'Arganil', theme: 'serra', seed: 655, stages: [['Góis', 3400], ['Lousã', 3200], ['Arganil', 3600]] },
       { name: 'Rali da Austrália', place: 'Nova Gales do Sul', theme: 'noite', seed: 666, stages: [['Coffs à noite', 3200], ['Nambucca', 3000], ['Wedding Bells', 3400]] },
+      { name: 'Rali de Monte Carlo', place: 'Mónaco e Alpes', theme: 'asfalto', seed: 677, stages: [['Col de Turini', 3400], ['La Bollène', 3000], ['Sospel', 3200]] },
+      { name: 'Rali do Chile', place: 'Concepción', theme: 'lama', seed: 688, stages: [['Bio Bío', 3400], ['Pulpería', 3200], ['Lircay', 3600]] },
     ]
   }
 ];
-const FLAG = { PT: 'Portugal', ES: 'Espanha', DE: 'Alemanha', IT: 'Itália', PL: 'Polónia', FR: 'França', FI: 'Finlândia', SE: 'Suécia', CZ: 'Chéquia', NO: 'Noruega', HR: 'Croácia', JP: 'Japão', KE: 'Quénia', AO: 'Angola', GB: 'Reino Unido', MX: 'México', AU: 'Austrália' };
+const FLAG = { MZ: 'Moçambique', BR: 'Brasil', CV: 'Cabo Verde', PT: 'Portugal', ES: 'Espanha', DE: 'Alemanha', IT: 'Itália', PL: 'Polónia', FR: 'França', FI: 'Finlândia', SE: 'Suécia', CZ: 'Chéquia', NO: 'Noruega', HR: 'Croácia', JP: 'Japão', KE: 'Quénia', AO: 'Angola', GB: 'Reino Unido', MX: 'México', AU: 'Austrália' };
 const POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const PRIZE = [12000, 8000, 6000, 4500, 3500, 2800, 2200, 1700, 1300, 1000, 800, 600];
 const CHAMP_BONUS = [30000, 18000, 10000];
+const SPONSOR = [1500, 900, 600];        // patrocinador: bónus por vitória ou pódio numa PEC
+const POWER = [5, 4, 3, 2, 1];             // Power Stage: pontos extra na última PEC de cada rali
+const CHAMP_ORDER = ['nac', 'lus', 'eur', 'mun'];
 const DIFF = [{ name: 'Fácil', k: 1.1 }, { name: 'Normal', k: 1.0 }, { name: 'Difícil', k: 0.955 }];
 function rallyStageDef(ci, ri, si) {
   const ch = CHAMPS[ci], ra = ch.rallies[ri], st = ra.stages[si];
@@ -553,6 +605,10 @@ function roadTexture(c) {
       g.globalAlpha = 0.35 + r() * 0.5; g.fillRect(x, y, s, s * (0.6 + r() * 0.8));
     }
     g.globalAlpha = 1;
+    if (c.tarmac) { // white edge lines and a dashed centre line
+      g.fillStyle = 'rgba(240,240,236,.9)'; g.fillRect(w * 0.035, 0, w * 0.025, h); g.fillRect(w * 0.94, 0, w * 0.025, h);
+      g.fillStyle = 'rgba(240,230,200,.8)'; g.fillRect(w * 0.49, 0, w * 0.02, h * 0.45);
+    }
   }, true);
 }
 function textTex(text, opts = {}) {
@@ -1537,7 +1593,7 @@ function champField(ci) {
     return { name, nat, car, skill: lerp(ch.skill[0], ch.skill[1], f) * (1 + (r() - 0.5) * 0.015) };
   });
 }
-function fieldForCar(c) { const k = carIdx(c.id); return k <= 2 ? 0 : k <= 5 ? 1 : 2; }
+function fieldForCar(c) { return c.cv <= 190 ? 0 : c.cv <= 300 ? 2 : 3; }
 function botTimes(field, key) {
   const r = mulberry32(hashStr(key)), dk = DIFF[career.diff].k;
   return field.map(b => {
@@ -1620,8 +1676,8 @@ function on(id, fn) { const el = $(id); if (el) el.addEventListener('click', fn)
 function resTable(rows, showGapTo, opts = {}) {
   const lead = rows[0].t; const lim = opts.limit || 12; let out = rows.slice(0, lim); const meI = rows.findIndex(r => r.me);
   if (meI >= lim) out = out.slice(0, lim - 1).concat([rows[meI]]);
-  return `<div class="tblwrap"><table class="res num"><thead><tr><th>#</th><th>Piloto</th><th class="hide-s">Carro</th><th>Tempo</th><th>Dif.</th>${opts.pts ? '<th>Pts</th>' : ''}</tr></thead><tbody>` +
-    out.map(r => { const p = rows.indexOf(r) + 1; return `<tr class="${r.me ? 'me' : ''}"><td>${p}</td><td>${esc(r.name)}${r.nat ? ` <small>${r.nat}</small>` : ''}${r.note ? ` <em>${esc(r.note)}</em>` : ''}</td><td class="hide-s">${esc(carById(r.car).name)}</td><td>${fmt(r.t)}</td><td>${p === 1 ? '—' : '+' + (r.t - lead).toFixed(1)}</td>${opts.pts ? `<td>${POINTS[p - 1] ? '+' + POINTS[p - 1] : ''}</td>` : ''}</tr>`; }).join('') + '</tbody></table></div>';
+  return `<div class="tblwrap"><table class="res num"><thead><tr><th>#</th><th>Piloto</th>${opts.pts ? '' : '<th class="hide-s">Carro</th>'}<th>Tempo</th><th>Dif.</th>${opts.pts ? '<th>Pts</th>' : ''}</tr></thead><tbody>` +
+    out.map(r => { const p = rows.indexOf(r) + 1; return `<tr class="${r.me ? 'me' : ''}"><td>${p}</td><td>${esc(r.name)}${r.nat ? ` <small>${r.nat}</small>` : ''}${r.note ? ` <em>${esc(r.note)}</em>` : ''}</td>${opts.pts ? '' : `<td class="hide-s">${esc(carById(r.car).name)}</td>`}<td>${fmt(r.t)}</td><td>${p === 1 ? '—' : '+' + (r.t - lead).toFixed(1)}</td>${opts.pts ? `<td>${POINTS[p - 1] ? '+' + POINTS[p - 1] : ''}</td>` : ''}</tr>`; }).join('') + '</tbody></table></div>';
 }
 function standTable(pts, meName = 'Tu') {
   const rows = Object.entries(pts).sort((a, b) => b[1] - a[1]);
@@ -1642,17 +1698,22 @@ function showStageResult() {
       race.applied = true;
       for (const r of R.res) sess.total[r.name] = (sess.total[r.name] || 0) + r.t;
       sess.damage = 0; // service park between stages
-      career.cur = { ci: sess.ci, ri: sess.ri, si: sess.si + 1, total: sess.total }; saveCareer();
+      race.bonus = R.pos <= 3 ? Math.round(SPONSOR[R.pos - 1] * CHAMPS[sess.ci].mult) : 0;
+      career.money += race.bonus; sess.bonus = (sess.bonus || 0) + race.bonus;
+      career.cur = { ci: sess.ci, ri: sess.ri, si: sess.si + 1, total: sess.total, bonus: sess.bonus }; saveCareer();
     }
+    const isPower = sess.si >= CHAMPS[sess.ci].rallies[sess.ri].stages.length - 1;
     const overall = Object.entries(sess.total).map(([name, t]) => { const src = R.res.find(r => r.name === name) || {}; return { name, t, me: name === 'Tu', car: src.car || 'bica', nat: src.nat }; }).sort((a, b) => a.t - b.t);
     const last = sess.si >= CHAMPS[sess.ci].rallies[sess.ri].stages.length - 1;
-    openPanel(head + `<div class="two"><div><div class="lbl">Tempos da PEC</div>${resTable(R.res)}</div><div><div class="lbl">Geral do rali após a PEC ${def.pec}</div>${resTable(overall)}</div></div>
+    const extra = (race.bonus ? `<div class="bonusline">Bónus do patrocinador pelo ${ordinal(R.pos)} lugar na PEC: <b>+${money(race.bonus)}</b></div>` : '') + (isPower ? `<div class="bonusline">Power Stage: os 5 mais rápidos desta PEC ganham pontos extra (5, 4, 3, 2, 1)${R.pos <= 5 ? ` · tu ganhas <b>+${POWER[R.pos - 1]}</b>` : ''}.</div>` : '');
+    openPanel(head + extra + `<div class="two"><div><div class="lbl">Tempos ${isPower ? 'da Power Stage' : 'da PEC'}</div>${resTable(R.res)}</div><div><div class="lbl">Geral do rali após a PEC ${def.pec}</div>${resTable(overall)}</div></div>
       <div class="btns"><button class="btn" id="bReplay">Ver repetição</button><button class="btn pri" id="bNext">${last ? 'Classificação final' : 'Parque de assistência → PEC ' + (def.pec + 1)}</button></div>`, true);
     on('bReplay', () => startReplay(showStageResult));
     on('bNext', () => { if (last) finishRally(overall); else { toast('Parque de assistência: carro reparado'); Voice.say(['servico'], true); startCareerStage(sess.ci, sess.ri, sess.si + 1, sess); } });
   } else {
-    const prev = race.prevBest;
-    openPanel(head + `<div class="lbl">Contra os pilotos ${['do Nacional', 'do Europeu', 'do Mundial'][fieldForCar(curCar())]}</div>${resTable(R.res)}
+    const prev = race.prevBest, fk = fieldForCar(curCar());
+    if (!race.applied) { race.applied = true; race.bonus = R.pos <= 3 ? Math.round([800, 500, 300][R.pos - 1] * [1, 1.6, 2.5, 5][fk]) : 0; career.money += race.bonus; saveCareer(); }
+    openPanel(head + (race.bonus ? `<div class="bonusline">Prova regional: prémio de <b>${money(race.bonus)}</b> pelo ${ordinal(R.pos)} lugar.</div>` : `<div class="keys">Na prova rápida só os 3 primeiros levam prémio (como nas provas regionais).</div>`) + `<div class="lbl">Contra os pilotos ${['do Nacional', 'da Taça Lusófona', 'do Europeu', 'do Mundial'][fieldForCar(curCar())]}</div>${resTable(R.res)}
       <div class="keys">Recorde anterior: ${prev ? fmt(prev.total) : 'primeira passagem'} · Carro: ${esc(curCar().name)}</div>
       <div class="btns"><button class="btn pri" id="bRetry">Repetir</button><button class="btn" id="bReplay">Ver repetição</button><button class="btn" id="bMenu">Menu</button></div>`, true);
     on('bRetry', () => beginStage(S.def, { mode: 'quick' }));
@@ -1670,6 +1731,8 @@ function finishRally(overall) {
   const sess = session, ch = CHAMPS[sess.ci], cs = career.champs[ch.id];
   const pos = overall.findIndex(r => r.me) + 1;
   overall.forEach((r, i) => { cs.pts[r.name] = (cs.pts[r.name] || 0) + (POINTS[i] || 0); });
+  const powerRes = race.result.res.slice(0, 5); powerRes.forEach((r, i) => { cs.pts[r.name] = (cs.pts[r.name] || 0) + POWER[i]; });
+  const myPower = powerRes.findIndex(r => r.me) + 1;
   const prize = Math.round((PRIZE[pos - 1] || 300) * ch.mult);
   career.money += prize; cs.round++; career.cur = null;
   let champEnd = '';
@@ -1677,13 +1740,14 @@ function finishRally(overall) {
     const stand = Object.entries(cs.pts).sort((a, b) => b[1] - a[1]); const fpos = stand.findIndex(s => s[0] === 'Tu') + 1;
     cs.done = true; cs.best = Math.min(cs.best || 99, fpos);
     const bonus = Math.round((CHAMP_BONUS[fpos - 1] || 0) * ch.mult); career.money += bonus;
-    champEnd = `<div class="champend ${fpos === 1 ? 'gold' : ''}"><div class="lbl">${esc(ch.name)} · fim da época</div><div class="bigpos">${fpos === 1 ? 'Campeão!' : ordinal(fpos) + ' lugar'}</div>${bonus ? `<div>Prémio do campeonato: <b>${money(bonus)}</b></div>` : ''}${fpos <= 3 && CHAMPS[sess.ci + 1] ? `<div>Desbloqueaste o <b>${esc(CHAMPS[sess.ci + 1].name)}</b>.</div>` : ''}</div>`;
+    champEnd = `<div class="champend ${fpos === 1 ? 'gold' : ''}"><div class="lbl">${esc(ch.name)} · fim da época</div><div class="bigpos">${fpos === 1 ? 'Campeão!' : ordinal(fpos) + ' lugar'}</div>${bonus ? `<div>Prémio do campeonato: <b>${money(bonus)}</b></div>` : ''}${CHAMPS.filter(c => c.unlock && c.unlock.champ === ch.id && fpos <= c.unlock.pos).map(c => `<div>Desbloqueaste: <b>${esc(c.name)}</b>.</div>`).join('')}</div>`;
     if (fpos === 1) Voice.say(['campeao'], true); else if (fpos <= 3) Voice.say(['pod'], true);
   } else if (pos <= 3) Voice.say(['pod'], true);
   saveCareer();
   const ra = ch.rallies[sess.ri];
   openPanel(`<div class="lbl">${esc(ch.name)} · rali ${sess.ri + 1} de ${ch.rallies.length}</div><h2>${esc(ra.name)}</h2>
-    <div class="sumrow"><div><div class="lbl">Classificação final</div><div class="bigpos num">${ordinal(pos)}<small>/${overall.length}</small></div></div><div><div class="lbl">Prémio</div><div class="bigtime num">${money(prize)}</div></div></div>
+    <div class="sumrow"><div><div class="lbl">Classificação final</div><div class="bigpos num">${ordinal(pos)}<small>/${overall.length}</small></div></div><div><div class="lbl">Prémio do rali</div><div class="bigtime num">${money(prize)}</div></div></div>
+    <div class="keys">Ganhaste ${POINTS[pos - 1] || 0} pontos pela classificação${myPower ? ` e ${POWER[myPower - 1]} na Power Stage` : ''}. Bónus do patrocinador neste rali: ${money(sess.bonus || 0)}. Inscrição paga: ${money(sess.fee || 0)}.</div>
     ${champEnd}
     <div class="two"><div><div class="lbl">Final do rali</div>${resTable(overall, true, { pts: true })}</div><div><div class="lbl">Campeonato</div>${standTable(cs.pts)}</div></div>
     <div class="btns"><button class="btn pri" id="bCareer">Continuar</button></div>`, true);
@@ -1694,15 +1758,15 @@ function champUnlocked(ci) { const u = CHAMPS[ci].unlock; if (!u) return true; c
 function ensureChamp(ci) { const ch = CHAMPS[ci]; if (!career.champs[ch.id]) career.champs[ch.id] = { round: 0, pts: {}, done: false, season: 0 }; const cs = career.champs[ch.id]; if (!Object.keys(cs.pts).length) { champField(ci).forEach(b => cs.pts[b.name] = 0); cs.pts['Tu'] = 0; } return cs; }
 function showCareer() {
   state = 'menu'; $('menu').hidden = true; $('hud').hidden = true; $('touch').hidden = true; $('replayBar').hidden = true;
-  const cards = CHAMPS.map((ch, ci) => {
+  const cards = CHAMP_ORDER.map(id => CHAMPS.findIndex(c => c.id === id)).map(ci => { const ch = CHAMPS[ci];
     const unl = champUnlocked(ci), cs = career.champs[ch.id];
     let status, btn = '';
-    if (!unl) { status = `Bloqueado: acaba nos 3 primeiros do ${CHAMPS[ci - 1].name}.`; }
+    if (!unl) { const u = ch.unlock; status = `Bloqueado: acaba nos ${u.pos} primeiros do ${CHAMPS.find(c => c.id === u.champ).name}.`; }
     else if (career.cur && career.cur.ci === ci) { status = `A meio do ${esc(ch.rallies[career.cur.ri].name)} · PEC ${career.cur.si + 1}`; btn = `<button class="btn pri" data-go="${ci}">Continuar rali</button>`; }
     else if (cs && cs.done) { status = `Época terminada · ${cs.best === 1 ? 'Campeão' : 'melhor: ' + ordinal(cs.best)}`; btn = `<button class="btn" data-new="${ci}">Nova época</button>`; }
     else if (cs && cs.round > 0) { const st = Object.entries(cs.pts).sort((a, b) => b[1] - a[1]); status = `Rali ${cs.round + 1} de ${ch.rallies.length} · ${ordinal(st.findIndex(s => s[0] === 'Tu') + 1)} com ${cs.pts['Tu'] || 0} pts`; btn = `<button class="btn pri" data-go="${ci}">${esc(ch.rallies[cs.round].name)}</button>`; }
     else { status = `${ch.rallies.length} ralis · ${ch.rallies.length * 3} PEC · rivais com ${[...new Set(ch.botCars.map(i => CARS[i].cls))].join(', ')}`; btn = `<button class="btn pri" data-go="${ci}">Começar</button>`; }
-    return `<div class="champ ${unl ? '' : 'locked'}"><div><div class="lbl">${esc(ch.scope)} · prémios ×${ch.mult}</div><div class="nm">${esc(ch.name)}</div><div class="meta">${status}</div></div><div class="cbtn">${btn}</div></div>`;
+    return `<div class="champ ${unl ? '' : 'locked'}"><div><div class="lbl">${esc(ch.scope)} · prémios ×${ch.mult} · inscrição ${money(ch.fee)}</div><div class="nm">${esc(ch.name)}</div><div class="meta">${status}</div></div><div class="cbtn">${btn}</div></div>`;
   }).join('');
   const activeCi = career.cur ? career.cur.ci : CHAMPS.findIndex((c, i) => champUnlocked(i) && career.champs[c.id] && !career.champs[c.id].done && career.champs[c.id].round > 0);
   const standing = activeCi >= 0 && career.champs[CHAMPS[activeCi].id] ? `<div class="lbl">${esc(CHAMPS[activeCi].name)} · classificação</div>${standTable(career.champs[CHAMPS[activeCi].id].pts)}` : '';
@@ -1712,7 +1776,7 @@ function showCareer() {
     <div class="champs">${cards}</div>
     ${standing}
     <div class="btns"><button class="btn" id="bGarage">Garagem</button></div>
-    <div class="keys">Cada rali tem 3 provas especiais (PEC). Os tempos somam-se e no fim os 10 primeiros ganham pontos (25, 18, 15, 12, 10, 8, 6, 4, 2, 1). O dinheiro dos prémios compra carros melhores na garagem. Entre PEC o carro é reparado no parque de assistência.</div>`, true);
+    <div class="keys">Cada rali tem 3 provas especiais (PEC). Os tempos somam-se e, como na vida real, o prémio em dinheiro é pago pela classificação final do rali. Os 10 primeiros ganham pontos (25, 18, 15, 12, 10, 8, 6, 4, 2, 1) e a última PEC é a Power Stage, com pontos extra para os 5 mais rápidos. O patrocinador dá um bónus por cada vitória ou pódio numa PEC, e cada rali tem taxa de inscrição. Entre PEC o carro é reparado no parque de assistência.</div>`, true);
   on('bBack', goMenu); on('bGarage', () => showGarage(showCareer));
   $('panelCard').querySelectorAll('[data-diff]').forEach(b => b.onclick = () => { career.diff = +b.dataset.diff; saveCareer(); showCareer(); });
   $('panelCard').querySelectorAll('[data-new]').forEach(b => b.onclick = () => { const ch = CHAMPS[+b.dataset.new]; const old = career.champs[ch.id]; career.champs[ch.id] = { round: 0, pts: {}, done: false, season: (old.season || 0) + 1, best: old.best }; saveCareer(); showCareer(); });
@@ -1726,20 +1790,25 @@ function showRallyIntro(ci) {
   const stages = ra.stages.map((s, i) => `<tr class="${resume && i < resume.si ? 'done' : ''}"><td>PEC ${i + 1}</td><td>${esc(s[0])}</td><td>${(s[1] / 1000).toFixed(1)} km</td></tr>`).join('');
   openPanel(`<div class="topline"><button class="back" id="bBack">← CARREIRA</button><div class="money num">${money(career.money)}</div></div>
     <div class="lbl">${esc(ch.name)} · rali ${ri + 1} de ${ch.rallies.length}</div><h2>${esc(ra.name)}</h2>
-    <div class="keys">${esc(ra.place)} · ${esc(th.surface)}</div>
+    <div class="keys">${esc(ra.place)} · ${esc(th.surface)} · inscrição ${resume ? 'paga' : money(ch.fee)}</div>
     <div class="tblwrap"><table class="res"><tbody>${stages}</tbody></table></div>
     <div class="keys">O teu carro: <b>${esc(c.name)}</b> · ${c.cv} cv · ${driveName(c)}. Rivais mais rápidos: ${rivals.slice(0, 3).map(b => `${esc(b.name)} (${esc(carById(b.car).name)})`).join(', ')}.</div>
     <div class="btns"><button class="btn pri" id="bStart">${resume ? 'Partir para a PEC ' + (resume.si + 1) : 'Partir para a PEC 1'}</button><button class="btn" id="bGarage">Garagem</button></div>`, true);
   on('bBack', showCareer); on('bGarage', () => showGarage(() => showRallyIntro(ci)));
   on('bStart', () => {
-    if (resume) startCareerStage(ci, ri, resume.si, { mode: 'career', ci, ri, si: resume.si, total: resume.total || {}, stageRes: [], damage: 0 });
-    else { career.cur = { ci, ri, si: 0, total: {} }; saveCareer(); startCareerStage(ci, ri, 0); }
+    if (resume) startCareerStage(ci, ri, resume.si, { mode: 'career', ci, ri, si: resume.si, total: resume.total || {}, stageRes: [], damage: 0, fee: resume.fee || 0, bonus: resume.bonus || 0 });
+    else {
+      const fee = career.money >= ch.fee ? ch.fee : 0;
+      if (fee) career.money -= fee; else toast('Sem dinheiro para a inscrição: a federação paga desta vez.');
+      career.cur = { ci, ri, si: 0, total: {}, fee }; saveCareer();
+      startCareerStage(ci, ri, 0, { mode: 'career', ci, ri, si: 0, total: {}, stageRes: [], damage: 0, fee, bonus: 0 });
+    }
   });
 }
 function statBar(v) { return `<div class="sbar"><i style="width:${clamp(v * 100, 4, 100).toFixed(0)}%"></i></div>`; }
 function showGarage(back) {
   state = 'menu'; $('menu').hidden = true;
-  const cards = CARS.map(c => {
+  const cards = CARS.slice().sort((a, b) => a.price - b.price).map(c => {
     const own = career.owned.includes(c.id), sel = career.car === c.id, can = career.money >= c.price;
     return `<div class="carcard ${sel ? 'sel' : ''}"><div class="topline"><div><div class="lbl">${esc(c.cls)} · ${driveName(c)}</div><div class="nm">${esc(c.name)}</div></div><div class="price num">${own ? (sel ? 'No teu carro' : 'Teu') : money(c.price)}</div></div>
       <div class="meta">${esc(c.desc)}</div>
@@ -2048,9 +2117,9 @@ function renderMenu() {
   const opts = `<div class="opts"><label><input type="checkbox" id="oVoice"><span>Voz do navegador</span></label><label><input type="checkbox" id="oSound"><span>Som</span></label><label><input type="checkbox" id="oShadow"><span>Sombras</span></label></div>`;
   if (menuView === 'main') {
     const cs = CHAMPS.map((c, i) => career.champs[c.id]).filter(Boolean);
-    const sub = career.cur ? `A meio do ${CHAMPS[career.cur.ci].rallies[career.cur.ri].name}` : cs.length ? `${money(career.money)} na conta` : 'Nacional, Europeu e Mundial';
+    const sub = career.cur ? `A meio do ${CHAMPS[career.cur.ci].rallies[career.cur.ri].name}` : cs.length ? `${money(career.money)} na conta` : 'Nacional, Taça Lusófona, Europeu e Mundial';
     sh.innerHTML = `<div class="brand"><h1>POEIRA</h1><span>RALI</span></div>
-      <p class="tag">Campeonatos contra pilotos de todo o mundo. Ouve o navegador, mete o carro de lado e não beijes as árvores.</p>
+      <p class="tag">Quatro campeonatos contra pilotos de todo o mundo. Ouve o navegador, mete o carro de lado e não beijes as árvores.</p>
       <div class="menu-btns">
         <button class="mbtn" id="mCareer"><span>Carreira<small>${esc(sub)}</small></span><b>›</b></button>
         <button class="mbtn" id="mQuick"><span>Prova rápida<small>Uma PEC contra o relógio e os rivais</small></span><b>›</b></button>
