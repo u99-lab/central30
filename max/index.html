@@ -261,9 +261,9 @@ html.reduce-motion .spot-art{transform:none}
 </form></div>
 <script>
 // Palavra-passe: cada aparelho pode experimentar a Central 5 vezes sem código; à 6.ª pede o código. Depois de o pores, fica desbloqueado (no site só fica o resumo SHA-256)
-(function(){var H='fc319e42faa49b71b201e4bc7dbb57c0c2aa971eed793397a91efdd15d76f571',g=document.getElementById('c30gate');
- // bloqueios reiniciados (12 de novembro de 2026): toda a gente volta a ter 5 entradas sem código e depois tem de pôr o código outra vez
- try{var GV='2026-11-12a';if(localStorage.getItem('c30max.gateV')!==GV){['c30max.pass','c30max.trialN'].forEach(function(k){localStorage.removeItem(k)});localStorage.setItem('c30max.gateV',GV);}}catch(e){}
+(function(){var H='140d84d0e2ccc6dd61d3546ed51b871f519b1a69ad600855a0f8c5e470493d24',g=document.getElementById('c30gate');
+ // bloqueios reiniciados e palavra-passe nova (13 de novembro de 2026): toda a gente volta a ter 5 entradas sem código e depois tem de pôr o código outra vez
+ try{var GV='2026-11-13b';if(localStorage.getItem('c30max.gateV')!==GV){['c30max.pass','c30max.trialN'].forEach(function(k){localStorage.removeItem(k)});localStorage.setItem('c30max.gateV',GV);}}catch(e){}
  try{if(localStorage.getItem('c30max.pass')===H){g.remove();return;}var n=+localStorage.getItem('c30max.trialN')||0;if(n<5){localStorage.setItem('c30max.trialN',String(n+1));window.__C30_TRIAL_LEFT=4-n;g.remove();return;}}catch(e){} // 5 entradas para experimentar; à 6.ª pede o código
  document.documentElement.style.overflow='hidden';
  var inp=document.getElementById('c30gatePw'),msg=document.getElementById('c30gateMsg');setTimeout(function(){inp.focus();},50);
