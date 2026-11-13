@@ -39,6 +39,8 @@ canvas{display:block}
 #mega{position:absolute;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top,0px));font-family:var(--display);color:var(--gold);font-size:18px;letter-spacing:.08em;text-shadow:0 0 14px var(--gold)}
 #feed{position:absolute;right:calc(16px + env(safe-area-inset-right,0px));top:calc(14px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:4px;align-items:flex-end;font-weight:700;font-size:15px}
 #feed div{background:var(--panel);padding:3px 10px;border-radius:6px;border:1px solid var(--line)}
+#replayBtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));pointer-events:auto;background:linear-gradient(180deg,#ff9440,#e85f0c);color:#fff;border:0;border-radius:12px;padding:12px 22px;font:400 20px var(--display);letter-spacing:.05em;cursor:pointer;box-shadow:0 6px 24px rgba(255,122,26,.45)}
+#replayTag{position:absolute;left:calc(18px + env(safe-area-inset-left,0px));top:calc(64px + env(safe-area-inset-top,0px));font-family:var(--display);font-size:20px;color:#ff4060;letter-spacing:.08em;text-shadow:0 0 12px #ff4060}
 #pauseBtn{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));top:calc(40px + env(safe-area-inset-top,0px));pointer-events:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;font:700 16px var(--ui);padding:6px 12px}
 
 #menu{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 120%,rgba(47,140,255,.25),transparent 60%),radial-gradient(ellipse at 50% -20%,rgba(255,122,26,.22),transparent 60%),rgba(4,6,16,.55);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;overflow:auto}
@@ -80,6 +82,8 @@ h1 .n2{color:var(--orange);text-shadow:0 0 24px rgba(255,122,26,.7)}
   <div id="mega" hidden>⚡ SOBRECARGA</div>
   <div id="msg"></div>
   <div id="sub"></div>
+  <div id="replayTag" hidden>● REPETIÇÃO <small style="font:700 13px var(--ui);color:var(--muted);letter-spacing:.06em;text-shadow:none">· R ou toque para saltar</small></div>
+  <button id="replayBtn" hidden>▶ VER REPETIÇÃO</button>
   <div id="boostUI" hidden><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"></circle><circle id="ring" cx="50" cy="50" r="42"></circle></svg><div id="bval"><div>33<small>TURBO</small></div></div></div>
   <button id="pauseBtn" hidden>II</button>
 </div>
@@ -439,7 +443,7 @@ function setup(){
 }
 const SPOTS={1:[[0,.42]],2:[[-14,.42],[22,.6]],3:[[0,.42],[-30,.55],[30,.55]]};
 function kickoff(){
-  ball.pos.set(0,BR,0);ball.vel.set(0,0,0);ball.last=null;ballMesh.visible=true;
+  ball.pos.set(0,BR,0);ball.vel.set(0,0,0);ball.last=null;ballMesh.visible=true;rec=[];
   const sp=SPOTS[S.mode];
   for(const t of[0,1]){const team=cars.filter(c=>c.team===t);
     team.forEach((c,i)=>{const [x,f]=sp[i],s=t===0?1:-1;c.pos.set(x*s,0,s*f*L);c.vel.set(0,0,0);c.yaw=t===0?Math.PI:0;
@@ -462,9 +466,25 @@ function endGame(){
   $('tagline').textContent=b>o?`Marcaste ${S.goals} golo${S.goals===1?'':'s'}. A arena é tua.`:`Marcaste ${S.goals} golo${S.goals===1?'':'s'}. Tenta outra vez ou baixa a dificuldade.`;
   $('play').textContent='JOGAR OUTRA VEZ';$('menu').hidden=false;$('touch').hidden=true;$('pauseBtn').hidden=true;
 }
+// replay: last 6 s recorded at 30 fps; the button shows from 13 Nov 2026 17:50 (Lisbon = UTC in November)
+const REPLAY_FROM=Date.UTC(2026,10,13,17,50);
+const replayOn=()=>Date.now()>=REPLAY_FROM;
+let rec=[],recT=0,lastReplay=null,rp=null;
+function snap(){return{b:[ball.pos.x,ball.pos.y,ball.pos.z,ballMesh.quaternion.x,ballMesh.quaternion.y,ballMesh.quaternion.z,ballMesh.quaternion.w],
+  c:cars.map(c=>[c.pos.x,c.pos.y,c.pos.z,c.yaw,c.fg.rotation.x,c.fg.rotation.z,c.boosting?1:0])};}
+function startReplay(){
+  if(!lastReplay||lastReplay.length<10||S.state!=='goal')return;
+  S.state='replay';rp={i:0,cam:null};$('replayBtn').hidden=true;$('replayTag').hidden=false;message('');
+  ballMesh.visible=true;cars.forEach(c=>c.boosting=false);
+}
+function afterGoal(){
+  message('');ballMark.visible=true;$('replayBtn').hidden=true;$('replayTag').hidden=true;rp=null;
+  const ng=S.noGoal;S.noGoal=false;
+  if(S.ot&&!ng)endGame();else if(S.time<=0&&S.score[0]!==S.score[1])endGame();else kickoff();
+}
 function togglePause(){
   if(S.state==='paused'){S.state=S.prev;$('menu').hidden=true;$('restart').hidden=true;$('touch').hidden=!isTouch;}
-  else if(['play','countdown','goal'].includes(S.state)){S.prev=S.state;S.state='paused';$('result').hidden=false;$('result').textContent='Pausa';$('result').style.color='var(--text)';$('play').textContent='CONTINUAR';$('restart').hidden=false;$('menu').hidden=false;$('touch').hidden=true;}
+  else if(['play','countdown','goal','replay'].includes(S.state)){S.prev=S.state;S.state='paused';$('result').hidden=false;$('result').textContent='Pausa';$('result').style.color='var(--text)';$('play').textContent='CONTINUAR';$('restart').hidden=false;$('menu').hidden=false;$('touch').hidden=true;}
 }
 
 /* ---------- input ---------- */
@@ -472,7 +492,7 @@ const keys={};let jumpQ=false,camQ=false;
 const touch={thr:0,steer:0,boost:false,jump:false};
 addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
-  if(!keys[e.code]){if(e.code==='Space'||e.code==='KeyJ')jumpQ=true;if(e.code==='KeyC')camQ=true;if(e.code==='Escape'||e.code==='KeyP')togglePause();}
+  if(!keys[e.code]){if(e.code==='Space'||e.code==='KeyJ')jumpQ=true;if(e.code==='KeyC')camQ=true;if(e.code==='KeyR'){if(S.state==='goal'&&!$('replayBtn').hidden)startReplay();else if(S.state==='replay')afterGoal();}if(e.code==='Escape'||e.code==='KeyP')togglePause();}
   keys[e.code]=true;initAudio();
 });
 addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -520,6 +540,8 @@ function playerInput(){
 function seg(id,key){const el=$(id);el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));S[key]=+b.dataset.v;});}
 seg('segMode','mode');seg('segDiff','diff');seg('segTime','dur');
+$('replayBtn').addEventListener('click',startReplay);
+renderer.domElement.addEventListener('pointerdown',()=>{if(S.state==='replay')afterGoal();});
 $('restart').addEventListener('click',()=>{$('restart').hidden=true;$('result').hidden=true;startGame();});
 $('play').addEventListener('click',()=>{if(S.state==='paused')togglePause();else{$('result').hidden=true;startGame();}});
 if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás para travar)</span><b>SALTAR</b><span>Toca 2× com o joystick inclinado = mortal</span><b>TURBO</b><span>Mantém premido</span><b>CÂMARA</b><span>Câmara bola / livre</span>';
@@ -622,7 +644,7 @@ function carCar(a,b){
   if(rel<0){const j=-rel*.75;a.vel.addScaledVector(d,-j);b.vel.addScaledVector(d,j);if(-rel>12)hitSfx(-rel*.6);}
 }
 function step(dt,inputs){
-  if(S.state==='countdown'||S.state==='paused'||S.state==='menu'||S.state==='over')return;
+  if(S.state==='countdown'||S.state==='paused'||S.state==='menu'||S.state==='over'||S.state==='replay')return;
   cars.forEach((c,i)=>c.update(dt,inputs[i]));
   for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++)carCar(cars[i],cars[j]);
   // pads
@@ -655,9 +677,11 @@ function step(dt,inputs){
     // own goals by the human player don't count and show nothing: just a quiet restart
     if(own&&scorer.isPlayer){S.state='goal';S.timer=1.2;S.noGoal=true;ballMesh.visible=false;ballMark.visible=false;return;}
     S.score[team]++;
+    lastReplay=rec.slice();rec=[];
+    if(replayOn()&&lastReplay.length>=10)$('replayBtn').hidden=false;
     const kmh=Math.round(b.vel.length()*3.2);
     if(scorer&&scorer.isPlayer&&!own)S.goals++;
-    S.state='goal';S.timer=3.2;ballMesh.visible=false;ballMark.visible=false;
+    S.state='goal';S.timer=replayOn()?4.5:3.2;ballMesh.visible=false;ballMark.visible=false;
     for(let k=0;k<4;k++)emit(b.pos,new V(0,6,0),45,TEAMCOL[team],1.6,90,-12);
     emit(b.pos,new V(),25,0xffffff,1,80);
     horn();shake=1.2;
@@ -713,7 +737,7 @@ function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min(.05,(now-last)/1000);last=now;
   if(camQ){S.cam=S.cam==='ball'?'free':'ball';camQ=false;feed(S.cam==='ball'?'Câmara: bola':'Câmara: livre');}
-  const running=['play','goal','countdown'].includes(S.state);
+  const running=['play','goal','countdown','replay'].includes(S.state);
   let inputs=null;
   if(running){
     inputs=cars.map(c=>c.isPlayer?playerInput():aiInput(c));
@@ -731,9 +755,10 @@ function frame(now){
         }}
     }else if(S.state==='goal'){
       S.timer-=dt;
-      if(S.timer<=0){message('');ballMark.visible=true;
-        const ng=S.noGoal;S.noGoal=false;
-        if(S.ot&&!ng)endGame();else if(S.time<=0&&S.score[0]!==S.score[1])endGame();else kickoff();}
+      if(S.timer<=0)afterGoal();
+    }else if(S.state==='replay'){
+      rp.i+=dt*30*(rp.i>lastReplay.length-35?.45:.9);
+      if(rp.i>=lastReplay.length-1)afterGoal();
     }
   }
   if(S.state==='paused'||S.state==='menu'||S.state==='over'){acc=0;}
@@ -752,7 +777,17 @@ function frame(now){
   for(const p of pads){const on=p.t<=0;p.glow.material.opacity=on?.8:.12;if(p.orb){p.orb.visible=on;p.orb.position.y=2.2+Math.sin(now/300+p.x)*.3;p.g.userData.pillar.visible=on;}}
   if(orb.mesh.visible){orb.mesh.rotation.y+=dt*2;orb.mesh.rotation.x+=dt;orb.mesh.position.y=3.2+Math.sin(now/300)*.4;}
   updParts(dt);
-  updateCam(dt);
+  if(S.state==='play'){recT+=dt;if(recT>=1/30){recT=0;rec.push(snap());if(rec.length>180)rec.shift();}}
+  if(S.state==='replay'&&rp&&lastReplay){
+    const i=Math.min(lastReplay.length-1,Math.floor(rp.i)),f=lastReplay[i];
+    ballMesh.position.set(f.b[0],f.b[1],f.b[2]);ballMesh.quaternion.set(f.b[3],f.b[4],f.b[5],f.b[6]);
+    cars.forEach((c,k)=>{const d=f.c[k];if(!d)return;c.group.position.set(d[0],d[1],d[2]);c.group.rotation.y=d[3];c.fg.rotation.x=d[4];c.fg.rotation.z=d[5];c.flame.visible=!!d[6];
+      if(d[6])emit(new V(d[0],d[1]+.9,d[2]).addScaledVector(new V(Math.sin(d[3]),0,Math.cos(d[3])),-3.4),new V(),2,0xff8a30,.3,1);});
+    // broadcast camera: high and to the side of the ball, slowly following
+    const bp=ballMesh.position,sx=bp.x>0?-1:1,des=new V(bp.x+sx*22,bp.y+10,bp.z+(bp.z>0?-14:14));
+    if(!rp.cam)rp.cam=des.clone();rp.cam.lerp(des,1-Math.exp(-3*dt));
+    camera.position.copy(rp.cam);camera.lookAt(bp);camera.fov=60;camera.updateProjectionMatrix();
+  }else updateCam(dt);
   // audio
   if(AC&&eng){
     const on=running&&player&&S.state!=='paused';const sp=on?player.vel.length():0;
