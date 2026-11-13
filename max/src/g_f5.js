@@ -85,6 +85,8 @@ function update(dt){for(let i=timers.length-1;i>=0;i--){timers[i].t-=dt;if(timer
   if(Math.abs(ball.x)>PX-BR){if(Math.abs(ball.z)<GZ-.1&&ball.y<GH){if(Math.abs(ball.x)>PX+.5&&state==='play'){goal(ball.x>0?0:1);ball.vx*=.1;ball.vz*=.1;}else if(Math.abs(ball.x)>PX+1.3){ball.x=Math.sign(ball.x)*(PX+1.3);ball.vx*=-.2;}}else if(Math.abs(ball.x)<PX+.4||Math.abs(ball.z)>=GZ-.1){if(Math.abs(Math.abs(ball.z)-GZ)<.25&&ball.y<GH+.2)K.tone(900,.2,'triangle',.25,500);ball.x=Math.sign(ball.x)*(PX-BR);ball.vx*=-.75;K.sfx.bounce(.4);}}
   if(live&&ball.free<=0&&ball.y<1.5)for(const p of P){if(p.stun>0||p.kick>0)continue;const d=Math.hypot(p.x-ball.x,p.z-ball.z),sp=Math.hypot(ball.vx,ball.vz);if(d<(p.gk?1.25:.85)){if(p.gk){const L=p.t?lvl:.55;if(sp<15||Math.random()<.35+L*.5){give(p);K.sfx.hit();if(sp>15&&p.t===1)K.flash('DEFESA!','',600,'#ff8a3d');}else{ball.free=.3;}}else if(sp<19||ball.last&&ball.last.t===p.t)give(p);else{ball.vx*=-.4;ball.vz*=.5;ball.free=.2;}break;}}
   ballM.rotation.x+=ball.vz*dt*3;ballM.rotation.z-=ball.vx*dt*3;}
+ for(const q of K.peers()){if(!ball.owner&&ball.y<1.9){const dx=ball.x-q.x,dz=ball.z-q.z,d=Math.hypot(dx,dz);if(d<.62&&d>.01){const nx=dx/d,nz=dz/d,vn=ball.vx*nx+ball.vz*nz;ball.x=q.x+nx*.62;ball.z=q.z+nz*.62;if(vn<0){ball.vx-=1.6*vn*nx;ball.vz-=1.6*vn*nz;K.sfx.bounce(.5);}}}
+  for(const p of P){const dx=p.x-q.x,dz=p.z-q.z,d=Math.hypot(dx,dz);if(d<.8&&d>.01){p.x=q.x+dx/d*.8;p.z=q.z+dz/d*.8;}}}
  ballM.position.set(ball.x,ball.y,ball.z);
  if(demo)return;ring.visible=!!ctl;if(ctl)ring.position.set(ctl.x,.04,ctl.z);
  const cx=K.clamp(ball.x*.72,-13,13);cam.position.x=K.damp(cam.position.x,cx,4,dt);cam.position.y=17.5;cam.position.z=23.5;cam.lookAt(cam.position.x,0,1.2);

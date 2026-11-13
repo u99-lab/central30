@@ -671,6 +671,9 @@ function step(dt,inputs){
   b.vel.y+=GRAV*.9*dt;b.vel.multiplyScalar(1-.03*dt);
   const bs=b.vel.length();if(bs>120)b.vel.multiplyScalar(120/bs);
   b.pos.addScaledVector(b.vel,dt);
+  // online: os carros dos amigos são sólidos para a bola e para o teu carro
+  try{const ps=window.C30peers?window.C30peers():[];for(const q of ps){let dx=b.pos.x-q.x,dy=b.pos.y-(q.y+1.2),dz=b.pos.z-q.z,d=Math.hypot(dx,dy,dz);if(d<4.4&&d>.01){dx/=d;dy/=d;dz/=d;const vn=b.vel.x*dx+b.vel.y*dy+b.vel.z*dz;b.pos.set(q.x+dx*4.4,q.y+1.2+dy*4.4,q.z+dz*4.4);if(vn<0){b.vel.x-=1.7*vn*dx;b.vel.y-=1.7*vn*dy;b.vel.z-=1.7*vn*dz;}}
+    if(player){const ex=player.pos.x-q.x,ez=player.pos.z-q.z,e=Math.hypot(ex,ez);if(e<4.2&&e>.01&&Math.abs(player.pos.y-q.y)<3){player.pos.x=q.x+ex/e*4.2;player.pos.z=q.z+ez/e*4.2;const pv=player.vel.x*ex/e+player.vel.z*ez/e;if(pv<0){player.vel.x-=1.3*pv*ex/e;player.vel.z-=1.3*pv*ez/e;}}}}}catch(e){}
   if(b.pos.y<BR){b.pos.y=BR;if(b.vel.y<0){const vy=-b.vel.y;b.vel.y=vy*.62;if(b.vel.y<1.5)b.vel.y=0;if(vy>6)hitSfx(vy*.4);}
     const f=Math.exp(-.35*dt);b.vel.x*=f;b.vel.z*=f;}
   const imp=walls(b.pos,b.vel,BR,.75);if(imp>8)hitSfx(imp*.5);
