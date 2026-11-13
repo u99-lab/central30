@@ -248,6 +248,12 @@ html.reduce-motion *{animation:none!important;transition:none!important}
 html.reduce-motion .spot-art{transform:none}
 @media (prefers-reduced-motion:reduce){.loader-mark,.loading-line:after,.spot-art img,.spot-txt{animation:none}}
 </style>
+<style id="c30xfix">/* botões de fechar (X) sempre redondos e centrados, mesmo com títulos compridos ou em iPad/telemóvel */
+.close,#c30chat .tabs .x{flex:none!important;padding:0!important;display:grid!important;place-items:center;line-height:1!important;-webkit-appearance:none;appearance:none;font-family:system-ui,-apple-system,"Segoe UI",sans-serif!important;font-variant-emoji:text;text-align:center;box-sizing:border-box;overflow:hidden}
+.close{min-width:30px;aspect-ratio:1}
+#c30chat .tabs .x{width:34px!important;height:34px!important;min-width:34px}
+.dialog-header h2{min-width:0}
+</style>
 </head>
 <body><noscript><section style="max-width:760px;margin:40px auto;padding:0 16px;color:#fff;font-family:system-ui,sans-serif;line-height:1.5"><h1>Central 30 MAX</h1><p>Central 30 MAX: 24 jogos 3D para jogar no browser, sem instalar nada. Os 21 da Central 30 e 3 novos: Polícias e Ladrões, Futebol de Rua 5x5 e Arrancadas da Marginal.</p><p>Ativa o JavaScript para jogar.</p></section></noscript><div id="bd"><i></i><i></i></div>
 <div id="c30gate">
