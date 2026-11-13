@@ -12,8 +12,8 @@ K.angDiff=(a,b)=>{let d=(b-a)%(Math.PI*2);if(d>Math.PI)d-=Math.PI*2;if(d<-Math.P
 K.touch=matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>1;
 document.body.insertAdjacentHTML('beforeend','<div id="k-hud"></div><div id="k-flash"></div><div id="k-pad"><div id="k-stick"><i></i></div><div id="k-btns"></div></div><button id="k-pbtn" aria-label="Pausa">II</button><div id="k-toast"></div><div id="k-screen" hidden></div><div id="k-pause" hidden><div class="k-box"><div class="k-title">Pausa</div><button class="k-go" id="k-resume">Continuar</button><button class="k-alt" id="k-quit">Sair para o menu do jogo</button></div></div>');
 // ---------- gravação
-K.store=(name,def)=>{let data=def;try{const v=JSON.parse(localStorage.getItem('max.'+name));if(v&&typeof v==='object')data=Object.assign({},def,v);}catch{}
- const s={data,save(){try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
+K.store=(name,def)=>{let data=def;try{const v=window.__C30_STORAGE__?JSON.parse(localStorage.getItem('max.'+name)):null;if(v&&typeof v==='object')data=Object.assign({},def,v);}catch{}
+ const s={data,save(){if(!window.__C30_STORAGE__)return;try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa
 K.setPause=v=>{v=!!v;if(v&&!K.inGame)v=false;K.paused=v;$('k-pause').hidden=!v;if(!v)for(const k in keys)keys[k]=false;};
