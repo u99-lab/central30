@@ -69,5 +69,6 @@ function place(dt){for(const c of [me,foe]){c.g.position.z=c.z;const u=c.g.userD
  if(state==='menu')return;const z=me.z;cam.position.set(K.damp(cam.position.x,-9.5,3,dt),K.damp(cam.position.y,3.2,3,dt),z-9-Math.min(4,me.v*.05));cam.lookAt(1,1,z+10);const fv=58+Math.min(22,me.v*.3);if(Math.abs(cam.fov-fv)>.3){cam.fov=K.damp(cam.fov,fv,4,dt);cam.updateProjectionMatrix();}if(me.nitro>0)K.shake=.05;K.sunFollow(0,z);}
 const _sp=K.setPause;K.setPause=v=>{_sp(v);if(engG)engG.gain.value=K.paused?0:.045;};window.C30pause=f=>K.setPause(f===undefined?!K.paused:f);
 K._dbg=()=>({state,z:+me.z.toFixed(0),v:+me.v.toFixed(1),g:me.gear,fz:+foe.z.toFixed(0),fd:foe.done,md:me.done});
+K.me=()=>state==='stage'||state==='race'?me&&me.g:null;
 K.loop(update);menu();
 })();

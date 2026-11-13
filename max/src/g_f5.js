@@ -90,5 +90,6 @@ function update(dt){for(let i=timers.length-1;i>=0;i--){timers[i].t-=dt;if(timer
  const cx=K.clamp(ball.x*.72,-13,13);cam.position.x=K.damp(cam.position.x,cx,4,dt);cam.position.y=17.5;cam.position.z=23.5;cam.lookAt(cam.position.x,0,1.2);
  const hc=K.$('hc');if(hc){const c=Math.max(0,Math.ceil(clock));hc.textContent=golden?'∞':Math.floor(c/60)+':'+String(c%60).padStart(2,'0');K.$('hm').style.opacity=charging?1:0;K.$('pw').style.width=charge*100+'%';K.$('hh').textContent=ball.owner===ctl?'ESPAÇO remata · F passa':ball.owner&&ball.owner.t===0?'':'ESPAÇO carrinho · F troca de jogador';}}
 K._dbg=()=>({state,score,clock:clock|0,ball:[+ball.x.toFixed(1),+ball.z.toFixed(1)],own:ball.owner?ball.owner.t+':'+ball.owner.i:null});K._demo=()=>{ctl=null;};
+K.me=()=>state==='play'||state==='goal'?ctl&&ctl.g:null;
 K.loop(update);menu();
 })();

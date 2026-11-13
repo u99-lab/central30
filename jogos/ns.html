@@ -548,21 +548,25 @@ if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás p
 
 /* ---------- AI ---------- */
 function aiInput(car){
-  const D=DIFF[S.diff];const inp={thr:1,steer:0,boost:false,jump:false,jumpHeld:false};
+  const mate=car.team===0&&!car.isPlayer,D=DIFF[mate?Math.max(1,S.diff):S.diff];const inp={thr:1,steer:0,boost:false,jump:false,jumpHeld:false};
   const s=car.team===0?1:-1,ownZ=s*L,attZ=-s*L;
   const dist=Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z);
   const t=Math.min(dist/40,1.2)*D.lead;
   const pb=new V(clamp(ball.pos.x+ball.vel.x*t,-W+3,W-3),0,clamp(ball.pos.z+ball.vel.z*t,-L+3,L-3));
   const mates=cars.filter(c=>c.team===car.team);
   const rate=c=>Math.hypot(c.pos.x-ball.pos.x,c.pos.z-ball.pos.z)+((c.pos.z-ball.pos.z)*s<0?22:0);
-  const attacker=mates.every(m=>m===car||rate(car)<=rate(m)+(m.isPlayer?6:0));
+  const pool=mate?mates.filter(m=>!m.isPlayer):mates;
+  const attacker=pool.every(m=>m===car||rate(car)<=rate(m));
+  // se o jogador já está em cima da bola e do lado certo, o colega sobe para a frente à espera do passe ou do ressalto
+  const plOn=mate&&attacker&&player&&Math.hypot(player.pos.x-ball.pos.x,player.pos.z-ball.pos.z)<9&&(player.pos.z-ball.pos.z)*s>0&&Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z)>12;
   const toGoalA=new V(-pb.x*.85,0,attZ-pb.z).normalize();
   const app=new V(pb.x-car.pos.x,0,pb.z-car.pos.z);const appL=app.length()||1;app.multiplyScalar(1/appL);
   // only 'goal-side' when behind the ball AND the approach line points toward the rival goal
   const goalSide=(car.pos.z-pb.z)*s>1.5&&app.dot(toGoalA)>.15;
   const danger=ball.pos.z*s>L*.55;
   let target;
-  if(!attacker){
+  if(plOn){target=new V(clamp(pb.x+(car.pos.x>pb.x?1:-1)*11,-W+4,W-4),0,clamp(pb.z-s*16,-L+6,L-6));}
+  else if(!attacker){
     target=new V(pb.x*.35,0,(pb.z+ownZ)/2+s*6);
     if(Math.abs(target.z)>L-5)target.z=s*(L-5);
     if(danger&&mates.indexOf(car)===mates.length-1)target=new V(clamp(pb.x*.4,-GW/2+2,GW/2-2),0,ownZ-s*3);

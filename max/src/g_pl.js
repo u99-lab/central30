@@ -84,5 +84,6 @@ function update(dt){if(mode==='menu'||mode==='end'){const t=K.time*.06;cam.posit
   if(hide)dot(hide,'#35d07f',5);for(const sp of spots)dot(sp,'#ffd23f',4);for(const p of cops)dot(p,blink?'#ff3040':'#4f8dff',3.5);for(const r of robs)dot(r,'#ff3040',4);dot(me,'#fff',4);c.strokeStyle='#fff';c.beginPath();c.moveTo(X(me.x),X(me.z));c.lineTo(X(me.x)+Math.sin(me.a)*9,X(me.z)+Math.cos(me.a)*9);c.stroke();}}
 const _sp=K.setPause;K.setPause=v=>{_sp(v);if(engG)engG.gain.value=K.paused?0:.03;};window.C30pause=f=>K.setPause(f===undefined?!K.paused:f);
 K._dbg=()=>({sp:spots.map(s=>[s.x,s.z]),timer,mode,stars,loot,score,cops:cops.map(c=>[Math.round(Math.hypot(c.x-me.x,c.z-me.z)),+c.sp.toFixed(0)]),me:me&&[Math.round(me.x),Math.round(me.z)],robs:robs.length});K._test=o=>{Object.assign(me,o);};
+K.me=()=>mode==='lad'||mode==='pol'?me&&me.g:null;
 K.loop(update);menu();
 })();
