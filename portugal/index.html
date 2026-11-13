@@ -962,7 +962,7 @@ function bridgeAt(x,z,cy,wide){const W=wide||0;let best=null,bs=1e9;for(const B 
 function onBridgeXZ(x,z){return !!bridgeAt(x,z)}
 function bridgeY(z,x){const b=bridgeAt(x==null?0:x,z);return b?b.y:0}
 function targetY(x,z){const b=bridgeAt(x,z);return b?b.y:Math.max(roadLiftY(x,z),-.4)}
-function surfaceAt(x,z,curY){const b=bridgeAt(x,z,curY);if(b&&(curY==null||Math.abs(curY-b.y)<4))return b.y;return Math.max(roadLiftY(x,z),-3)}
+function surfaceAt(x,z,curY){const b=bridgeAt(x,z,curY);if(b&&(curY==null||Math.abs(curY-b.y)<4))return b.y;const r=roadLiftY(x,z);if(r<-.35&&typeof SEGS!=='undefined'&&SEGS.length){const n=nearRoad(x,z);if(n&&n.d<=n.s.r.w/2+.8)return -.35}return Math.max(r,-3)}
 function roadLiftY(x,z){const t=terrainH(x,z);if(typeof SEGS==='undefined'||!SEGS.length)return t;const n=nearRoad(x,z);if(!n||n.s.r.bridge||n.d>n.s.r.w/2+.6)return t;const g=n.s,gl=g.len||1,ex=-(g.bz-g.az)/gl*g.r.w/2,ez=(g.bx-g.ax)/gl*g.r.w/2;const m0=meshH(n.px,n.pz);if(m0<=-.5)return t;const m=Math.max(m0,meshH(n.px+ex,n.pz+ez),meshH(n.px-ex,n.pz-ez));return Math.max(t,Math.max(m,-.2)+.1+(m>4?.15:0))}
 /* ================= RENDER ================= */
 const canvas=$('#c');const renderer=new THREE.WebGLRenderer({canvas,antialias:true});const mobile=matchMedia('(pointer:coarse)').matches;
@@ -1304,7 +1304,7 @@ const SPAWN=(()=>{let x,z;const ap=ARRIVE&&AIRPORTS.find(a=>a.id===ARRIVE);if(BO
 // fronteiras de carro: cada país sabe quem são os vizinhos (contornos); se o vizinho existe no jogo, passa-se para lá
 const NBNAME={pt:'Portugal',es:'Espanha',fr:'França',it:'Itália',uk:'Reino Unido',de:'Alemanha',be:'Bélgica',nl:'Países Baixos',ch:'Suíça',at:'Áustria',pl:'Polónia',cz:'Chéquia',dk:'Dinamarca',lu:'Luxemburgo',x_Andorra:'Andorra',x_Morocco:'Marrocos',x_Ireland:'Irlanda',x_Slovenia:'Eslovénia',x_Liechtenstein:'Liechtenstein',x_Slovakia:'Eslováquia',x_Hungary:'Hungria',x_Ukraine:'Ucrânia',x_Belarus:'Bielorrússia',x_Lithuania:'Lituânia',x_Russia:'Rússia',x_Sweden:'Suécia'};
 function distPolyLL(lon,lat,poly){const k=Math.cos(lat*Math.PI/180);let m=1e9;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j],ax=(a[0]-lon)*k,ay=a[1]-lat,bx=(b[0]-lon)*k,by=b[1]-lat,vx=bx-ax,vy=by-ay,t=Math.max(0,Math.min(1,-(ax*vx+ay*vy)/((vx*vx+vy*vy)||1e-12)));m=Math.min(m,Math.hypot(ax+vx*t,ay+vy*t))}return m}
-function nbAt(lon,lat){const nb=RG.nb||{};let best=null,bd=.2;for(const k in nb)for(const poly of nb[k]){if(inPolyLL(lon,lat,poly))return k;const d=distPolyLL(lon,lat,poly);if(d<bd){bd=d;best=k}}return best}
+function nbAt(lon,lat){const nb=RG.nb||{};const home=(RG.land||[]).some(p=>inPolyLL(lon,lat,p));let best=null,bd=.2;for(const k in nb)for(const poly of nb[k]){if(inPolyLL(lon,lat,poly)){if(home)continue;return k}const d=distPolyLL(lon,lat,poly);if(d<bd){bd=d;best=k}}return best}
 let crossing=false;
 function goRegion(to,lon,lat,msg,paid){if(crossing||!REGIONS[to])return false;if(typeof entryCheck==='function'&&!entryCheck(to,paid?'paid':'car'))return false;crossing=true;P.vx*=.2;P.vz*=.2;
  try{sessionStorage.setItem('ea.region',to);sessionStorage.setItem('ea.at',JSON.stringify({lon,lat}));sessionStorage.setItem('ea.carry',JSON.stringify({money:G.money,fuel:P.fuel,owned:G.owned,clock:G.clock,car:carType,col:carColor,casa:G.casa,from:RG.name,road:1,passport:!!G.passport}));sessionStorage.setItem('ea.autostart','1')}catch(e){}
