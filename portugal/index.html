@@ -1834,7 +1834,7 @@ function updateBoard(){const el=$('#board'),st=nearStationFar();if(!st||G.state!
   $('#boardL').innerHTML=list.length?list.map(a=>{const goes=i===0?STATIONS[last].name:i===last?STATIONS[0].name:(a.dir>0?STATIONS[last].name:STATIONS[0].name);return `<div>${hhmm(G.clock+a.t*CLK)} · para ${goes}${a.t<16?' · <span style="color:#7fd8a0">está na estação!</span>':''}</div>`}).join(''):'<div>Comboio em viagem…</div>'}
 
 /* ================= HUD / MAPA ================= */
-const toastEl=$('#toast');let toastT=0;function toast(m,bad,d){toastEl.textContent=m;toastEl.style.color=bad?'var(--bad)':'var(--sand)';toastEl.style.opacity=1;toastT=d||2.5}
+const toastEl=$('#toast');let toastT=0;let toastTO=0;function toast(m,bad,d){toastEl.textContent=m;toastEl.style.color=bad?'var(--bad)':'var(--sand)';toastEl.style.opacity=1;toastT=d||2.5;clearTimeout(toastTO);toastTO=setTimeout(()=>{toastT=0;toastEl.style.opacity=0},(d||2.5)*1000)}
 const euro=n=>Math.round(n).toLocaleString('pt-PT')+' €';const mmss=s=>{s=Math.max(0,s);const m=Math.floor(s/60);return m+':'+String(Math.floor(s%60)).padStart(2,'0')};
 const W0=WB.x0,W1=WB.x1,Z0=WB.z0,Z1=WB.z1,MW=W1-W0,MH=Z1-Z0;
 const MAPLABELS=[],MAPMARKS=[];
@@ -1993,7 +1993,7 @@ function placeCam(dt,fv){const fx=Math.sin(P.h),fz=-Math.cos(P.h);let dist=[9,16
   if(G.cam===2){camera.position.set(P.x+fx*.4,P.y+hgt,P.z+fz*.4);_v.set(P.x+fx*20,P.y+1,P.z+fz*20);camera.lookAt(_v)}else{const tx=P.x-fx*dist,tz=P.z-fz*dist;const ty=Math.max(P.y+hgt,surfaceAt(tx,tz)+1.5);const k=Math.min(1,dt*6);camera.position.x=lerp(camera.position.x,tx,k);camera.position.z=lerp(camera.position.z,tz,k);camera.position.y=lerp(camera.position.y,ty,k);_v.set(P.x+fx*4,P.y+1.2,P.z+fz*4);camera.lookAt(_v)}
   if(shake>0){camera.position.x+=(Math.random()-.5)*shake*.6;camera.position.y+=(Math.random()-.5)*shake*.4;shake=Math.max(0,shake-dt*2)}camera.fov=lerp(camera.fov,65+clamp(Math.abs(fv)/60,0,1)*12,Math.min(1,dt*3));camera.updateProjectionMatrix()}
 function loop(now){if(G.state==='office'){last=now;requestAnimationFrame(loop);return}const dt=Math.min(.05,(now-last)/1000);last=now;if(G.state==='play'&&!document.hidden){PRF.n++;PRF.t+=(now-(PRF.l||now))/1000;PRF.l=now;if(PRF.t>2.5){const fps=PRF.n/PRF.t;PRF.n=0;PRF.t=0;let np=PR;if(fps<40&&PR>1)np=Math.max(1,PR-.25);else if(fps>56){PRF.good++;if(PRF.good>=2&&PR<PRMAX){np=Math.min(PRMAX,PR+.25);PRF.good=0}}else PRF.good=0;if(np!==PR){PR=np;renderer.setPixelRatio(PR);resize()}}}else PRF.l=now;TM+=dt;waterU.uT.value=TM;
-  if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}
+  
   markers.forEach((mk,i)=>{mk.o.visible=!G.mission;mk.o.material.opacity=.18+Math.sin(TM*3+i)*.06});postMeshes.forEach((m,i)=>{m.rotation.y+=dt*1.5});if(window.__lamp)window.__lamp.material.color.setHSL(.14,1,.6+Math.sin(TM*2)*.25);
   updateTrain(dt);updateBoats(dt);updateLevelX(dt);
   if(G.state==='play'||G.state==='train'||G.state==='office'){G.clock=((G.clock||36000)+dt*CLK)%86400;if(G.weather!=='chuva'){const per=periodOf(G.clock);if(per!==G.weather){applyWeather(per);setSeg('#wx','w',per)}}}
