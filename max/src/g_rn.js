@@ -70,7 +70,7 @@ function endDay(ok){state='over';K.play(false);S.data.coins+=got;let st=0;if(ok)
 let tsx=0,tsy=0,tsOn=false;const cv=K.renderer.domElement;
 cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tsx=t.clientX;tsy=t.clientY;tsOn=true;},{passive:true});
 cv.addEventListener('touchmove',e=>{if(!tsOn)return;const t=e.changedTouches[0],dx=t.clientX-tsx,dy=t.clientY-tsy;if(Math.abs(dx)>32||Math.abs(dy)>32){tsOn=false;if(Math.abs(dx)>Math.abs(dy))act(dx>0?'r':'l');else act(dy<0?'u':'d');}},{passive:true});
-function act(a){if(state!=='run'||stumble>0||K.paused)return;if(a==='l'&&lane>0){lane--;K.sfx.whoosh();}if(a==='r'&&lane<2){lane++;K.sfx.whoosh();}if(a==='u'&&y<=.01){vy=8.2;slide=0;K.tone(300,.15,'sine',.12,600);}if(a==='d'){if(y>.01)vy=-14;else{slide=.65;K.noise(.3,.1,600);}}}
+function act(a){if(state!=='run'||stumble>0||K.paused)return;if(a==='l'&&lane<2){lane++;K.sfx.whoosh();}if(a==='r'&&lane>0){lane--;K.sfx.whoosh();}if(a==='u'&&y<=.01){vy=8.2;slide=0;K.tone(300,.15,'sine',.12,600);}if(a==='d'){if(y>.01)vy=-14;else{slide=.65;K.noise(.3,.1,600);}}}
 function update(dt){const P=boy.userData.P;
  if(state==='menu'||state==='over'){z+=dt*4;runT+=dt*8;K.walk(boy,runT,.6);boy.rotation.set(0,0,0);boy.position.set(0,0,z);cam.position.set(4,2.6,z+5.5);cam.lookAt(0,1.2,z);}
  else if(state==='fin'){finT+=dt;z+=dt*Math.max(0,5-finT*2.4);boy.position.set(x,Math.abs(Math.sin(finT*7))*.5,z);K.pose(boy,{armL:[-2.8,0,-.3],armR:[-2.8,0,.3]});cam.position.x=K.damp(cam.position.x,5,2,dt);cam.position.y=K.damp(cam.position.y,2.4,2,dt);cam.position.z=K.damp(cam.position.z,z+6,2,dt);cam.lookAt(x,1.2,z);if(finT>3)endDay(true);}
