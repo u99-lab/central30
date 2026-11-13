@@ -1752,7 +1752,7 @@ function stepCar(dt){const c=CARS[carType];const fx=Math.sin(P.h),fz=-Math.cos(P
    if(na.d<1.05&&g.len&&na.t>.0001)wall(1.05,-1);  // separador central
    else if(na.d>10.95&&!nearOtherRoad(P.x,P.z)&&!roadEnd(na))wall(10.95,1)}}  // rails (menos nas saídas)
   if(borderPush()){}
-  const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z,P.y);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));
+  const ty=surfaceAt(P.x,P.z,P.y);const bB=bridgeAt(P.x,P.z,P.y);P.y=bB&&Math.abs(P.y-bB.y)<4?ty:lerp(P.y,ty,Math.min(1,dt*12));if(P.y<ty)P.y=ty;
   if(ty<-1&&!bridgeAt(P.x,P.z,P.y)){P.inWater+=dt;P.vx*=.9;P.vz*=.9;if(P.inWater>1.2){toast('Splash! O carro caiu à água.',true,2);recover()}}else{P.inWater=0;if(onRoad)P.lastSafe={x:P.x,z:P.z,h:P.h}}
   car.position.set(P.x,P.y,P.z);car.rotation.y=-P.h;const sx=terrainH(P.x+Math.sin(P.h)*2,P.z-Math.cos(P.h)*2)-terrainH(P.x-Math.sin(P.h)*2,P.z+Math.cos(P.h)*2);car.rotation.x=onRoad&&P.y>3&&Math.abs(P.x-2200)<8?0:clamp(sx/4,-.25,.25);
   setBrake(car,(brk&&fv>.5)||hand||(!gas&&Math.abs(fv)<1.5)||(!gas&&fv>2&&a<0));car.userData.wheels.forEach((w,i)=>{w.rotation.x-=fv*dt/.36;if(i<2)car.userData.pivots[i].rotation.y=steer*.35});
