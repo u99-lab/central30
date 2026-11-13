@@ -471,7 +471,7 @@ const driveName = c => c.front === 1 ? 'Tração à frente' : c.front === 0 ? 'T
 /* championships: each rally is three special stages */
 const CHAMPS = [
   {
-    id: 'nac', name: 'Campeonato Nacional', scope: 'Portugal', mult: 1, fee: 600, botCars: [0, 0, 1, 1, 2, 3], skill: [0.97, 1.15], unlock: null,
+    id: 'nac', name: 'Campeonato Nacional', scope: 'Portugal', mult: 1, fee: 600, botCars: [0, 0, 1, 1, 2, 2], skill: [0.98, 1.16], unlock: null,
     bots: [['Tiago Ferraz', 'PT'], ['Inês Sobral', 'PT'], ['Duarte Lobo', 'PT'], ['Marta Quintas', 'PT'], ['Hugo Barreiros', 'PT'], ['Sara Pinho', 'PT'], ['Nuno Calado', 'PT'], ['Joana Viegas', 'PT'], ['Paulo Freixo', 'PT'], ['Bruno Teles', 'PT'], ['Carla Mourão', 'PT']],
     rallies: [
       { name: 'Rali da Figueira', place: 'Figueira da Foz', theme: 'serra', seed: 101, stages: [['Serra da Boa Viagem', 3000], ['Quiaios', 2800], ['Tavarede', 3200]] },
@@ -527,7 +527,7 @@ const CHAMP_BONUS = [30000, 18000, 10000];
 const SPONSOR = [1500, 900, 600];        // patrocinador: bónus por vitória ou pódio numa PEC
 const POWER = [5, 4, 3, 2, 1];             // Power Stage: pontos extra na última PEC de cada rali
 const CHAMP_ORDER = ['nac', 'lus', 'eur', 'mun'];
-const DIFF = [{ name: 'Fácil', k: 1.1 }, { name: 'Normal', k: 1.0 }, { name: 'Difícil', k: 0.955 }];
+const DIFF = [{ name: 'Fácil', k: 1.1 }, { name: 'Normal', k: 1.035 }, { name: 'Difícil', k: 0.96 }];
 function rallyStageDef(ci, ri, si) {
   const ch = CHAMPS[ci], ra = ch.rallies[ri], st = ra.stages[si];
   const th = THEMES[ra.theme], open = th.flora === 'desert';
@@ -1353,6 +1353,7 @@ function resetCarTo(s, hard) {
   car.y = T.py[i] + (hard ? 0 : 0.6); car.gyPrev = T.py[i]; car.axS = car.ayS = 0; car.stuckT = 0;
   susp.p = susp.r = susp.vp = susp.vr = 0;
   visN.set(0, 1, 0); vis.init = false;
+  if (typeof prevPose !== 'undefined') { prevPose.x = rpose.x = car.x; prevPose.y = rpose.y = car.y; prevPose.z = rpose.z = car.z; prevPose.h = rpose.h = car.h; }
 }
 function stepCar(dt, inp) {
   const T = S.T, th = S.th;
@@ -1419,7 +1420,7 @@ function stepCar(dt, inp) {
   const avR = FmR * Math.sqrt(Math.max(1 - (inp.hb ? 0.86 : 0.42) * (FxR / FmR) ** 2, 0.1));
   let FyF = -avF * Math.sin(1.45 * Math.atan(9 * aF));
   let FyR = -avR * Math.sin(1.45 * Math.atan(8.5 * aR));
-  if (car.air) { FxF = FxR = FyF = FyR = 0; }
+  if (car.air && car.airT > 0.08) { FxF = FxR = FyF = FyR = 0; }
   const cs = Math.cos(car.steer), sn = Math.sin(car.steer);
   let Fx = FxF * cs - FyF * sn + FxR, Fy = FxF * sn + FyF * cs + FyR;
   const roll = car.air ? 0 : lerp(190, 30, roadW);
@@ -1446,12 +1447,17 @@ function stepCar(dt, inp) {
   car.x += car.vx * dt; car.z += car.vz * dt;
   // vertical: follow the ground, leave it over crests
   const pr2 = project(car.x, car.z, car.idx), g = groundH(car.x, car.z, pr2);
-  car.vy -= GRAV * dt; car.y += car.vy * dt;
+  car.vy -= GRAV * dt;
+  const gap = car.y - g;
+  if (!car.air && gap > 0 && car.vy > -2) car.vy -= 34 * dt * (0.3 + gap / 0.4); // springs pull the wheels back down
+  car.y += car.vy * dt;
   if (car.y <= g) {
-    const tv = clamp((g - car.gyPrev) / dt, -30, 7.5), impact = tv - car.vy;
+    const tvRaw = clamp((g - car.gyPrev) / dt, -30, 6); car.tvS = lerp(car.tvS || 0, tvRaw, 0.3);
+    const tv = Math.min(tvRaw, car.tvS + 1.5), impact = tv - car.vy;
     if (car.air && impact > 3.5) { shake = Math.max(shake, clamp(impact * 0.05, 0, 0.6)); Snd.thud(impact / 10); if (impact > 9) { toast('Aterragem dura!'); if (state === 'race') car.damage = Math.min(1, car.damage + (impact - 9) * 0.02); } }
     car.y = g; car.vy = tv; car.air = false; car.airT = 0;
-  } else if (car.y > g + 0.25) { car.air = true; car.airT += dt; }
+  } else if (car.y > g + 0.4) { car.air = true; car.airT += dt; }
+  else if (car.air) car.airT += dt;
   car.gyPrev = g;
   collide();
   car.wheelRot += vf / RW * dt * (inp.hb ? 0.1 : 1) + (car.spin ? 0.6 : 0);
@@ -1598,7 +1604,8 @@ function botTimes(field, key) {
   const r = mulberry32(hashStr(key)), dk = DIFF[career.diff].k;
   return field.map(b => {
     const id = S.ideal[carIdx(b.car)];
-    let t = id.total * REF * b.skill * dk * (1 + gauss(r) * 0.024) * (1 + (r() - 0.5) * 0.03), note = ''; // forma do dia: os lugares mudam de prova para prova
+    const form = 1 + (mulberry32(hashStr(b.name + key.replace(/-(\d+)(:\d+)?$/, '$2')))() - 0.5) * 0.05; // rival's form on this rally
+    let t = id.total * REF * b.skill * dk * form * (1 + gauss(r) * 0.018), note = '';
     const x = r();
     if (x < 0.035) { t += 6 + r() * 16; note = 'pião'; } else if (x < 0.047) { t += 30 + r() * 30; note = 'furo'; }
     const splits = id.splits.map(sp => sp / id.total * t);
@@ -1942,7 +1949,7 @@ function blockedTV(x, z) {
   return false;
 }
 function updateCamera(dt) {
-  const T = S.T, sh = Math.sin(car.h), ch = Math.cos(car.h), spd = Math.hypot(car.vx, car.vz);
+  const T = S.T, sh = Math.sin(rpose.h), ch = Math.cos(rpose.h), spd = Math.hypot(car.vx, car.vz);
   const cp = carMesh.position, carP = tmpV.set(cp.x, cp.y, cp.z);
   let fov = 62;
   const tvMode = state === 'menu' || state === 'finished' || state === 'loading' || (state === 'replay' && rp.cam === 0);
@@ -1996,12 +2003,13 @@ const visN = new THREE.Vector3(0, 1, 0), mtx = new THREE.Matrix4(), vX = new THR
 const susp = { p: 0, r: 0, vp: 0, vr: 0 };
 const vis = { y: 0, vy: 0, init: false, dist: 0 };
 function updateCarVisual(dt, inp) {
-  const sh = Math.sin(car.h), ch = Math.cos(car.h), rx = -ch, rz = sh;
+  const CX = rpose.x, CY = rpose.y, CZ = rpose.z;
+  const sh = Math.sin(rpose.h), ch = Math.cos(rpose.h), rx = -ch, rz = sh;
   const airVis = car.air && car.airT > 0.1;
   if (!airVis) {
     const P = (x, z) => groundH(x, z, project(x, z, car.idx));
-    const hf = P(car.x + sh * 1.6, car.z + ch * 1.6), hb = P(car.x - sh * 1.6, car.z - ch * 1.6);
-    const hr = P(car.x + rx * 1.0, car.z + rz * 1.0), hl = P(car.x - rx * 1.0, car.z - rz * 1.0);
+    const hf = P(CX + sh * 1.6, CZ + ch * 1.6), hb = P(CX - sh * 1.6, CZ - ch * 1.6);
+    const hr = P(CX + rx * 1.0, CZ + rz * 1.0), hl = P(CX - rx * 1.0, CZ - rz * 1.0);
     vZ.set(sh * 3.2, hf - hb, ch * 3.2); vX.set(-rx * 2.0, hl - hr, -rz * 2.0);
     vY.crossVectors(vZ, vX).normalize(); if (vY.y < 0) vY.negate();
     visN.lerp(vY, 1 - Math.exp(-dt * 9)).normalize();
@@ -2010,19 +2018,19 @@ function updateCarVisual(dt, inp) {
   mtx.makeBasis(vX, visN, vZ); carMesh.quaternion.setFromRotationMatrix(mtx);
   if (airVis) carMesh.rotateX(clamp(car.airT * 0.12, 0, 0.25));
   // the body rides on a spring above the physics point, so small steps in the ground never shake it
-  if (!vis.init) { vis.y = car.y; vis.vy = 0; vis.init = true; }
+  if (!vis.init) { vis.y = CY; vis.vy = 0; vis.init = true; }
   const k = airVis ? 400 : 260, c = airVis ? 40 : 30;
-  vis.vy += ((car.y - vis.y) * k - vis.vy * c) * dt; vis.y += vis.vy * dt;
-  if (vis.y < car.y - 0.15) { vis.y = car.y - 0.15; vis.vy = Math.max(vis.vy, 0); }
-  if (vis.y > car.y + 0.3) vis.y = car.y + 0.3;
-  carMesh.position.set(car.x, vis.y, car.z);
+  vis.vy += ((CY - vis.y) * k - vis.vy * c) * dt; vis.y += vis.vy * dt;
+  if (vis.y < CY - 0.15) { vis.y = CY - 0.15; vis.vy = Math.max(vis.vy, 0); }
+  if (vis.y > CY + 0.3) vis.y = CY + 0.3;
+  carMesh.position.set(CX, vis.y, CZ);
   const tp = clamp(-car.axS * 0.011, -0.07, 0.07), tr = clamp(-car.ayS * 0.009, -0.08, 0.08);
   susp.vp += ((tp - susp.p) * 110 - susp.vp * 16) * dt; susp.p += susp.vp * dt;
   susp.vr += ((tr - susp.r) * 110 - susp.vr * 16) * dt; susp.r += susp.vr * dt;
   const body = carMesh.userData.body; body.rotation.set(susp.p, 0, susp.r);
   const spd = Math.hypot(car.vx, car.vz); vis.dist += spd * dt;
   body.position.y = !car.onRoad && !airVis ? (Math.sin(vis.dist * 2.1) * 0.6 + Math.sin(vis.dist * 3.3 + 1.3) * 0.4) * 0.025 * clamp(spd / 15, 0, 1) : 0;
-  for (const w of carMesh.userData.wheels) { w.spin.rotation.x = car.wheelRot; if (w.front) w.pivot.rotation.y = car.steer; }
+  for (const w of carMesh.userData.wheels) { w.spin.rotation.x = car.wheelRot; if (w.front) w.pivot.rotation.y = -car.steer; }
   carMesh.userData.tailMat.color.setHex(car.brakeOn || inp.hb ? 0xff2a1a : (S.th.night ? 0x8a1a12 : 0x5a0d0d));
   if (carMesh.userData.blob) carMesh.userData.blob.material.opacity = airVis ? 0.4 : 1;
   if (!car.air) {
@@ -2177,6 +2185,7 @@ addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); ca
 /* ---------------------------------------------------------------------
    Main loop
    --------------------------------------------------------------------- */
+var prevPose = { x: 0, y: 0, z: 0, h: 0 }, rpose = { x: 0, y: 0, z: 0, h: 0 };
 const STEP = 1 / 120; let acc = 0, last = performance.now(), clock = 0;
 function frame(now) {
   requestAnimationFrame(frame);
@@ -2194,6 +2203,7 @@ function frame(now) {
     acc += dt;
     while (acc >= STEP) {
       acc -= STEP;
+      prevPose.x = car.x; prevPose.y = car.y; prevPose.z = car.z; prevPose.h = car.h;
       if (state === 'countdown') {
         const target = 900 + inp.throttle * 6200; car.rpm = lerp(car.rpm, target, 1 - Math.exp(-STEP * (inp.throttle ? 6 : 3)));
         if (inp.throttle < 0.2 && car.thr > 0.6 && car.rpm > 4800) car.lastPop = 0.3; car.thr = inp.throttle;
@@ -2201,6 +2211,9 @@ function frame(now) {
       } else stepCar(STEP, inp);
     }
   }
+  { const a = state === 'replay' || state === 'countdown' ? 1 : clamp(acc / STEP, 0, 1);
+    rpose.x = lerp(prevPose.x, car.x, a); rpose.y = lerp(prevPose.y, car.y, a); rpose.z = lerp(prevPose.z, car.z, a); rpose.h = prevPose.h + wrapA(car.h - prevPose.h) * a;
+    if (Math.hypot(car.x - prevPose.x, car.z - prevPose.z) > 5) { rpose.x = car.x; rpose.y = car.y; rpose.z = car.z; rpose.h = car.h; } }
   if (race) raceTick(dt);
   if (state === 'menu' || state === 'finished' || state === 'loading') {
     if (car.idx > S.T.n - 30) { resetCarTo(S.T.startS - 8, true); tv.idx = -1; }
