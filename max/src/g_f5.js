@@ -24,6 +24,7 @@ for(let i=0;i<5;i++)K.cloud(K.rand(-90,90),K.rand(40,60),K.rand(-120,-50),K.rand
 const bT=K.tex(128,64,(c,w,h)=>{c.fillStyle='#fff';c.fillRect(0,0,w,h);c.fillStyle='#1b2340';for(const [x,y] of [[16,16],[48,44],[80,18],[112,46],[64,60],[30,62],[98,2]]){c.beginPath();c.arc(x,y,9,0,7);c.fill();}});
 const ballM=new THREE.Mesh(new THREE.SphereGeometry(BR,16,12),new THREE.MeshLambertMaterial({map:bT}));ballM.castShadow=true;scene.add(ballM);
 const ring=new THREE.Mesh(new THREE.RingGeometry(.55,.72,24),new THREE.MeshBasicMaterial({color:0xffd23f,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;scene.add(ring);
+const arrow=new THREE.Mesh(new THREE.ConeGeometry(.3,.55,4),new THREE.MeshBasicMaterial({color:0xffd23f}));arrow.rotation.x=Math.PI;scene.add(arrow);arrow.visible=false;
 // ----- estado
 let P=[],ball={x:0,y:BR,z:0,vx:0,vy:0,vz:0,owner:null,free:0,last:null},ctl=null,state='menu',score=[0,0],clock=0,half=1,lvl=0,cup=null,charge=0,charging=false,freeze=0,golden=false,opp=TEAMS[0];
 const timers=[];const after=(t,f)=>timers.push({t,f});
@@ -61,12 +62,12 @@ function ai(p,dt,chaser){const s=sgn(p),L=p.t?lvl:.55,o=ball.owner,spd=5.2+L*1.6
 function steal(p,o){o.stun=.45;ball.owner=null;give(p);K.sfx.hit();if(p===ctl||o===ctl)K.shake=.15;}
 function update(dt){for(let i=timers.length-1;i>=0;i--){timers[i].t-=dt;if(timers[i].t<=0){const f=timers[i].f;timers.splice(i,1);f();}}
  fans.forEach((f,i)=>f.position.y=state==='goal'?Math.abs(Math.sin(K.time*9+i))*.3:0);
- if(state==='menu'||state==='end'){const t=K.time*.15;cam.position.set(Math.sin(t)*26,12,24+Math.cos(t)*4);cam.lookAt(0,.5,0);ring.visible=false;if(state==='end')return;}
+ if(state==='menu'||state==='end'){arrow.visible=false;const t=K.time*.15;cam.position.set(Math.sin(t)*26,12,24+Math.cos(t)*4);cam.lookAt(0,.5,0);ring.visible=false;if(state==='end')return;}
  const demo=state==='menu';if(freeze>0)freeze-=dt;const live=(state==='play'||demo)&&freeze<=0;
  if(state==='play'&&freeze<=0&&!golden){clock-=dt;if(clock<=0){if(half===1){half=2;clock=90;K.sfx.whistle(true);K.flash('INTERVALO','2.ª parte',1400,'#fff');kickoff(1);hud();}else if(score[0]===score[1]){golden=true;K.flash('GOLO DE OURO','Quem marcar ganha',1600,'#ffd23f');kickoff(0);hud();}else{K.sfx.whistle(true);end();return;}}}
  // quem persegue a bola
  const ch=[null,null];for(const t of [0,1]){let bd=1e9;for(const p of P)if(p.t===t&&!p.gk&&ball.owner!==p){const d=Math.hypot(p.x-ball.x,p.z-ball.z);if(d<bd){bd=d;ch[t]=p;}}if(ball.owner&&ball.owner.t===t)ch[t]=null;}
- if(!demo&&ctl&&ball.owner!==ctl&&(!ball.owner||ball.owner.t!==0)&&K.hit('KeyF','KeyQ','KeyJ')&&ch[0])ctl=ch[0];
+ if(!demo&&ch[0]&&ctl&&ch[0]!==ctl&&ball.owner!==ctl&&(!ball.owner||ball.owner.t!==0)&&ctl.tack<=0){const dn=Math.hypot(ch[0].x-ball.x,ch[0].z-ball.z),dc=Math.hypot(ctl.x-ball.x,ctl.z-ball.z);if(dc>dn+2.5||K.hit('KeyF','KeyQ','KeyJ'))ctl=ch[0];}
  for(const p of P){p.vx=p.vz=0;if(p.tcd>0)p.tcd-=dt;if(p.kick>0)p.kick-=dt;
   if(p.stun>0){p.stun-=dt;}else if(!live){}
   else if(p===ctl&&!demo){const ax=K.axis(),sp=(K.down('ShiftLeft','ShiftRight')?7.6:6.3)*(ball.owner===p?.92:1);
@@ -88,9 +89,9 @@ function update(dt){for(let i=timers.length-1;i>=0;i--){timers[i].t-=dt;if(timer
  for(const q of K.peers()){if(!ball.owner&&ball.y<1.9){const dx=ball.x-q.x,dz=ball.z-q.z,d=Math.hypot(dx,dz);if(d<.62&&d>.01){const nx=dx/d,nz=dz/d,vn=ball.vx*nx+ball.vz*nz;ball.x=q.x+nx*.62;ball.z=q.z+nz*.62;if(vn<0){ball.vx-=1.6*vn*nx;ball.vz-=1.6*vn*nz;K.sfx.bounce(.5);}}}
   for(const p of P){const dx=p.x-q.x,dz=p.z-q.z,d=Math.hypot(dx,dz);if(d<.8&&d>.01){p.x=q.x+dx/d*.8;p.z=q.z+dz/d*.8;}}}
  ballM.position.set(ball.x,ball.y,ball.z);
- if(demo)return;ring.visible=!!ctl;if(ctl)ring.position.set(ctl.x,.04,ctl.z);
+ if(demo){arrow.visible=false;return;}ring.visible=arrow.visible=!!ctl;if(ctl){ring.position.set(ctl.x,.04,ctl.z);arrow.position.set(ctl.x,2.65+Math.sin(K.time*6)*.12,ctl.z);arrow.rotation.y+=dt*3;}
  const cx=K.clamp(ball.x*.72,-13,13);cam.position.x=K.damp(cam.position.x,cx,4,dt);cam.position.y=17.5;cam.position.z=23.5;cam.lookAt(cam.position.x,0,1.2);
- const hc=K.$('hc');if(hc){const c=Math.max(0,Math.ceil(clock));hc.textContent=golden?'∞':Math.floor(c/60)+':'+String(c%60).padStart(2,'0');K.$('hm').style.opacity=charging?1:0;K.$('pw').style.width=charge*100+'%';K.$('hh').textContent=ball.owner===ctl?'ESPAÇO remata · F passa':ball.owner&&ball.owner.t===0?'':'ESPAÇO carrinho · F troca de jogador';}}
+ const hc=K.$('hc');if(hc){const c=Math.max(0,Math.ceil(clock));hc.textContent=golden?'∞':Math.floor(c/60)+':'+String(c%60).padStart(2,'0');K.$('hm').style.opacity=charging?1:0;K.$('pw').style.width=charge*100+'%';K.$('hh').textContent=K.touch?(ball.owner===ctl?'Botões: remate (mantém para a força) e passe':'Controlas o jogador da seta amarela · carrinho tira a bola'):(ball.owner===ctl?'ESPAÇO remata (mantém para a força) · F passa':'Controlas o jogador da seta amarela · ESPAÇO faz carrinho');}}
 K._dbg=()=>({state,score,clock:clock|0,ball:[+ball.x.toFixed(1),+ball.z.toFixed(1)],own:ball.owner?ball.owner.t+':'+ball.owner.i:null});K._demo=()=>{ctl=null;};
 K.me=()=>state==='play'||state==='goal'?ctl&&ctl.g:null;
 K.loop(update);menu();
