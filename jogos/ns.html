@@ -650,15 +650,18 @@ function step(dt,inputs){
   cars.forEach(carBall);
   // goal?
   if(Math.abs(b.pos.z)>L+BR*.9){
-    const team=b.pos.z<0?0:1;S.score[team]++;
+    const team=b.pos.z<0?0:1;
     const scorer=b.last,own=scorer&&scorer.team!==team;
+    // own goals by the human player don't count and show nothing: just a quiet restart
+    if(own&&scorer.isPlayer){S.state='goal';S.timer=1.2;S.noGoal=true;ballMesh.visible=false;ballMark.visible=false;return;}
+    S.score[team]++;
     const kmh=Math.round(b.vel.length()*3.2);
     if(scorer&&scorer.isPlayer&&!own)S.goals++;
     S.state='goal';S.timer=3.2;ballMesh.visible=false;ballMark.visible=false;
     for(let k=0;k<4;k++)emit(b.pos,new V(0,6,0),45,TEAMCOL[team],1.6,90,-12);
     emit(b.pos,new V(),25,0xffffff,1,80);
     horn();shake=1.2;
-    const who=scorer&&!own?(scorer.isPlayer?'Golo teu!':`Golo de ${scorer.name}`):'';
+    const who=scorer&&!own&&!scorer.isPlayer?`Golo de ${scorer.name}`:'';
     message('GOLO!',team===0?'#5aaaff':'#ff9a4a',who?`${who} · ${kmh} km/h`:`${kmh} km/h`);
     // push cars away from explosion
     cars.forEach(c=>{const d=c.pos.clone().sub(b.pos);const m=d.length();if(m<25){d.y=0;d.normalize();c.vel.addScaledVector(d,(25-m)*1.6);c.vel.y+=(25-m)*.6;}});
@@ -729,7 +732,8 @@ function frame(now){
     }else if(S.state==='goal'){
       S.timer-=dt;
       if(S.timer<=0){message('');ballMark.visible=true;
-        if(S.ot)endGame();else if(S.time<=0&&S.score[0]!==S.score[1])endGame();else kickoff();}
+        const ng=S.noGoal;S.noGoal=false;
+        if(S.ot&&!ng)endGame();else if(S.time<=0&&S.score[0]!==S.score[1])endGame();else kickoff();}
     }
   }
   if(S.state==='paused'||S.state==='menu'||S.state==='over'){acc=0;}
