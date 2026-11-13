@@ -548,7 +548,7 @@ if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás p
 
 /* ---------- AI ---------- */
 function aiInput(car){
-  const mate=car.team===0&&!car.isPlayer,D=DIFF[mate?Math.max(1,S.diff):S.diff];const inp={thr:1,steer:0,boost:false,jump:false,jumpHeld:false};
+  const mate=car.team===0&&!car.isPlayer,lead=S.score[0]-S.score[1],D=DIFF[mate?Math.max(1,S.diff):Math.min(2,S.diff+(car.team===1?(lead>=2?1:0)+(lead>=4?1:0):0))];if(car.team===1&&lead>=3)car.boost=Math.max(car.boost,35);let retreat=false;const inp={thr:1,steer:0,boost:false,jump:false,jumpHeld:false};
   const s=car.team===0?1:-1,ownZ=s*L,attZ=-s*L;
   const dist=Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z);
   const t=Math.min(dist/40,1.2)*D.lead;
@@ -563,7 +563,7 @@ function aiInput(car){
   const app=new V(pb.x-car.pos.x,0,pb.z-car.pos.z);const appL=app.length()||1;app.multiplyScalar(1/appL);
   // only 'goal-side' when behind the ball AND the approach line points toward the rival goal
   const goalSide=(car.pos.z-pb.z)*s>1.5&&app.dot(toGoalA)>.15;
-  const danger=ball.pos.z*s>L*.55;
+  const danger=ball.pos.z*s>L*(car.team===1?.12:.55);
   let target;
   if(plOn){target=new V(clamp(pb.x+(car.pos.x>pb.x?1:-1)*11,-W+4,W-4),0,clamp(pb.z-s*16,-L+6,L-6));}
   else if(!attacker){
@@ -579,7 +579,7 @@ function aiInput(car){
     if(dist<9){ // too close on the wrong side: veer away from the ball
       target=new V(car.pos.x+side*12,0,car.pos.z+s*10);
     }
-    if(danger&&(car.pos.z-ball.pos.z)*s<0)target=new V(clamp(pb.x*.5,-GW/2+2,GW/2-2),0,ownZ-s*4);
+    if(danger&&(car.pos.z-ball.pos.z)*s<0){target=new V(clamp(pb.x*.5,-GW/2+2,GW/2-2),0,ownZ-s*4);retreat=car.team===1;}
   }else{
     const toGoal=toGoalA;
     const off=clamp(dist*.35,1,9);
@@ -599,6 +599,7 @@ function aiInput(car){
   inp.thr*=D.thr;
   if(Math.abs(ang)<.3&&car.boost>D.boostMin&&sp<46&&(td>18||(attacker&&dist<22&&goalSide))&&Math.random()<D.boostP)inp.boost=true;
   if(!goalSide&&dist<16)inp.boost=false;
+  if(retreat&&car.boost>0&&Math.abs(ang)<.6&&td>12)inp.boost=true;
   if(S.state==='play'&&S.timer>-1.5&&attacker&&dist<80)inp.boost=car.boost>0&&Math.abs(ang)<.4; // kickoff rush
   const bdx=ball.pos.x-car.pos.x,bdz=ball.pos.z-car.pos.z,blz=bdx*sn+bdz*c,blx=bdx*c-bdz*sn,bang=Math.atan2(blx,blz);
   if(attacker&&D.jump&&car.onGround&&dist<10&&ball.pos.y>3.5&&ball.pos.y<11&&Math.abs(bang)<.4&&ball.vel.y<6){inp.jump=true;inp.jumpHeld=true;}
