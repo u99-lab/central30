@@ -79,7 +79,7 @@ function update(dt){if(state==='menu'||state==='done'){const t=K.time*.15;cam.po
  if(inside&&Math.abs(me.sp)<.4){okT+=dt;if(okT>1){win();return;}}else okT=Math.max(0,okT-dt*2);
  const q=Math.max(0,1-Math.hypot(lx,lz)/6)*(1-Math.min(1,da2/.6));K.$('ht').textContent=T.toFixed(1);K.$('hh').textContent=hits;K.$('hp').style.width=(inside?100*Math.min(1,okT):q*80)+'%';K.$('hi').textContent=inside?(Math.abs(me.sp)<.4?'Perfeito… aguenta!':'Pára o carro'):Math.hypot(lx,lz)<3?(da2>.12?'Endireita o carro':'Quase lá'):'Entra no lugar verde, bem direito, e pára';
  // câmara
- if(camMode===0){cam.position.x=K.damp(cam.position.x,me.x-Math.sin(me.a)*8.5,4,dt);cam.position.z=K.damp(cam.position.z,me.z-Math.cos(me.a)*8.5,4,dt);cam.position.y=K.damp(cam.position.y,8.5,4,dt);cam.lookAt(me.x+Math.sin(me.a)*3,0,me.z+Math.cos(me.a)*3);}
+ if(camMode===0){cam.position.x=K.damp(cam.position.x,me.x-Math.sin(me.a)*10,4,dt);cam.position.z=K.damp(cam.position.z,me.z-Math.cos(me.a)*10,4,dt);cam.position.y=K.damp(cam.position.y,7.5,4,dt);cam.lookAt(me.x+Math.sin(me.a)*7,0,me.z+Math.cos(me.a)*7);}
  else{cam.position.x=K.damp(cam.position.x,me.x,5,dt);cam.position.z=K.damp(cam.position.z,me.z-1,5,dt);cam.position.y=K.damp(cam.position.y,20,5,dt);cam.lookAt(me.x,0,me.z);}}
 K._dbg=()=>({state,lv,T:+T.toFixed(1),hits,x:+me.x.toFixed(1),z:+me.z.toFixed(1)});K._put=(o)=>Object.assign(me,o);
 load(0);K.loop(update);menu();

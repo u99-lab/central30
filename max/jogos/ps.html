@@ -163,13 +163,13 @@ K.init({sky:0xf7c98b,fog:[80,320],fov:55,shadow:40,hemi:.75,sunI:1,sunPos:[-60,4
 const scene=K.scene,cam=K.camera;
 const FISH=[['Faneca',.2,.6,1,0xc9a36a],['Carapau',.15,.5,1.2,0x7fa8c9],['Dourada',.4,1.8,2,0xe5c76b],['Robalo',.6,3,2.6,0x9fb3bf],['Choco',.3,1.2,1.5,0xb89a86],['Sargo',.3,1.4,1.8,0xbfc7cf],['Linguado',.3,1.5,1.6,0xa08060],['Enguia',.2,1,2.2,0x5a6a3a]];
 // água
-const wg=new THREE.PlaneGeometry(800,800,80,80);const water=new THREE.Mesh(wg,new THREE.MeshPhongMaterial({color:0x2f7d92,specular:0x222222,shininess:25,transparent:true,opacity:.94}));water.rotation.x=-Math.PI/2;scene.add(water);const wp=wg.attributes.position;
+const wg=new THREE.PlaneGeometry(800,800,80,80);const water=new THREE.Mesh(wg,new THREE.MeshLambertMaterial({color:0x2f7d92,transparent:true,opacity:.95}));water.rotation.x=-Math.PI/2;scene.add(water);const wp=wg.attributes.position;
 K.box(800,1,140,0xe3cf9a,0,-.3,-170);for(let i=0;i<30;i++){const p=K.palm();p.position.set(K.rand(-200,200),0,K.rand(-200,-120));scene.add(p);}
 for(let i=0;i<10;i++)K.box(K.rand(5,9),K.rand(3,6),5,[0xffffff,0xf3e3c6,0x7fb3d5,0xf2c14e][i%4],-90+i*18,2,-130);
 for(const [x,c] of [[-30,0xe8452c],[40,0x2a8bff],[-70,0xffd23f]]){const b=new THREE.Group();K.box(3,1,7,c,0,.4,0,b);K.box(.15,6,.15,0xffffff,0,3.5,0,b);b.position.set(x,0,-60+Math.random()*20);scene.add(b);}
 // o teu barco
 const boat=new THREE.Group();K.box(2.4,.8,6,0xf2f2f2,0,.3,0,boat);K.box(2.5,.25,6.1,0x2a8bff,0,.75,0,boat);K.box(1.6,.2,1,0x8a6a4a,0,.75,1.5,boat);scene.add(boat);
-const me=K.person(0xe8452c);me.position.set(0,.85,1.6);me.rotation.y=Math.PI;boat.add(me);
+const me=K.person({shirt:0xe8452c});me.position.set(0,.85,1.6);me.rotation.y=Math.PI;boat.add(me);
 const rod=new THREE.Group();K.cyl(.03,.05,3.6,0x2b2b2b,0,1.8,0,rod,6);rod.position.set(.35,1.6,1.2);rod.rotation.x=-.6;boat.add(rod);
 const tip=new THREE.Object3D();tip.position.set(0,3.6,0);rod.add(tip);
 const bob=K.sph(.32,0xff3030,0,0,0,null,12);bob.visible=false;
