@@ -628,10 +628,11 @@ function carBall(car){
     // the ball follows where the car is driving, blended with the contact normal
     const hitDir=n.clone();
     const mv=new V(car.vel.x,0,car.vel.z),ms=mv.length();
-    if(ms>6){mv.multiplyScalar(1/ms);const al=mv.dot(n);if(al>0)hitDir.addScaledVector(mv,.9*al);}
+    if(ms>6){mv.multiplyScalar(1/ms);const al=mv.dot(n);if(al>0)hitDir.addScaledVector(mv,.45*al);}
     hitDir.y+=.2;hitDir.normalize();
-    ball.vel.addScaledVector(n,-rel*.55);
-    ball.vel.addScaledVector(hitDir,-rel*1.05*power+3);
+    const soft=clamp((-rel-4)/26,0,1); // toque leve (pouca velocidade) = bola devagar
+    ball.vel.addScaledVector(n,-rel*.4);
+    ball.vel.addScaledVector(hitDir,-rel*(.35+.45*soft)*power+1.5);
     car.vel.addScaledVector(n,rel*.2);
     const v=-rel;hitSfx(v*power);
     if(v>8)emit(ball.pos,new V(),v*.25,car.mega>0?0xffd23f:TEAMCOL[car.team],.4,Math.min(30,v|0));
