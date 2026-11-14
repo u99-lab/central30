@@ -73,6 +73,7 @@ K.store=(name,def)=>{let data=def;try{const v=window.__C30_STORAGE__?JSON.parse(
  const s={data,save(){if(!window.__C30_STORAGE__)return;try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
 window.C30me=()=>{try{return K.me?K.me():null;}catch{return null;}};
 K.peers=()=>{try{return window.C30peers?window.C30peers():[];}catch{return [];}};
+K.name=()=>{try{return (window.C30name&&window.C30name())||'Tu';}catch{return 'Tu';}};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa
 K.setPause=v=>{v=!!v;if(v&&!K.inGame)v=false;K.paused=v;$('k-pause').hidden=!v;if(!v)for(const k in keys)keys[k]=false;};
@@ -212,7 +213,7 @@ function next(){if(mode==='vs'){if(turn===1){round++;if(round>=8&&sc[0]!==sc[1]|
 function startVs(r){mode='vs';rival=r;scene.remove(foe);foe=K.person({shirt:RIVALS[r][2],shorts:0x222222,skin:0xd9a87c,hair:0x1c1c1c});sc=[0,0];round=0;turn=0;streak=0;randSpot();begin();}
 function begin(){phase='aim';K.screen(null);K.play(true);place();hud();K.sfx.whistle();}
 function endVs(){K.play(false);const win=sc[0]>sc[1];if(win){S.data.wins[rival]++;S.save();K.sfx.win();K.confetti(new THREE.Vector3(0,3,4));if(rival===2)K.unlock('bq-stor','Cesto · Ganhaste ao Stôr Paulo');}else K.sfx.bad();
- K.screen(`<div class="k-title">${win?'<em>Ganhaste!</em>':sc[0]===sc[1]?'Empate':'Perdeste'}</div><div class="k-lead">Tu ${sc[0]} – ${sc[1]} ${RIVALS[rival][0]}</div><button class="k-go" data-a="r">Desforra</button><button class="k-alt" data-a="m">Menu</button>`,{r:()=>startVs(rival),m:menu});}
+ K.screen(`<div class="k-title">${win?'<em>Ganhaste!</em>':sc[0]===sc[1]?'Empate':'Perdeste'}</div><div class="k-lead">${K.name()} ${sc[0]} – ${sc[1]} ${RIVALS[rival][0]}</div><button class="k-go" data-a="r">Desforra</button><button class="k-alt" data-a="m">Menu</button>`,{r:()=>startVs(rival),m:menu});}
 function endT60(){K.play(false);const rec=sc[0]>S.data.best60;if(rec){S.data.best60=sc[0];S.save();K.sfx.win();}if(sc[0]>=40)K.unlock('bq-40','Cesto · 40 pontos num minuto');
  K.screen(`<div class="k-title"><em>${sc[0]}</em> pontos</div><div class="k-lead">${rec?'Novo recorde!':'Recorde: '+S.data.best60} · ${shots} lançamentos</div><button class="k-go" data-a="r">Outra vez</button><button class="k-alt" data-a="m">Menu</button>`,{r:startT60,m:menu});}
 function endVolta(){K.play(false);const rec=!S.data.bestVolta||shots<S.data.bestVolta;if(rec){S.data.bestVolta=shots;S.save();}K.sfx.win();if(shots===7)K.unlock('bq-volta','Cesto · Volta ao mundo perfeita');
@@ -226,7 +227,7 @@ function menu(){mode='menu';phase='idle';K.play(false);turn=0;setSpot(6,0);place
  <table class="k-tab"><tr><td>Recorde 60 s</td><td>${S.data.best60}</td></tr><tr><td>Melhor volta ao mundo</td><td>${S.data.bestVolta||'—'}</td></tr></table>${K.keysHelp([['CLIQUE','ou'],['ESPAÇO','manter e largar'],['P','pausa']])}`,
  {vs:v=>startVs(+v),t60:startT60,volta:startVolta});}
 K.onQuit=menu;
-function hud(){const z=zoneW()*100,top=mode==='vs'?`<div class="k-pill" style="text-align:center"><small>Ronda ${Math.min(round+1,12)}${round>=8?' · desempate':'/8'}</small><b>Tu ${sc[0]} – ${sc[1]} ${RIVALS[rival][0]}</b></div>`:mode==='t60'?`<div class="k-pill"><small>Tempo</small><b id="hc">60</b></div><div class="k-pill"><small>Pontos</small><b>${sc[0]}</b></div>`:`<div class="k-pill"><small>Posição</small><b>${Math.min(7,vIdx+1)}/7</b></div><div class="k-pill"><small>Lançamentos</small><b>${shots}</b></div>`;
+function hud(){const z=zoneW()*100,top=mode==='vs'?`<div class="k-pill" style="text-align:center"><small>Ronda ${Math.min(round+1,12)}${round>=8?' · desempate':'/8'}</small><b>${K.name()} ${sc[0]} – ${sc[1]} ${RIVALS[rival][0]}</b></div>`:mode==='t60'?`<div class="k-pill"><small>Tempo</small><b id="hc">60</b></div><div class="k-pill"><small>Pontos</small><b>${sc[0]}</b></div>`:`<div class="k-pill"><small>Posição</small><b>${Math.min(7,vIdx+1)}/7</b></div><div class="k-pill"><small>Lançamentos</small><b>${shots}</b></div>`;
  K.hud(`<div class="k-tc">${top}</div><div class="k-tr"><div class="k-pill"><small>${spot.d.toFixed(1)} m</small><b>${pts()} pts${streak>=3?' 🔥':''}</b></div></div>
  <div class="k-bc" style="flex-direction:column">${turn===0?`<div class="k-meter"><u style="left:${IDEAL*100-z/2}%;width:${z}%"></u><i id="pw" style="width:0"></i></div><div class="k-hint">Mantém premido e larga no verde</div>`:`<div class="k-hint">Vez do ${RIVALS[rival][0]}…</div>`}</div>`);}
 const cv=K.renderer.domElement;

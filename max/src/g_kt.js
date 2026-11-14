@@ -10,7 +10,7 @@ const TRACKS=[
  {n:'Serra da Boa Viagem',th:'serra',pts:[[0,0],[50,0],[90,-30],[140,-20],[150,30],[110,50],[120,100],[70,120],[40,80],[0,110],[-50,90],[-40,40],[-80,10],[-40,-20]]},
  {n:'Noite em Tavarede',th:'noite',pts:[[0,0],[70,0],[100,30],[70,60],[100,90],[70,120],[10,110],[-20,70],[-70,90],[-110,50],[-80,10],[-100,-30],[-50,-40]]}];
 const THEME={praia:{sky:0x8fd3ff,ground:0xefd9a3,hemi:.85,sun:.85,fog:[140,460],sunC:0xfff1d0},serra:{sky:0xffb984,ground:0x4f8a45,hemi:.72,sun:.8,fog:[90,340],sunC:0xffc890},noite:{sky:0x0d1330,ground:0x1c2238,hemi:.5,sun:.4,fog:[70,300],sunC:0x9fb4ff}};
-const HW=6.5,N=640,LAPS=3,NAMES=['Tu','Rui','Bia','Isaac','Mika','Bruno'],COLS=[0xff3d5a,0x2a8bff,0xffd23f,0x35d07f,0xb46bff,0xff8a3d],DIFF=[['Fácil',.84],['Normal',.92],['Difícil',1]];
+const HW=6.5,N=640,LAPS=3,NAMES=[K.name(),'Rui','Bia','Isaac','Mika','Bruno'],COLS=[0xff3d5a,0x2a8bff,0xffd23f,0x35d07f,0xb46bff,0xff8a3d],DIFF=[['Fácil',.84],['Normal',.92],['Difícil',1]];
 let world=null,P=[],Tn=[],Nr=[],curv=[],seg=1,track=null,ti=0,diff=1;
 const roadT=K.tex(128,128,(c,w,h)=>{c.fillStyle='#3d414d';c.fillRect(0,0,w,h);for(let i=0;i<500;i++){c.fillStyle=Math.random()<.5?'#454a57':'#373b46';c.fillRect(Math.random()*w,Math.random()*h,2,2);}c.fillStyle='#f4f4f4';c.fillRect(5,0,4,h);c.fillRect(w-9,0,4,h);c.fillStyle='#ffd23f';c.fillRect(62,0,4,h*.5);},[1,1]);
 const curbT=K.tex(32,64,(c,w,h)=>{c.fillStyle='#fff';c.fillRect(0,0,w,h);c.fillStyle='#e8352c';c.fillRect(0,0,w,h/2);},[1,1]);

@@ -16,6 +16,7 @@ K.store=(name,def)=>{let data=def;try{const v=window.__C30_STORAGE__?JSON.parse(
  const s={data,save(){if(!window.__C30_STORAGE__)return;try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
 window.C30me=()=>{try{return K.me?K.me():null;}catch{return null;}};
 K.peers=()=>{try{return window.C30peers?window.C30peers():[];}catch{return [];}};
+K.name=()=>{try{return (window.C30name&&window.C30name())||'Tu';}catch{return 'Tu';}};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa
 K.setPause=v=>{v=!!v;if(v&&!K.inGame)v=false;K.paused=v;$('k-pause').hidden=!v;if(!v)for(const k in keys)keys[k]=false;};

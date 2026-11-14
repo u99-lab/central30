@@ -73,6 +73,7 @@ K.store=(name,def)=>{let data=def;try{const v=window.__C30_STORAGE__?JSON.parse(
  const s={data,save(){if(!window.__C30_STORAGE__)return;try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
 window.C30me=()=>{try{return K.me?K.me():null;}catch{return null;}};
 K.peers=()=>{try{return window.C30peers?window.C30peers():[];}catch{return [];}};
+K.name=()=>{try{return (window.C30name&&window.C30name())||'Tu';}catch{return 'Tu';}};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa
 K.setPause=v=>{v=!!v;if(v&&!K.inGame)v=false;K.paused=v;$('k-pause').hidden=!v;if(!v)for(const k in keys)keys[k]=false;};
@@ -182,7 +183,7 @@ function build(i){ci=i;if(world)scene.remove(world);world=new THREE.Group();scen
 function mkBoat(col){const g=new THREE.Group(),b=new THREE.Group();g.add(b);K.box(1.8,.6,3.2,0xffffff,0,.3,-.2,b);K.box(1.82,.18,3.22,col,0,.5,-.2,b);const bow=K.box(1.28,.6,1.28,0xffffff,0,.3,1.4,b);bow.rotation.y=Math.PI/4;const bow2=K.box(1.3,.18,1.3,col,0,.5,1.4,b);bow2.rotation.y=Math.PI/4;
  K.box(1.5,.12,2.4,0xd9c9a8,0,.62,-.6,b);K.box(1.2,.5,.1,0x9fd8ff,0,.95,.05,b);K.box(.4,.6,.5,0x222222,0,.65,-2.6,b);const p=K.person({shirt:0xffd23f,parent:b,s:.7});p.position.set(0,.3,-1);K.pose(p,{legL:[-1.5],legR:[-1.5],armL:[-1.2],armR:[-1.2]});
  g.userData.b=b;scene.add(g);return g;}
-const NAMES=['Tu','Rui','Bia','Isaac','Mika'],COLS=[0xe8452c,0x2a8bff,0xffd23f,0x35d07f,0xb46bff];
+const NAMES=[K.name(),'Rui','Bia','Isaac','Mika'],COLS=[0xe8452c,0x2a8bff,0xffd23f,0x35d07f,0xb46bff];
 function grid(){for(const b of boats)scene.remove(b.g);boats=[];for(let k=0;k<5;k++){const back=8+k*6,j=(N-Math.round(back/3))%N,lat=(k%2?1:-1)*4;const a=P[(j+1)%N],b0=P[(j+N-1)%N],tx=a.x-b0.x,tz=a.z-b0.z,l=Math.hypot(tx,tz),nx=-tz/l,nz=tx/l;
  const B={id:k,name:NAMES[k],g:mkBoat(COLS[k]),x:P[j].x+nx*lat,z:P[j].z+nz*lat,a:Math.atan2(tx,tz),sp:0,idx:j,prog:j-N,boost:0,turbo:100,ai:k>0,skill:.86+k*.03+K.rand(0,.03),tl:K.rand(-5,5),fin:0,lat:0,bob:K.rand(6)};boats.push(B);if(!k)me=B;}}
 function nearest(B){let best=B.idx,bd=1e9;for(let j=-10;j<=10;j++){const i=((B.idx+j)%N+N)%N,d=(P[i].x-B.x)**2+(P[i].z-B.z)**2;if(d<bd){bd=d;best=i;}}let di=best-B.idx;if(di>N/2)di-=N;if(di<-N/2)di+=N;B.prog+=di;B.idx=best;B.dist=Math.sqrt(bd);}

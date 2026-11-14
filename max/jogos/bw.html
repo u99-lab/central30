@@ -73,6 +73,7 @@ K.store=(name,def)=>{let data=def;try{const v=window.__C30_STORAGE__?JSON.parse(
  const s={data,save(){if(!window.__C30_STORAGE__)return;try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
 window.C30me=()=>{try{return K.me?K.me():null;}catch{return null;}};
 K.peers=()=>{try{return window.C30peers?window.C30peers():[];}catch{return [];}};
+K.name=()=>{try{return (window.C30name&&window.C30name())||'Tu';}catch{return 'Tu';}};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa
 K.setPause=v=>{v=!!v;if(v&&!K.inGame)v=false;K.paused=v;$('k-pause').hidden=!v;if(!v)for(const k in keys)keys[k]=false;};
@@ -180,7 +181,7 @@ let state='menu',players=[],turn=0,frameN=0,roll=0,phase='aim',aim={x:0,ang:0,sp
 function resetPins(all){for(const p of pins){if(all||!p.down){p.x=p.x0;p.z=p.z0;p.vx=p.vz=0;p.tilt=0;p.down=false;p.out=false;}else{p.out=true;}placePins();}}
 function placePins(){for(const p of pins){p.g.visible=!p.out;p.g.position.set(p.x,0,p.z);p.g.rotation.set(0,0,0);if(p.tilt){p.g.rotation.z=Math.cos(p.dir)*p.tilt;p.g.rotation.x=Math.sin(p.dir)*p.tilt;}}}
 const standing=()=>pins.filter(p=>!p.down&&!p.out).length;
-function startGame(vs){players=[{name:'Tu',f:[],cpu:false}];if(vs)players.push({name:'Rui',f:[],cpu:true});turn=0;frameN=0;roll=0;resetPins(true);newRoll();K.screen(null);K.play(true);state='play';hud();}
+function startGame(vs){players=[{name:K.name(),f:[],cpu:false}];if(vs)players.push({name:'Rui',f:[],cpu:true});turn=0;frameN=0;roll=0;resetPins(true);newRoll();K.screen(null);K.play(true);state='play';hud();}
 function newRoll(){phase='aim';aim.x=0;aim.ang=0;aim.spin=0;aim.pow=0;bl={x:0,z:-.2,vx:0,vz:0,spin:0,live:false,gutter:false};ball.position.set(0,BR,-.2);pinsBefore=standing();cpuT=1.4;swept=false;K.pad([['Space','Lançar'],['KeyQ','Efeito ◀'],['KeyE','Efeito ▶']]);}
 function score(f){let t=0,r=[];for(const fr of f)r.push(...fr);let i=0;const out=[];for(let k=0;k<f.length&&k<10;k++){const fr=f[k];if(fr[0]===10&&k<9){if(r[i+2]===undefined)break;t+=10+r[i+1]+r[i+2];i+=1;}else if(k<9&&fr[0]+(fr[1]||0)===10){if(fr.length<2||r[i+2]===undefined)break;t+=10+r[i+2];i+=2;}else{if(k<9&&fr.length<2)break;if(k===9&&!((fr.length===3)||(fr.length===2&&fr[0]+fr[1]<10)))break;t+=fr.reduce((a,b)=>a+b,0);i+=fr.length;}out.push(t);}return out;}
 function hud(){const rows=players.map(pl=>{const sc=score(pl.f);let s='';for(let k=0;k<10;k++){const fr=pl.f[k]||[];const m=fr.map((v,j)=>v===10&&(j===0||k===9)?'X':j>0&&fr[j-1]+v===10&&fr[j-1]!==10?'/':v===0?'-':v).join(' ');s+=`<td style="border:1px solid #ffffff33;padding:2px 4px;min-width:30px;text-align:center;font-size:11px">${m||'&nbsp;'}<br><b>${sc[k]!==undefined?sc[k]:''}</b></td>`;}return `<tr><td style="padding:2px 6px;font-weight:800">${pl.name}</td>${s}</tr>`;}).join('');
