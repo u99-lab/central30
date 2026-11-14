@@ -246,7 +246,7 @@ html:not(.c30playing) #c30chat{top:calc(74px + env(safe-area-inset-top,0px))}
 }
 html.reduce-motion *{animation:none!important;transition:none!important}
 html.reduce-motion .spot-art{transform:none}
-@media (prefers-reduced-motion:reduce){.loader-mark,.loading-line:after,.spot-art img,.spot-txt{animation:none}}
+
 </style>
 <style id="c30xfix">/* botões de fechar (X) sempre redondos e centrados, mesmo com títulos compridos ou em iPad/telemóvel */
 .close,#c30chat .tabs .x{flex:none!important;padding:0!important;display:grid!important;place-items:center;line-height:1!important;-webkit-appearance:none;appearance:none;font-family:system-ui,-apple-system,"Segoe UI",sans-serif!important;font-variant-emoji:text;text-align:center;box-sizing:border-box;overflow:hidden}
@@ -257,6 +257,7 @@ html.reduce-motion .spot-art{transform:none}
 .fav{padding:0!important;flex:none!important;line-height:0!important;-webkit-appearance:none;appearance:none;box-sizing:border-box;overflow:hidden;aspect-ratio:1}
 .fav svg{flex:none;display:block;min-width:15px;min-height:15px}
 </style>
+<style id="c30small">/* Ecrãs pequenos: nada mais largo do que o ecrã (igual à Central 30) */html,body{max-width:100%;overflow-x:hidden}.top-right{min-width:0;flex-wrap:wrap;justify-content:flex-end}</style>
 </head>
 <body><noscript><section style="max-width:760px;margin:40px auto;padding:0 16px;color:#fff;font-family:system-ui,sans-serif;line-height:1.5"><h1>Central 30 MAX</h1><p>Central 30 MAX: 40 jogos 3D para jogar no browser, sem instalar nada. Os 21 da Central 30 e 19 novos: Táxi, Polícias e Ladrões, Kart, Comboio, Pesca, Vólei de Praia, Bowling, Motocross e mais.</p><p>Ativa o JavaScript para jogar.</p></section></noscript><div id="bd"><i></i><i></i></div>
 <div id="c30gate">

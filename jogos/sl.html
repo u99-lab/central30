@@ -1071,10 +1071,13 @@ function updateCarPhysics(state,dt,isPlayer){
   if(after.distance>railHalfWidth-1.25){
     const outward=after.normal.clone().multiplyScalar(Math.sign(after.offset)),impact=state.velocity.dot(outward);
     state.pos.addScaledVector(outward,-(after.distance-(railHalfWidth-1.25)));
-    if(impact>0){state.velocity.addScaledVector(outward,-impact*1.28);state.velocity.multiplyScalar(.87);state.yawRate*=.5;
+    {const t=after.tangent;let h=Math.atan2(t.x,t.z);if(Math.abs(wrapAngle(h-state.heading))>Math.PI/2)h=wrapAngle(h+Math.PI);state.heading=wrapAngle(state.heading+wrapAngle(h-state.heading)*Math.min(1,dt*3.2));
+     if(isPlayer){state.wallTime=(state.wallTime||0)+dt;if(state.wallTime>2.5&&Math.abs(state.speed)<1.5&&!state.wallHint){state.wallHint=true;raceNotice('Preso? Carrega em R (ou ↺) para voltar à pista',3);}}}
+    if(impact>0){state.velocity.addScaledVector(outward,-impact*1.28);state.velocity.multiplyScalar(impact>1.5?.87:Math.exp(-dt*1.2));state.yawRate*=.5;
       if(isPlayer&&impact>2&&state.contactCooldown<=0){impactShake=Math.min(.65,impact*.035);window.C30?.sound('impact',Math.min(1,impact/15));raceNotice('Contacto com a barreira · recupera a trajetória',1.5);state.contactCooldown=.7;}
     }
   }
+  if(isPlayer&&after.distance<=railHalfWidth-1.25){state.wallTime=0;state.wallHint=false;}
   state.mesh.position.copy(state.pos);
   const curbBump=contact.surface===SURFACES.curb?Math.sin(simulationTime*55)*Math.min(.055,speed*.002):0;
   state.mesh.position.y=curbBump;
