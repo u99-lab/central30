@@ -1625,10 +1625,10 @@ function botTimes(field, key) {
   const salt = (Math.random() * 1e9) | 0, r = mulberry32(hashStr(key + '#' + salt)), dk = DIFF[career.diff].k;
   return field.map(b => {
     const id = S.ideal[carIdx(b.car)];
-    const form = 1 + (mulberry32(hashStr(b.name + key.replace(/-(\d+)(:\d+)?$/, '$2') + '#' + salt))() - 0.5) * 0.06; // forma do rival nesta tentativa
-    let t = id.total * REF * b.skill * dk * form * (1 + gauss(r) * 0.026), note = '';
+    const form = 1 + (mulberry32(hashStr(b.name + key.replace(/-(\d+)(:\d+)?$/, '$2') + '#' + salt))() - 0.5) * 0.12; // forma do rival nesta tentativa (há dias bons e maus)
+    let t = id.total * REF * b.skill * dk * form * (1 + gauss(r) * 0.035), note = '';
     const x = r();
-    if (x < 0.035) { t += 6 + r() * 16; note = 'pião'; } else if (x < 0.047) { t += 30 + r() * 30; note = 'furo'; }
+    if (x < 0.06) { t += 6 + r() * 16; note = 'pião'; } else if (x < 0.08) { t += 30 + r() * 30; note = 'furo'; } else if (x < 0.09) { t += 12 + r() * 10; note = 'saída de estrada'; }
     const splits = id.splits.map(sp => sp / id.total * t);
     return { name: b.name, nat: b.nat, car: b.car, t, note, splits };
   });
