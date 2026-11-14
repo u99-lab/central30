@@ -6002,8 +6002,7 @@ function updatePolice(){
         chaseActive=false; wanted=0; wantedTimer=0; chaseTimer=0;
         document.getElementById('police-hud').style.display='none';
         SND.stopSiren();
-        showMsg('PASSAPORTE ACEITE!\nMulta reduzida - EUR 100',3000);
-        money=Math.max(0,money-(100)); return;
+        cityFine(100,'PASSAPORTE ACEITE!\nMulta reduzida'); return;
       }
       // No passport — go to prison
       chaseActive=false; wanted=0; wantedTimer=0; chaseTimer=0;
@@ -6057,7 +6056,16 @@ function openMarket(){
   });
   openModal('MERCADO DE CARROS',html,'#44ff44');
 }
+// multas como na vida real: sem dinheiro, o caso vai a tribunal (trabalho comunitário) e, se voltar a acontecer, o carro é apreendido
+var courtCount=0;
+function cityFine(amount,why){
+  if(money>=amount){money-=amount;showMsg(why+'\n-EUR '+amount+' MULTA',3000);return;}
+  var owe=amount-Math.floor(money);money=0;courtCount++;
+  if(courtCount>=3&&currentCar!==0){var lost=carDefs[currentCar].name;carDefs[currentCar].owned=false;courtCount=0;try{selectCar(0);}catch(e){}showMsg('⚖️ TRIBUNAL\nMultas por pagar outra vez: o teu '+lost+' foi apreendido e vendido para pagar EUR '+owe+'.',6000);return;}
+  showMsg('⚖️ TRIBUNAL\nNão tinhas dinheiro para a multa (EUR '+amount+').\nSentença: '+(courtCount===1?'trabalho comunitário a limpar as ruas':'o dobro do trabalho comunitário')+'.'+(courtCount===2?'\nMais uma e o carro é apreendido!':''),6000);
+}
 window.buyCar=function(i){
+  if(money<carDefs[i].price){showMsg('Sem dinheiro!\nFaltam EUR '+Math.ceil(carDefs[i].price-money),2200);return;}
   money=Math.max(0,money-(carDefs[i].price)); carDefs[i].owned=true; selectCar(i); openMarket();
 };
 window.selectCar=function(i){
@@ -7117,8 +7125,7 @@ function checkInteract(){
       chaseActive=false; wanted=0; wantedTimer=0; chaseTimer=0;
       document.getElementById('police-hud').style.display='none';
       SND.stopSiren();
-      spd=0; money=Math.max(0,money-(300));
-      showMsg('ENTREGASTE-TE A POLICIA\n-EUR 300 MULTA',3000); return;
+      spd=0; cityFine(300,'ENTREGASTE-TE À POLÍCIA'); return;
     }
     var p2=pp();
     // Airports
