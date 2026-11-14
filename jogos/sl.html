@@ -98,6 +98,7 @@
   #btnRecover{position:absolute;top:72px;right:16px;pointer-events:auto;background:#091627c9;border:1px solid #d4e8ff44;border-radius:7px;padding:8px 11px;color:#d4e8ff;font-size:11px;cursor:pointer}
   .trackSurface{font-size:11px;color:#a4cbd7;margin:8px 0;letter-spacing:.3px}
   @media(max-width:700px){#driveHelp{bottom:8px;font-size:9px;white-space:nowrap;padding:5px 8px}#speedo,#speedVal,#speedUnit{right:8px}#minimap{bottom:218px;left:12px;width:105px;height:105px}#telemetry{bottom:180px;right:18px;font-size:9px}#speedo{bottom:218px;width:112px;height:112px}#speedVal{bottom:256px;width:112px;font-size:27px}#speedUnit{bottom:243px;width:112px;font-size:9px}#telemetry{bottom:337px}#raceNotice{top:116px}}
+  @media(pointer:coarse){#btnRecover,#driveHelp{display:none!important}#speedo{bottom:172px}#speedVal{bottom:218px}#speedUnit{bottom:204px}#telemetry{bottom:330px}#posBox{top:96px}}
 </style>
 </head>
 <body>
@@ -969,7 +970,7 @@ function startRace(trackKey){
   aiCars=[];
   const nAi=Math.max(t.aiCount,(window.C30slots||[]).filter(x=>x.present||x.joined).length);
   const aiField=pickAiField(nAi,trackKey);while(aiField.length<nAi)aiField.push(aiField[aiField.length%Math.max(1,aiField.length)]||Object.keys(CARS)[0]);
-  for(let i=0;i<nAi;i++)aiCars.push(stateFor(aiField[i],i<pSlot?i:i+1,false));
+  for(let i=0;i<nAi;i++)aiCars.push(stateFor(aiField[i],i<pSlot?i:i+1,false));{const pt=document.getElementById('posTotal');if(pt)pt.textContent=aiCars.length+1;}
   raceStatsThisSession.distinctTracksRaced.add(trackKey);
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('hud').classList.add('active');
