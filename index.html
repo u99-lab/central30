@@ -221,7 +221,7 @@ updateKeepChip();
 </script>
 <script>'use strict';
 const STAR='<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>';
-const KB={"jc":2708,"pn":2444,"an":874,"cr":451,"ct":363,"fb":355,"pr":291,"ea":989,"mr":151,"cm":110,"cq":100,"ab":94,"cb":94,"sl":89,"lr":86,"cl":84,"bf":61,"aa":57,"tb":55,"rs":189};
+const KB={"jc": 2708, "pn": 2444, "an": 874, "cr": 451, "ct": 363, "fb": 355, "pr": 293, "rs": 192, "ea": 991, "mr": 151, "cm": 110, "cq": 100, "ab": 94, "cb": 94, "sl": 89, "lr": 86, "cl": 84, "bf": 61, "aa": 57, "tb": 55, "ns": 55};
 let stats=read('c30.stats',{}),favs=read('c30.favs',[]);const F={q:'',genre:'Todos',fav:false,sort:'peso'};
 if(!stats||typeof stats!=='object'||Array.isArray(stats))stats={};if(!Array.isArray(favs))favs=[];
 const st=id=>stats[id]||(stats[id]={secs:0,plays:0,last:0});
