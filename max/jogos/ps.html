@@ -191,7 +191,7 @@ function press(){if(state!=='play')return;held=true;K.audio();
  else if(phase==='bite'){phase='fight';const r=Math.random();fish=FISH[Math.min(FISH.length-1,Math.floor(r*r*FISH.length*1.15))];fish={n:fish[0],kg:K.rand(fish[1],fish[2]),str:fish[3],c:fish[4]};fishPos=.5;fishV=0;zone=.5;reel=.15;K.tone(300,.1,'square',.2);}}
 function release(){held=false;if(phase==='power'){phase='wait';dist=8+power*30;const a=boat.rotation.y;bobP.set(boat.position.x-Math.sin(a)*dist,0,boat.position.z-Math.cos(a)*dist);bob.visible=true;line.visible=true;wait=K.rand(3,9);K.noise(.15,.2,1500);}}
 addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat){e.preventDefault();press();}});addEventListener('keyup',e=>{if(e.code==='Space')release();});
-K.renderer.domElement.addEventListener('pointerdown',press);addEventListener('pointerup',release);
+K.renderer.domElement.addEventListener('pointerdown',press);K.pad([['KeyA','◀ Rodar'],['KeyD','Rodar ▶']]);addEventListener('pointerup',release);
 function landed(){const f=fish;catchList.push(f);kg+=f.kg;S.data.book[f.n]=Math.max(S.data.book[f.n]||0,f.kg);S.save();K.flash(f.n+'!',f.kg.toFixed(2)+' kg',1400,'#3dffa2');K.sfx.good();K.burst(bob.position.clone(),0x9fe8ff,14);
  if(f.n==='Robalo'&&f.kg>2.5)K.unlock('ps-robalo','Pesca · Robalo de mais de 2,5 kg');phase='idle';bob.visible=false;line.visible=false;fish=null;}
 function lost(why){K.flash(why,'',1200,'#ff6b6b');K.sfx.bad();phase='idle';bob.visible=false;line.visible=false;fish=null;}

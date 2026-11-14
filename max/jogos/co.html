@@ -210,10 +210,11 @@ function finish(){state='end';K.play(false);const tot=Math.max(0,Math.round(scor
 function menu(){state='menu';K.play(false);if(!stations.length){L=0;buildLine();z=stations[0].z;}
  K.screen(`<div class="k-title">Comboio do <em>Oeste</em></div><div class="k-lead">És maquinista: respeita os limites e pára o comboio com a marca vermelha no cais.</div><div class="k-row">${LINES.map((l,i)=>`<button class="k-chip" data-a="go" data-v="${i}">${l.n}<small>${l.st.length} estações · recorde ${S.data.best[i]}</small></button>`).join('')}</div>${K.keysHelp([['W ↑','tração'],['S ↓','travão'],['C','câmara'],['P','pausa']])}`,{go:v=>start(+v)});}
 K.onQuit=menu;
-addEventListener('keydown',e=>{if(e.code==='KeyC')view=(view+1)%2;});
+K.pad([['KeyW','Tração ▲'],['KeyS','Travão ▼'],['KeyC','Câmara']]);
 let hudT=0;
 function update(dt){
  if(state==='menu'){const t=K.time*.15;const zz=stations[0].z+Math.sin(t)*60;cam.position.set(curveX(zz)+18,9,zz-20);cam.lookAt(curveX(zz),2,zz+10);train.position.set(curveX(stations[0].z),0,stations[0].z);return;}
+ if(K.hit('KeyC'))view=(view+1)%2;
  if(state==='play'){const ax=K.axis();timer+=dt;
   if(dwell>0){dwell-=dt;thr=Math.min(thr,0);v=0;const st=stations[stIdx];st.people.forEach(p=>{if(p.userData.board!=null){p.userData.board-=dt;if(p.userData.board<0){p.position.x+=dt*2.5;if(p.position.x>curveX(st.z)-1.5)p.visible=false;}else K.walk(p,K.time*8,.6);}});
    msg='Portas abertas · '+Math.ceil(dwell)+' s';if(dwell<=0){doors=false;msg='';stIdx++;if(stIdx>=stations.length){finish();return;}K.toast('Próxima estação: '+stations[stIdx].n);K.tone(660,.15,'sine',.2);setTimeout(()=>K.tone(520,.2,'sine',.2),180);}}

@@ -1199,7 +1199,7 @@ function buildStadium(s){let [x,z]=PJ(s.lon,s.lat);const c=CITIES.find(c=>Math.h
  for(const [u,v] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const m=box(g,.8,26,.8,0x8a9096,u*(R-2)*.8,0,v*(R-2)*D/W*.8);const l=box(g,4,2,1,0xfff6d0,u*(R-2)*.8,25,v*(R-2)*D/W*.8);l.material=new THREE.MeshBasicMaterial({color:0xfff6d0})}
  // nome do clube por fora
  const nt=ctex(512,96,(g2,w,h)=>{g2.fillStyle='#'+col.toString(16).padStart(6,'0');g2.fillRect(0,0,w,h);g2.fillStyle='#'+col2.toString(16).padStart(6,'0');g2.font='800 54px "Bricolage Grotesque",sans-serif';g2.textAlign='center';g2.textBaseline='middle';g2.fillText(s.short||s.team.toUpperCase(),w/2,h/2+3)});
- for(const sd of [-1,1]){const sg=new THREE.Mesh(new THREE.PlaneGeometry(W*.5,W*.5*96/512),new THREE.MeshBasicMaterial({map:nt}));sg.position.set(0,10,sd*(D/2+.6));if(sd<0)sg.rotation.y=Math.PI;g.add(sg)}
+ for(const sd of [-1,1]){const sg=new THREE.Mesh(new THREE.PlaneGeometry(W*.5,W*.5*96/512),new THREE.MeshBasicMaterial({map:nt}));sg.position.set(0,10,sd*((R+1)*D/W+.5));if(sd<0)sg.rotation.y=Math.PI;g.add(sg)}
  B.push({x,z,w:W+2,d:D+2,h:14,keep:true,hidden:true});LM['st_'+s.id]={x,z,label:s.name};
  STADIA.push(Object.assign({},s,{x,z,W,D,g}))}
 (RG.stadiums||[]).forEach(s=>{try{buildStadium(s)}catch(e){}});
