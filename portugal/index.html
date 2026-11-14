@@ -1647,8 +1647,8 @@ $('#mhOut').onclick=()=>endMatch();
 
 /* ================= PASSAPORTE E VISTOS (como na vida real, para quem tem nacionalidade portuguesa) ================= */
 // com o Cartão de Cidadão entra-se na União Europeia, no Espaço Schengen e nos países que o aceitam; nos outros é preciso passaporte, e alguns pedem visto ou autorização paga
-const ID_OK=new Set(['pt','es','fr','it','de','be','nl','ch','at','pl','cz','dk','lu','sm','va','mc','ad','li','ie','mt','cy','is','no','se','fi','ee','lv','lt','md','ro','bg','gr','al','mk','xk','me','rs','ba','hr','si','sk','hu','tr','ge']);
-const VISA={uk:[16,'ETA (autorização eletrónica de viagem)'],us:[37,'ESTA'],usla:[37,'ESTA'],ca:[5,'eTA'],in:[25,'e-Visa'],eg:[25,'visto à chegada'],az:[24,'e-Visa'],ru:[80,'visto']};
+const ID_OK=new Set(['br','pt','es','fr','it','de','be','nl','ch','at','pl','cz','dk','lu','sm','va','mc','ad','li','ie','mt','cy','is','no','se','fi','ee','lv','lt','md','ro','bg','gr','al','mk','xk','me','rs','ba','hr','si','sk','hu','tr','ge']);
+const VISA={uk:[19,'ETA britânica (£16)'],us:[37,'ESTA'],usla:[37,'ESTA'],ca:[5,'eTA'],in:[25,'e-Visa'],eg:[25,'visto à chegada'],az:[24,'e-Visa'],ru:[80,'visto']};
 G.passport=!!(G.passport||MEM.get('passport',false));
 function entryRule(to){if(ID_OK.has(to))return{pass:false,fee:0};const v=VISA[to];return{pass:true,fee:v?v[0]:0,doc:v?v[1]:null}}
 let entryToastT=0;
