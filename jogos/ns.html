@@ -40,7 +40,7 @@ canvas{display:block}
 #feed{position:absolute;right:calc(16px + env(safe-area-inset-right,0px));top:calc(14px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:4px;align-items:flex-end;font-weight:700;font-size:15px}
 #feed div{background:var(--panel);padding:3px 10px;border-radius:6px;border:1px solid var(--line)}
 #replayBtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));pointer-events:auto;background:linear-gradient(180deg,#ff9440,#e85f0c);color:#fff;border:0;border-radius:12px;padding:12px 22px;font:400 20px var(--display);letter-spacing:.05em;cursor:pointer;box-shadow:0 6px 24px rgba(255,122,26,.45)}
-#replayTag{position:absolute;left:calc(18px + env(safe-area-inset-left,0px));top:calc(64px + env(safe-area-inset-top,0px));font-family:var(--display);font-size:20px;color:#ff4060;letter-spacing:.08em;text-shadow:0 0 12px #ff4060}
+#replayTag{pointer-events:auto;position:absolute;left:calc(18px + env(safe-area-inset-left,0px));top:calc(64px + env(safe-area-inset-top,0px));font-family:var(--display);font-size:20px;color:#ff4060;letter-spacing:.08em;text-shadow:0 0 12px #ff4060}
 #pauseBtn{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));top:calc(40px + env(safe-area-inset-top,0px));pointer-events:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;font:700 16px var(--ui);padding:6px 12px}
 
 #menu{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 120%,rgba(47,140,255,.25),transparent 60%),radial-gradient(ellipse at 50% -20%,rgba(255,122,26,.22),transparent 60%),rgba(4,6,16,.55);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;overflow:auto}
@@ -82,7 +82,7 @@ h1 .n2{color:var(--orange);text-shadow:0 0 24px rgba(255,122,26,.7)}
   <div id="mega" hidden>⚡ SOBRECARGA</div>
   <div id="msg"></div>
   <div id="sub"></div>
-  <div id="replayTag" hidden>● REPETIÇÃO <small style="font:700 13px var(--ui);color:var(--muted);letter-spacing:.06em;text-shadow:none">· R ou toque para saltar</small></div>
+  <div id="replayTag" hidden>● REPETIÇÃO <button type="button" style="margin-left:10px;pointer-events:auto;font:800 14px var(--ui);padding:8px 14px;border-radius:10px;border:0;background:#ff4060;color:#fff;cursor:pointer">⏭ Saltar</button></div>
   <button id="replayBtn" hidden>▶ VER REPETIÇÃO</button>
   <div id="boostUI" hidden><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"></circle><circle id="ring" cx="50" cy="50" r="42"></circle></svg><div id="bval"><div>33<small>TURBO</small></div></div></div>
   <button id="pauseBtn" hidden>II</button>
@@ -542,6 +542,9 @@ function seg(id,key){const el=$(id);el.addEventListener('click',e=>{const b=e.ta
 seg('segMode','mode');seg('segDiff','diff');seg('segTime','dur');
 $('replayBtn').addEventListener('click',startReplay);
 renderer.domElement.addEventListener('pointerdown',()=>{if(S.state==='replay')afterGoal();});
+// no iPad os comandos de toque ficam por cima do jogo: qualquer toque no ecrã (ou o botão) salta a repetição
+addEventListener('pointerdown',e=>{if(S.state==='replay'&&!(e.target.closest&&e.target.closest('#pause,#result,#menu'))){e.preventDefault();afterGoal();}},true);
+$('replayTag').addEventListener('click',()=>{if(S.state==='replay')afterGoal();});
 $('restart').addEventListener('click',()=>{$('restart').hidden=true;$('result').hidden=true;startGame();});
 $('play').addEventListener('click',()=>{if(S.state==='paused')togglePause();else{$('result').hidden=true;startGame();}});
 if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás para travar)</span><b>SALTAR</b><span>Toca 2× com o joystick inclinado = mortal</span><b>TURBO</b><span>Mantém premido</span><b>CÂMARA</b><span>Câmara bola / livre</span>';
