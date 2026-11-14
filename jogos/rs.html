@@ -109,6 +109,14 @@ kbd{font-family:var(--display);background:var(--sun);color:#1a1020;border-radius
 #gCls button.on{background:var(--sun);color:#1a1020;border-color:transparent}
 #gSlider{width:100%;margin:12px 0 2px;accent-color:var(--hot)}
 #gNum{font-size:13px;color:var(--mute);text-align:center}
+#gList{position:relative;margin:10px 0 4px;max-height:min(30vh,230px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.18)}
+#gList button{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.06);color:var(--fg);font:600 14px var(--ui,system-ui);text-align:left;cursor:pointer}
+#gList button:hover{background:rgba(255,255,255,.06)}
+#gList button.on{background:rgba(255,178,46,.18)}
+#gList b{flex:none;width:26px;text-align:center;border-radius:4px;background:rgba(255,255,255,.1);font-size:12px;padding:2px 0}
+#gList span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gList em{flex:none;font-style:normal;font-size:12px;color:var(--mute)}
+#gList em.own{color:#52f0a0}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 22px;margin:16px 0}
 .stat{font-size:13px;color:var(--mute);letter-spacing:.08em;text-transform:uppercase}
 .stat .bar{height:6px;background:rgba(255,255,255,.12);border-radius:3px;margin-top:4px;overflow:hidden}
@@ -275,8 +283,9 @@ body.touch #toasts{top:calc(var(--gt) + 60px)}
   <div class="panel">
     <div class="gHead"><button class="arrow" id="gPrev" aria-label="Carro anterior">◀</button><h2><span id="gClass">C</span><span id="gName">Carro</span></h2><button class="arrow" id="gNext" aria-label="Carro seguinte">▶</button></div>
     <div class="gNav"><div id="gCls"><button data-c="Todos" class="on">Todos</button><button data-c="D">D</button><button data-c="C">C</button><button data-c="B">B</button><button data-c="A">A</button><button data-c="S">S</button><button data-c="X">X</button></div><button id="gRand" class="gBtn">🎲 Aleatório</button></div>
-    <input type="range" id="gSlider" min="0" max="999" value="0" aria-label="Percorrer os carros">
-    <div id="gNum" class="num">1 / 1000</div>
+    <input type="range" id="gSlider" min="0" max="99" value="0" aria-label="Percorrer os carros">
+    <div id="gNum" class="num">1 / 100</div>
+    <div id="gList" role="listbox" aria-label="Lista de carros (faz scroll)"></div>
     <div class="stats" id="gStats"></div>
     <div class="stat">Pintura</div>
     <div class="swatches" id="gSw"></div>
@@ -1189,7 +1198,7 @@ const CARS = [
   const BR = ['Aurora', 'Sardinha', 'Galo', 'Tejo', 'Douro', 'Minho', 'Algarve', 'Atlântico', 'Estrela', 'Cometa', 'Pégaso', 'Lince', 'Trovão', 'Falcão', 'Corvo', 'Brisa', 'Vento', 'Maré', 'Farol', 'Sol', 'Lua', 'Rocha', 'Ciclone', 'Gaivota', 'Lobo'];
   const MD = ['GT', 'RS', 'Sport', 'Turbo', 'Clássico', 'Evo', 'Rally', 'Coupé', 'Cabrio', 'Sprint', 'Lusso', 'Street', 'Trail', 'Max', 'Neo', 'Pro', 'Vintage', 'Drift', 'City', 'Road'];
   const r = mulberry(1000), base = CARS.slice(), seen = new Set(CARS.map(c => c.name));
-  while (CARS.length < 1000) {
+  while (CARS.length < 100) {
     const b = base[Math.floor(r() * base.length)], k = 0.9 + r() * 0.2, roof = (r() - 0.5) * 0.12;
     let name; do { name = BR[Math.floor(r() * BR.length)] + ' ' + MD[Math.floor(r() * MD.length)] + ' ' + (10 + Math.floor(r() * 990)); } while (seen.has(name)); seen.add(name);
     const vmax = Math.round(clamp(b.vmax * (0.8 + r() * 0.42), 140, 400));
@@ -1490,13 +1499,25 @@ function updateCarVisual(dt, mesh, x, y, z, h, vF, steer, airborne, extra) {
 
 // ---------- traffic ----------
 const TRAFFIC = [];
+// cópia leve de um carro: partilha geometria e materiais, mas refaz as ligações às rodas (mesh.cd)
+function cloneCar(tpl) {
+  const m = tpl.clone(true), a = [], b = []; tpl.traverse(o => a.push(o)); m.traverse(o => b.push(o)); const map = new Map(a.map((o, i) => [o, b[i]]));
+  const rc = v => v && v.isObject3D ? (map.get(v) || v) : Array.isArray(v) ? v.map(rc) : v && typeof v === 'object' && v.constructor === Object ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, rc(x)])) : v;
+  for (const k of Object.keys(tpl)) if (!(k in m) || m[k] === undefined) m[k] = rc(tpl[k]);
+  if (tpl.cd) m.cd = rc(tpl.cd); return m;
+}
 function buildTraffic(scene) {
+  const TPL = new Map();
   const r = mulberry(404), cols = ['#e8e8ea', '#20232a', '#8a1c22', '#2a4d8f', '#c9b48a', '#4b6d4b', '#d0d4da', '#5b3a7a'];
-  const total = ROADS.reduce((t, R) => t + R.len, 0);
-  for (let i = 0; i < 56; i++) {
-    let pick = r() * total, ri = 0; while (pick > ROADS[ri].len && ri < ROADS.length - 1) { pick -= ROADS[ri].len; ri++; }
-    const R = ROADS[ri], ci = [0, 0, 1, 2, 3, 5, 5, 6, 8][Math.floor(r() * 9)];
-    const m = makeCarMesh(ci, cols[i % cols.length]); scene.add(m);
+  const PER = 150, isl = ROADS.map(R => { const p = roadPoint(R, R.len / 2, 0); return islandAt(p.x, p.z); });
+  const slots = [];
+  for (let k = 0; k < ISLANDS.length; k++) {
+    const rs = ROADS.map((R, i) => i).filter(i => isl[i] === k), tot = rs.reduce((t, i) => t + ROADS[i].len, 0); if (!tot) continue;
+    for (let n = 0; n < PER; n++) { let pick = r() * tot, j = 0; while (pick > ROADS[rs[j]].len && j < rs.length - 1) { pick -= ROADS[rs[j]].len; j++; } slots.push(rs[j]); }
+  }
+  for (let i = 0; i < slots.length; i++) {
+    const ri = slots[i], R = ROADS[ri], ci = [0, 0, 1, 2, 3, 5, 5, 6, 8][Math.floor(r() * 9)];
+    const key = ci + cols[i % cols.length], tpl = TPL.get(key) || TPL.set(key, makeCarMesh(ci, cols[i % cols.length])).get(key), m = cloneCar(tpl); scene.add(m); // os carros iguais partilham a geometria (mais leve)
     const dir = r() < 0.5 ? 1 : -1;
     TRAFFIC.push({ m, ri, s: r() * R.len, dir, v: 16 + r() * 8, ci, near: false, hit: false, x: 0, z: 0, h: 0, cool: 0 });
   }
@@ -2450,6 +2471,7 @@ let gClassF = 'Todos';
 function garageList() { return gClassF === 'Todos' ? CARS.map((c, i) => i) : CARS.map((c, i) => i).filter(i => CARS[i].cls === gClassF); }
 function garageStep(d) { const L = garageList(); let k = L.indexOf(gIdx); if (k < 0) k = 0; else k = (k + d + L.length) % L.length; gIdx = L[k]; renderGarage(); }
 $('gSlider').oninput = e => { const L = garageList(); gIdx = L[Math.min(L.length - 1, +e.target.value)]; renderGarage(); };
+$('gList').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; gIdx = +b.dataset.i; renderGarage(); });
 $('gRand').onclick = () => { const L = garageList(); gIdx = L[Math.floor(Math.random() * L.length)]; renderGarage(); };
 $('gCls').onclick = e => { const b = e.target.closest('button'); if (!b) return; gClassF = b.dataset.c; const L = garageList(); if (!L.includes(gIdx)) gIdx = L[0]; renderGarage(); };
 function renderGarage() {
@@ -2457,6 +2479,8 @@ function renderGarage() {
   if (car.ci !== gIdx || true) { const x = car.x, z = car.z, h = car.h; setPlayerCar(gIdx); car.mesh.position.set(x, car.y, z); car.mesh.rotation.set(0, h, 0); }
   $('gClass').textContent = sp.cls; $('gName').textContent = sp.name;
   const L = garageList(), k = L.indexOf(gIdx); $('gSlider').max = L.length - 1; $('gSlider').value = Math.max(0, k);
+  { const gl = $('gList'), key = gClassF + ':' + save.owned.length + ':' + save.credits; if (gl.dataset.k !== key) { gl.dataset.k = key; gl.innerHTML = L.map(i => { const c = CARS[i], own = save.owned.includes(i); return '<button data-i="' + i + '"><b>' + c.cls + '</b><span>' + c.name + '</span><em class="' + (own ? 'own' : '') + '">' + (own ? 'teu' : 'CR ' + fmt(c.price)) + '</em></button>'; }).join(''); }
+    gl.querySelectorAll('button.on').forEach(b => b.classList.remove('on')); const cur = gl.querySelector('[data-i="' + gIdx + '"]'); if (cur) { cur.classList.add('on'); const top = cur.offsetTop, h = gl.clientHeight; if (top < gl.scrollTop || top + cur.offsetHeight > gl.scrollTop + h) gl.scrollTop = top - h / 2 + cur.offsetHeight / 2; } }
   $('gNum').textContent = (k + 1) + ' / ' + L.length + (gClassF === 'Todos' ? ' carros' : ' carros da classe ' + gClassF) + (save.owned.includes(gIdx) ? ' · teu' : ' · CR ' + fmt(sp.price));
   [...$('gCls').children].forEach(b => b.classList.toggle('on', b.dataset.c === gClassF));
   const st = [['Velocidade máx.', Math.min(1, sp.vmax / 400), sp.vmax + ' km/h'], ['Aceleração', sp.acc / 25], ['Aderência', sp.grip / 13], ['Todo-o-terreno', sp.off]];
@@ -2594,6 +2618,7 @@ async function boot() {
   await step(78, 'A montar o festival…'); buildEventProps(); buildCheckpointArches(); buildParticles(scene); buildSkids(scene); buildTraffic(scene);
   await step(88, 'A desenhar o mapa…'); buildMapCanvas();
   await step(96, 'A aquecer os motores…');
+  save.owned = save.owned.filter(i => i >= 0 && i < CARS.length); if (!save.owned.includes(0)) save.owned.unshift(0);
   if (!save.owned.includes(save.sel)) save.sel = 0;
   if (matchMedia('(pointer:coarse)').matches && !save.qualitySet) { save.quality = 1; save.qualitySet = true; }
   spawnAtFestival(); setPlayerCar(window.__COVERCAR ?? save.sel); applyQuality(); updateSky(0, true); updateCreditsUI(); setRadio(save.radio); setupTouch();
