@@ -42,9 +42,10 @@ function over(){state='end';engine(false);K.play(false);pickM.visible=dropM.visi
 function menu(){state='menu';engine(false);K.play(false);const d=S.data;
  K.screen(`<div class="k-title">Táxi da <em>Figueira</em></div><div class="k-lead">Apanha passageiros e leva-os depressa. Cada viagem dá mais tempo. Carteira: <b>${d.money} €</b></div><button class="k-go" data-a="go">🚕 Começar o turno</button>
  <div class="k-lab">Garagem</div><div class="k-row">${CARS.map((c,i)=>{const own=d.owned.includes(i);return `<button class="k-chip${d.car===i?' on':''}" data-a="car" data-v="${i}" ${own||d.money>=c[3]?'':'disabled'}>${c[0]}<small>${own?(d.car===i?'a usar':'usar'):c[3]+' €'} · ${Math.round(c[2]*3.6)} km/h</small></button>`;}).join('')}</div>
- <table class="k-tab"><tr><td>Melhor turno</td><td>${d.best} €</td></tr><tr><td>Mais viagens</td><td>${d.most}</td></tr></table>${K.keysHelp([['W A S D','conduzir'],['ESPAÇO','travão de mão'],['P','pausa']])}`,
+ <table class="k-tab"><tr><td>Melhor turno</td><td>${d.best} €</td></tr><tr><td>Mais viagens</td><td>${d.most}</td></tr></table>${K.keysHelp([['W A S D','conduzir'],['ESPAÇO','travão de mão'],['7 9','piscas'],['8','4 piscas'],['0','faróis'],['N H','buzina'],['P','pausa']])}`,
  {go:start,car:v=>{v=+v;if(!d.owned.includes(v)){d.money-=CARS[v][3];d.owned.push(v);K.sfx.coin();}d.car=v;S.save();menu();}});}
 K.onQuit=menu;K.me=()=>state==='play'?me&&me.g:null;
+addEventListener('keydown',e=>{if(e.code==='KeyH'&&!e.repeat&&state==='play')K.sfx.horn();});
 function update(dt){if(state!=='play'){const t=K.time*.06;cam.position.set(W/2+Math.sin(t)*150,70,W/2+Math.cos(t)*150);cam.lookAt(W/2,0,W/2);K.sunFollow(W/2,W/2);return;}
  const ax=K.axis(),hb=K.down('Space'),thr=K.touch&&!K.down('KeyB')?(ax.y<-.6?-1:1):K.down('KeyB')?-1:ax.y>.2?1:ax.y<-.2?-1:0;drive(me,thr,ax.x,hb,dt);
  for(const v of civs){const tx=v.ni*D+v.dz*-3.2,tz=v.nj*D+v.dx*3.2;if(Math.abs(tx-v.x)+Math.abs(tz-v.z)<3)pickCiv(v);v.a=Math.atan2(v.dx,v.dz);const dx=tx-v.x,dz=tz-v.z,d=Math.hypot(dx,dz)||1,st=Math.min(d,9*dt);v.x+=dx/d*st;v.z+=dz/d*st;v.g.position.set(v.x,0,v.z);v.g.rotation.y=v.a;
