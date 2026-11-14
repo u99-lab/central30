@@ -1378,8 +1378,8 @@ function stepCar(dt, inp) {
   if (state === 'race' && race) {
     const grass = ad > half + 0.9 && !car.air;
     if (grass) {
-      if (!car.onGrass) { car.onGrass = true; car.grassT = 0; race.pen += 2; race.grass = (race.grass || 0) + 1; $('tPen').textContent = '+' + race.pen + ' s'; toast('Pisaste a relva · +2 s'); }
-      else { car.grassT += dt; if (car.grassT >= 2) { car.grassT -= 2; race.pen += 1; $('tPen').textContent = '+' + race.pen + ' s'; toast('Continuas na relva · +1 s'); } }
+      if (!car.onGrass) { car.onGrass = true; car.grassT = 0; race.pen += 2; race.grass = (race.grass || 0) + 1; $('tPen').textContent = '+' + race.pen + ' s'; toast('Saíste da estrada · +2 s'); }
+      else { car.grassT += dt; if (car.grassT >= 2) { car.grassT -= 2; race.pen += 1; $('tPen').textContent = '+' + race.pen + ' s'; toast('Continuas fora da estrada · +1 s'); } }
     } else if (car.onRoad) car.onGrass = false;
   }
   const spd = Math.hypot(car.vx, car.vz);
