@@ -1267,9 +1267,23 @@ const Voice = {
       } catch (e) { }
     }
   },
-  stop() { for (const s of this.srcs) { try { s.stop(); } catch (e) { } } this.srcs = []; if (Snd.ctx) this.endAt = Snd.ctx.currentTime; },
+  // voz do navegador (a do próprio aparelho, em português, com palavras inteiras); se não houver, usa as gravações
+  TXT: { e: 'e', longa: 'longa', aperta: 'aperta', d100: 'cem', d150: 'cento e cinquenta', d200: 'duzentos', salto: 'salto', cuidado: 'cuidado', n3: 'três', n2: 'dois', n1: 'um', vai: 'vai!', fim: 'fim da especial', rec: 'novo recorde!', p1: 'estás em primeiro!', frente: 'ganhaste um lugar', atras: 'perdeste um lugar', pancada: 'pancada!', boa: 'boa sorte', servico: 'parque de assistência', campeao: 'campeão!', pod: 'pódio!' },
+  NUM: ['gancho', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis'],
+  ptVoice() { try { const vs = speechSynthesis.getVoices(); return vs.find(v => /^pt[-_]PT/i.test(v.lang)) || vs.find(v => /^pt/i.test(v.lang)) || null; } catch (e) { return null; } },
+  text(k) { const m = /^([LR])(\d)$/.exec(k); if (m) { const d = m[1] === 'L' ? 'esquerda' : 'direita'; return m[2] === '0' ? 'gancho ' + d : d + ' ' + this.NUM[+m[2]]; } return this.TXT[k] || ''; },
+  speak(keys, prio) {
+    const v = this.ptVoice(); if (!v || typeof SpeechSynthesisUtterance === 'undefined') return false;
+    const txt = keys.map(k => this.text(k)).filter(Boolean).join(', ').replace(', e,', ' e'); if (!txt) return true;
+    if (prio || speechSynthesis.pending) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(txt); u.voice = v; u.lang = v.lang; u.rate = 1.05; u.pitch = 1.05; u.volume = 1;
+    speechSynthesis.speak(u); if (Snd.ctx && Snd.eg && settings.sound) Snd.duck = Snd.ctx.currentTime + 0.3 * keys.length + 0.4; return true;
+  },
+  stop() { try { speechSynthesis.cancel(); } catch (e) { } for (const s of this.srcs) { try { s.stop(); } catch (e) { } } this.srcs = []; if (Snd.ctx) this.endAt = Snd.ctx.currentTime; },
   say(keys, prio) {
-    if (!settings.voice || !Snd.ctx || !this.gain || !keys.length) return;
+    if (!settings.voice || !keys.length) return;
+    try { if (typeof speechSynthesis !== 'undefined' && this.speak(keys, prio)) return; } catch (e) { }
+    if (!Snd.ctx || !this.gain) return;
     const ctx = Snd.ctx, now = ctx.currentTime;
     // never let the notes fall behind the car: if the queue is long, drop what is waiting and read the new note now
     if (this.endAt - now > (prio ? 0.3 : 1.1)) this.stop();
@@ -1608,11 +1622,11 @@ function champField(ci) {
 }
 function fieldForCar(c) { return c.cv <= 190 ? 0 : c.cv <= 300 ? 2 : 3; }
 function botTimes(field, key) {
-  const r = mulberry32(hashStr(key)), dk = DIFF[career.diff].k;
+  const salt = (Math.random() * 1e9) | 0, r = mulberry32(hashStr(key + '#' + salt)), dk = DIFF[career.diff].k;
   return field.map(b => {
     const id = S.ideal[carIdx(b.car)];
-    const form = 1 + (mulberry32(hashStr(b.name + key.replace(/-(\d+)(:\d+)?$/, '$2')))() - 0.5) * 0.05; // rival's form on this rally
-    let t = id.total * REF * b.skill * dk * form * (1 + gauss(r) * 0.018), note = '';
+    const form = 1 + (mulberry32(hashStr(b.name + key.replace(/-(\d+)(:\d+)?$/, '$2') + '#' + salt))() - 0.5) * 0.06; // forma do rival nesta tentativa
+    let t = id.total * REF * b.skill * dk * form * (1 + gauss(r) * 0.026), note = '';
     const x = r();
     if (x < 0.035) { t += 6 + r() * 16; note = 'pião'; } else if (x < 0.047) { t += 30 + r() * 30; note = 'furo'; }
     const splits = id.splits.map(sp => sp / id.total * t);
