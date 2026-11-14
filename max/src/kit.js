@@ -16,6 +16,9 @@ K.store=(name,def)=>{let data=def;try{const v=window.__C30_STORAGE__?JSON.parse(
  const s={data,save(){if(!window.__C30_STORAGE__)return;try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
 window.C30me=()=>{try{return K.me?K.me():null;}catch{return null;}};
 K.peers=()=>{try{return window.C30peers?window.C30peers():[];}catch{return [];}};
+// raios na jante para se ver a roda a girar; K.roll limita o giro por frame (sem efeito de roda ao contrário)
+K.rim=(m,r,h,c=0xc9ced6)=>{for(const a of [0,Math.PI/2]){const b=new THREE.Mesh(new THREE.BoxGeometry(r*1.7,h*1.06,r*.24),new THREE.MeshLambertMaterial({color:c}));b.rotation.y=a;m.add(b);}return m;};
+K.roll=(m,ang)=>{m.rotation.x+=Math.max(-.32,Math.min(.32,ang));};
 K.name=()=>{try{return (window.C30name&&window.C30name())||'Tu';}catch{return 'Tu';}};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa

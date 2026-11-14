@@ -1218,4 +1218,12 @@ window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,room
 (function(){function wipe(){try{if(typeof settings!=='undefined'&&settings.keepProgress)return;const keep=/^(c30\.(pass2|passN|trialN|gateV|reset)|c30max\.(pass|passN|trialN|gateV))$/;const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(/^c30\./.test(k)||/^(craques3d|vfig|patrao|jdc|ea|max)\./.test(k)||k==='central30.aviso'||k==='central30.indexnow')&&!keep.test(k))del.push(k)}del.forEach(k=>localStorage.removeItem(k))}catch(e){}}
  wipe();addEventListener('pagehide',wipe);setInterval(wipe,15000);window.C30wipeIfNoKeep=wipe})();
 </script>
+<script>/* C30FSKEYS: em ecrã inteiro (ou se o foco ficar na central) as teclas chegam sempre ao jogo */
+(()=>{const fr=()=>document.getElementById('gameFrame');const on=()=>{const f=fr();return f&&f.src&&!f.closest('[hidden]')&&getComputedStyle(f).display!=='none'};
+ const refocus=()=>setTimeout(()=>{const f=fr();if(on()){try{f.focus();f.contentWindow.focus();f.contentWindow.postMessage({c30:true,type:'focus'},'*');}catch(e){}}},60);
+ document.addEventListener('fullscreenchange',refocus);document.addEventListener('webkitfullscreenchange',refocus);
+ const fwd=e=>{if(!on())return;const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable))return;if(document.querySelector('dialog[open]'))return;
+  const w=fr().contentWindow;if(!w)return;try{const ev=new w.KeyboardEvent(e.type,{key:e.key,code:e.code,keyCode:e.keyCode,which:e.which,shiftKey:e.shiftKey,ctrlKey:e.ctrlKey,altKey:e.altKey,metaKey:e.metaKey,repeat:e.repeat,bubbles:true,cancelable:true});(w.document.activeElement||w.document.body||w.document).dispatchEvent(ev);if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.type==='keydown'&&e.code!=='Escape')refocus();}catch(err){}};
+ addEventListener('keydown',fwd);addEventListener('keyup',fwd);})();
+</script>
 </body></html>

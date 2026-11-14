@@ -15,7 +15,7 @@ const ink=[];const line=(x,z,w,d,col=0xf4f4f4)=>{const m=K.plane(w,d,col,x,.02,z
 // carro do jogador
 function mkCar(col){const g=new THREE.Group(),b=new THREE.Group();g.add(b);K.box(1.8,.55,4,col,0,.6,0,b);K.box(1.62,.5,2,col,0,1.08,-.25,b);K.box(1.5,.38,1.9,0x9fd8ff,0,1.1,-.25,b).scale.set(1.04,1,.9);
  for(const s of [-1,1]){const h=new THREE.Mesh(new THREE.BoxGeometry(.4,.15,.05),new THREE.MeshBasicMaterial({color:0xfff6c0}));h.position.set(s*.6,.65,2.02);b.add(h);const t=new THREE.Mesh(new THREE.BoxGeometry(.4,.15,.05),new THREE.MeshBasicMaterial({color:0xff2030}));t.position.set(s*.6,.7,-2.02);b.add(t);}
- const w=[];for(const [x,z] of [[-.92,1.3],[.92,1.3],[-.92,-1.3],[.92,-1.3]]){const p=new THREE.Group();p.position.set(x,.36,z);const m=K.cyl(.36,.36,.28,0x15171d,0,0,0,p,12);m.rotation.z=1.57;g.add(p);w.push(p);}g.userData={b,w};scene.add(g);return g;}
+ const w=[];for(const [x,z] of [[-.92,1.3],[.92,1.3],[-.92,-1.3],[.92,-1.3]]){const p=new THREE.Group();p.position.set(x,.36,z);const m=K.cyl(.36,.36,.28,0x15171d,0,0,0,p,12);m.rotation.z=1.57;K.rim(m,.36,.28);g.add(p);w.push(p);}g.userData={b,w};scene.add(g);return g;}
 const me={g:mkCar(0xe8452c),x:0,z:0,a:0,sp:0,steer:0};
 // níveis: [nome, partida, lugar alvo {x,z,a}, obstáculos (carros parados e cones), tempo para 3 estrelas]
 const C=(x,z,a)=>({t:'car',x,z,a}),N=(x,z)=>({t:'cone',x,z});
@@ -72,7 +72,7 @@ function update(dt){if(state==='menu'||state==='done'){const t=K.time*.15;cam.po
  hitCd-=dt;const mine=corners(me.x,me.z,me.a,.9,2);let bump=false;
  for(const o of objs){if(o.t==='car'){if(obbHit(mine,corners(o.x,o.z,o.a,o.hw,o.hd)))bump=true;}else if(!o.down){const lx=(o.x-me.x)*Math.cos(me.a)-(o.z-me.z)*Math.sin(me.a),lz=(o.x-me.x)*Math.sin(me.a)+(o.z-me.z)*Math.cos(me.a);if(Math.abs(lx)<.9+o.r&&Math.abs(lz)<2+o.r){o.down=true;o.m.rotation.z=1.4;o.m.position.y=.2;o.m.position.x+=Math.sin(me.a)*.6;hits++;K.sfx.bounce();K.toast('Derrubaste um cone!');}}}
  if(bump){me.x=ox;me.z=oz;me.a=oa;if(Math.abs(me.sp)>.6&&hitCd<=0){hits++;hitCd=.8;K.sfx.hit();K.shake=.2;K.toast('Bateste!');}me.sp*=-.2;}
- const u=me.g.userData;me.g.position.set(me.x,0,me.z);me.g.rotation.y=me.a;for(let i=0;i<4;i++){u.w[i].children[0].rotation.x+=me.sp*dt/.36;if(i<2)u.w[i].rotation.y=me.steer*.5;}
+ const u=me.g.userData;me.g.position.set(me.x,0,me.z);me.g.rotation.y=me.a;for(let i=0;i<4;i++){K.roll(u.w[i].children[0],me.sp*dt/.36);if(i<2)u.w[i].rotation.y=me.steer*.5;}
  // dentro do lugar?
  const t=LEVELS[lv][2],dx=me.x-t.x,dz=me.z-t.z,lx=dx*Math.cos(t.a)-dz*Math.sin(t.a),lz=dx*Math.sin(t.a)+dz*Math.cos(t.a),da=Math.abs(K.angDiff(me.a,t.a)),da2=Math.min(da,Math.PI-da);
  const inside=Math.abs(lx)<.45&&Math.abs(lz)<.6&&da2<.12;T+=dt;

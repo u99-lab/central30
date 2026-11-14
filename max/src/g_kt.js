@@ -52,7 +52,7 @@ let boxes=[],bananas=[],balls=[];
 // ----- karts
 function mkKart(col){const g=new THREE.Group(),b=new THREE.Group();g.add(b);K.box(1.15,.3,2,col,0,.38,0,b);K.box(.85,.24,.8,col,0,.44,1.05,b);K.box(1.4,.14,.3,0x1b1f2e,0,.3,1.45,b);K.box(1.4,.1,.5,0x1b1f2e,0,.95,-1,b);K.box(.1,.5,.1,0x1b1f2e,-.5,.7,-1,b);K.box(.1,.5,.1,0x1b1f2e,.5,.7,-1,b);
  K.box(.6,.55,.2,0x1b1f2e,0,.75,-.6,b);K.box(.5,.5,.36,0xffffff,0,.85,-.3,b);K.sph(.27,col,0,1.32,-.28,b,10);K.box(.36,.14,.1,0x1b2340,0,1.34,-.05,b);K.cyl(.2,.2,.05,0x1b1f2e,0,.85,.25,b,10).rotation.x=1.1;
- const w=[];for(const [x,z] of [[-.78,.8],[.78,.8],[-.8,-.75],[.8,-.75]]){const p=new THREE.Group();p.position.set(x,.32,z);const m=K.cyl(.32,.32,.3,0x16181f,0,0,0,p,12);m.rotation.z=Math.PI/2;K.cyl(.15,.15,.32,0xdddddd,0,0,0,p,8).rotation.z=Math.PI/2;g.add(p);w.push(p);}
+ const w=[];for(const [x,z] of [[-.78,.8],[.78,.8],[-.8,-.75],[.8,-.75]]){const p=new THREE.Group();p.position.set(x,.32,z);const m=K.cyl(.32,.32,.3,0x16181f,0,0,0,p,12);m.rotation.z=Math.PI/2;K.rim(m,.32,.3,0xdddddd);g.add(p);w.push(p);}
  g.userData={b,w};scene.add(g);return g;}
 let karts=[],me=null,state='menu',raceT=0,startT=0,order=[],cup=null,finishN=0,eng=null,engG=null,lapT=0,bestLap=0,startBoostOk=false;
 function grid(){for(const k of karts)scene.remove(k.g);karts=[];const ord=[1,2,3,4,5,0];
@@ -84,7 +84,7 @@ function stepKart(k,dt){let thr=0,steer=0,drift=false;
  if(state==='race'&&!k.fin){for(const b of boxes)if(!k.item&&(k.ai||b.t<=0)&&(b.m.position.x-k.x)**2+(b.m.position.z-k.z)**2<(k.ai?3.6:5.5)){giveItem(k);if(!k.ai){b.t=2;b.m.visible=false;K.burst(b.m.position,[0xffd23f,0xff8a3d],10,4,4,.5);K.flash(ITEMS[k.item],'E para usar',700,'#fff');}}
   for(let i=bananas.length-1;i>=0;i--){const b=bananas[i];if((b.o!==k||b.t>.6)&&(b.x-k.x)**2+(b.z-k.z)**2<2){scene.remove(b.m);bananas.splice(i,1);spinOut(k,'CASCA!');}}}
  const g=k.g,u=g.userData;g.position.set(k.x,0,k.z);g.rotation.y=k.a-k.dr*.38+k.va;u.b.rotation.z=K.damp(u.b.rotation.z,k.steer*.07*Math.min(1,k.sp/20)+k.dr*.05,8,dt);u.b.position.y=off&&Math.abs(k.sp)>4?Math.sin(K.time*40+k.id)*.05:0;
- for(let i=0;i<4;i++){u.w[i].children[0].rotation.x+=k.sp*dt/.32;u.w[i].children[1].rotation.x+=k.sp*dt/.32;if(i<2)u.w[i].rotation.y=-k.steer*.45;}}
+ for(let i=0;i<4;i++){K.roll(u.w[i].children[0],k.sp*dt/.32);u.w[i].children[1].rotation.x+=k.sp*dt/.32;if(i<2)u.w[i].rotation.y=-k.steer*.45;}}
 // ----- corrida
 function startRace(i){buildTrack(i);grid();state='count';startT=3.6;raceT=0;lapT=0;bestLap=0;finishN=0;order=karts.slice();K.screen(null);K.play(true);K.useStick=true;K.pad([['Space','Derrapar'],['KeyE','Objeto'],['KeyB','Travar']]);hud();engine(true);camSnap();K.flash('3','',700,'#ffd23f');}
 function engine(on){const ac=K.audio();if(!ac)return;if(on&&!eng){eng=ac.createOscillator();eng.type='sawtooth';const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=700;engG=ac.createGain();engG.gain.value=0;eng.connect(f);f.connect(engG);engG.connect(ac.destination);eng.start();}if(!on&&eng){try{eng.stop();}catch{}eng=null;engG=null;}}

@@ -31,7 +31,7 @@ const st={x:0,y:0,vx:0,vy:0,a:0,va:0,air:false,airT:0,rot:0,crash:0,t:0,flips:0,
 let state='menu',eng=null,engG=null,ghost=[],rec=[];
 function engine(on){const ac=K.audio();if(!ac)return;if(on&&!eng){eng=ac.createOscillator();eng.type='sawtooth';const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=1200;engG=ac.createGain();engG.gain.value=0;eng.connect(f);f.connect(engG);engG.connect(ac.destination);eng.start();}if(!on&&eng){try{eng.stop();}catch{}eng=null;engG=null;}}
 const tfmt=t=>t.toFixed(2)+' s';
-function start(i){build(i);Object.assign(st,{x:2,y:hAt(2),vx:0,vy:0,a:0,va:0,air:false,rot:0,crash:0,t:0,flips:0,fin:0});rec=[];state='count';cd=3.5;K.screen(null);K.play(true);K.pad([['KeyW','Acelerar'],['KeyA','◀ Inclinar'],['KeyD','Inclinar ▶'],['KeyS','Travar']]);engine(true);
+function start(i){build(i);Object.assign(st,{x:2,y:hAt(2),vx:0,vy:0,a:0,va:0,air:false,rot:0,crash:0,t:0,flips:0,fin:0,lastFlip:0});rec=[];state='count';cd=3.5;K.screen(null);K.play(true);K.pad([['KeyW','Acelerar'],['KeyA','◀ Inclinar'],['KeyD','Inclinar ▶'],['KeyS','Travar']]);engine(true);
  K.hud(`<div class="k-tl"><div class="k-pill"><small>${TRACKS[i][0]}</small><b id="ht">0.00 s</b></div></div><div class="k-tr"><div class="k-pill"><small>Mortais</small><b id="hf">0</b></div></div><div class="k-tc"><div class="k-meter" style="width:min(300px,50vw);height:12px"><i id="hp" style="width:0;background:#ff8a3d"></i></div></div><div class="k-bc"><div class="k-hint">W acelera · no ar A/D inclina (dá mortais) · aterra com as rodas!</div></div>`);}
 let cd=0;
 function crash(){st.crash=1.6;K.sfx.hit();K.shake=.6;K.burst(new THREE.Vector3(st.x,st.y+.8,0),[0xc98a4f,0xffd23f],20,4,6,.8);K.flash('QUEDA!','',900,'#ff6b6b');st.t+=2;}
@@ -47,10 +47,10 @@ function update(dt){
  if(state==='race'){st.t+=dt;
   if(st.crash>0){st.crash-=dt;st.vx*=Math.pow(.2,dt);if(st.crash<=0){st.y=hAt(st.x);st.a=Math.atan(slope(st.x));st.va=0;st.air=false;st.vx=2;}}
   else if(!st.air){const sl=Math.atan(slope(st.x));st.a=K.damp(st.a,sl,14,dt);const acc=(gas||ax.y>.3?18:0)-(brk?22:0)-Math.sin(sl)*G*.9;st.vx+=acc*dt;st.vx*=Math.pow(.92,dt);st.vx=K.clamp(st.vx,-4,TRACKS[track][1]+8);
-   const nx=st.x+st.vx*dt*Math.cos(sl),ny=hAt(nx);const nsl=Math.atan(slope(nx));if(nsl<sl-.25&&st.vx>6){st.air=true;st.vy=st.vx*Math.sin(sl);st.va=0;st.rot=0;st.airT=0;}st.x=nx;st.y=st.air?st.y+st.vy*dt:ny;}
+   const nx=st.x+st.vx*dt*Math.cos(sl),ny=hAt(nx);const nsl=Math.atan(slope(nx));if(nsl<sl-.25&&st.vx>6){st.air=true;st.vy=st.vx*Math.sin(sl);st.va=0;st.rot=0;st.airT=0;st.lastFlip=0;}st.x=nx;st.y=st.air?st.y+st.vy*dt:ny;}
   else{st.airT+=dt;st.vy-=G*dt;st.x+=st.vx*Math.cos(0)*dt*.98;st.y+=st.vy*dt;st.va=K.damp(st.va,ln*4.2,5,dt);st.a+=st.va*dt;st.rot+=st.va*dt;
    const fl=Math.floor(Math.abs(st.rot)/(Math.PI*2));if(fl>st.lastFlip){st.lastFlip=fl;st.flips++;st.t-=1;K.flash('MORTAL!','−1 s',800,'#ff8a3d');K.sfx.good();}
-   const gy=hAt(st.x);if(st.y<=gy){const sl=Math.atan(slope(st.x)),d=Math.abs(K.angDiff(st.a,sl));st.y=gy;st.air=false;st.lastFlip=0;if(d>.7){crash();st.a=sl;}else{st.a=sl;st.vx*=1-d*.4;K.sfx.bounce(.8);if(st.airT>1)K.toast('Boa aterragem!');}}}
+   const gy=hAt(st.x);if(st.y<=gy){const sl=Math.atan(slope(st.x)),d=Math.abs(K.angDiff(st.a,sl));st.y=gy;st.air=false;if(d>.7){st.lastFlip=0;crash();st.a=sl;}else{const tot=Math.round(Math.abs(st.rot)/(Math.PI*2));if(tot>st.lastFlip){const n=tot-st.lastFlip;st.flips+=n;st.t-=n;K.flash('MORTAL!','−'+n+' s',800,'#ff8a3d');K.sfx.good();}st.lastFlip=0;st.a=sl;st.vx*=1-d*.4;K.sfx.bounce(.8);if(st.airT>1)K.toast('Boa aterragem!');}}}
   if(st.x>=LEN-6&&!st.fin){st.fin=1;K.flash('META!','',1500,'#ffd23f');setTimeout(finish,1600);state='fin';}}
  else if(state==='fin'){st.vx*=Math.pow(.3,dt);st.x+=st.vx*dt;st.y=hAt(st.x);}
  st.x=Math.max(0,st.x);bike.position.set(st.x,st.y,0);bb.rotation.z=st.a;bb.position.y=st.crash>0?.0:0;rider.visible=true;if(st.crash>0)bb.rotation.z+=Math.sin(st.crash*20)*.3;

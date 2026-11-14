@@ -23,7 +23,7 @@ const chk=new THREE.Mesh(new THREE.PlaneGeometry(14,3),new THREE.MeshBasicMateri
 const fans=[];for(let i=0;i<26;i++){const p=K.person({shirt:K.pick([0xffd23f,0x35d07f,0x2a8bff,0xff8ac0,0xffffff,0xff8a3d])});p.position.set((i%2?1:-1)*(9.5+K.rand(0,2)),0,K.rand(-6,26));p.rotation.y=(i%2?-1:1)*1.57;fans.push(p);}
 function mkCar(col,tier){const g=new THREE.Group(),b=new THREE.Group();g.add(b);K.box(1.9,.5,4.3,col,0,.62,0,b);K.box(1.7,.48,2,col,0,1.08,-.3,b);K.box(1.6,.36,1.9,0x0b1020,0,1.1,-.3,b).scale.set(1.04,1,.92);K.box(1.9,.12,.5,0x16181f,0,.42,2.15,b);
  if(tier>0)K.box(1.9,.1,.5,0x16181f,0,1.25+tier*.06,-2,b);if(tier>1)K.box(.9,.12,1.3,0x16181f,0,.9,1.2,b);for(const s of [-1,1]){const h=new THREE.Mesh(new THREE.BoxGeometry(.4,.16,.06),new THREE.MeshBasicMaterial({color:0xfff6c0}));h.position.set(s*.62,.7,2.16);b.add(h);const t=new THREE.Mesh(new THREE.BoxGeometry(.5,.14,.06),new THREE.MeshBasicMaterial({color:0xff2030}));t.position.set(s*.6,.75,-2.16);b.add(t);}
- const w=[];for(const [x,z] of [[-.98,1.35],[.98,1.35],[-.98,-1.35],[.98,-1.35]]){const m=K.cyl(.4,.4,.34,0x101217,x,.4,z,g,14);m.rotation.z=1.57;w.push(m);}g.userData={b,w};scene.add(g);return g;}
+ const w=[];for(const [x,z] of [[-.98,1.35],[.98,1.35],[-.98,-1.35],[.98,-1.35]]){const m=K.cyl(.4,.4,.34,0x101217,x,.4,z,g,14);m.rotation.z=1.57;K.rim(m,.4,.34);w.push(m);}g.userData={b,w};scene.add(g);return g;}
 // ----- estado
 let state='menu',me=null,foe=null,T=0,lightT=0,green=false,result=null;
 const mkR=(g,pw,x,ai)=>({g,pw,x,ai,z:0,v:0,gear:0,rpm:0,shiftT:0,spin:0,nitro:0,nitroLeft:1,t:0,done:0,rev:0,react:-1,aiL:K.rand(.5,.9),aiS:K.rand(.86,.97)});
@@ -65,7 +65,7 @@ function update(dt){fans.forEach((f,i)=>{f.position.y=state==='race'||state==='e
  if(engG){engG.gain.value=.045;eng.frequency.value=70+me.rpm*240+(me.nitro>0?40:0);}
  if(me.spin>0||me.nitro>0)if(Math.random()<dt*40)K.burst(new THREE.Vector3(me.x+K.rand(-.9,.9),.3,me.z-2.2),me.nitro>0?[0x4fd0ff,0xffffff]:0xcccccc,1,1.5,2,.5);
  if(state==='race'&&(me.done&&(foe.done||me.t>me.done+1.5)||me.t>40)){if(!me.done)me.done=me.t;finish();}}
-function place(dt){for(const c of [me,foe]){c.g.position.z=c.z;const u=c.g.userData;u.b.rotation.x=K.damp(u.b.rotation.x,c.launched&&!c.done&&c.shiftT<=0?-.035*GR[c.gear]*3:0,8,dt);u.b.position.y=!green&&c.rev>.3?Math.sin(K.time*50)*.012:0;for(const w of u.w)w.rotation.x+=(c.spin>0?40:c.v/.4)*dt;}
+function place(dt){for(const c of [me,foe]){c.g.position.z=c.z;const u=c.g.userData;u.b.rotation.x=K.damp(u.b.rotation.x,c.launched&&!c.done&&c.shiftT<=0?-.035*GR[c.gear]*3:0,8,dt);u.b.position.y=!green&&c.rev>.3?Math.sin(K.time*50)*.012:0;for(const w of u.w)K.roll(w,(c.spin>0?40:c.v/.4)*dt);}
  if(state==='menu')return;const z=me.z;cam.position.set(K.damp(cam.position.x,-9.5,3,dt),K.damp(cam.position.y,3.2,3,dt),z-9-Math.min(4,me.v*.05));cam.lookAt(1,1,z+10);const fv=58+Math.min(22,me.v*.3);if(Math.abs(cam.fov-fv)>.3){cam.fov=K.damp(cam.fov,fv,4,dt);cam.updateProjectionMatrix();}if(me.nitro>0)K.shake=.05;K.sunFollow(0,z);}
 const _sp=K.setPause;K.setPause=v=>{_sp(v);if(engG)engG.gain.value=K.paused?0:.045;};window.C30pause=f=>K.setPause(f===undefined?!K.paused:f);
 K._dbg=()=>({state,z:+me.z.toFixed(0),v:+me.v.toFixed(1),g:me.gear,fz:+foe.z.toFixed(0),fd:foe.done,md:me.done});

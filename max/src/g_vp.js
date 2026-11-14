@@ -4,7 +4,7 @@
 const S=K.store('vp',{wins:[0,0,0]});
 document.documentElement.style.setProperty('--kc','#ffd23f');
 K.init({sky:0x8fd3ff,fog:[80,260],fov:50,shadow:22,hemi:.75,sunI:1.1,sunPos:[20,40,25]});
-const scene=K.scene,cam=K.camera,CW=4.5,CL=8,NH=2.3,G=11,BR=.22;
+const scene=K.scene,cam=K.camera,CW=4.5,CL=8,NH=2.3,G=9.5,BR=.22;
 const RIV=[['Marta',.5,4.6],['Tiago',.75,6],['Inês',.92,6.8]];
 // praia
 K.plane(400,400,0xd9c38a,0,0,0);const sea=K.plane(400,200,0x2a86a8,0,.02,-130);K.plane(400,6,0xf6f0e0,0,.03,-31);
@@ -27,7 +27,7 @@ function serve(who){server=who;const p=who===0?me:op;b.x=p.x;b.z=p.z+(who===0?-.
 function start(l){lvl=l;sc=[0,0];me.x=0;me.z=5;op.x=0;op.z=-5;serve(0);state='play';K.screen(null);K.play(true);hud();K.sfx.whistle();}
 function hud(){K.hud(`<div class="k-tc"><div class="k-pill" style="text-align:center"><small>Primeiro a 11</small><b>${K.name()} ${sc[0]} – ${sc[1]} ${RIV[lvl][0]}</b></div></div><div class="k-bc"><div class="k-hint">${serveT>50?(K.touch?'Toca no botão para servir':'ESPAÇO para servir'):(K.touch?'Joystick para correr · botão para saltar':'W A S D correr · ESPAÇO saltar e cortar')}</div></div>`);}
 // bater: manda a bola para o outro lado com uma parábola até um alvo
-function hitTo(from,tx,tz,hgt){const dx=tx-b.x,dz=tz-b.z,d=Math.hypot(dx,dz);const T=K.clamp(d/(hgt?11:7.5),.5,1.6);b.vx=dx/T;b.vz=dz/T;b.vy=(.5*G*T*T-(b.y-.3))/T;last=from;}
+function hitTo(from,tx,tz,hgt){const dx=tx-b.x,dz=tz-b.z,d=Math.hypot(dx,dz);const T=K.clamp(d/(hgt?11:6),.6,1.9);b.vx=dx/T;b.vz=dz/T;b.vy=(.5*G*T*T-(b.y-.3))/T;last=from;}
 function point(w){sc[w]++;K.flash(w===0?'Ponto!':'Ponto d'+(RIV[lvl][0]==='Tiago'?'o ':'a ')+RIV[lvl][0],sc[0]+' – '+sc[1],1000,w===0?'#3dffa2':'#ff6b6b');w===0?K.sfx.good():K.sfx.bad();hud();
  if(sc[w]>=11&&sc[w]-sc[1-w]>=2){state='over';setTimeout(()=>end(w===0),1300);return;}pause=1.3;setTimeout(()=>{if(state==='play'){serve(w);hud();}},1300);}
 function end(win){state='end';K.play(false);if(win){S.data.wins[lvl]++;S.save();K.sfx.win();if(lvl===2)K.unlock('vp-ines','Vólei · Ganhaste à Inês');}
@@ -37,7 +37,7 @@ K.onQuit=menu;
 const jump=()=>{if(state!=='play')return;if(serveT>50){serveT=0;hitTo(0,K.rand(-CW+1,CW-1),-K.rand(3,6.5),false);b.vy+=1;K.tone(300,.08,'triangle',.3);hud();return;}if(me.y<=0)me.vy=4.6;};
 K.useStick=true;K.pad([['Space','Saltar']]);
 function predict(){let x=b.x,y=b.y,z=b.z,vx=b.vx,vy=b.vy,vz=b.vz;for(let i=0;i<300;i++){vy-=G*.016;x+=vx*.016;y+=vy*.016;z+=vz*.016;if(y<1.3&&vy<0)return {x,z};}return {x,z};}
-function contact(p,who){const top=p.y+2.1;const dx=b.x-p.x,dz=b.z-p.z;if(cool[who]>0)return;if(Math.hypot(dx,dz)<(who===0?1.35:1.1)&&b.y<top+.7&&b.y>.35){cool[who]=.35;if(last===who){touches++;if(touches>2){K.toast('Três toques!');point(1-who);b.vx=b.vz=0;return;}}else touches=1;
+function contact(p,who){const top=p.y+2.1;const dx=b.x-p.x,dz=b.z-p.z;if(cool[who]>0)return;if(Math.hypot(dx,dz)<(who===0?1.6:1.1)&&b.y<top+.7&&b.y>.35){cool[who]=.35;if(last===who){touches++;if(touches>2){K.toast('Três toques!');point(1-who);b.vx=b.vz=0;return;}}else touches=1;
  const dir=who===0?-1:1;const spike=p.y>.6&&Math.abs(p.z)<2.6;
  if(who===0){const ax=K.axis();const tx=K.clamp(b.x+ax.x*3+K.rand(-1,1),-CW+.5,CW-.5);hitTo(0,tx,dir*(spike?K.rand(2.5,5):K.rand(3,6.8)),spike);if(spike)K.flash('CORTE!','',500,'#ffd23f');}
  else{const L=RIV[lvl][1];const away=me.x>0?-1:1;const tx=K.clamp(away*K.rand(1,CW-.6)*L+K.rand(-1.5,1.5)*(1-L),-CW+.5,CW-.5);hitTo(1,tx,dir*K.rand(3,6.8+(1-L)*2.6),spike);}
@@ -47,7 +47,7 @@ function update(dt){
  cam.position.set(me.x*.4,6.2,CL+7.5);cam.lookAt(me.x*.25,1.2,-1.5);
  if(state!=='play'){place();return;}
  if(K.hit('Space'))jump();cool[0]-=dt;cool[1]-=dt;
- const ax=K.axis(),sp=6.2;me.x=K.clamp(me.x+ax.x*sp*dt,-CW-1.5,CW+1.5);me.z=K.clamp(me.z-ax.y*sp*dt,.6,CL+2);if(b.vz>0&&serveT<=0){const q=predict(),ddx=q.x-me.x,ddz=q.z+.2-me.z,dd=Math.hypot(ddx,ddz);if(dd<1.6&&dd>.05){me.x+=ddx/dd*Math.min(dd,2.2*dt);me.z+=ddz/dd*Math.min(dd,2.2*dt);}}
+ const ax=K.axis(),sp=6.2;me.x=K.clamp(me.x+ax.x*sp*dt,-CW-1.5,CW+1.5);me.z=K.clamp(me.z-ax.y*sp*dt,.6,CL+2);if(b.vz>0&&serveT<=0){const q=predict(),ddx=q.x-me.x,ddz=q.z+.2-me.z,dd=Math.hypot(ddx,ddz);if(dd<3.2&&dd>.05){me.x+=ddx/dd*Math.min(dd,4.5*dt);me.z+=ddz/dd*Math.min(dd,4.5*dt);}}
  me.vy-=G*1.1*dt;me.y=Math.max(0,me.y+me.vy*dt);op.vy-=G*1.1*dt;op.y=Math.max(0,op.y+op.vy*dt);
  // adversária
  const R=RIV[lvl];let tx=0,tz=-4.5;if(b.vz<0||(b.z<0&&serveT<=0)){const pr=predict();tx=pr.x;tz=Math.min(-.7,pr.z-.3);}
