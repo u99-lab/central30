@@ -198,7 +198,7 @@ const REGIONS={
   bounds:{x0:-6100,x1:7300,z0:-12500,z1:12100},land:[PT_OUTLINE],foreign:[ES_OUTLINE],nb:{es:[ES_OUTLINE]},foreignName:'Espanha',
   relief:(x,z)=>{// norte e interior mais altos; Alentejo e Algarve mais planos
    const north=smooth(6000,-6000,z),east=smooth(-3000,3000,x);return .35+.65*Math.max(north*.9,east*.7)},
-  mounts:[[-7.61,40.32,120,950],[-7.50,40.42,45,800],[-8.15,41.77,120,650],[-7.95,41.27,95,600],[-8.18,40.57,80,520],[-8.22,40.10,85,560],[-9.40,38.79,45,260],[-8.56,37.31,70,420],[-9.0,39.25,40,380],[-7.05,41.5,60,900],[-7.75,41.6,80,700],[-6.9,40.9,55,700],[-8.6,38.5,25,500],[-7.4,39.35,55,450],[-8.4,41.95,70,500]],
+  mounts:[[-8.895,40.199,36,190,'keep'],[-8.858,40.206,32,210,'keep'],[-7.61,40.32,120,950],[-7.50,40.42,45,800],[-8.15,41.77,120,650],[-7.95,41.27,95,600],[-8.18,40.57,80,520],[-8.22,40.10,85,560],[-9.40,38.79,45,260],[-8.56,37.31,70,420],[-9.0,39.25,40,380],[-7.05,41.5,60,900],[-7.75,41.6,80,700],[-6.9,40.9,55,700],[-8.6,38.5,25,500],[-7.4,39.35,55,450],[-8.4,41.95,70,500]],
   rivers:[
    {name:'Tejo',pts:[[-9.42,38.66],[-9.30,38.675],[-9.20,38.685],[-9.13,38.695],[-9.07,38.70],[-9.02,38.74],[-8.98,38.80],[-8.98,38.88],[-8.97,38.95],[-8.86,39.05],[-8.73,39.18],[-8.68,39.24],[-8.55,39.36],[-8.35,39.47],[-8.20,39.46],[-7.95,39.55],[-7.67,39.65],[-7.53,39.66]],w:[160,180,140,170,240,300,260,160,90,50,40,38,36,34,32,30,28,26]},
    {name:'Douro',pts:[[-8.70,41.142],[-8.66,41.145],[-8.62,41.14],[-8.58,41.14],[-8.50,41.12],[-8.35,41.08],[-8.15,41.10],[-7.95,41.16],[-7.79,41.16],[-7.56,41.19],[-7.30,41.12],[-7.10,41.08],[-6.93,41.03],[-6.80,41.13],[-6.62,41.30],[-6.45,41.45],[-6.30,41.62]],w:[40,34,30,30,30,28,28,28,26,26,24,24,24,22,22,20,20]},
@@ -235,11 +235,11 @@ const REGIONS={
    {name:'IP2 · Évora–Beja',pts:[[-7.91,38.55],[-7.88,38.30],[-7.87,38.03]]},{name:'IP2 · Beja–A2',pts:[[-7.86,38.00],[-8.05,37.80],[-8.22,37.66]]},
    {name:'N2 · Portalegre',pts:[[-7.43,39.27],[-7.50,39.10],[-7.59,38.85]]},{name:'N222 · Douro',pts:[[-8.30,41.43],[-8.10,41.33],[-7.95,41.28]]},
    {name:'N125 · Nazaré',pts:[[-9.07,39.60],[-8.95,39.68],[-8.82,39.74]]},{name:'N114 · Peniche',pts:[[-9.37,39.355],[-9.20,39.38],[-9.15,39.40]]},
-   {name:'N13 · Viana',pts:[[-8.82,41.70],[-8.75,41.55],[-8.70,41.40],[-8.62,41.22]]},{name:'N10 · Setúbal',pts:[[-8.89,38.53],[-8.95,38.58]]},
+   {name:'N13 · Viana',pts:[[-8.82,41.70],[-8.75,41.55],[-8.70,41.40],[-8.62,41.22]]},{name:'N10 · Setúbal',pts:[[-8.89,38.53],[-8.95,38.58]]},{name:'Estrada da Serra da Boa Viagem',pts:[[-8.872,40.168],[-8.878,40.18],[-8.888,40.192],[-8.902,40.193]]},{name:'N109 · Figueira–Leiria',pts:[[-8.851,40.162],[-8.8485,40.152],[-8.846,40.141],[-8.84,40.115],[-8.83,40.06],[-8.80,39.98],[-8.80,39.80],[-8.81,39.75]]},
    {name:'N247 · Sintra',pts:[[-9.385,38.80],[-9.42,38.76],[-9.42,38.71]]},{name:'N125 · Lagos–Faro',pts:[[-8.67,37.10],[-8.54,37.13],[-8.25,37.10],[-7.93,37.03],[-7.65,37.13]]}],
   rail:[[-7.935,37.02],[-8.10,37.08],[-8.25,37.17],[-8.40,37.50],[-8.55,37.95],[-8.57,38.17],[-8.75,38.45],[-8.88,38.56],[-9.00,38.62],[-9.10,38.645],[-9.18,38.665],[-9.177,38.70],[-9.12,38.725],[-9.07,38.78],[-8.99,38.96],[-8.70,39.25],[-8.50,39.47],[-8.62,39.72],[-8.64,39.92],[-8.44,40.22],[-8.50,40.40],[-8.64,40.64],[-8.63,40.85],[-8.62,41.00],[-8.60,41.11],[-8.585,41.15],[-8.55,41.30],[-8.44,41.54]],
   stations:[['Faro',-7.935,37.02],['Albufeira',-8.25,37.17],['Grândola',-8.57,38.17],['Setúbal',-8.88,38.555],['Lisboa',-9.12,38.725],['Santarém',-8.70,39.25],['Entroncamento',-8.50,39.47],['Pombal',-8.64,39.92],['Coimbra',-8.44,40.22],['Aveiro',-8.64,40.64],['Porto',-8.585,41.15],['Braga',-8.44,41.54]],
-  bridgeNames:[['Ponte 25 de Abril',-9.176,38.69,'25abril'],['Ponte Vasco da Gama',-9.0,38.73,'vgama'],['Ponte da Arrábida',-8.64,41.145,'arco'],['Ponte Luís I',-8.61,41.14,'arco'],['Ponte do Infante',-8.60,41.14,'arco'],['Ponte da Lezíria',-8.98,38.95,''],['Ponte de Santarém',-8.69,39.24,''],['Ponte de Coimbra',-8.43,40.205,''],['Ponte do Guadiana',-7.42,37.23,'vgama'],['Ponte Edgar Cardoso',-8.86,40.15,'vgama']],
+  bridgeNames:[['Ponte 25 de Abril',-9.176,38.69,'25abril'],['Ponte Vasco da Gama',-9.0,38.73,'vgama'],['Ponte da Arrábida',-8.64,41.145,'arco'],['Ponte Luís I',-8.61,41.14,'arco'],['Ponte do Infante',-8.60,41.14,'arco'],['Ponte da Lezíria',-8.98,38.95,''],['Ponte de Santarém',-8.69,39.24,''],['Ponte de Coimbra',-8.43,40.205,''],['Ponte do Guadiana',-7.42,37.23,'vgama'],['Ponte Edgar Cardoso',-8.847,40.147,'vgama']],
   airports:[{id:'LIS',n:'Aeroporto de Lisboa',lon:-9.13,lat:38.78,rot:.35,city:'Lisboa'},{id:'OPO',n:'Aeroporto do Porto',lon:-8.67,lat:41.235,rot:-.2,city:'Porto'},{id:'FAO',n:'Aeroporto de Faro',lon:-7.97,lat:37.017,rot:.6,city:'Faro'}],
   landmarks:()=>[
    ()=>{const g=lmGroup('belem',-9.215,38.693,'Torre de Belém',14,14);box(g,10,14,10,0xe8dcc2);box(g,7,8,7,0xe8dcc2,0,14);for(const [x,z] of [[-5,-5],[5,-5],[-5,5],[5,5]])cyl(g,1.2,1.2,3,0xe8dcc2,x,14,z,8);box(g,12,1,12,0xd8ccb2,0,13.5)},
@@ -834,7 +834,9 @@ function coastD(x,z){const fx=clamp((x-MX0)/MG,0,MNX-1.001),fz=clamp((z-MZ0)/MG,
 const RIVERS=(RG.rivers||[]).map(r=>{const P=PJL(r.pts);const segs=[];let acc=0;for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);segs.push({ax:a[0],az:a[1],bx:b[0],bz:b[1],len:L,s0:acc,w0:r.w[Math.min(i,r.w.length-1)],w1:r.w[Math.min(i+1,r.w.length-1)]});acc+=L}const xs=P.map(p=>p[0]),zs=P.map(p=>p[1]);return{name:r.name,segs,x0:Math.min(...xs)-400,x1:Math.max(...xs)+400,z0:Math.min(...zs)-400,z1:Math.max(...zs)+400}});
 function riverAt(x,z){let best=null;for(const R of RIVERS){if(x<R.x0||x>R.x1||z<R.z0||z>R.z1)continue;for(const s of R.segs){const vx=s.bx-s.ax,vz=s.bz-s.az,t=clamp(((x-s.ax)*vx+(z-s.az)*vz)/(s.len*s.len||1),0,1),d=Math.hypot(x-s.ax-vx*t,z-s.az-vz*t),w=lerp(s.w0,s.w1,t);const e=d-w/2;if(!best||e<best.e)best={e,w,R}}}return best}
 // ---- montanhas e cidades ----
-const MOUNTS=(RG.mounts||[]).map(m=>{const p=PJ(m[0],m[1]);return{x:p[0],z:p[1],h:m[2],r:m[3]}});
+const MOUNTS=(RG.mounts||[]).map(m=>{const p=PJ(m[0],m[1]);return{x:p[0],z:p[1],h:m[2],r:m[3],keep:m[4]==='keep'}});
+// serras dentro de cidades (ex.: Serra da Boa Viagem na Figueira): a cidade não as aplana nem constrói em cima
+const KEEPM=MOUNTS.filter(m=>m.keep);function keepBump(x,z){let b=0;for(const m of KEEPM){const d=Math.hypot(x-m.x,z-m.z);if(d<m.r*2.2)b+=m.h*Math.exp(-(d*d)/(m.r*m.r))*(.8+fbm(x/260,z/260)*.4)}return b}
 const CITIES=(RG.cities||[]).map(c=>{const p=PJ(c.lon,c.lat);return Object.assign({},c,{x:p[0],z:p[1],r:Math.round((c.r||150)*3.2),blk:Math.round((c.blk||110)*1.5)})});// cidades maiores (e quarteirões maiores, para os prédios serem maiores)
 const PARKS=(RG.parks||[]).map(([lon,lat,L,Wd,rot])=>{const p=PJ(lon,lat);return{x:p[0],z:p[1],hl:L/SCALE/2,hw:Wd/SCALE/2,ux:Math.sin(rot),uz:-Math.cos(rot)}});
 function inPark(x,z,m){m=m||0;for(const k of PARKS){const dx=x-k.x,dz=z-k.z,u=dx*k.ux+dz*k.uz,v=-dx*k.uz+dz*k.ux;if(Math.abs(u)<k.hl+m&&Math.abs(v)<k.hw+m)return true}return false}
@@ -848,8 +850,9 @@ function rawH(x,z){const dc=coastD(x,z);if(dc<0)return -3-Math.min(12,-dc*.02);
 function terrainH(x,z){let h=rawH(x,z);if(h<-.5)return h;
  const rv=riverAt(x,z);if(rv){if(rv.e<0)return -3;if(rv.e<60)h=lerp(1.2,h,smooth(0,60,rv.e))}
  for(const a of AIRBASE){const dx=x-a.x,dz=z-a.z,u=dx*a.c-dz*a.s,v=dx*a.s+dz*a.c;const e=Math.max(Math.max(-90-u,u-320,0),Math.max(Math.abs(v)-400,0));if(e<120){h=lerp(a.base,h,smooth(0,120,e))}}
- for(const c of CITIES){const d=Math.hypot(x-c.x,z-c.z);if(d<c.r+260){const base=c.base!=null?c.base:Math.max(1.6,rawH(c.x,c.z));c.base=base;h=lerp(base,h,smooth(c.r*.9,c.r+260,d))}}
- return h}
+ const kb=KEEPM.length?keepBump(x,z):0;h-=kb;
+ for(const c of CITIES){const d=Math.hypot(x-c.x,z-c.z);if(d<c.r+260){const base=c.base!=null?c.base:Math.max(1.6,rawH(c.x,c.z)-(KEEPM.length?keepBump(c.x,c.z):0));c.base=base;h=lerp(base,h,smooth(c.r*.9,c.r+260,d))}}
+ return h+kb}
 function zoneAt(x,z){if(terrainH(x,z)<-.5)return 'agua';const dc=coastD(x,z);if(dc<38&&!cityAt(x,z))return 'areia';return 'terra'}
 function inRia(x,z){return terrainH(x,z)<-.5}
 const shoreN=z=>0,shoreX=z=>0,avX=z=>0,riaE=z=>0,riaW=z=>0,RIV0=0;// (nomes antigos da Costa de Prata, sem uso aqui)
@@ -867,7 +870,7 @@ const JUNCTIONS=[];// pontos onde se pode atravessar o separador (nós de ligaç
 (RG.nroads||[]).forEach(h=>{const P=chaikin(PJL(h.pts),2);road(h.name,P,10,{rural:true})});
 // cidades: ruas em grelha (só em terra) e ligação à autoestrada mais perto
 function clipRuns(P,ok){const runs=[];let cur=[];for(const p of P){if(ok(p[0],p[1]))cur.push(p);else{if(cur.length>1)runs.push(cur);cur=[]}}if(cur.length>1)runs.push(cur);return runs}
-CITIES.forEach(c=>{const blk=c.blk||110,n=Math.floor(c.r/blk),ok=(x,z)=>Math.hypot(x-c.x,z-c.z)<c.r&&rawH(x,z)>-.5&&maskAt(x,z)===1;
+CITIES.forEach(c=>{const blk=c.blk||110,n=Math.floor(c.r/blk),ok=(x,z)=>Math.hypot(x-c.x,z-c.z)<c.r&&rawH(x,z)>-.5&&maskAt(x,z)===1&&(!KEEPM.length||keepBump(x,z)<2.5);
  const okw=(x,z)=>{if(!ok(x,z)||inPark(x,z,6))return false;const dc=Math.hypot(x-c.x,z-c.z);if(CITIES.some(o=>o!==c&&Math.hypot(x-o.x,z-o.z)<Math.min(dc,o.r+20)))return false;const rv=riverAt(x,z);return !rv||rv.e>8};
  for(let i=-n;i<=n;i++){const x=c.x+i*blk;for(const run of clipRuns(dens([[x,c.z-c.r],[x,c.z+c.r]],10),okw))road(c.n,run.filter((p,k)=>k===0||k===run.length-1),i===0?12:9,{city:c.n,urb:true})}
  for(let j=-n;j<=n;j++){const z=c.z+j*blk;for(const run of clipRuns(dens([[c.x-c.r,z],[c.x+c.r,z]],10),okw))road(c.n,run.filter((p,k)=>k===0||k===run.length-1),j===0?12:9,{city:c.n,urb:true})}});
@@ -1006,7 +1009,7 @@ const PAL={sand:[.93,.86,.66],grass:[.42,.54,.30],dry:[.66,.62,.38],forest:[.30,
 {const g=new THREE.PlaneGeometry(WB.x1-WB.x0,WB.z1-WB.z0,TNX,TNZ);g.rotateX(-Math.PI/2);g.translate((WB.x0+WB.x1)/2,0,(WB.z0+WB.z1)/2);const p=g.attributes.position,col=new Float32Array(p.count*3);
  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);let h=TH0(x,z);if(h>-.5){const nr=nearRoad(x,z);if(nr.d<60&&!nr.s.r.bridge){const w2=nr.s.r.w/2;if(nr.d<w2+34){const rh=TH0(nr.px,nr.pz);h=lerp(h,rh,smooth(w2+34,w2+8,nr.d))}}const rl=nearRail(x,z);if(rl.d<40&&!railWet(rl.px,rl.pz))h=lerp(h,TH0(rl.px,rl.pz),smooth(40,8,rl.d))}
   p.setY(i,h);HV[i]=h;const n=fbm(x/90,z/90),zo=h<-.5?'agua':zoneAt(x,z);let c;
-  if(zo==='agua')c=[.50,.50,.40];else if(zo==='areia')c=PAL.sand;else if(foreignAt(x,z))c=PAL.foreign;else if(inPark(x,z))c=[.30,.55,.28];else if(cityAt(x,z))c=PAL.town;else if(h>150)c=PAL.snow;else if(h>95)c=PAL.rock;
+  if(zo==='agua')c=[.50,.50,.40];else if(zo==='areia')c=PAL.sand;else if(foreignAt(x,z))c=PAL.foreign;else if(inPark(x,z))c=[.30,.55,.28];else if(KEEPM.length&&keepBump(x,z)>2.5)c=PAL.forest;else if(cityAt(x,z))c=PAL.town;else if(h>150)c=PAL.snow;else if(h>95)c=PAL.rock;
   else{const al=Math.abs(LAT0-z/KY);let dry=clamp((44-al)/8,0,1);if(al<24&&!DESERT)dry=.12;if(DESERT)dry=1;const f=fbm(x/500+9,z/500);c=f>.58?PAL.forest:[lerp(PAL.grass[0],PAL.dry[0],dry),lerp(PAL.grass[1],PAL.dry[1],dry),lerp(PAL.grass[2],PAL.dry[2],dry)]}
   col.set([c[0]+n*.06,c[1]+n*.06,c[2]+n*.05],i*3)}
  g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();const m=new THREE.Mesh(g,lam({vertexColors:true}));m.receiveShadow=true;scene.add(m)}
@@ -1148,7 +1151,7 @@ function yield_(x,z,w,d){if(inPark(x,z,Math.max(w,d)/2+4))return;if(nearRail(x,z
 function freeArea(x0,z0,x1,z1){const m=11;for(let x=x0+m;x<x1-m-9;){const w=15+rnd()*24;if(x+w>x1-m)break;for(let z=z0+m;z<z1-m-9;){const d=15+rnd()*21;if(z+d>z1-m)break;yield_(x+w/2,z+d/2,w-1.5,d-1.5);z+=d}x+=w}}
 CITIES.forEach(c=>{const blk=c.blk||110,n=Math.floor(c.r/blk);zonePal=PALS[c.pal]||PALS.def;
  zoneH=(x,z)=>{const d=Math.hypot(x-c.x,z-c.z)/c.r;const big=c.big||0;const T=c.tall||CSTY.tall||1;return big===2?T*(d<.35?22+rnd()*38:d<.7?12+rnd()*16:7+rnd()*8):big===1?(d<.4?12+rnd()*16:7+rnd()*9):(c.pal==='alentejo'||c.pal==='algarve')?5+rnd()*4:6+rnd()*8};
- for(let i=-n;i<n;i++)for(let j=-n;j<n;j++){const x=c.x+i*blk,z=c.z+j*blk;if(Math.hypot(x+blk/2-c.x,z+blk/2-c.z)>c.r-20)continue;freeArea(x,z,x+blk,z+blk)}});
+ for(let i=-n;i<n;i++)for(let j=-n;j<n;j++){const x=c.x+i*blk,z=c.z+j*blk;if(Math.hypot(x+blk/2-c.x,z+blk/2-c.z)>c.r-20)continue;if(KEEPM.length&&keepBump(x+blk/2,z+blk/2)>2.5)continue;freeArea(x,z,x+blk,z+blk)}});
 // casas dispersas ao longo das estradas nacionais
 zoneH=()=>5+rnd()*4;zonePal=PALS.def;ROADS.forEach(r=>{if(r.auto||r.urb||r.bridge)return;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);for(let t=0;t<L;t+=90){if(rnd()<.55)continue;const x=lerp(a[0],b[0],t/L),z=lerp(a[1],b[1],t/L),nx=-(b[1]-a[1])/L,nz=(b[0]-a[0])/L,sd=rnd()<.5?-1:1,o=20+rnd()*20;yield_(x+nx*sd*o,z+nz*sd*o,9+rnd()*6,9+rnd()*6)}}});
 const LM={};function landmark(id,x,z,w,d,h,col,label){LM[id]={x,z,label};B.push({x,z,w,d,h,col,keep:true})}
@@ -1223,6 +1226,8 @@ CITIES.forEach(c=>{const n=nearRoad(c.x+c.r*.85,c.z);const x=c.x+c.r*.92,z=c.z;i
 {const PALMR=['pt','es','it','gr','mt','cy','tr','ma','eg','ae','in','th','sg','br','mx','usla','au','za','mc','al','hr','me'].includes(REGION_ID);const PIN=[],ROUND=[],CON=[],PALM=[],N=mobile?5000:14000;let tries=0;while((PIN.length+ROUND.length+CON.length+PALM.length)<N&&tries<N*5){tries++;const x=WB.x0+rnd()*(WB.x1-WB.x0),z=WB.z0+rnd()*(WB.z1-WB.z0);if(maskAt(x,z)!==1)continue;const h=TH0(x,z);if(h<1.2||h>140)continue;const dc=coastD(x,z);if(dc<45)continue;
   const f=fbm(x/700+3,z/700-2);if(f<.48&&rnd()<.75)continue;if(cityAt(x,z)||!roadClear(x,z,4)||nearRail(x,z).d<9||hitBuilding(x,z,4))continue;
   const al=Math.abs(LAT0-z/KY),south=clamp((45-al)/7,0,1);(PALMR&&al<40&&rnd()<clamp((40-al)/4,.15,.6)?PALM:al>48&&rnd()<clamp((al-48)/6,0,.9)?CON:rnd()<south*.8?ROUND:PIN).push({x,z,s:.7+rnd()*.7})}
+ // pinhal denso nas serras dentro das cidades (Serra da Boa Viagem)
+ for(const m of KEEPM){let k=0,t2=0;const want=mobile?140:380;while(k<want&&t2<want*6){t2++;const a2=rnd()*6.283,r2=Math.sqrt(rnd())*m.r*1.25,x=m.x+Math.cos(a2)*r2,z=m.z+Math.sin(a2)*r2;if(maskAt(x,z)!==1||keepBump(x,z)<4||TH0(x,z)<1.2||!roadClear(x,z,4)||hitBuilding(x,z,4))continue;PIN.push({x,z,s:.7+rnd()*.6});k++}}
  const tg=new THREE.CylinderGeometry(.3,.42,6,5);tg.translate(0,3,0);const cg=new THREE.SphereGeometry(3.4,7,5);cg.scale(1,.5,1);cg.translate(0,7,0);
  inst(tg,lam({color:0x7a5a3a}),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cg,lam({color:0x355f2e}),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);
  const tg2=new THREE.CylinderGeometry(.35,.5,3,5);tg2.translate(0,1.5,0);const rg=new THREE.SphereGeometry(3,7,5);rg.scale(1,.7,1);rg.translate(0,4.2,0);
