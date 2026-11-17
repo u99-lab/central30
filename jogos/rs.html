@@ -1569,11 +1569,11 @@ function toggleFoot() {
 }
 function updateFoot(dt) {
   const fw = (input.throttle || 0) - (input.brake || 0), turn = input.steer || 0, run = keys.ShiftLeft || keys.ShiftRight || input.hand;
-  foot.h -= turn * 2.6 * dt; const sp = fw * (run ? 7.5 : 3.6) * (fw < 0 ? 0.6 : 1);
+  const g0 = groundAt(foot.x, foot.z), swim = !!(g0.water || (g0.h !== undefined ? g0.h : terrainH(foot.x, foot.z)) < -0.3); foot.h -= turn * (swim ? 1.6 : 2.6) * dt; const sp = fw * (swim ? (run ? 2.2 : 1.4) : (run ? 7.5 : 3.6)) * (fw < 0 ? 0.6 : 1);
   foot.x += Math.sin(foot.h) * sp * dt; foot.z += Math.cos(foot.h) * sp * dt;
-  const g = groundAt(foot.x, foot.z); foot.y = g.h !== undefined ? g.h : terrainH(foot.x, foot.z); if (foot.y < 0.2) { foot.y = 0.2; }
+  const g = groundAt(foot.x, foot.z); const gy = g.h !== undefined ? g.h : terrainH(foot.x, foot.z); if (g.water || gy < -0.3) { foot.y += (-1.15 - foot.y) * Math.min(1, dt * 8); if (!foot.swT) { foot.swT = 1; toast('A nadar 🏊', 'Na água só se nada', '#38c6ff'); } } else { foot.y = Math.max(gy, -0.3); foot.swT = 0; }
   const m = foot.mesh; m.position.set(foot.x, foot.y, foot.z); m.rotation.y = foot.h;
-  foot.ph += dt * (Math.abs(sp) > 0.1 ? (run ? 13 : 8) : 0); const a = Math.abs(sp) > 0.1 ? Math.sin(foot.ph) * (run ? 0.9 : 0.6) : 0, U = m.userData; U.legs[0].rotation.x = a; U.legs[1].rotation.x = -a; U.arms[0].rotation.x = -a * 0.8; U.arms[1].rotation.x = a * 0.8;
+  foot.ph += dt * (Math.abs(sp) > 0.1 ? (run ? 13 : 8) : (swim ? 3 : 0)); const a = Math.abs(sp) > 0.1 ? Math.sin(foot.ph) * (run ? 0.9 : 0.6) : 0, U = m.userData; U.legs[0].rotation.x = a; U.legs[1].rotation.x = -a; if (swim) { U.legs[0].rotation.x = Math.sin(foot.ph * 2) * .4; U.legs[1].rotation.x = -Math.sin(foot.ph * 2) * .4; } U.arms[0].rotation.x = -a * 0.8; U.arms[1].rotation.x = a * 0.8; if (swim) { U.arms[0].rotation.x = -1.6 + Math.sin(foot.ph) * 1.4; U.arms[1].rotation.x = -1.6 - Math.sin(foot.ph) * 1.4; }
 }
 // ---------- AI racers ----------
 const AI = [];
