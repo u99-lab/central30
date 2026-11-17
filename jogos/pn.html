@@ -7811,7 +7811,7 @@ function drawMinimap() {
   const c = mmCtx, W = HUD.mm.width, H = HUD.mm.height;
   const pp = worldPos();
   const sp = player.inCar ? Math.abs(player.inCar.speed) : 0;
-  const zoom = 2.6 - clamp(sp / 50, 0, 1) * 1.1;
+  const zoom = 1.55 - clamp(sp / 50, 0, 1) * 0.7;
   const yaw = player.camYaw, rot = -Math.PI / 2 - Math.atan2(Math.cos(yaw), Math.sin(yaw));
   c.save(); c.clearRect(0, 0, W, H);
   c.translate(W / 2, H * 0.62); c.rotate(rot); c.scale(zoom, zoom);
