@@ -269,6 +269,7 @@
     box-shadow:0 4px 20px rgba(0,200,83,0.4); opacity:0.4; pointer-events:none;
   }
   #career-confirm-btn.ready { opacity:1; pointer-events:auto; }
+  #career-confirm-btn:not(.ready)::after { content:' · escolhe um clube primeiro'; font-weight:700; font-size:11px; letter-spacing:.5px; }
 
   /* ===== DAILY MISSIONS ===== */
   #missions-btn {
