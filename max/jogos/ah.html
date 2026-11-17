@@ -73,6 +73,9 @@ K.store=(name,def)=>{let data=def;try{const v=window.__C30_STORAGE__?JSON.parse(
  const s={data,save(){if(!window.__C30_STORAGE__)return;try{localStorage.setItem('max.'+name,JSON.stringify(s.data));}catch{}}};window.C30save=()=>s.save();return s;};
 window.C30me=()=>{try{return K.me?K.me():null;}catch{return null;}};
 K.peers=()=>{try{return window.C30peers?window.C30peers():[];}catch{return [];}};
+// raios na jante para se ver a roda a girar; K.roll limita o giro por frame (sem efeito de roda ao contrário)
+K.rim=(m,r,h,c=0xc9ced6)=>{for(const a of [0,Math.PI/2]){const b=new THREE.Mesh(new THREE.BoxGeometry(r*1.7,h*1.06,r*.24),new THREE.MeshLambertMaterial({color:c}));b.rotation.y=a;m.add(b);}return m;};
+K.roll=(m,ang)=>{m.rotation.x+=Math.max(-.32,Math.min(.32,ang));};
 K.name=()=>{try{return (window.C30name&&window.C30name())||'Tu';}catch{return 'Tu';}};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa
@@ -177,7 +180,7 @@ K.box(2.4,1,.8,0x6a4d8a,-5,.5,-6);K.box(2.4,1,.8,0x6a4d8a,5,.5,-6);
 const mallet=c=>{const g=new THREE.Group();K.cyl(MR,MR,.06,c,0,.03,0,g,24);K.cyl(.07,.08,.14,c,0,.12,0,g,14);K.sph(.08,c,0,.2,0,g,12);g.position.y=.9;scene.add(g);return g;};
 const meM=mallet(0xe8352c),opM=mallet(0x2a6bd7);const puck=K.cyl(PR,PR,.04,0x111111,0,.92,0,null,24);
 const me={x:0,z:1.4,vx:0,vz:0},op={x:0,z:-1.4,vx:0,vz:0},pk={x:0,z:0,vx:0,vz:0};
-let state='menu',score=[0,0],lvl=0,serveT=0,ptr=null,ptrOn=false;
+let state='menu',score=[0,0],lvl=0,serveT=0,ptr=null,ptrOn=false,stillT=0;
 function reset(towards){pk.x=0;pk.z=towards>0?.6:-.6;pk.vx=pk.vz=0;serveT=.8;}
 function start(l){lvl=l;score=[0,0];me.x=0;me.z=1.4;op.x=0;op.z=-1.4;reset(1);state='play';K.screen(null);K.play(true);hud();K.sfx.whistle();}
 function hud(){K.hud(`<div class="k-tc"><div class="k-pill" style="text-align:center"><small>Primeiro a 7</small><b>${K.name()} ${score[0]} – ${score[1]} ${RIV[lvl][0]}</b></div></div><div class="k-bc"><div class="k-hint">${K.touch?'Arrasta o dedo para mexer o batedor':'Rato ou W A S D para mexer o batedor'}</div></div>`);}
@@ -191,7 +194,7 @@ const ray=new THREE.Raycaster(),ndc=new THREE.Vector2(),pl=new THREE.Plane(new T
 const toTable=e=>{ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,cam);if(ray.ray.intersectPlane(pl,hp))ptr={x:hp.x,z:hp.z};};
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||ptrOn)toTable(e);});cv.addEventListener('pointerdown',e=>{K.audio();ptrOn=true;toTable(e);});addEventListener('pointerup',()=>{ptrOn=false;});
 function moveMallet(m,tx,tz,maxV,dt,zmin,zmax){tx=K.clamp(tx,-TW/2+MR,TW/2-MR);tz=K.clamp(tz,zmin,zmax);const dx=tx-m.x,dz=tz-m.z,d=Math.hypot(dx,dz),st=Math.min(d,maxV*dt);const nx=d?m.x+dx/d*st:m.x,nz=d?m.z+dz/d*st:m.z;m.vx=(nx-m.x)/dt;m.vz=(nz-m.z)/dt;m.x=nx;m.z=nz;}
-function hit(m){const dx=pk.x-m.x,dz=pk.z-m.z,d=Math.hypot(dx,dz);if(d<PR+MR&&d>1e-4){const nx=dx/d,nz=dz/d;pk.x=m.x+nx*(PR+MR);pk.z=m.z+nz*(PR+MR);const rv=(pk.vx-m.vx)*nx+(pk.vz-m.vz)*nz;if(rv<0){pk.vx-=1.9*rv*nx;pk.vz-=1.9*rv*nz;K.tone(500+Math.min(600,-rv*60),.05,'triangle',.25,250);}}}
+function hit(m){const dx=pk.x-m.x,dz=pk.z-m.z,d=Math.hypot(dx,dz);if(d<PR+MR&&d>1e-4){const nx=dx/d,nz=dz/d;pk.x=m.x+nx*(PR+MR);pk.z=m.z+nz*(PR+MR);const lx=TW/2-PR,lz=TL/2-PR;if(Math.abs(pk.x)>lx||(Math.abs(pk.z)>lz&&Math.abs(pk.x)>=GW/2)){pk.x=K.clamp(pk.x,-lx,lx);if(Math.abs(pk.x)>=GW/2)pk.z=K.clamp(pk.z,-lz,lz);const ex=pk.x-m.x,ez=pk.z-m.z,ed=Math.hypot(ex,ez)||1;m.x=pk.x-ex/ed*(PR+MR+.002);m.z=pk.z-ez/ed*(PR+MR+.002);}const rv=(pk.vx-m.vx)*nx+(pk.vz-m.vz)*nz;if(rv<0){pk.vx-=1.9*rv*nx;pk.vz-=1.9*rv*nz;K.tone(500+Math.min(600,-rv*60),.05,'triangle',.25,250);}}}
 function update(dt){
  if(state==='menu'||state==='end'){const t=K.time*.2;cam.position.set(Math.sin(t)*4,3.2,Math.cos(t)*4);cam.lookAt(0,.9,0);return;}
  cam.position.set(0,3.4,3.3);cam.lookAt(0,.6,-.3);
@@ -200,15 +203,16 @@ function update(dt){
  let tx=me.x,tz=me.z;if(ptr){tx=ptr.x;tz=ptr.z;}const ax=K.axis();if(ax.x||ax.y){tx=me.x+ax.x*.6;tz=me.z-ax.y*.6;ptr=null;}
  moveMallet(me,tx,tz,9,dt,.12,TL/2-MR);
  // adversário: defende a baliza e ataca quando o disco está do lado dele
- const L=RIV[lvl][1];let ox=K.clamp(pk.x*(.5+L*.5),-GW,GW),oz=-TL/2+.45;if(pk.z<-.1&&pk.vz<3){ox=pk.x;oz=pk.z-(pk.z<-TL/2+.6?-.15:.12);}
+ const L=RIV[lvl][1];let ox=K.clamp(pk.x*(.5+L*.5),-GW,GW),oz=-TL/2+.45;if(pk.z<-.1&&pk.vz<3){if(pk.z<-TL/2+MR+PR){ox=pk.x+(pk.x>0?-.5:.5);oz=-TL/2+.5;}else{ox=pk.x;oz=pk.z-(pk.z<-TL/2+.6?-.15:.12);}}
  moveMallet(op,ox+Math.sin(K.time*3)*.05*(1-L),oz,3+L*5,dt,-TL/2+MR,-.12);
  if(serveT>0)serveT-=dt;
  const steps=6,h=dt/steps;for(let i=0;i<steps;i++){if(serveT<=0){pk.x+=pk.vx*h;pk.z+=pk.vz*h;}const f=Math.pow(.7,h);pk.vx*=f;pk.vz*=f;const sp=Math.hypot(pk.vx,pk.vz);if(sp>14){pk.vx*=14/sp;pk.vz*=14/sp;}
   if(Math.abs(pk.x)>TW/2-PR){pk.x=Math.sign(pk.x)*(TW/2-PR);pk.vx*=-.9;K.tone(300,.04,'square',.08);}
   if(Math.abs(pk.z)>TL/2-PR){if(Math.abs(pk.x)<GW/2){goal(pk.z<0?0:1);break;}pk.z=Math.sign(pk.z)*(TL/2-PR);pk.vz*=-.9;K.tone(300,.04,'square',.08);}
   hit(me);hit(op);}
+ if(state==='play'&&serveT<=0){const sp=Math.hypot(pk.vx,pk.vz);stillT=sp<.35?stillT+dt:0;const lim=pk.z<0?2.5:5;if(stillT>lim){stillT=0;const mine=pk.z>0;pk.x=K.clamp(pk.x*.4,-.5,.5);pk.z=mine?.6:-.6;pk.vx=pk.vz=0;serveT=.6;K.toast(mine?'O disco estava parado: volta para ti':'Disco parado: o adversário recolhe-o');}}
  meM.position.set(me.x,.9,me.z);opM.position.set(op.x,.9,op.z);puck.position.set(pk.x,.92,pk.z);}
-K._dbg=()=>({state,score,pk:[+pk.x.toFixed(2),+pk.z.toFixed(2)]});
+K._dbg=()=>({state,score,pk:[+pk.x.toFixed(2),+pk.z.toFixed(2)],still:+stillT.toFixed(1)});K._test=(x,z)=>{pk.x=x;pk.z=z;pk.vx=pk.vz=0;serveT=0;};
 K.loop(update);menu();
 })();
 </script>
