@@ -73,6 +73,7 @@ h1{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(46px,9vw,
 .keys h2{grid-column:1/-1;margin:0 0 6px;font-family:var(--display);font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);font-weight:600}
 .keys kbd{font-family:var(--mono);font-size:19px;color:var(--paper);background:rgba(255,255,255,.08);border:1px solid var(--line);border-bottom-width:3px;padding:0 6px;white-space:nowrap;justify-self:start}
 .keys span{color:#d4ccb8}
+@media (max-height:860px){.keys{font-size:15px;gap:2px 12px;padding:10px 12px;max-height:calc(100vh - 32px);overflow:auto}.keys kbd{font-size:14px}.keys h2{font-size:15px;margin-bottom:2px}}
 #pause,#inv{background:rgba(10,13,24,.6);align-items:center;justify-content:center}
 .card{background:var(--panel);border:2px solid var(--line);padding:22px;display:flex;flex-direction:column;gap:12px;max-width:100%;min-width:0}
 .card h2{margin:0;font-family:var(--display);font-size:34px}
