@@ -243,7 +243,7 @@ function stepKart(k,dt){let thr=0,steer=0,drift=false;
  if(state==='race'&&!k.fin){for(const b of boxes)if(!k.item&&(k.ai||b.t<=0)&&(b.m.position.x-k.x)**2+(b.m.position.z-k.z)**2<(k.ai?3.6:5.5)){giveItem(k);if(!k.ai){b.t=2;b.m.visible=false;K.burst(b.m.position,[0xffd23f,0xff8a3d],10,4,4,.5);K.flash(ITEMS[k.item],'E para usar',700,'#fff');}}
   for(let i=bananas.length-1;i>=0;i--){const b=bananas[i];if((b.o!==k||b.t>.6)&&(b.x-k.x)**2+(b.z-k.z)**2<2){scene.remove(b.m);bananas.splice(i,1);spinOut(k,'CASCA!');}}}
  const g=k.g,u=g.userData;g.position.set(k.x,0,k.z);g.rotation.y=k.a-k.dr*.38+k.va;u.b.rotation.z=K.damp(u.b.rotation.z,k.steer*.07*Math.min(1,k.sp/20)+k.dr*.05,8,dt);u.b.position.y=off&&Math.abs(k.sp)>4?Math.sin(K.time*40+k.id)*.05:0;
- for(let i=0;i<4;i++){K.roll(u.w[i].children[0],k.sp*dt/.32);u.w[i].children[1].rotation.x+=k.sp*dt/.32;if(i<2)u.w[i].rotation.y=-k.steer*.45;}}
+ for(let i=0;i<4;i++){K.roll(u.w[i].children[0],k.sp*dt/.32);if(i<2)u.w[i].rotation.y=-k.steer*.45;}}
 // ----- corrida
 function startRace(i){buildTrack(i);grid();state='count';startT=3.6;raceT=0;lapT=0;bestLap=0;finishN=0;order=karts.slice();K.screen(null);K.play(true);K.useStick=true;K.pad([['Space','Derrapar'],['KeyE','Objeto'],['KeyB','Travar']]);hud();engine(true);camSnap();K.flash('3','',700,'#ffd23f');}
 function engine(on){const ac=K.audio();if(!ac)return;if(on&&!eng){eng=ac.createOscillator();eng.type='sawtooth';const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=700;engG=ac.createGain();engG.gain.value=0;eng.connect(f);f.connect(engG);engG.connect(ac.destination);eng.start();}if(!on&&eng){try{eng.stop();}catch{}eng=null;engG=null;}}
