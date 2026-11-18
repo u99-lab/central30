@@ -3031,9 +3031,10 @@ function buildCar(col){
     // 5 spokes
     for(var si=0;si<5;si++){
       var sa=si*(Math.PI*2/5);
-      var spk=new THREE.Mesh(new THREE.BoxGeometry(0.31,0.045,0.045),spokM);
-      spk.position.set(Math.cos(sa)*0.13,Math.sin(sa)*0.13,0);
-      spk.rotation.z=sa; wg.add(spk);
+      // raios no plano da roda (o eixo da roda é X)
+      var spk=new THREE.Mesh(new THREE.BoxGeometry(0.045,0.26,0.045),spokM);
+      spk.position.set(wp[0]>0?0.13:-0.13,Math.cos(sa)*0.13,Math.sin(sa)*0.13);
+      spk.rotation.x=-sa; wg.add(spk);
     }
     // Centre cap
     var cap=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.34,8),capM);
@@ -7535,7 +7536,8 @@ function animate(){
       cX=Math.max(-1800,Math.min(1000,cX)); cZ=Math.max(-5800,Math.min(1480,cZ));
       carGroup.position.x=cX; carGroup.position.z=cZ; carGroup.rotation.y=ang;
       wSpin+=spd*0.6;
-      wheels.forEach(function(w){w.rotation.x=wSpin;});
+      // rodas: todas rolam; as da frente viram para o lado da curva (como num carro normal)
+      var stA=(lt?0.42:rt2?-0.42:0);wheels.forEach(function(w,i){w.rotation.order='YXZ';w.rotation.x=wSpin;w.rotation.y=(i<2)?((w.userData.st||0)+(stA-(w.userData.st||0))*0.25):0;if(i<2)w.userData.st=w.rotation.y;});
       // ── PISCAS (Z=esquerda, X=direita, C=hazard) ──
       if(keys['KeyZ']&&qUp){ turnSignal=(turnSignal===1)?0:1; qUp=false; }
       if(!keys['KeyZ']) qUp=true;
