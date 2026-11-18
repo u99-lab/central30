@@ -1243,7 +1243,7 @@ var SND = (function(){
     <div id="stadium-score-text" style="color:#ffcc00;font-size:20px;font-weight:700;letter-spacing:4px">BENFICA 0 - 0 R.MADRID</div>
     <div id="stadium-score-sub" style="color:#444;font-size:8px;letter-spacing:2px">EM JOGO</div>
   </div>
-  <div id="police-hud"><div class="pl">POLICIA ATRAS</div><div class="pv" id="wstars">* * *</div><div style="color:#882200;font-size:8px;letter-spacing:2px">E = ENTREGAR-SE</div></div>
+  <div id="police-hud"><div class="pl">POLICIA ATRAS</div><div class="pv" id="wstars">* * *</div><div id="wdist" style="color:#ffd23f;font-size:13px;font-weight:800;letter-spacing:1px;margin:2px 0"></div><div style="color:#882200;font-size:8px;letter-spacing:2px">E = ENTREGAR-SE</div></div>
   <div id="speed-sign"><div class="sv" id="slimit">70</div><div class="sl">km/h</div></div>
   <div id="dash">
     <div class="pod"><canvas id="gaugeSpd" width="110" height="110"></canvas><div class="pod-label">velocidade</div></div>
@@ -5624,8 +5624,9 @@ for(var rai=0;rai<6;rai++){
 // GAME STATE
 // ═══════════════════════════════════════════════════════
 var keys={};
+var sigTap={};
 document.addEventListener('keydown',function(e){
-  keys[e.code]=true;
+  keys[e.code]=true;if(!e.repeat&&(e.code==='KeyZ'||e.code==='KeyX'||e.code==='KeyC'))sigTap[e.code]=1;
   // só previne scroll e comportamentos default do browser nas teclas de jogo
   var gameCodes=['KeyW','KeyA','KeyS','KeyD','KeyI','KeyJ','KeyK','KeyL',
     'ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyF','KeyE','KeyM','Enter','NumpadEnter',
@@ -5988,6 +5989,7 @@ function updatePolice(){
   var _isNight2=(window._dayNess||1)<0.4;
   var _rintens=fl?(_isNight2?0xff0000:0xcc0000):0x110000;
   var _bintens=!fl?(_isNight2?0x0000ff:0x0000cc):0x000011;
+  var _minPD=1e9;
   policeCars.forEach(function(p){
     if(!p.active) return;
     p.lR.material.emissive.setHex(_rintens);
@@ -5995,7 +5997,7 @@ function updatePolice(){
     p.lB.material.emissive.setHex(_bintens);
     p.lB.material.color.setHex(!fl?0x2244ff:0x000022);
     var tx=onFoot?wkX:cX, tz=onFoot?wkZ:cZ;
-    var dx=tx-p.x, dz=tz-p.z, d=Math.sqrt(dx*dx+dz*dz);
+    var dx=tx-p.x, dz=tz-p.z, d=Math.sqrt(dx*dx+dz*dz);if(d<_minPD)_minPD=d;
     if(d<3){
       // Check if player has passport — can show it to avoid prison
       if(hasPassport){
@@ -6023,6 +6025,7 @@ function updatePolice(){
   });
   var stars=''; for(var wi=0;wi<wanted;wi++) stars+='* ';
   document.getElementById('wstars').textContent=stars.trim();
+  var _wd=document.getElementById('wdist');if(_wd)_wd.textContent=_minPD<1e8?('A '+(_minPD<1000?Math.round(_minPD/5)*5+' m':(_minPD/1000).toFixed(1).replace('.',',')+' km')+(_minPD>250?' · QUASE A FUGIR!':'')):'';
 }
 function triggerChase(){
   if(chaseActive) return;
@@ -7539,12 +7542,11 @@ function animate(){
       // rodas: todas rolam; as da frente viram para o lado da curva (como num carro normal)
       var stA=(lt?0.42:rt2?-0.42:0);wheels.forEach(function(w,i){w.rotation.order='YXZ';w.rotation.x=wSpin;w.rotation.y=(i<2)?((w.userData.st||0)+(stA-(w.userData.st||0))*0.25):0;if(i<2)w.userData.st=w.rotation.y;});
       // ── PISCAS (Z=esquerda, X=direita, C=hazard) ──
-      if(keys['KeyZ']&&qUp){ turnSignal=(turnSignal===1)?0:1; qUp=false; }
-      if(!keys['KeyZ']) qUp=true;
-      if(keys['KeyX']&&xUp){ turnSignal=(turnSignal===2)?0:2; xUp=false; }
-      if(!keys['KeyX']) xUp=true;
-      if(keys['KeyC']&&cUp2){ turnSignal=(turnSignal===3)?0:3; cUp2=false; }
-      if(!keys['KeyC']) cUp2=true;
+      // cada toque conta (mesmo um toque rápido entre dois fotogramas)
+      if(sigTap.KeyZ){ turnSignal=(turnSignal===1)?0:1; }
+      if(sigTap.KeyX){ turnSignal=(turnSignal===2)?0:2; }
+      if(sigTap.KeyC){ turnSignal=(turnSignal===3)?0:3; }
+      sigTap={};
       var blinkOn=Math.floor(wt*5)%2===0;
       carSignals.forEach(function(s){
         var active=(turnSignal===3)||(turnSignal===1&&s.side==='L')||(turnSignal===2&&s.side==='R');
