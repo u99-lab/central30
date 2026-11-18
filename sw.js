@@ -1,6 +1,6 @@
 // Central 30 · modo offline: guarda a Central e os jogos no aparelho para dar para jogar sem internet.
-// Com internet vai buscar a versão nova primeiro (e guarda-a); se a internet estiver lenta ou não houver, usa a que está guardada.
-const CACHE = 'central30-v22';
+// Com internet vai buscar a versão nova primeiro (e guarda-a); sem internet usa a guardada; com internet muito lenta (mais de 15 s) usa a guardada e avisa quando chegar a nova.
+const CACHE = 'central30-v23';
 const CORE = ['./', 'index.html', 'escola/index.html', 'corrida/index.html', 'joaquim-3d/index.html', 'craques/index.html', 'liga/index.html', 'portugal/index.html', 'favicon.svg', 'apple-touch-icon.png', 'jogos/aa.html', 'jogos/rs.html', 'img/rs.jpg', 'jogos/pr.html', 'img/pr.jpg', 'jogos/ab.html', 'jogos/an.html', 'jogos/bf.html', 'jogos/cb.html', 'jogos/cl.html', 'jogos/cr.html', 'jogos/fb.html', 'jogos/mr.html', 'jogos/pn.html', 'jogos/sl.html', 'jogos/tb.html', 'jogos/ns.html', 'img/ns.jpg', 'engines/r128.js', 'engines/r134.js', 'img/aa.jpg', 'img/ab.jpg', 'img/an.jpg', 'img/bf.png', 'img/cb.jpg', 'img/cl.png', 'img/cm.jpg', 'img/cq.jpg', 'img/cr.png', 'img/ct.jpg', 'img/ea.jpg', 'img/fb.jpg', 'img/jc.jpg', 'img/lr.jpg', 'img/mr.png', 'img/pn.jpg', 'img/sl.jpg', 'img/tb.jpg'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(new Request(u, { cache: 'reload' })).catch(() => {})))).then(() => self.skipWaiting()));
@@ -26,9 +26,12 @@ self.addEventListener('fetch', e => {
   const fail = () => new Response('Sem internet e esta parte ainda não estava guardada.', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8' } });
   // imagens: a guardada logo (e atualiza por trás); o resto: a nova, mas se a internet demorar mais de 4 s usa a guardada
   if (img) { e.respondWith(cached().then(r => r || net).catch(() => net).catch(fail)); net.catch(() => {}); return; }
+  // com internet lenta espera até 15 s pela versão nova; se mesmo assim tiver de usar a guardada, avisa quando a nova chegar
+  let servedOld = false;
   e.respondWith(new Promise(resolve => {
     let done = false; const give = r => { if (!done && r) { done = true; resolve(r); } };
-    const t = setTimeout(() => cached().then(give), 4000);
+    const t = setTimeout(() => cached().then(r => { if (r) servedOld = true; give(r); }), 15000);
     net.then(r => { clearTimeout(t); give(r); }).catch(() => { clearTimeout(t); cached().then(r => give(r || fail())); });
   }));
+  e.waitUntil(net.then(r => { if (servedOld && r && r.ok) return self.clients.matchAll().then(cs => cs.forEach(c => c.postMessage({ c30: 'updated', path: url.pathname }))); }).catch(() => {}));
 });

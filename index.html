@@ -224,7 +224,7 @@ updateKeepChip();
 </script>
 <script>'use strict';
 const STAR='<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>';
-const KB={"jc": 2708, "pn": 2444, "an": 874, "cr": 452, "ct": 363, "fb": 355, "pr": 293, "rs": 211, "ea": 1953, "mr": 151, "cm": 110, "cq": 100, "ab": 94, "cb": 94, "sl": 89, "lr": 86, "cl": 84, "bf": 61, "aa": 57, "tb": 55, "ns": 55};
+const KB={"jc": 2708, "pn": 2444, "an": 874, "cr": 452, "ct": 363, "fb": 355, "pr": 293, "rs": 211, "ea": 1903, "mr": 151, "cm": 110, "cq": 100, "ab": 94, "cb": 94, "sl": 89, "lr": 86, "cl": 84, "bf": 61, "aa": 57, "tb": 55, "ns": 55};
 let stats=read('c30.stats',{}),favs=read('c30.favs',[]);const F={q:'',genre:'Todos',fav:false,sort:'peso'};
 if(!stats||typeof stats!=='object'||Array.isArray(stats))stats={};if(!Array.isArray(favs))favs=[];
 const st=id=>stats[id]||(stats[id]={secs:0,plays:0,last:0});
@@ -971,7 +971,7 @@ window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,room
 </script>
 <script id="c30offline">
 /* Modo offline: a Central fica guardada no aparelho (dá para jogar sem internet; o online volta quando houver rede) */
-(()=>{try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+(()=>{try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.c30==='updated'){try{toast('Chegou uma versão nova. Sai e volta a abrir para a usares.')}catch(x){}}});
  const css=document.createElement('style');css.textContent='#c30offBadge{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:2147482600;background:#2a1d08f0;color:#ffd98a;border:1px solid #ffd98a55;border-radius:999px;padding:6px 14px;font:600 13px system-ui,sans-serif;pointer-events:none;transition:opacity .4s}html.c30off #c30open,html.c30off #c30openBar{opacity:.45;pointer-events:none}';document.head.appendChild(css);
  let b=null,hideT=0;const show=()=>{const off=!navigator.onLine;document.documentElement.classList.toggle('c30off',off);if(off){if(!b){b=document.createElement('div');b.id='c30offBadge';document.body.appendChild(b)}b.textContent='📴 Modo offline: estás a jogar sem internet';b.style.opacity=1;clearTimeout(hideT);hideT=setTimeout(()=>{if(b)b.style.opacity=0},6000);
    const so=document.getElementById('c30mOff');if(so&&so.offsetParent)so.click()}
