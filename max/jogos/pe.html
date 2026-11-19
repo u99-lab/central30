@@ -308,7 +308,8 @@ function update(dt){for(let i=timers.length-1;i>=0;i--){timers[i].t-=dt;if(timer
   if(ball.position.z<-4.6){bv.z=Math.abs(bv.z)*.3;ball.position.z=-4.6;}
   if(bv.lengthSq()<.02&&ball.position.y<=BR+.01&&phase==='result')bDone=true;}
  nBack.position.z=K.damp(nBack.position.z,-1.9,6,dt);}
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>{if(mode!=='match')return null;if(shooter&&shooter.isObject3D)return shooter;return me&&me.isObject3D?me:null};K.loop(update);menu();
 })();
 </script>
 </body></html>

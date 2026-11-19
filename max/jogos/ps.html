@@ -218,7 +218,8 @@ function update(dt){const t=K.time;
  rod.updateMatrixWorld(true);tip.getWorldPosition(tipW);if(line.visible){const p=lineG.attributes.position;p.setXYZ(0,tipW.x,tipW.y,tipW.z);p.setXYZ(1,bob.position.x,bob.position.y,bob.position.z);p.needsUpdate=true;}
  const a=boat.rotation.y,cd=state==='menu'?16:10;const ang=state==='menu'?t*.1:a;cam.position.set(boat.position.x+Math.sin(ang)*cd,state==='menu'?6:4.6,boat.position.z+Math.cos(ang)*cd);cam.lookAt(boat.position.x-Math.sin(ang)*14,0,boat.position.z-Math.cos(ang)*14);}
 K._dbg=()=>({state,phase,n:catchList.length,kg:+kg.toFixed(2),reel:+reel.toFixed(2),t:Math.round(timeLeft)});
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>state==='play'?boat:null;K.loop(update);menu();
 })();
 </script>
 </body></html>

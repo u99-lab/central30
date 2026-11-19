@@ -227,7 +227,8 @@ function place(){meM.position.set(me.x,me.y,me.z);meM.rotation.y=Math.PI;opM.pos
  {const inc=state==='play'&&serveT<=0&&pause<=0&&b.vz>0;mark.visible=inc;if(inc){const q=predict();mark.position.set(q.x,.05,q.z);}}
  ballM.position.set(b.x,b.y,b.z);ballM.rotation.x+=.05;shadow.position.set(b.x,.04,b.z);}
 K._dbg=()=>({pr:(()=>{const q=predict();return [+q.x.toFixed(1),+q.z.toFixed(1)];})(),vz:+b.vz.toFixed(1),state,sc,serveT:+serveT.toFixed(1),b:[+b.x.toFixed(1),+b.y.toFixed(1),+b.z.toFixed(1)],me:[+me.x.toFixed(1),+me.z.toFixed(1)]});
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>state==='play'?meM:null;K.loop(update);menu();
 })();
 </script>
 </body></html>

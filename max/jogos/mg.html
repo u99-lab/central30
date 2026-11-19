@@ -261,7 +261,8 @@ function update(dt){if(!H)return;
  const pw=K.$('pw');if(pw)pw.style.width=aim.p*100+'%';
  const tx=bp.x*.75,tz=bp.z-8.2;cam.position.x=K.damp(cam.position.x,tx,3,dt);cam.position.z=K.damp(cam.position.z,tz,3,dt);cam.position.y=K.damp(cam.position.y,8.6,3,dt);cam.lookAt(cam.position.x,0,cam.position.z+10.2);}
 K._dbg={hit:(x,z,p)=>{const l=Math.hypot(x,z);aim.x=x/l;aim.z=z/l;aim.p=p;hitBall();},st:()=>({x:+bp.x.toFixed(2),z:+bp.z.toFixed(2),strokes,moving,sunk:!!sunk,hi})};
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>state==='play'?ball:null;K.loop(update);menu();
 })();
 </script>
 </body></html>

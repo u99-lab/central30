@@ -221,7 +221,8 @@ function update(dt){const pl=players[turn];
   const moving=pins.some(p=>p.vx||p.vz);if(!bl.live&&!moving&&rollT>1.2&&!swept){swept=true;phase='wait';setTimeout(endRoll,500);}if(rollT>9&&!swept){swept=true;phase='wait';endRoll();}}
  const tz=phase==='roll'&&bl.z<-6?Math.max(bl.z+3.2,-LL+3.5):2.6;cam.position.x=K.damp(cam.position.x,phase==='aim'?aim.x*.5:bl.x*.4,4,dt);cam.position.y=K.damp(cam.position.y,phase==='roll'&&bl.z<-6?1.1:1.45,3,dt);cam.position.z=K.damp(cam.position.z,tz,3,dt);cam.lookAt(cam.position.x*.6,.15,cam.position.z-6);}
 K._dbg=()=>({bl:[+bl.x.toFixed(2),+bl.z.toFixed(2),+bl.vx.toFixed(2),+bl.vz.toFixed(2),bl.gutter],aim:[+aim.x.toFixed(2),+aim.ang.toFixed(3),+aim.pow.toFixed(2)],state,phase,turn,frameN,roll,standing:standing(),f:players.map(p=>JSON.stringify(p.f))});
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>state==='play'?ball:null;K.loop(update);menu();
 })();
 </script>
 </body></html>

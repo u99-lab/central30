@@ -230,7 +230,8 @@ function update(dt){
  else{cam.position.set(x+Math.sin(a)*8.2,3.4,z+Math.cos(a)*8.2);cam.lookAt(curveX(z+60),2.6,z+60);}
  hudT-=dt;if(hudT<=0&&state==='play'){hudT=.15;hud();}}
 K._dbg=()=>({state,z:+z.toFixed(1),v:+(v*3.6).toFixed(1),stIdx,score:Math.round(score),fines:Math.round(fines),next:stations[stIdx]?+(stations[stIdx].z-z).toFixed(1):0});
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>state==='play'?train:null;K.loop(update);menu();
 })();
 </script>
 </body></html>

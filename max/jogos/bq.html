@@ -257,7 +257,8 @@ function update(dt){for(let i=timers.length-1;i>=0;i--){timers[i].t-=dt;if(timer
  net.scale.y=K.damp(net.scale.y,1,8,dt);
  if(phase==='fly'||phase==='res'){const b=ball.position;cam.lookAt(b.x*.25,K.lerp(2.6,Math.max(1.6,b.y),.25),b.z*.25);}}
 K._dbg={shoot:(p,n)=>shoot(p,n||0),set:(d,a)=>{timers.length=0;phase="aim";setSpot(d,a);place();},st:()=>({phase,sc,scored,mode})};
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>mode!=='menu'?me:null;K.loop(update);menu();
 })();
 </script>
 </body></html>

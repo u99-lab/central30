@@ -213,7 +213,8 @@ function update(dt){
  if(state==='play'&&serveT<=0){const sp=Math.hypot(pk.vx,pk.vz);stillT=sp<.35?stillT+dt:0;const lim=pk.z<0?2.5:5;if(stillT>lim){stillT=0;const mine=pk.z>0;pk.x=K.clamp(pk.x*.4,-.5,.5);pk.z=mine?.6:-.6;pk.vx=pk.vz=0;serveT=.6;K.toast(mine?'O disco estava parado: volta para ti':'Disco parado: o adversário recolhe-o');}}
  meM.position.set(me.x,.9,me.z);opM.position.set(op.x,.9,op.z);puck.position.set(pk.x,.92,pk.z);}
 K._dbg=()=>({state,score,pk:[+pk.x.toFixed(2),+pk.z.toFixed(2)],still:+stillT.toFixed(1)});K._test=(x,z)=>{pk.x=x;pk.z=z;pk.vx=pk.vz=0;serveT=0;};
-K.loop(update);menu();
+// online: o teu boneco aparece aos amigos da sala
+K.me=()=>state==='play'?meM:null;K.loop(update);menu();
 })();
 </script>
 </body></html>
