@@ -163,7 +163,7 @@ K.loop=(update,render)=>{let last=performance.now();const f=now=>{requestAnimati
 const S=K.store('vp',{wins:[0,0,0]});
 document.documentElement.style.setProperty('--kc','#ffd23f');
 K.init({sky:0x8fd3ff,fog:[80,260],fov:50,shadow:22,hemi:.75,sunI:1.1,sunPos:[20,40,25]});
-const scene=K.scene,cam=K.camera,CW=4.5,CL=8,NH=2.3,G=9.5,BR=.22;
+const scene=K.scene,cam=K.camera,CW=4,CL=8,NH=2.43,G=9.81,BR=.11;
 const RIV=[['Marta',.5,4.6],['Tiago',.75,6],['Inês',.92,6.8]];
 // praia
 K.plane(400,400,0xd9c38a,0,0,0);const sea=K.plane(400,200,0x2a86a8,0,.02,-130);K.plane(400,6,0xf6f0e0,0,.03,-31);

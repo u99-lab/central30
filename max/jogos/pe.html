@@ -159,7 +159,7 @@ K.loop=(update,render)=>{let last=performance.now();const f=now=>{requestAnimati
 const S=K.store('pe',{cups:0,wins:0,best:0,kit:0});
 const KITS=[[0xffd23f,0x1b2340],[0xe8452c,0xffffff],[0x2a6bff,0xffffff],[0x1fae6b,0xffffff],[0xffffff,0x1b2340],[0x8a4dff,0xffd23f]];
 const TEAMS=[['Vale Verde',0x3fbf6b,0xffffff,.1],['Buarcos United',0x35b6e8,0x10243f,.25],['Atlético da Marginal',0xff8a3d,0x222222,.4],['Estrela do Mondego',0xf2f2f2,0xc0202a,.55],['Naval 30',0x2444c9,0xffd23f,.7],['Leões de Quiaios',0x1d1d28,0xff3d5a,.85],['Sporting da Serra',0x7a1fa2,0xffffff,1]];
-const GW=3.66,GH=2.44,SPOT=11,BR=.16,GRAV=7.5;
+const GW=3.66,GH=2.44,SPOT=11,BR=.11,GRAV=9.81;
 K.init({sky:0x79bdfa,fog:[90,190],fov:50,sunPos:[-25,45,35],shadow:32});
 const scene=K.scene,cam=K.camera;
 // ----- relvado

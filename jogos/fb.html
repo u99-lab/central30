@@ -1054,7 +1054,7 @@ scene.add(sun);
 // ==========================================
 // FIELD
 // ==========================================
-const FIELD_W = 70, FIELD_L = 100;
+const FIELD_W = 68, FIELD_L = 105;
 
 // Grass - checkerboard pattern
 const grassCanvas = document.createElement('canvas');
@@ -1477,10 +1477,10 @@ const PT_CLUBS = [
   { id:'scb',  name:'SCB',    fullName:'SC Braga',               primary:0xcc0000, secondary:0xffffff, skill:73 },
   { id:'vit',  name:'VIT',    fullName:'Vitória SC',             primary:0x000000, secondary:0xffd700, skill:68 },
   { id:'rio',  name:'RIO',    fullName:'Rio Ave FC',             primary:0x009900, secondary:0xffffff, skill:66 },
-  { id:'cas',  name:'CAS',    fullName:'Cascais FC',             primary:0xff6600, secondary:0xffffff, skill:64 },
-  { id:'boi',  name:'BOI',    fullName:'Boavista FC',            primary:0x000000, secondary:0xffffff, skill:67 },
+  { id:'fam',  name:'FAM',    fullName:'FC Famalicão',           primary:0x003a8c, secondary:0xffffff, skill:66 },
+  { id:'gil',  name:'GIL',    fullName:'Gil Vicente FC',         primary:0xd2122e, secondary:0x1f3f8f, skill:65 },
   { id:'est',  name:'EST',    fullName:'Estoril Praia',          primary:0xffcc00, secondary:0x003087, skill:63 },
-  { id:'faro', name:'FAR',    fullName:'SC Farense',             primary:0xff4400, secondary:0x000000, skill:62 },
+  { id:'scl',  name:'SCL',    fullName:'CD Santa Clara',         primary:0xd71920, secondary:0xffffff, skill:66 },
 ];
 
 const BR_CLUBS = [
@@ -1563,7 +1563,7 @@ const NL_CLUBS = [
   { id:'az',  name:'AZ',  fullName:'AZ Alkmaar',        primary:0xc8102e, secondary:0xffffff, skill:73 },
   { id:'twe', name:'TWE', fullName:'Twente',            primary:0xda020e, secondary:0xffffff, skill:72 },
   { id:'utr', name:'UTR', fullName:'Utrecht',           primary:0xc8102e, secondary:0xffffff, skill:68 },
-  { id:'vit', name:'VIT', fullName:'Vitesse',           primary:0xfcd116, secondary:0x000000, skill:63 },
+  { id:'nec', name:'NEC', fullName:'NEC Nijmegen',      primary:0xd8111e, secondary:0x1a1a1a, skill:65 },
   { id:'hee', name:'HEE', fullName:'Heerenveen',        primary:0x0033a0, secondary:0xffffff, skill:64 },
   { id:'gro', name:'GRO', fullName:'Groningen',         primary:0xffffff, secondary:0x00964b, skill:62 },
   { id:'spa', name:'SPA', fullName:'Sparta Rotterdam',  primary:0xc8102e, secondary:0xffffff, skill:60 },
@@ -2048,6 +2048,8 @@ if (typeof refreshCrowdColors === 'function') refreshCrowdColors();
 // CARREIRA: SELEÇÃO DE LIGA + CLUBE
 // ==========================================
 function applyClubSelection(clubId) {
+  // clubes que saíram da 1.ª divisão foram trocados: as carreiras antigas passam para o clube novo
+  clubId = ({ cas:'fam', boi:'gil', faro:'scl', vit:'nec' })[clubId] || clubId;
   const club = getClubById(clubId);
   if (!club) return;
   PLAYER_CLUB_ID = clubId;
@@ -4898,57 +4900,57 @@ scene.add(sky);
 
 const MARKET_PLAYERS = [
   // GUARDA-REDES
-  { id:'gr1', name:'Rui Patrício',   emoji:'🧤', pos:'GR',  club:'Portugal', stars:5, pace:60, shoot:20, pass:55, drib:48, def:85, overall:92, price:12000000, color:'#ffa500' },
+  { id:'gr1', name:'Rui Patrício',   emoji:'🧤', pos:'GR',  club:'Al-Ain', stars:5, pace:60, shoot:20, pass:55, drib:48, def:85, overall:92, price:12000000, color:'#ffa500' },
   { id:'gr2', name:'Diogo Costa',    emoji:'🧤', pos:'GR',  club:'FC Porto',  stars:5, pace:62, shoot:22, pass:58, drib:50, def:87, overall:90, price:14000000, color:'#ffa500' },
-  { id:'gr3', name:'Anthony Lopes',  emoji:'🧤', pos:'GR',  club:'Lyon',      stars:4, pace:58, shoot:18, pass:52, drib:44, def:80, overall:85, price:6000000,  color:'#ffa500' },
-  { id:'gr4', name:'Predrag Rajk.',  emoji:'🧤', pos:'GR',  club:'Livre',     stars:3, pace:52, shoot:15, pass:48, drib:40, def:72, overall:78, price:2000000,  color:'#ffa500' },
-  { id:'gr5', name:'José Sá',        emoji:'🧤', pos:'GR',  club:'Al-Nassr',  stars:4, pace:59, shoot:19, pass:54, drib:46, def:83, overall:87, price:8000000,  color:'#ffa500' },
+  { id:'gr3', name:'Anthony Lopes',  emoji:'🧤', pos:'GR',  club:'Nantes',      stars:4, pace:58, shoot:18, pass:52, drib:44, def:80, overall:85, price:6000000,  color:'#ffa500' },
+  { id:'gr4', name:'Predrag Rajk.',  emoji:'🧤', pos:'GR',  club:'Al-Ittihad',     stars:3, pace:52, shoot:15, pass:48, drib:40, def:72, overall:78, price:2000000,  color:'#ffa500' },
+  { id:'gr5', name:'José Sá',        emoji:'🧤', pos:'GR',  club:'Wolves',  stars:4, pace:59, shoot:19, pass:54, drib:46, def:83, overall:87, price:8000000,  color:'#ffa500' },
   { id:'gr6', name:'Marcelo Pitra.', emoji:'🧤', pos:'GR',  club:'Famalicão', stars:2, pace:50, shoot:12, pass:42, drib:38, def:65, overall:71, price:800000,   color:'#ffa500' },
   // DEFESAS
   { id:'df1', name:'Rúben Dias',     emoji:'🛡️', pos:'DEF', club:'Man City',  stars:5, pace:72, shoot:40, pass:68, drib:62, def:91, overall:95, price:18000000, color:'#6495ed' },
   { id:'df2', name:'Gonçalo Inácio', emoji:'🛡️', pos:'DEF', club:'Sporting',  stars:4, pace:70, shoot:38, pass:65, drib:60, def:83, overall:87, price:9000000,  color:'#6495ed' },
   { id:'df3', name:'João Cancelo',   emoji:'🛡️', pos:'DEF', club:'Al-Hilal',  stars:5, pace:84, shoot:60, pass:78, drib:75, def:82, overall:89, price:11000000, color:'#6495ed' },
   { id:'df4', name:'Nuno Mendes',    emoji:'🛡️', pos:'DEF', club:'PSG',       stars:4, pace:86, shoot:42, pass:70, drib:72, def:79, overall:86, price:8000000,  color:'#6495ed' },
-  { id:'df5', name:'Pepe',           emoji:'🛡️', pos:'DEF', club:'Livre',     stars:4, pace:60, shoot:45, pass:62, drib:55, def:80, overall:82, price:3000000,  color:'#6495ed' },
+  { id:'df5', name:'Pepe',           emoji:'🛡️', pos:'DEF', club:'LENDA',     stars:4, pace:60, shoot:45, pass:62, drib:55, def:80, overall:82, price:3000000,  color:'#6495ed' },
   { id:'df6', name:'Ricardo Esgaio', emoji:'🛡️', pos:'DEF', club:'Sporting',  stars:3, pace:76, shoot:48, pass:66, drib:65, def:74, overall:79, price:1500000,  color:'#6495ed' },
   { id:'df7', name:'António Silva',  emoji:'🛡️', pos:'DEF', club:'Benfica',   stars:4, pace:78, shoot:36, pass:64, drib:58, def:81, overall:84, price:7000000,  color:'#6495ed' },
   { id:'df8', name:'Diogo Leite',    emoji:'🛡️', pos:'DEF', club:'Union Berlin', stars:3, pace:68, shoot:34, pass:60, drib:54, def:76, overall:78, price:2500000, color:'#6495ed' },
   { id:'df9', name:'Danilo Pereira', emoji:'🛡️', pos:'DEF', club:'Al-Ittihad', stars:4, pace:64, shoot:50, pass:67, drib:58, def:80, overall:83, price:4500000, color:'#6495ed' },
-  { id:'df10',name:'Raphael Guer.',  emoji:'🛡️', pos:'DEF', club:'Real Madrid', stars:5, pace:75, shoot:55, pass:73, drib:68, def:88, overall:91, price:15000000, color:'#6495ed' },
+  { id:'df10',name:'Raphael Guer.',  emoji:'🛡️', pos:'DEF', club:'Bayern', stars:5, pace:75, shoot:55, pass:73, drib:68, def:88, overall:91, price:15000000, color:'#6495ed' },
   // MÉDIOS
   { id:'md1', name:'Bruno Fernandes',emoji:'⚡', pos:'MEI', club:'Man United', stars:5, pace:75, shoot:80, pass:89, drib:82, def:62, overall:92, price:16000000, color:'#90ee90' },
   { id:'md2', name:'Bernardo Silva', emoji:'⚡', pos:'MEI', club:'Man City',   stars:5, pace:82, shoot:75, pass:88, drib:87, def:64, overall:93, price:19000000, color:'#90ee90' },
   { id:'md3', name:'Vitinha',        emoji:'⚡', pos:'MEI', club:'PSG',        stars:4, pace:78, shoot:68, pass:82, drib:80, def:58, overall:87, price:10000000, color:'#90ee90' },
-  { id:'md4', name:'João Palhinha',  emoji:'⚡', pos:'MEI', club:'Benfica',    stars:4, pace:70, shoot:62, pass:74, drib:68, def:85, overall:86, price:9000000,  color:'#90ee90' },
+  { id:'md4', name:'João Palhinha',  emoji:'⚡', pos:'MEI', club:'Tottenham',    stars:4, pace:70, shoot:62, pass:74, drib:68, def:85, overall:86, price:9000000,  color:'#90ee90' },
   { id:'md5', name:'Rúben Neves',    emoji:'⚡', pos:'MEI', club:'Al-Hilal',   stars:4, pace:72, shoot:70, pass:80, drib:74, def:72, overall:84, price:7000000,  color:'#90ee90' },
   { id:'md6', name:'Matheus Nunes',  emoji:'⚡', pos:'MEI', club:'Man City',   stars:3, pace:80, shoot:65, pass:75, drib:76, def:60, overall:81, price:4000000,  color:'#90ee90' },
-  { id:'md7', name:'Otávio',         emoji:'⚡', pos:'MEI', club:'Al-Nassr',   stars:4, pace:77, shoot:72, pass:81, drib:84, def:50, overall:85, price:6500000,  color:'#90ee90' },
-  { id:'md8', name:'Florentino Luís',emoji:'⚡', pos:'MEI', club:'Benfica',    stars:3, pace:68, shoot:55, pass:71, drib:65, def:78, overall:79, price:3500000,  color:'#90ee90' },
+  { id:'md7', name:'Otávio',         emoji:'⚡', pos:'MEI', club:'Al-Qadsiah',   stars:4, pace:77, shoot:72, pass:81, drib:84, def:50, overall:85, price:6500000,  color:'#90ee90' },
+  { id:'md8', name:'Florentino Luís',emoji:'⚡', pos:'MEI', club:'Burnley',    stars:3, pace:68, shoot:55, pass:71, drib:65, def:78, overall:79, price:3500000,  color:'#90ee90' },
   { id:'md9', name:'João Neves',     emoji:'⚡', pos:'MEI', club:'PSG',        stars:4, pace:79, shoot:69, pass:83, drib:81, def:66, overall:88, price:13000000, color:'#90ee90' },
   // AVANÇADOS
   { id:'av1', name:'Cristiano Ron.',emoji:'👑', pos:'AVA', club:'Al-Nassr',   stars:5, pace:85, shoot:94, pass:76, drib:86, def:34, overall:95, price:65000000, color:'#ffd700', legend:true },
   { id:'av2', name:'Rafael Leão',   emoji:'⚽', pos:'AVA', club:'AC Milan',   stars:5, pace:94, shoot:84, pass:78, drib:90, def:32, overall:91, price:17000000, color:'#ff6347' },
   { id:'av3', name:'Gonçalo Ramos', emoji:'⚽', pos:'AVA', club:'PSG',        stars:4, pace:79, shoot:86, pass:72, drib:80, def:30, overall:88, price:12000000, color:'#ff6347' },
-  { id:'av4', name:'Diogo Jota',    emoji:'⚽', pos:'AVA', club:'Liverpool',  stars:4, pace:84, shoot:82, pass:75, drib:82, def:35, overall:86, price:10000000, color:'#ff6347' },
+  { id:'av4', name:'Diogo Jota',    emoji:'⚽', pos:'AVA', club:'LENDA',  stars:4, pace:84, shoot:82, pass:75, drib:82, def:35, overall:86, price:10000000, color:'#ff6347' },
   { id:'av5', name:'Pedro Neto',    emoji:'⚽', pos:'AVA', club:'Chelsea',    stars:4, pace:92, shoot:76, pass:74, drib:86, def:33, overall:84, price:8000000,  color:'#ff6347' },
   { id:'av6', name:'Francisco Tri.',emoji:'⚽', pos:'AVA', club:'Sporting',   stars:3, pace:78, shoot:74, pass:68, drib:75, def:28, overall:78, price:3500000,  color:'#ff6347' },
-  { id:'av7', name:'João Félix',    emoji:'⚽', pos:'AVA', club:'Atlético',   stars:4, pace:83, shoot:80, pass:76, drib:84, def:30, overall:85, price:9000000,  color:'#ff6347' },
-  { id:'av8', name:'Jonas',         emoji:'⚽', pos:'AVA', club:'Livre',      stars:3, pace:70, shoot:79, pass:65, drib:72, def:25, overall:79, price:2200000,  color:'#ff6347' },
-  { id:'av9', name:'Viktor Gyök.',  emoji:'⚽', pos:'AVA', club:'Sporting',   stars:4, pace:88, shoot:85, pass:70, drib:83, def:28, overall:87, price:14000000, color:'#ff6347' },
-  { id:'av10',name:'Tiago Tomás',   emoji:'⚽', pos:'AVA', club:'Stuttgart',  stars:3, pace:86, shoot:73, pass:67, drib:78, def:26, overall:80, price:3000000,  color:'#ff6347' },
+  { id:'av7', name:'João Félix',    emoji:'⚽', pos:'AVA', club:'Al-Nassr',   stars:4, pace:83, shoot:80, pass:76, drib:84, def:30, overall:85, price:9000000,  color:'#ff6347' },
+  { id:'av8', name:'Jonas',         emoji:'⚽', pos:'AVA', club:'LENDA',      stars:3, pace:70, shoot:79, pass:65, drib:72, def:25, overall:79, price:2200000,  color:'#ff6347' },
+  { id:'av9', name:'Viktor Gyök.',  emoji:'⚽', pos:'AVA', club:'Arsenal',   stars:4, pace:88, shoot:85, pass:70, drib:83, def:28, overall:87, price:14000000, color:'#ff6347' },
+  { id:'av10',name:'Tiago Tomás',   emoji:'⚽', pos:'AVA', club:'Wolfsburg',  stars:3, pace:86, shoot:73, pass:67, drib:78, def:26, overall:80, price:3000000,  color:'#ff6347' },
   // ── MAIS JOGADORES (reforço grande do mercado) ──────────────────────────
   // Guarda-redes extra
-  { id:'gr7', name:'Marchesín',      emoji:'🧤', pos:'GR',  club:'Livre',      stars:3, pace:56, shoot:16, pass:50, drib:42, def:76, overall:77, price:1800000,  color:'#ffa500' },
-  { id:'gr8', name:'Ederson',        emoji:'🧤', pos:'GR',  club:'Man City',   stars:5, pace:64, shoot:35, pass:82, drib:60, def:88, overall:93, price:20000000, color:'#ffa500' },
+  { id:'gr7', name:'Marchesín',      emoji:'🧤', pos:'GR',  club:'Boca Juniors',      stars:3, pace:56, shoot:16, pass:50, drib:42, def:76, overall:77, price:1800000,  color:'#ffa500' },
+  { id:'gr8', name:'Ederson',        emoji:'🧤', pos:'GR',  club:'Fenerbahçe',   stars:5, pace:64, shoot:35, pass:82, drib:60, def:88, overall:93, price:20000000, color:'#ffa500' },
   { id:'gr9', name:'Thibaut Court.', emoji:'🧤', pos:'GR',  club:'Real Madrid',stars:5, pace:60, shoot:24, pass:65, drib:52, def:92, overall:94, price:22000000, color:'#ffa500' },
-  { id:'gr10',name:'Bento',          emoji:'🧤', pos:'GR',  club:'Al-Ittihad', stars:4, pace:61, shoot:20, pass:60, drib:48, def:82, overall:84, price:6500000,  color:'#ffa500' },
+  { id:'gr10',name:'Bento',          emoji:'🧤', pos:'GR',  club:'Al-Nassr', stars:4, pace:61, shoot:20, pass:60, drib:48, def:82, overall:84, price:6500000,  color:'#ffa500' },
   // Defesas extra
   { id:'df11',name:'William Saliba', emoji:'🛡️', pos:'DEF', club:'Arsenal',    stars:5, pace:80, shoot:38, pass:70, drib:64, def:89, overall:92, price:20000000, color:'#6495ed' },
   { id:'df12',name:'Achraf Hakimi',  emoji:'🛡️', pos:'DEF', club:'PSG',        stars:5, pace:96, shoot:65, pass:76, drib:80, def:75, overall:90, price:17000000, color:'#6495ed' },
   { id:'df13',name:'Theo Hernández', emoji:'🛡️', pos:'DEF', club:'Al-Hilal',   stars:5, pace:90, shoot:62, pass:74, drib:78, def:73, overall:89, price:16000000, color:'#6495ed' },
   { id:'df14',name:'Josko Gvardiol', emoji:'🛡️', pos:'DEF', club:'Man City',   stars:5, pace:85, shoot:50, pass:72, drib:70, def:87, overall:90, price:18500000, color:'#6495ed' },
   { id:'df15',name:'Alphonso Davies',emoji:'🛡️', pos:'DEF', club:'Bayern',     stars:4, pace:95, shoot:55, pass:71, drib:79, def:76, overall:87, price:12500000, color:'#6495ed' },
-  { id:'df16',name:'Renato Veiga',   emoji:'🛡️', pos:'DEF', club:'Chelsea',    stars:3, pace:74, shoot:40, pass:66, drib:62, def:77, overall:80, price:4000000,  color:'#6495ed' },
+  { id:'df16',name:'Renato Veiga',   emoji:'🛡️', pos:'DEF', club:'Villarreal',    stars:3, pace:74, shoot:40, pass:66, drib:62, def:77, overall:80, price:4000000,  color:'#6495ed' },
   { id:'df17',name:'Tomás Araújo',   emoji:'🛡️', pos:'DEF', club:'Benfica',    stars:3, pace:72, shoot:35, pass:62, drib:56, def:78, overall:80, price:3200000,  color:'#6495ed' },
   { id:'df18',name:'Ousmane Diomandé',emoji:'🛡️',pos:'DEF', club:'Sporting',   stars:4, pace:76, shoot:37, pass:63, drib:58, def:82, overall:83, price:6500000,  color:'#6495ed' },
   { id:'df19',name:'Nuno Tavares',   emoji:'🛡️', pos:'DEF', club:'Lazio',      stars:3, pace:88, shoot:44, pass:64, drib:70, def:70, overall:79, price:3800000,  color:'#6495ed' },
@@ -4970,8 +4972,8 @@ const MARKET_PLAYERS = [
   { id:'av14',name:'Lamine Yamal',   emoji:'⚽', pos:'AVA', club:'Barcelona',  stars:5, pace:92, shoot:83, pass:82, drib:94, def:28, overall:93, price:60000000, color:'#ff6347' },
   { id:'av15',name:'Viktor Osimhen', emoji:'⚽', pos:'AVA', club:'Galatasaray',stars:5, pace:87, shoot:90, pass:66, drib:80, def:30, overall:91, price:38000000, color:'#ff6347' },
   { id:'av16',name:'Bukayo Saka',    emoji:'⚽', pos:'AVA', club:'Arsenal',    stars:5, pace:88, shoot:84, pass:82, drib:88, def:38, overall:92, price:42000000, color:'#ff6347' },
-  { id:'av17',name:'Evanilson',      emoji:'⚽', pos:'AVA', club:'FC Porto',   stars:3, pace:80, shoot:78, pass:66, drib:74, def:28, overall:81, price:5500000,  color:'#ff6347' },
-  { id:'av18',name:'Geovany Quenda', emoji:'⚽', pos:'AVA', club:'Sporting',   stars:4, pace:93, shoot:75, pass:70, drib:87, def:26, overall:84, price:9500000,  color:'#ff6347' },
+  { id:'av17',name:'Evanilson',      emoji:'⚽', pos:'AVA', club:'Bournemouth',   stars:3, pace:80, shoot:78, pass:66, drib:74, def:28, overall:81, price:5500000,  color:'#ff6347' },
+  { id:'av18',name:'Geovany Quenda', emoji:'⚽', pos:'AVA', club:'Chelsea',   stars:4, pace:93, shoot:75, pass:70, drib:87, def:26, overall:84, price:9500000,  color:'#ff6347' },
   { id:'av19',name:'Rodrygo',        emoji:'⚽', pos:'AVA', club:'Real Madrid',stars:4, pace:90, shoot:81, pass:77, drib:87, def:32, overall:89, price:28000000, color:'#ff6347' },
   { id:'av20',name:'Álvaro Morata',  emoji:'⚽', pos:'AVA', club:'Como',       stars:3, pace:74, shoot:80, pass:68, drib:72, def:30, overall:82, price:4200000,  color:'#ff6347' },
   // ⭐ LENDAS — raros, caríssimos e com estatísticas excecionais

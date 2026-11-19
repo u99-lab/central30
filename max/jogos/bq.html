@@ -160,7 +160,7 @@ K.loop=(update,render)=>{let last=performance.now();const f=now=>{requestAnimati
 const S=K.store('bq',{best60:0,bestVolta:0,wins:[0,0,0]});
 document.documentElement.style.setProperty('--kc','#ff8a3d');
 K.init({sky:0x9fdcff,fog:[60,140],fov:52,shadow:22,sunPos:[14,30,18]});
-const scene=K.scene,cam=K.camera,HY=3.05,RR=.34,BR=.17,GRAV=9.8;
+const scene=K.scene,cam=K.camera,HY=3.05,RR=.23,BR=.12,GRAV=9.8;
 const RIVALS=[['Rui',.42,0xe8352c],['Bia',.58,0xb46bff],['Stôr Paulo',.74,0x1b2340]];
 // ----- campo
 const ct=K.tex(512,512,(c,w,h)=>{const s=25.6,X=m=>256+m*s,Z=m=>41+m*s;c.fillStyle='#2f7fb0';c.fillRect(0,0,w,h);for(let i=0;i<1500;i++){c.fillStyle=Math.random()<.5?'#3587b8':'#2a76a5';c.fillRect(Math.random()*w,Math.random()*h,3,3);}
