@@ -5703,7 +5703,7 @@ const HG = {
   torso: new THREE.CapsuleGeometry(0.2, 0.3, 4, 10).scale(1.18, 1, 0.68),
   hip: new THREE.CapsuleGeometry(0.17, 0.08, 4, 10).scale(1.2, 1, 0.75),
   head: new THREE.SphereGeometry(0.125, 14, 10).scale(1, 1.18, 1.05),
-  hair: new THREE.SphereGeometry(0.135, 14, 8, 0, TAU, 0, Math.PI * 0.55).scale(1, 1.15, 1.08),
+  hair: new THREE.SphereGeometry(0.135, 14, 8, 0, TAU, 0, Math.PI * 0.43).scale(1, 1.15, 1.08),
   cap: new THREE.CylinderGeometry(0.14, 0.14, 0.08, 14).translate(0, 0.1, 0),
   brim: new THREE.BoxGeometry(0.22, 0.02, 0.14).translate(0, 0.07, 0.12),
   leg: new THREE.CapsuleGeometry(0.085, 0.62, 4, 8).translate(0, -0.42, 0),
@@ -5712,7 +5712,7 @@ const HG = {
   hand: new THREE.SphereGeometry(0.06, 8, 6).translate(0, -0.6, 0),
   gun: new THREE.BoxGeometry(0.06, 0.32, 0.12).translate(0, -0.72, 0.05),
   rpg: new THREE.CylinderGeometry(0.08, 0.08, 1.1, 10).translate(0, -0.65, 0),
-  shades: new THREE.BoxGeometry(0.2, 0.04, 0.03).translate(0, 0.02, 0.12),
+  shades: new THREE.BoxGeometry(0.2, 0.04, 0.03).translate(0, -0.036, 0.132),
 };
 const SKINS = [0xf1c8a5, 0xe0ac7f, 0xc68a5e, 0x8d5a3b, 0x5e3a24, 0xf5d5bc];
 const SHIRTS = [0xd23c3c, 0x2f6fb5, 0xe8e2d5, 0x3a3a3a, 0x3d8c4a, 0xe0a42c, 0x7a3f9a, 0x1f9aa8, 0xff7a3d, 0x8a8f99, 0xb8326b];
@@ -5730,6 +5730,20 @@ function vcol(geo, hex, m) {
 }
 const _hm = new THREE.Matrix4();
 const T_ = (x, y, z) => _hm.clone().makeTranslation(x, y, z);
+// cara de cada pessoa: olhos (branco, íris e pupila), sobrancelhas, nariz, boca e orelhas, juntos na mesma malha do corpo
+const FACE_BOX = new THREE.BoxGeometry(1, 1, 1), EYE_C = [0x4a2e1a, 0x3b2414, 0x2f2014, 0x3b6ea5, 0x4f7a4a, 0x6b4a2a];
+function faceParts(c) {
+  const R = 0.125, SY = 1.18, SZ = 1.05, Y0 = 0.8, out = [], dk = (h, k) => new THREE.Color(h).multiplyScalar(k).getHex();
+  const eye = c.eye != null ? c.eye : EYE_C[Math.floor(Math.random() * EYE_C.length)];
+  const put = (w, h, d, x, y, col, dz = 0) => { const z = Math.sqrt(Math.max(0, R * R - x * x - y * y)) * SZ + dz; out.push(vcol(FACE_BOX, col, new THREE.Matrix4().makeTranslation(x, Y0 + y * SY, z).multiply(new THREE.Matrix4().makeScale(w, h, d)))); };
+  for (const s of [-1, 1]) {
+    put(0.042, 0.022, 0.012, s * 0.044, -0.03, 0xf6f3ec); put(0.02, 0.022, 0.012, s * 0.044, -0.031, eye, 0.003); put(0.009, 0.011, 0.01, s * 0.044, -0.031, 0x080808, 0.006);
+    if (!c.cap) put(0.05, 0.01, 0.012, s * 0.046, 0.004, dk(c.hair, 0.85), 0.002);
+    out.push(vcol(FACE_BOX, dk(c.skin, 0.9), new THREE.Matrix4().makeTranslation(s * 0.128, Y0, 0).multiply(new THREE.Matrix4().makeScale(0.016, 0.045, 0.035))));
+  }
+  put(0.02, 0.04, 0.022, 0, -0.065, dk(c.skin, 0.9), 0.004); put(0.05, 0.01, 0.008, 0, -0.1, dk(c.skin, 0.55));
+  return out;
+}
 function buildHuman(c) {
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
   const M = (geo, parent) => { const m = new THREE.Mesh(geo, PED_MAT); m.castShadow = true; parent.add(m); return m; };
@@ -5738,6 +5752,7 @@ function buildHuman(c) {
   if (c.cap) { parts.push(vcol(HG.cap, c.cap, T_(0, 0.8, 0)), vcol(HG.brim, c.cap, T_(0, 0.8, 0))); }
   else parts.push(vcol(HG.hair, c.hair, T_(0, 0.815, -0.01)));
   if (c.shades) parts.push(vcol(HG.shades, 0x050505, T_(0, 0.8, 0)));
+  for (const fp of faceParts(c)) parts.push(fp);
   const torso = M(mergeGeometries(parts), body);
   const legG = mergeGeometries([vcol(HG.leg, c.pants), vcol(HG.shoe, 0x161616)]);
   const armG = mergeGeometries([vcol(HG.arm, c.sleeves === false ? c.skin : c.shirt), vcol(HG.hand, c.skin)]);
@@ -6535,7 +6550,7 @@ function worldPos() { return INSIDE ? _wp.set(INSIDE.out.x, CURB, INSIDE.out.z) 
 const _wp = new V3();
 function spawnPlayer(x, z) {
   if (player.ped) player.ped.remove();
-  player.ped = new Ped(x, z, 'player');
+  player.ped = new Ped(x, z, 'player', playerLook());
   player.ped.health = 100; player.dead = false; player.inCar = null; player.ped.mesh.visible = true;
   player.camYaw = 0; player.ped.heading = 0;
 }
@@ -7585,6 +7600,60 @@ function buildClub(it) {
   it.music = 2;
 }
 const oz = it => (it.z0 + it.z1) / 2;
+// --------------------------------------------- mais prédios onde se entra (bar, barbearia, roupa, ginásio, restaurante)
+let PLOOK = null;
+function playerLook() { if (!PLOOK) { try { PLOOK = JSON.parse(localStorage.getItem('pn.look') || 'null'); } catch (e) { } if (!PLOOK) PLOOK = randomLook('player'); } return Object.assign({}, PLOOK); }
+function setPlayerLook(ch) {
+  PLOOK = Object.assign(playerLook(), ch); try { localStorage.setItem('pn.look', JSON.stringify(PLOOK)); } catch (e) { }
+  const p = player.ped, old = p.mesh, nm = buildHuman(PLOOK); nm.position.copy(old.position); nm.rotation.copy(old.rotation); nm.visible = old.visible;
+  scene.remove(old); old.userData.geos.forEach(g => g.dispose()); scene.add(nm); p.mesh = nm; nm.userData.gun.visible = old.userData.gun.visible;
+}
+const SHIRT_C = [0xd94b3a, 0x2f6db5, 0xf2b705, 0xf2f2ee, 0x2e8b6e, 0x1c1f24, 0x8e44ad, 0xe67e22, 0xff40d0], PANTS_C = [0x222222, 0x2a3a5a, 0x5a4a3a, 0x3a3a3a, 0xd8d0c0], HAIR_C = [0x2b1d14, 0x5a3a20, 0xc9a35a, 0x111111, 0xb03a2e, 0x9aa1a8, 0xf2f2ee];
+const nextIn = (arr, v) => arr[(arr.indexOf(v) + 1) % arr.length];
+function buildBar(it) {
+  const r = room(it.ox, it.oz, 14, 12, 'dark'); Object.assign(it, r); const { x0, x1, z0, z1 } = r, ox = it.ox, oc = oz(it);
+  solid('wood', x0 + 1, 0, z1 - 3, x1 - 3, 1.1, z1 - 2.2); ig('dark').box(x0 + 1, 1.2, z1 - 0.2, x1 - 3, 3.2, z1 - 0.05, 2);
+  for (let x = x0 + 1.3; x < x1 - 3.3; x += 0.42) ig(PRODUCT[Math.floor(crng() * 6)]).box(x, 1.7, z1 - 0.4, x + 0.18, 2.2, z1 - 0.2, 1);
+  it.clerk = staticPed(ox - 1, z1 - 1.4, Math.PI, { shirt: 0x111111, pants: 0x111111, skin: pick(SKINS), hair: pick(HAIRS) });
+  solid('green', x1 - 3.4, 0, z0 + 2, x1 - 1.4, 0.85, z0 + 5.6); ig('wood').box(x1 - 3.5, 0.85, z0 + 1.9, x1 - 1.3, 0.95, z0 + 5.7, 1);
+  for (let k = 0; k < 4; k++) staticPed(ox + rand(-4, 1), oc + rand(-2, 1.5), rand(0, TAU), randomLook('civ'));
+  marker(it, ox - 1, z1 - 3.8, 'Comprar <b>refresco</b> · ' + fmtMoney(8), () => buy(8, () => { player.ped.health = Math.min(100, player.ped.health + 10); showHint('+10 saúde', 1.5); }), 0xffd040);
+  marker(it, x1 - 2.4, z0 + 6.6, 'Jogar <b>bilhar</b> · ' + fmtMoney(10), () => buy(10, () => { const w = Math.random() < 0.5; if (w) addMoney(30); showHint(w ? 'Ganhaste a partida! +' + fmtMoney(30) : 'Perdeste a partida.', 2); }), 0x40e0ff);
+  it.music = 1;
+}
+function buildBarbearia(it) {
+  const r = room(it.ox, it.oz, 12, 10); Object.assign(it, r); const { x0, x1, z0, z1 } = r, ox = it.ox;
+  for (const x of [ox - 3, ox, ox + 3]) { solid('dark', x - 0.45, 0, z1 - 2.2, x + 0.45, 0.6, z1 - 1.3); ig('dark').box(x - 0.45, 0.6, z1 - 1.4, x + 0.45, 1.4, z1 - 1.3, 1); ig('glass').box(x - 0.8, 1.2, z1 - 0.1, x + 0.8, 2.4, z1 - 0.05, 1); }
+  ig('red').box(x1 - 0.5, 0, z0 + 0.5, x1 - 0.2, 2, z0 + 0.8, 1);
+  it.clerk = staticPed(ox + 1.4, z1 - 2.6, Math.PI, { shirt: 0xffffff, pants: 0x222222, skin: pick(SKINS), hair: pick(HAIRS) });
+  marker(it, ox, z1 - 3.4, '<b>Cortar e pintar o cabelo</b> · ' + fmtMoney(40), () => buy(40, () => { setPlayerLook({ hair: nextIn(HAIR_C, playerLook().hair), cap: null }); showHint('Cabelo novo!', 1.5); }), 0xffd040);
+}
+function buildRoupa(it) {
+  const r = room(it.ox, it.oz, 14, 11); Object.assign(it, r); const { x0, x1, z0, z1 } = r, ox = it.ox;
+  for (const z of [z0 + 4, z0 + 7]) { solid('metal', ox - 4, 1.6, z - 0.05, ox + 2, 1.68, z + 0.05, false); for (let x = ox - 3.8; x < ox + 1.9; x += 0.5) ig(PRODUCT[Math.floor(crng() * 6)]).box(x, 0.8, z - 0.05, x + 0.4, 1.55, z + 0.05, 1); addCollider({ x0: ox - 4, x1: ox + 2, z0: z - 0.4, z1: z + 0.4, h: 2 }); }
+  solid('counter', x1 - 3.5, 0, z1 - 2.4, x1 - 0.8, 1.05, z1 - 1.6); ig('glass').box(x0 + 0.1, 0.2, z0 + 3, x0 + 0.15, 2.4, z0 + 4.4, 1);
+  it.clerk = staticPed(x1 - 2.1, z1 - 1.0, Math.PI, { shirt: 0x2f6db5, pants: 0x222222, skin: pick(SKINS), hair: pick(HAIRS) });
+  marker(it, ox - 1, z0 + 5.5, '<b>Camisola nova</b> · ' + fmtMoney(60), () => buy(60, () => { setPlayerLook({ shirt: nextIn(SHIRT_C, playerLook().shirt) }); showHint('Camisola nova vestida!', 1.5); }), 0xffd040);
+  marker(it, ox + 3.6, z0 + 5.5, '<b>Calças novas</b> · ' + fmtMoney(50), () => buy(50, () => { setPlayerLook({ pants: nextIn(PANTS_C, playerLook().pants) }); showHint('Calças novas!', 1.5); }), 0xffd040);
+  marker(it, x0 + 1.4, z0 + 3.7, '<b>Óculos de sol</b> · ' + fmtMoney(35), () => buy(35, () => { setPlayerLook({ shades: !playerLook().shades }); showHint(playerLook().shades ? 'Óculos de sol postos.' : 'Tiraste os óculos.', 1.5); }), 0x40e0ff);
+}
+function buildGinasio(it) {
+  const r = room(it.ox, it.oz, 16, 12); Object.assign(it, r); const { x0, x1, z0, z1 } = r, ox = it.ox;
+  for (const x of [ox - 5, ox - 2.5, ox]) { solid('dark', x - 0.45, 0, z1 - 3, x + 0.45, 0.4, z1 - 1); ig('metal').box(x - 0.45, 0.4, z1 - 1.2, x + 0.45, 1.4, z1 - 1.05, 1); }
+  for (let k = 0; k < 6; k++) ig('dark').box(x1 - 3 + (k % 3) * 0.7, 0, z0 + 2 + Math.floor(k / 3) * 1.2, x1 - 2.6 + (k % 3) * 0.7, 0.35, z0 + 2.4 + Math.floor(k / 3) * 1.2, 1);
+  ig('rug').flat(ox - 2, z0 + 2.5, ox + 2, z0 + 5.5, 0.01, 2);
+  staticPed(ox - 2.5, z1 - 2, 0, { shirt: 0xd35400, pants: 0x111111, skin: pick(SKINS), hair: pick(HAIRS) });
+  marker(it, ox, z1 - 4, '<b>Treinar</b> (resistência +) · ' + fmtMoney(25), () => buy(25, () => { player.armor = Math.min(100, (player.armor || 0) + 15); player.ped.health = 100; showHint('Treino feito! Saúde cheia e mais resistência.', 2); }), 0x40ff80);
+}
+function buildRestaurante(it) {
+  const r = room(it.ox, it.oz, 16, 12, 'wall'); Object.assign(it, r); const { x0, x1, z0, z1 } = r, ox = it.ox, oc = oz(it);
+  solid('counter', ox - 4, 0, z1 - 2, ox + 4, 1.05, z1 - 1.3);
+  for (const [x, z] of [[ox - 5, oc - 1.5], [ox - 1.5, oc - 1.5], [ox + 2, oc - 1.5], [ox + 5.2, oc - 1.5], [ox - 3.3, oc + 1.6], [ox + 3.6, oc + 1.6]]) { solid('white', x - 0.7, 0, z - 0.5, x + 0.7, 0.75, z + 0.5); ig('wood').box(x - 1.2, 0, z - 0.2, x - 0.8, 0.45, z + 0.2, 1); ig('wood').box(x + 0.8, 0, z - 0.2, x + 1.2, 0.45, z + 0.2, 1); }
+  it.clerk = staticPed(ox, z1 - 0.8, Math.PI, { shirt: 0xffffff, pants: 0x222222, skin: pick(SKINS), hair: pick(HAIRS) });
+  for (let k = 0; k < 3; k++) staticPed(ox + rand(-5, 5), oc + rand(-1, 1) - 2.4, 0, randomLook('civ'));
+  marker(it, ox, z1 - 3, '<b>Refeição completa</b> · ' + fmtMoney(30), () => buy(30, () => { player.ped.health = 100; showHint('Que bem que soube! Saúde cheia.', 2); }), 0x40ff80);
+}
+
 
 // --------------------------------------------- doors in the city
 function doorFor(b) {
@@ -7614,12 +7683,12 @@ function nameTag(text, color) {
     c.fillStyle = '#fff'; c.font = 'bold 58px Impact, "Arial Narrow", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text.toUpperCase(), 256, 66, 470);
   });
 }
-const DOOR_COL = { mercado: 0x40ff80, armaria: 0xff5040, casa: 0xffffff, club: 0xff40d0 };
-const DOOR_NAME = { mercado: 'Mini Mercado 24h', armaria: 'Armaria', casa: 'Casa segura', club: 'Club Neon' };
+const DOOR_COL = { mercado: 0x40ff80, armaria: 0xff5040, casa: 0xffffff, club: 0xff40d0, bar: 0xffb030, barbearia: 0xff6a6a, roupa: 0x5aa0ff, ginasio: 0x9cff40, restaurante: 0xffe060 };
+const DOOR_NAME = { mercado: 'Mini Mercado 24h', armaria: 'Armaria', casa: 'Casa segura', club: 'Club Neon', bar: 'Bar do Cais', barbearia: 'Barbearia', roupa: 'Loja de Roupa', ginasio: 'Ginásio', restaurante: 'Restaurante Ribeira' };
 function addDoor(type, d, signIdx) {
   const k = interiors.length, it = { type, name: DOOR_NAME[type], ox: INT_X + 40, oz: k * 50, markers: [], door: d };
   it.oz = k * 50; // room centre z
-  ({ mercado: buildMercado, armaria: buildArmaria, casa: buildCasa, club: buildClub })[type](it);
+  ({ mercado: buildMercado, armaria: buildArmaria, casa: buildCasa, club: buildClub, bar: buildBar, barbearia: buildBarbearia, roupa: buildRoupa, ginasio: buildGinasio, restaurante: buildRestaurante })[type](it);
   it.spawn = new V3(it.ox, 0, it.z0 + 2.4);
   it.exit = { x: it.ox, z: it.z0 + 0.6 };
   it.out = { x: d.x + d.nx * 1.3, z: d.z + d.nz * 1.3 };
@@ -7649,6 +7718,7 @@ function buildInteriors() {
   const ar = pickBuilding(P.x - 100, P.z - 120, b => b.shop); if (ar) addDoor('armaria', doorFor(ar), 9);
   const cl = pickBuilding(P.x + 60, P.z - 150, b => b.floors >= 5); if (cl) addDoor('club', doorFor(cl), 10);
   if (gasShopDoor) addDoor('mercado', gasShopDoor, null);
+  for (const [t, dx, dz] of [['bar', 180, 40], ['barbearia', -60, 90], ['roupa', 40, 120], ['ginasio', -160, 20], ['restaurante', 100, -90]]) { const b = pickBuilding(P.x + dx, P.z + dz, q => q.floors <= 8); if (b) addDoor(t, doorFor(b), null); }
   // flush geometry
   for (const k in IGB) { const m = new THREE.Mesh(IGB[k].build(), INT_MAT[k]); m.castShadow = k !== 'light' && k !== 'floor'; m.receiveShadow = true; scene.add(m); }
   flushCityGB();
@@ -7952,10 +8022,11 @@ function updateDayNight(dt, focus) {
   CARMAT.head.emissiveIntensity = nightF > 0.5 ? 4 : 0.5;
   // env map refresh
   envTimer -= dt;
-  if (envTimer <= 0 && (Math.abs(GAME.clock - lastEnvClock) > 0.15 || Math.abs(WEATHER.cloud - (updateDayNight.lc ?? 0)) > 0.08)) { envTimer = 4; lastEnvClock = GAME.clock; updateDayNight.lc = WEATHER.cloud; updateEnv(); }
+  if (envTimer <= 0 && (Math.abs(GAME.clock - lastEnvClock) > (LOW_DEV ? 1 : 0.6) || Math.abs(WEATHER.cloud - (updateDayNight.lc ?? 0)) > 0.08)) { envTimer = 12; lastEnvClock = GAME.clock; updateDayNight.lc = WEATHER.cloud; updateEnv(); }
   // lamp lights
   if (GAME.night) {
-    const sorted = lampPos.map(p => [p, p.distanceToSquared(camera.position)]).sort((a, b) => a[1] - b[1]);
+    if (!updateDayNight.ls || GAME.time - updateDayNight.lt > 0.25) { updateDayNight.lt = GAME.time; updateDayNight.ls = lampPos.map(p => [p, p.distanceToSquared(camera.position)]).sort((a, b) => a[1] - b[1]); }
+    const sorted = updateDayNight.ls || lampPos.map(p => [p, p.distanceToSquared(camera.position)]).sort((a, b) => a[1] - b[1]);
     lampLights.forEach((l, i) => { l.position.copy(sorted[i][0]); l.intensity = 28 * clamp(nightF * 1.5 - 0.5, 0, 1); });
   } else lampLights.forEach(l => l.intensity = 0);
   // headlights
@@ -8047,7 +8118,7 @@ function sharpenTextures() {
     for (const k of ['map', 'normalMap', 'roughnessMap', 'emissiveMap']) { const tx = m[k]; if (tx && tx.anisotropy !== MAX_ANISO) { tx.anisotropy = MAX_ANISO; tx.needsUpdate = true; } }
   } });
 }
-setTimeout(sharpenTextures, 1500); setInterval(sharpenTextures, 5000);
+setTimeout(sharpenTextures, 1500); // uma vez só, no menu (repetir de 5 em 5 s reenviava texturas à placa gráfica a meio do jogo e dava engasgos)
 function frame(now) {
   requestAnimationFrame(frame);
   const rawDt = Math.min(0.5, (now - last) / 1000), dt = Math.min(0.05, rawDt); last = now;
@@ -8070,6 +8141,7 @@ function frame(now) {
   updateWeather(dt);
   FIRE.update(dt); SMOKE.update(dt); updateTracers(dt);
   sky.position.copy(camera.position); stars.position.copy(camera.position);
+  if (!renderer.shadowMap.autoUpdate && (shadowTick = (shadowTick + 1) % 3) === 0) renderer.shadowMap.needsUpdate = true;
   composer.render();
   // adaptive resolution
   // qualidade automática: não mede os primeiros 8 s de jogo (a cidade ainda está a ser montada);
@@ -8081,7 +8153,7 @@ function frame(now) {
     const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
     if (fps < 42) {
       if (++slowN >= 2) { slowN = 0;
-        if (gfxLow === 0) { gfxLow = 1; sun.castShadow = false; }
+        if (gfxLow === 0) { gfxLow = 1; renderer.shadowMap.autoUpdate = false; }
         else if (gfxLow === 1) { gfxLow = 2; bloom.enabled = false; }
         else if (PIXEL_RATIO > 0.85) setPR(Math.max(0.85, PIXEL_RATIO - 0.15));
       }
@@ -8090,12 +8162,13 @@ function frame(now) {
       if (fps > 50) {
         if (PIXEL_RATIO < Math.min(1, PR_MAX)) setPR(Math.min(PR_MAX, PIXEL_RATIO + 0.15));
         else if (gfxLow === 2) { gfxLow = 1; bloom.enabled = true; }
-        else if (gfxLow === 1) { gfxLow = 0; sun.castShadow = true; }
+        else if (gfxLow === 1 && ++upN >= 3) { gfxLow = 0; upN = 0; renderer.shadowMap.autoUpdate = true; }
         else if (PIXEL_RATIO < PR_MAX) setPR(Math.min(PR_MAX, PIXEL_RATIO + 0.1));
       }
     }
   }
 }
+let upN = 0, shadowTick = 0;
 function setPR(pr) { PIXEL_RATIO = pr; renderer.setPixelRatio(pr); composer.setPixelRatio(pr); composer.setSize(innerWidth, innerHeight); }
 
 // ============================================================ MENUS
@@ -8127,7 +8200,7 @@ const togArrows = e => { if (e) e.stopPropagation(); CAR_ARROWS = !CAR_ARROWS; t
 for (const [id, f] of [['swapBtn', togSwap], ['swapBtn2', togSwap], ['arrowsBtn', togArrows], ['arrowsBtn2', togArrows]]) { const b = $(id); if (b) { b.addEventListener('click', f); b.addEventListener('pointerdown', e => e.stopPropagation()); } }
 paintSwap();
 // prepara os gráficos (texturas e shaders) enquanto está o menu, para não travar quando se começa a jogar
-function warmGfx() { try { scene.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'alphaMap']) if (m && m[k] && renderer.initTexture) renderer.initTexture(m[k]); }); renderer.compile(scene, camera); } catch (e) { } }
+function warmGfx() { try { scene.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'alphaMap']) if (m && m[k] && renderer.initTexture) renderer.initTexture(m[k]); }); const hid = []; scene.traverse(o => { if (!o.visible) { hid.push(o); o.visible = true; } }); try { renderer.compile(scene, camera); } finally { for (const o of hid) o.visible = false; } } catch (e) { } }
 setTimeout(warmGfx, 600);
 $('play').addEventListener('click', () => {
   initAudio();

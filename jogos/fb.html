@@ -1340,6 +1340,19 @@ function updateAdBoards(dt) {
     }
   });
 }
+/* cara a sério para os bonecos 3D: olhos com íris e pupila, sobrancelhas, nariz, boca e orelhas (numa só malha com cores por vértice) */
+function c30face(THREE,o){const sph=o.r!=null,W=sph?o.r:o.w,H=sph?o.r:o.h,D=sph?o.r:o.d,f=o.fwd||1,P=[];
+ const zAt=(x,y)=>sph?Math.sqrt(Math.max(0,o.r*o.r-x*x-y*y)):D;const cs=(h,k)=>{const c=new THREE.Color(h);c.multiplyScalar(k);return c.getHex()};
+ const EY=[0x4a2e1a,0x3b2414,0x2f2014,0x3b6ea5,0x4f7a4a,0x6b4a2a],eye=o.eye!=null?o.eye:EY[Math.floor(Math.random()*EY.length)],ey=o.ey!=null?o.ey:sph?.02:.1,br=o.br!=null?o.br:sph?.24:.34,ns=o.ns!=null?o.ns:sph?-.2:-.12,mo=o.mo!=null?o.mo:sph?-.5:-.48;
+ const add=(sx,sy,sz,x,y,c,dz)=>P.push([sx,sy,sz,x,y,(zAt(x,y)+(dz||0))*f,c]);
+ for(const s of [-1,1]){add(W*.34,H*.16,W*.05,s*W*.36,H*ey,0xf6f3ec,0);add(W*.16,H*.16,W*.05,s*W*.36,H*(ey-.01),eye,W*.025);add(W*.07,H*.08,W*.04,s*W*.36,H*(ey-.01),0x080808,W*.05);
+  add(W*.4,H*.07,W*.06,s*W*.37,H*br,o.hair!=null?cs(o.hair,.9):0x2a1a10,W*.015);P.push([W*.1,H*.3,D*.3,s*W*1.02,0,0,cs(o.skin,.9)])}
+ add(W*.15,H*.28,W*.16,0,H*ns,cs(o.skin,.9),W*.02);add(W*.44,H*.075,W*.05,0,H*mo,cs(o.skin,.55),0);
+ let n=0;const gs=P.map(p=>{const q=new THREE.BoxGeometry(p[0],p[1],p[2]).toNonIndexed();q.translate(p[3],p[4],p[5]);n+=q.attributes.position.count;return [q,p[6]]});
+ const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),c=new THREE.Color();let k=0;
+ for(const [q,h] of gs){c.setHex(h);const A=q.attributes.position,N=q.attributes.normal;for(let i=0;i<A.count;i++,k++){pos[k*3]=A.getX(i);pos[k*3+1]=A.getY(i);pos[k*3+2]=A.getZ(i);nor[k*3]=N.getX(i);nor[k*3+1]=N.getY(i);nor[k*3+2]=N.getZ(i);col[k*3]=c.r;col[k*3+1]=c.g;col[k*3+2]=c.b}q.dispose()}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const m=new THREE.Mesh(g,c30face.m||(c30face.m=new THREE.MeshLambertMaterial({vertexColors:true})));if(o.x!=null)m.position.set(o.x,o.y,o.z);if(o.rotY)m.rotation.y=o.rotY;return m}
 function buildAdBoards() {
   const edgeGap = 1.4; // colado à linha, entre a relva e as bancadas
   const halfW = FIELD_W/2 + edgeGap;
@@ -1373,12 +1386,12 @@ buildAdBoards();
   // Cabeça
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 12), new THREE.MeshLambertMaterial({ color: 0xe8a87c }));
   head.position.y = 1.54;
-  g.add(head);
+  g.add(head);head.add(c30face(THREE,{r:.21,skin:0xe8a87c,hair:0x111111,ey:-.06,br:.12,ns:-.35,mo:-.62}));
   const neckR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.105, 0.2, 10), head.material);
   neckR.position.y = 1.35; g.add(neckR);
   // Cabelo
   const hair = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 8, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshLambertMaterial({ color: 0x111111 }));
-  hair.position.y = 1.54;
+  hair.position.y = 1.59;
   g.add(hair);
   // Braços
   [-1,1].forEach(side => {
@@ -2310,7 +2323,7 @@ function createPlayer(team, number, isGoalie=false, skill=72) {
   const skinMat = new THREE.MeshLambertMaterial({ color: 0xf5c09a });
   const head = new THREE.Mesh(headGeo, skinMat);
   head.position.y = 1.55; head.castShadow = true;
-  g.add(head);
+  g.add(head);head.add(c30face(THREE,{r:.22,skin:0xf5c09a,hair:0x2a1a10,ey:-.06,br:.12,ns:-.35,mo:-.62}));
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.11, 0.2, 10), skinMat);
   neck.position.y = 1.36; g.add(neck);
 
@@ -2318,7 +2331,7 @@ function createPlayer(team, number, isGoalie=false, skill=72) {
   const hairGeo = new THREE.SphereGeometry(0.23, 16, 8, 0, Math.PI*2, 0, Math.PI/2);
   const hairMat = new THREE.MeshLambertMaterial({ color: Math.random() > 0.5 ? 0x3b1a00 : 0x111111 });
   const hair = new THREE.Mesh(hairGeo, hairMat);
-  hair.position.y = 1.55; hair.castShadow = true;
+  hair.position.y = 1.6; hair.castShadow = true;
   g.add(hair);
 
   // Arms

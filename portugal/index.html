@@ -1932,7 +1932,7 @@ function planMatch(st,fx){const R=Math.random;let h,a;
 let MATCH=null;
 function watchMatch(st,fx){const g=st.g,PW=st.PW||105,PD=st.PD||68;const grp=new THREE.Group();g.add(grp);
  const kit=[st.col,0x222222];if(st.col===0xffffff||st.col===0xf2f2f2)kit[1]=0xd0202c;const SK=[0xe0b08a,0xc68f62,0x8d5a3b,0xf1c9a5],HR=[0x2a1d14,0x5a3a20,0x111111,0xc9a35a];const mk=(c,gk,short)=>{const m=new THREE.Group(),skin=lam({color:SK[(Math.random()*4)|0]}),shirt=lam({color:gk?0x27c26a:c}),sh=lam({color:short}),sock=lam({color:gk?0x1b1b1b:c}),boot=lam({color:0x111111}),B=(w,h,d,mt,x,y,z,par)=>{const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mt);q.position.set(x,y,z);(par||m).add(q);return q};
-  B(.62,.72,.34,shirt,0,1.42,0);B(.6,.32,.36,sh,0,.98,0);B(.34,.36,.34,skin,0,2.02,0);B(.36,.12,.36,lam({color:HR[(Math.random()*4)|0]}),0,2.24,0);B(.16,.12,.16,skin,0,1.82,0);
+  B(.62,.72,.34,shirt,0,1.42,0);B(.6,.32,.36,sh,0,.98,0);{const hd=B(.34,.36,.34,skin,0,2.02,0);hd.add(c30face(THREE,{w:.17,h:.18,d:.17,skin:skin.color.getHex()}))}B(.36,.12,.36,lam({color:HR[(Math.random()*4)|0]}),0,2.24,0);B(.16,.12,.16,skin,0,1.82,0);
   const legs=[],arms=[];for(const sd of [-1,1]){const lg=new THREE.Group();lg.position.set(sd*.15,.86,0);m.add(lg);B(.2,.36,.22,skin,0,-.18,0,lg);B(.2,.34,.22,sock,0,-.52,0,lg);B(.22,.1,.32,boot,0,-.74,.05,lg);legs.push(lg);const ar=new THREE.Group();ar.position.set(sd*.4,1.72,0);m.add(ar);B(.16,.3,.18,shirt,0,-.15,0,ar);B(.14,.32,.16,skin,0,-.45,0,ar);arms.push(ar)}
   m.userData={legs,arms,ph:Math.random()*6};m.scale.setScalar(.82);grp.add(m);return m};
  const pl=[];for(const side of [0,1])for(let i=0;i<11;i++){const fx0=i===0?.47:[.3,.3,.3,.3,.12,.12,.12,.12,-.08,-.08][i-1],fz0=i===0?0:[-.36,-.12,.12,.36,-.3,-.1,.1,.3,-.15,.15][i-1];const hx=(side?-1:1)*fx0*PW,hz=fz0*PD;const m=mk(side?kit[1]:kit[0],i===0,side?0xffffff:(st.col2||0xffffff));m.position.set(hx,0,hz);pl.push({m,hx,hz,side})}
@@ -1991,7 +1991,7 @@ function ipainting(seed){let s=seed*9301+49297;const r=()=>((s=(s*9301+49297)%23
   else{q.fillStyle='#3a3226';q.fillRect(0,0,w,h);q.fillStyle='#6b5a3a';q.fillRect(0,h*.7,w,h*.3);for(let i=0;i<5;i++){q.fillStyle=['#c0392b','#e67e22','#f1c40f','#7fb069','#8e44ad'][i];q.beginPath();q.arc(w*(.25+i*.12),h*.62-(i%2)*6,7,0,7);q.fill()}}
   q.strokeStyle='#c9a14a';q.lineWidth=6;q.strokeRect(3,3,w-6,h-6)})}
 // pessoas lá dentro (visitantes que passeiam)
-function inpc(g,c){const m=new THREE.Group();const P=[[.2,.8,.22,-.13,0,0,0x2a3140],[.2,.8,.22,.13,0,0,0x2a3140],[.5,.62,.28,0,.84,0,c],[.3,.32,.3,0,1.48,0,0xe0b08a],[.32,.1,.32,0,1.8,0,[0x2b1d14,0x5a3a20,0xc9a35a,0x111111][(Math.random()*4)|0]]];imerge(m,P);g.add(m);return m}
+function inpc(g,c){const m=new THREE.Group();const P=[[.2,.8,.22,-.13,0,0,0x2a3140],[.2,.8,.22,.13,0,0,0x2a3140],[.5,.62,.28,0,.84,0,c],[.3,.32,.3,0,1.48,0,0xe0b08a],[.32,.1,.32,0,1.8,0,[0x2b1d14,0x5a3a20,0xc9a35a,0x111111][(Math.random()*4)|0]]];imerge(m,P);m.add(c30face(THREE,{w:.15,h:.16,d:.15,x:0,y:1.64,z:0,skin:0xe0b08a,hair:P[4][6]}));g.add(m);return m}
 function isky(){return ctex(256,128,(q,w,h)=>{const gr=q.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#5d9bd6');gr.addColorStop(.7,'#cfe4f5');gr.addColorStop(1,'#9aa3a8');q.fillStyle=gr;q.fillRect(0,0,w,h);q.fillStyle='#6f767b';q.fillRect(0,h*.78,w,h*.22);q.fillStyle='#f4f6f8';for(const x of [30,140]){q.fillRect(x,h*.7,60,7);q.fillRect(x+22,h*.66,16,18);q.fillRect(x+52,h*.62,4,10)}})}
 // que tipo de prédio é cada monumento
 function lmType(l){const k=l.kind||'',t=l.label||'';
@@ -2417,11 +2417,24 @@ function updateIndicators(dt){IND.blink+=dt;const ph=(IND.blink%0.8)<0.42;const 
   if(m&&Math.floor((IND.blink-dt)/0.4)!==Math.floor(IND.blink/0.4))tone(ph?1500:1100,.025,'square',.025);
   // trânsito: pisca antes de virar no fim da rua
   for(const T of TRAF){const r=T.r,last=T.dir>0?T.seg===r.pts.length-2&&T.t>.7:T.seg===0&&T.t<.3;if(T.m)setInd(T.m,ph&&last&&T.side<0,ph&&last&&T.side>0)}}
+/* cara a sério para os bonecos 3D: olhos com íris e pupila, sobrancelhas, nariz, boca e orelhas (numa só malha com cores por vértice) */
+function c30face(THREE,o){const sph=o.r!=null,W=sph?o.r:o.w,H=sph?o.r:o.h,D=sph?o.r:o.d,f=o.fwd||1,P=[];
+ const zAt=(x,y)=>sph?Math.sqrt(Math.max(0,o.r*o.r-x*x-y*y)):D;const cs=(h,k)=>{const c=new THREE.Color(h);c.multiplyScalar(k);return c.getHex()};
+ const EY=[0x4a2e1a,0x3b2414,0x2f2014,0x3b6ea5,0x4f7a4a,0x6b4a2a],eye=o.eye!=null?o.eye:EY[Math.floor(Math.random()*EY.length)],ey=sph?.02:.1,br=sph?.24:.34,ns=sph?-.2:-.12,mo=sph?-.5:-.48;
+ const add=(sx,sy,sz,x,y,c,dz)=>P.push([sx,sy,sz,x,y,(zAt(x,y)+(dz||0))*f,c]);
+ for(const s of [-1,1]){add(W*.34,H*.16,W*.05,s*W*.36,H*ey,0xf6f3ec,0);add(W*.16,H*.16,W*.05,s*W*.36,H*(ey-.01),eye,W*.025);add(W*.07,H*.08,W*.04,s*W*.36,H*(ey-.01),0x080808,W*.05);
+  add(W*.4,H*.07,W*.06,s*W*.37,H*br,o.hair!=null?cs(o.hair,.9):0x2a1a10,W*.015);P.push([W*.1,H*.3,D*.3,s*W*1.02,0,0,cs(o.skin,.9)])}
+ add(W*.15,H*.28,W*.16,0,H*ns,cs(o.skin,.9),W*.02);add(W*.44,H*.075,W*.05,0,H*mo,cs(o.skin,.55),0);
+ let n=0;const gs=P.map(p=>{const q=new THREE.BoxGeometry(p[0],p[1],p[2]).toNonIndexed();q.translate(p[3],p[4],p[5]);n+=q.attributes.position.count;return [q,p[6]]});
+ const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),c=new THREE.Color();let k=0;
+ for(const [q,h] of gs){c.setHex(h);const A=q.attributes.position,N=q.attributes.normal;for(let i=0;i<A.count;i++,k++){pos[k*3]=A.getX(i);pos[k*3+1]=A.getY(i);pos[k*3+2]=A.getZ(i);nor[k*3]=N.getX(i);nor[k*3+1]=N.getY(i);nor[k*3+2]=N.getZ(i);col[k*3]=c.r;col[k*3+1]=c.g;col[k*3+2]=c.b}q.dispose()}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const m=new THREE.Mesh(g,c30face.m||(c30face.m=new THREE.MeshLambertMaterial({vertexColors:true})));if(o.x!=null)m.position.set(o.x,o.y,o.z);return m}
 function makePerson(){const g=new THREE.Group(),M=c=>lam({color:c});const sk=M(0xe0b08a),sh=M(G.shirt!=null?G.shirt:PAINT[carColor]),pa=M(0x2a3140);
   const legL=new THREE.Mesh(new THREE.BoxGeometry(.2,.8,.22),pa),legR=legL.clone();legL.geometry=legL.geometry.clone();legL.geometry.translate(0,-.4,0);legR.geometry=legL.geometry;legL.position.set(-.13,.82,0);legR.position.set(.13,.82,0);
   const body=new THREE.Mesh(new THREE.BoxGeometry(.5,.62,.28),sh);body.position.y=1.15;const head=new THREE.Mesh(new THREE.BoxGeometry(.3,.32,.3),sk);head.position.y=1.65;const hair=new THREE.Mesh(new THREE.BoxGeometry(.32,.1,.32),M(G.hair!=null?G.hair:0x2b1d14));hair.position.y=1.82;
   const armG=new THREE.BoxGeometry(.13,.58,.15);armG.translate(0,-.29,0);const armL=new THREE.Mesh(armG,sh),armR=new THREE.Mesh(armG,sh);armL.position.set(-.33,1.44,0);armR.position.set(.33,1.44,0);
-  g.add(legL,legR,body,head,hair,armL,armR);g.userData={legL,legR,armL,armR};g.traverse(o=>{if(o.isMesh)o.castShadow=true});return g}
+  g.add(legL,legR,body,head,hair,armL,armR);head.add(c30face(THREE,{w:.15,h:.16,d:.15,skin:0xe0b08a,hair:hair.material.color.getHex()}));g.userData={legL,legR,armL,armR};g.traverse(o=>{if(o.isMesh)o.castShadow=true});return g}
 function toggleFoot(){if(G.state==='inside'){exitBuilding();return}if(G.state!=='play'||G.mission&&!W.on&&G.mission.type!=='empresa'&&false)return;
   if(!W.on){if(Math.hypot(P.vx,P.vz)>3){toast('Para o carro para saíres.',true,1.3);return}P.vx=P.vz=0;IND.mode='H';renderIndHud();
     const sx=Math.cos(P.h),sz=Math.sin(P.h);W.x=P.x-sx*1.9;W.z=P.z-sz*1.9;if(hitBuilding(W.x,W.z,.4)){W.x=P.x+sx*1.9;W.z=P.z+sz*1.9}W.y=surfaceAt(W.x,W.z,P.y);W.yaw=P.h;W.on=true;if(!W.m){W.m=makePerson();scene.add(W.m)}W.m.visible=true;if(engG)engG.gain.value=0;toast('Saíste do carro. F para voltar a entrar.',false,2);$('#gearT').textContent='A PÉ'}
@@ -2563,7 +2576,7 @@ function openMap(){if(G.state!=='play')return;G.state='map';$('#mapS').hidden=fa
 
 /* ================= AVIÕES: voar entre aeroportos (e para outros países) ================= */
 // o que se leva na viagem para outro país (dinheiro, combustível, carros…)
-(()=>{try{const v=sessionStorage.getItem('ea.carry');if(!v)return;sessionStorage.removeItem('ea.carry');const c=JSON.parse(v);if(typeof c.money==='number')G.money=c.money;if(typeof c.fuel==='number')P.fuel=c.fuel;if(Array.isArray(c.owned))G.owned=c.owned;if(typeof c.clock==='number')G.clock=c.clock;if(typeof c.car==='number')carType=c.car;if(typeof c.col==='number')carColor=c.col;G.casa=!!c.casa;G.fromFlight=c.from||null;G.byRoad=!!c.road;G.pickName=c.name||null;if(c.passport)G.passport=true}catch(e){}})();
+(()=>{try{const v=sessionStorage.getItem('ea.carry');if(!v)return;sessionStorage.removeItem('ea.carry');const c=JSON.parse(v);if(typeof c.money==='number')G.money=c.money;if(typeof c.fuel==='number')P.fuel=c.fuel;if(Array.isArray(c.owned))G.owned=c.owned;if(typeof c.clock==='number')G.clock=c.clock;if(typeof c.car==='number')carType=c.car;if(typeof c.col==='number')carColor=c.col;G.casa=!!c.casa;G.fromFlight=c.from||null;G.byRoad=!!c.road;G.pickName=c.name||null;if(c.passport)G.passport=true;G.carryWx=c.wx||null}catch(e){}})();
 function nearAirport(){const F=focus();return AIRPORTS.find(a=>Math.hypot(F.x-a.door.x,F.z-a.door.z)<10)}
 const flyPrice=(a,b)=>Math.round(29+Math.hypot(a.x-b.x,a.z-b.z)*SCALE/1000*.12);
 function openFly(ap){G.state='flymenu';G.flyFrom=ap;$('#flyS').hidden=false;$('#touch').hidden=true;if(engG)engG.gain.value=0;$('#flyE').textContent='✈ '+ap.n.toUpperCase()+' · '+hhmm(G.clock||36000)+' · tens '+euro(G.money);
@@ -2718,6 +2731,8 @@ document.querySelectorAll('#colors button').forEach(b=>b.onclick=()=>{carColor=+
 {const s=MEM.get('setup',null);if(s){carType=s.c||0;carColor=s.col||0;G.cam=s.cam||0;setSeg('#cars','c',carType);setSeg('#cams','k',G.cam);document.querySelectorAll('#colors button').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.i===carColor)))}}
 function showBest(){const n=Object.keys(G.post).length;$('#best').textContent=(IN_C30?'Saldo '+euro(G.money)+' · postais '+n+'/10. ':'')+'Mapa feito a partir dos contornos reais dos países, com as distâncias encurtadas para caber num jogo. Fora da Central 30 o jogo não guarda nada; dentro, segue a opção «Guardar dados».'}
 showBest();G.realTime=true;applyWeather(periodOf(realClock()));
+// a hora escolhida no menu (Dia, Pôr do sol, Noite, Chuva) segue para o país escolhido no mapa (antes voltava a «Agora» e ficava de dia)
+if(G.carryWx&&G.carryWx!=='agora'){G.realTime=false;G.weather=G.carryWx;try{setSeg('#wx','w',G.weather)}catch(e){}applyWeather(G.weather)}
 // numa sala de multijogador, a hora do dia é igual para todos (a do anfitrião, o primeiro jogador)
 function roomClock(){try{if(window.__C30_SEED__==null)return;const t=(Date.now()+(window.__C30_TIME_OFF__||0))/1000;G.clock=(t*16+((window.__C30_SEED__>>>0)%86400))%86400}catch(e){}}
 function start(){try{window.__bootDone&&window.__bootDone()}catch(e){}ac();setTimeout(roomClock,0);if(!G.owned.includes(carType))carType=0;if(car)scene.remove(car);car=carModel(carType,PAINT[carColor]);scene.add(car);MEM.set('setup',{c:carType,col:carColor,cam:G.cam});
@@ -2813,7 +2828,7 @@ $('#pickBtn').onclick=openPick;{const sb=$('#pkSearch');if(sb)sb.oninput=()=>{pi
 $('#pickGo').onclick=()=>{const s=WM.sel;if(!s)return;$('#pickS').hidden=true;
  if(s.k===REGION_ID){const [x,z]=PJ(s.lon,s.lat);START=roadSpot(x,z);START.t=s.t.replace(/ \([^()]*\)$/,'');G.fromFlight=null;showStartAt();start();return}
  // outro país: carrega esse país e começa lá
- try{sessionStorage.setItem('ea.region',s.k);sessionStorage.setItem('ea.loadName',s.t.replace(/ \([^()]*\)$/,'')||REGIONS[s.k].name);sessionStorage.setItem('ea.at',JSON.stringify({lon:s.lon,lat:s.lat}));sessionStorage.setItem('ea.carry',JSON.stringify({money:G.money,owned:G.owned,car:carType,col:carColor,casa:G.casa,pick:1,passport:!!G.passport,name:s.t.replace(/ \([^()]*\)$/,'')}));sessionStorage.setItem('ea.autostart','1')}catch(e){}
+ try{sessionStorage.setItem('ea.region',s.k);sessionStorage.setItem('ea.loadName',s.t.replace(/ \([^()]*\)$/,'')||REGIONS[s.k].name);sessionStorage.setItem('ea.at',JSON.stringify({lon:s.lon,lat:s.lat}));sessionStorage.setItem('ea.carry',JSON.stringify({money:G.money,owned:G.owned,car:carType,col:carColor,casa:G.casa,pick:1,passport:!!G.passport,wx:G.realTime?'agora':G.weather,name:s.t.replace(/ \([^()]*\)$/,'')}));sessionStorage.setItem('ea.autostart','1')}catch(e){}
  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:99;display:grid;place-items:center;background:rgba(10,22,32,.9);color:#f3efe6;font:800 28px "Bricolage Grotesque",sans-serif;text-align:center;padding:20px';ov.textContent='A preparar '+REGIONS[s.k].name+'…';document.body.appendChild(ov);setTimeout(()=>location.reload(),250)};
 {const lead=$('#menuLead'),eye=$('#menuEye');const cs=CITIES.slice().sort((a,b)=>(b.big||0)-(a.big||0)).map(c=>c.n);
  if(REGION_ID==='pt')lead.innerHTML='Conduz por <b>Portugal inteiro</b>: de <b>Viana do Castelo</b>, Guimarães e Bragança a <b>Viseu</b>, Covilhã e Castelo Branco, do Alentejo (<b>Évora</b>, Beja, Elvas) ao Algarve (<b>Tavira</b>, Lagos, Portimão). Pela <b>A22, A6, A25, A4 ou A3</b> passas de carro para <b>Espanha</b> e daí para <b>toda a Europa</b> (França, Itália, Alemanha, Suíça…). Comboio, aeroportos, entregas, polícia e monumentos.';

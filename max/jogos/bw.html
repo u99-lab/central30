@@ -132,9 +132,22 @@ K.init=(o={})=>{const r=K.renderer=new THREE.WebGLRenderer({antialias:true,power
  const rs=()=>{r.setSize(innerWidth,innerHeight,false);K.camera.aspect=innerWidth/innerHeight;K.camera.updateProjectionMatrix();};addEventListener('resize',rs);rs();return s;};
 // o sol segue um ponto (para sombras em mundos grandes)
 K.sunFollow=(x,z)=>{const o=K.sun.userData.off||(K.sun.userData.off=K.sun.position.clone());K.sun.position.set(x+o.x,o.y,z+o.z);K.sun.target.position.set(x,0,z);};
+/* cara a sério para os bonecos 3D: olhos com íris e pupila, sobrancelhas, nariz, boca e orelhas (numa só malha com cores por vértice) */
+function c30face(THREE,o){const sph=o.r!=null,W=sph?o.r:o.w,H=sph?o.r:o.h,D=sph?o.r:o.d,f=o.fwd||1,P=[];
+ const zAt=(x,y)=>sph?Math.sqrt(Math.max(0,o.r*o.r-x*x-y*y)):D;const cs=(h,k)=>{const c=new THREE.Color(h);c.multiplyScalar(k);return c.getHex()};
+ const EY=[0x4a2e1a,0x3b2414,0x2f2014,0x3b6ea5,0x4f7a4a,0x6b4a2a],eye=o.eye!=null?o.eye:EY[Math.floor(Math.random()*EY.length)],ey=sph?.02:.1,br=sph?.24:.34,ns=sph?-.2:-.12,mo=sph?-.5:-.48;
+ const add=(sx,sy,sz,x,y,c,dz)=>P.push([sx,sy,sz,x,y,(zAt(x,y)+(dz||0))*f,c]);
+ for(const s of [-1,1]){add(W*.34,H*.16,W*.05,s*W*.36,H*ey,0xf6f3ec,0);add(W*.16,H*.16,W*.05,s*W*.36,H*(ey-.01),eye,W*.025);add(W*.07,H*.08,W*.04,s*W*.36,H*(ey-.01),0x080808,W*.05);
+  add(W*.4,H*.07,W*.06,s*W*.37,H*br,o.hair!=null?cs(o.hair,.9):0x2a1a10,W*.015);P.push([W*.1,H*.3,D*.3,s*W*1.02,0,0,cs(o.skin,.9)])}
+ add(W*.15,H*.28,W*.16,0,H*ns,cs(o.skin,.9),W*.02);add(W*.44,H*.075,W*.05,0,H*mo,cs(o.skin,.55),0);
+ let n=0;const gs=P.map(p=>{const q=new THREE.BoxGeometry(p[0],p[1],p[2]).toNonIndexed();q.translate(p[3],p[4],p[5]);n+=q.attributes.position.count;return [q,p[6]]});
+ const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),c=new THREE.Color();let k=0;
+ for(const [q,h] of gs){c.setHex(h);const A=q.attributes.position,N=q.attributes.normal;for(let i=0;i<A.count;i++,k++){pos[k*3]=A.getX(i);pos[k*3+1]=A.getY(i);pos[k*3+2]=A.getZ(i);nor[k*3]=N.getX(i);nor[k*3+1]=N.getY(i);nor[k*3+2]=N.getZ(i);col[k*3]=c.r;col[k*3+1]=c.g;col[k*3+2]=c.b}q.dispose()}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const m=new THREE.Mesh(g,c30face.m||(c30face.m=new THREE.MeshLambertMaterial({vertexColors:true})));if(o.x!=null)m.position.set(o.x,o.y,o.z);return m}
 K.person=(o={})=>{const g=new THREE.Group(),skin=o.skin||0xf0c8a0,shirt=o.shirt||0xe8452c,shorts=o.shorts||0x22305a,hair=o.hair||0x3a2a1c,P={};
  P.torso=K.box(.52,.62,.28,shirt,0,1.08,0,g);K.box(.54,.22,.3,shorts,0,.72,0,g);
- P.head=K.box(.36,.36,.36,skin,0,1.6,0,g);K.box(.38,.13,.38,hair,0,1.79,0,g);K.box(.38,.2,.1,hair,0,1.68,-.15,g);
+ P.head=K.box(.36,.36,.36,skin,0,1.6,0,g);P.head.add(c30face(THREE,{w:.18,h:.18,d:.18,skin,hair}));K.box(.38,.13,.38,hair,0,1.79,0,g);K.box(.38,.2,.1,hair,0,1.68,-.15,g);
  for(const s of [-1,1]){const leg=new THREE.Group();leg.position.set(s*.14,.66,0);g.add(leg);K.box(.19,.5,.21,o.legs||skin,0,-.25,0,leg);K.box(.19,.16,.21,o.socks||0xffffff,0,-.5,0,leg);K.box(.2,.12,.32,o.shoes||0x222222,0,-.62,.05,leg);P[s<0?'legL':'legR']=leg;
   const arm=new THREE.Group();arm.position.set(s*.34,1.34,0);g.add(arm);K.box(.15,.26,.17,shirt,0,-.1,0,arm);K.box(.13,.4,.15,o.gloves||skin,0,-.42,0,arm);P[s<0?'armL':'armR']=arm;}
  g.userData.P=P;(o.parent||K.scene).add(g);if(o.s)g.scale.setScalar(o.s);return g;};

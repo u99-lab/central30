@@ -1503,6 +1503,19 @@ function buildCarMesh(colorHex){
 }
 
 /* ---------------- HUMAN (walk mode, tipo GTA) ---------------- */
+/* cara a sério para os bonecos 3D: olhos com íris e pupila, sobrancelhas, nariz, boca e orelhas (numa só malha com cores por vértice) */
+function c30face(THREE,o){const sph=o.r!=null,W=sph?o.r:o.w,H=sph?o.r:o.h,D=sph?o.r:o.d,f=o.fwd||1,P=[];
+ const zAt=(x,y)=>sph?Math.sqrt(Math.max(0,o.r*o.r-x*x-y*y)):D;const cs=(h,k)=>{const c=new THREE.Color(h);c.multiplyScalar(k);return c.getHex()};
+ const EY=[0x4a2e1a,0x3b2414,0x2f2014,0x3b6ea5,0x4f7a4a,0x6b4a2a],eye=o.eye!=null?o.eye:EY[Math.floor(Math.random()*EY.length)],ey=o.ey!=null?o.ey:sph?.02:.1,br=o.br!=null?o.br:sph?.24:.34,ns=o.ns!=null?o.ns:sph?-.2:-.12,mo=o.mo!=null?o.mo:sph?-.5:-.48;
+ const add=(sx,sy,sz,x,y,c,dz)=>P.push([sx,sy,sz,x,y,(zAt(x,y)+(dz||0))*f,c]);
+ for(const s of [-1,1]){add(W*.34,H*.16,W*.05,s*W*.36,H*ey,0xf6f3ec,0);add(W*.16,H*.16,W*.05,s*W*.36,H*(ey-.01),eye,W*.025);add(W*.07,H*.08,W*.04,s*W*.36,H*(ey-.01),0x080808,W*.05);
+  add(W*.4,H*.07,W*.06,s*W*.37,H*br,o.hair!=null?cs(o.hair,.9):0x2a1a10,W*.015);P.push([W*.1,H*.3,D*.3,s*W*1.02,0,0,cs(o.skin,.9)])}
+ add(W*.15,H*.28,W*.16,0,H*ns,cs(o.skin,.9),W*.02);add(W*.44,H*.075,W*.05,0,H*mo,cs(o.skin,.55),0);
+ let n=0;const gs=P.map(p=>{const q=new THREE.BoxGeometry(p[0],p[1],p[2]).toNonIndexed();q.translate(p[3],p[4],p[5]);n+=q.attributes.position.count;return [q,p[6]]});
+ const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),c=new THREE.Color();let k=0;
+ for(const [q,h] of gs){c.setHex(h);const A=q.attributes.position,N=q.attributes.normal;for(let i=0;i<A.count;i++,k++){pos[k*3]=A.getX(i);pos[k*3+1]=A.getY(i);pos[k*3+2]=A.getZ(i);nor[k*3]=N.getX(i);nor[k*3+1]=N.getY(i);nor[k*3+2]=N.getZ(i);col[k*3]=c.r;col[k*3+1]=c.g;col[k*3+2]=c.b}q.dispose()}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const m=new THREE.Mesh(g,c30face.m||(c30face.m=new THREE.MeshLambertMaterial({vertexColors:true})));if(o.x!=null)m.position.set(o.x,o.y,o.z);if(o.rotY)m.rotation.y=o.rotY;return m}
 function buildHumanMesh(shirtColor, isPolice){
   const g = new THREE.Group();
   const skin = 0xf0c39a, shirt = shirtColor||0xcc2222, pants = isPolice?0x101a33:0x223344;
@@ -1510,7 +1523,7 @@ function buildHumanMesh(shirtColor, isPolice){
   torso.position.y = 1.15; torso.castShadow = true;
   g.add(torso);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.24,10,10), new THREE.MeshStandardMaterial({color:skin}));
-  head.position.y = 1.72; head.castShadow = true;
+  head.position.y = 1.72; head.castShadow = true;head.add(c30face(THREE,{r:.24,skin:skin,hair:0x0d0a08,ey:-.42,br:-.32,ns:-.62,mo:-.82,rotY:Math.PI/2}));
   g.add(head);
   const hair = new THREE.Mesh(new THREE.SphereGeometry(0.25,10,10,0,Math.PI*2,0,Math.PI/1.7), new THREE.MeshStandardMaterial({color:0x0d0a08}));
   hair.position.y = 1.73; hair.castShadow = true;

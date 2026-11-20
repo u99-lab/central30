@@ -70,8 +70,8 @@ h2{margin:0 0 10px;font-size:20px}
 .card .ovr{font-size:30px;font-weight:900;line-height:1}
 .card .pos{font-size:12px;font-weight:800;letter-spacing:1px}
 .card .flag{position:absolute;left:10px;top:58px;font-size:18px}
-.card .face{position:absolute;right:6px;top:8px;width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--skin) 0 24%,transparent 25%),radial-gradient(ellipse at 50% 100%,var(--shirt) 0 44%,transparent 45%);opacity:.95}
-.card .face:after{content:"";position:absolute;left:24px;top:8px;width:18px;height:9px;border-radius:9px 9px 3px 3px;background:var(--hair)}
+.card .face{position:absolute;right:4px;top:6px;width:70px;height:70px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#ffffff40,#ffffff08 70%);box-shadow:inset 0 -6px 12px #0003}.card .face svg{display:block}
+
 .card .name{position:absolute;left:0;right:0;top:82px;text-align:center;font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;text-transform:uppercase}
 .card .stats{position:absolute;left:8px;right:8px;top:102px;display:grid;grid-template-columns:1fr 1fr;gap:1px 8px;font-size:11px;font-weight:700}
 .card .stats div{display:flex;justify-content:space-between}
@@ -329,10 +329,47 @@ const ICON=o=>o>=96;
 const tier=o=>o>=88?'special':o>=75?'gold':o>=65?'silver':'bronze';
 const TIER_PT={bronze:'Bronze',silver:'Prata',gold:'Ouro',special:'Lenda'};
 
+
+/* ---- retrato de cada jogador (desenhado à mão em SVG: cabeça, orelhas, olhos, sobrancelhas, nariz, boca, cabelo, barba e camisola) ---- */
+const FACEC={};
+function faceSVG(c,shirt){const key=c.id+'|'+shirt;if(FACEC[key])return FACEC[key];
+ let s=(c.id*2654435761+7)>>>0;const r=()=>((s=(s*1103515245+12345)>>>0)/4294967296);
+ const hx=h=>{h=String(h||'#c68f62').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]};
+ const sh=(h,f)=>{const [R,G,B]=hx(h);const m=v=>Math.max(0,Math.min(255,Math.round(f>0?v+(255-v)*f:v*(1+f))));return 'rgb('+m(R)+','+m(G)+','+m(B)+')'};
+ const sk=c.skin||'#c68f62',hr=c.hair||'#2b1d14',st=shirt||'#2b6cff',id='f'+c.id+'_'+String(st).replace(/[^a-z0-9]/gi,'');
+ const style=Math.floor(r()*7),beard=r(),eyeC=['#4a2e1a','#5b3a1e','#2f2014','#3b6ea5','#4f7a4a','#7a5a2a'][Math.floor(r()*6)],w=40+r()*5,jaw=r()*4,brow=r()*2;
+ let back='',top='';
+ if(style===0)top=`<path d="M${50-w/2} 40 Q50 ${14+r()*3} ${50+w/2} 40 Q${50+w/2-2} 31 50 29 Q${50-w/2+2} 31 ${50-w/2} 40Z" fill="${hr}"/>`;// curto
+ else if(style===1)top=`<path d="M${50-w/2+1} 38 Q50 17 ${50+w/2-1} 38 Q50 30 ${50-w/2+1} 38Z" fill="${hr}" opacity=".55"/>`;// rapado
+ else if(style===2){for(let i=0;i<14;i++){const a=Math.PI*(1.05+i/13*.9);top+=`<circle cx="${50+Math.cos(a)*w*.47}" cy="${37+Math.sin(a)*17}" r="${5+r()*2}" fill="${hr}"/>`}top+=`<ellipse cx="50" cy="27" rx="${w*.42}" ry="8" fill="${hr}"/>`}// encaracolado
+ else if(style===3)top=`<path d="M${50-w/2} 42 Q${50-w/2} 18 52 20 Q${50+w/2+2} 22 ${50+w/2} 40 Q${50+w/2-4} 30 44 31 Q${50-w/2+6} 34 ${50-w/2} 42Z" fill="${hr}"/><path d="M44 31 Q36 33 ${50-w/2+3} 41" stroke="${sh(hr,-.3)}" stroke-width="1.2" fill="none"/>`;// risca ao lado
+ else if(style===4){back=`<path d="M${50-w/2-3} 40 Q${50-w/2-5} 70 ${50-w/2+2} 74 L${50+w/2-2} 74 Q${50+w/2+5} 70 ${50+w/2+3} 40Z" fill="${hr}"/>`;top=`<path d="M${50-w/2-1} 44 Q50 10 ${50+w/2+1} 44 Q${50+w/2-3} 30 50 28 Q${50-w/2+3} 30 ${50-w/2-1} 44Z" fill="${hr}"/>`}// comprido
+ else if(style===5)back=`<ellipse cx="50" cy="32" rx="${w*.68}" ry="22" fill="${hr}"/>`;// afro
+ // style 6: careca (só brilho)
+ const beardSvg=beard<.28?`<path d="M${50-w/2+2} 50 Q${50-w/2+4} ${70+jaw} 50 ${74+jaw} Q${50+w/2-4} ${70+jaw} ${50+w/2-2} 50 Q${50+w/2-5} 62 50 64 Q${50-w/2+5} 62 ${50-w/2+2} 50Z" fill="${hr}" opacity=".9"/><path d="M43 63 Q50 60 57 63 Q50 65 43 63Z" fill="${sk}"/>`:beard<.5?`<path d="M${50-w/2+3} 52 Q${50-w/2+5} ${70+jaw} 50 ${73+jaw} Q${50+w/2-5} ${70+jaw} ${50+w/2-3} 52 Q50 66 ${50-w/2+3} 52Z" fill="${hr}" opacity=".28"/>`:'';
+ const eye=(x)=>`<path d="M${x-5} 47 Q${x} 43.6 ${x+5} 47 Q${x} 49.6 ${x-5} 47Z" fill="#fbfaf6"/><circle cx="${x}" cy="46.9" r="2.1" fill="${eyeC}"/><circle cx="${x}" cy="46.9" r="1" fill="#111"/><circle cx="${x+.7}" cy="46.2" r=".5" fill="#fff"/><path d="M${x-5.2} 46.8 Q${x} 43.2 ${x+5.2} 46.8" stroke="${sh(sk,-.55)}" stroke-width=".9" fill="none"/>`;
+ const brw=(x,d)=>`<path d="M${x-5.5} ${42.5-brow*.4} Q${x} ${40-brow} ${x+5.5} ${42+d}" stroke="${sh(hr,-.1)}" stroke-width="${1.8+brow*.5}" stroke-linecap="round" fill="none"/>`;
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%"><defs>
+<radialGradient id="${id}s" cx="45%" cy="40%" r="62%"><stop offset="0" stop-color="${sh(sk,.12)}"/><stop offset=".7" stop-color="${sk}"/><stop offset="1" stop-color="${sh(sk,-.28)}"/></radialGradient>
+<linearGradient id="${id}j" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sh(st,.15)}"/><stop offset="1" stop-color="${sh(st,-.35)}"/></linearGradient></defs>
+${back}
+<path d="M8 100 Q12 80 34 77 L66 77 Q88 80 92 100Z" fill="url(#${id}j)"/><path d="M40 77 L50 89 L60 77Z" fill="${sh(st,-.45)}"/>
+<path d="M41 62 L41 80 Q50 86 59 80 L59 62Z" fill="${sh(sk,-.2)}"/>
+<ellipse cx="${50-w/2}" cy="49" rx="3.6" ry="6" fill="${sh(sk,-.12)}"/><ellipse cx="${50+w/2}" cy="49" rx="3.6" ry="6" fill="${sh(sk,-.12)}"/>
+<path d="M${50-w/2} 44 Q${50-w/2} 22 50 22 Q${50+w/2} 22 ${50+w/2} 44 Q${50+w/2} ${62+jaw} 50 ${72+jaw} Q${50-w/2} ${62+jaw} ${50-w/2} 44Z" fill="url(#${id}s)"/>
+${style===6?`<ellipse cx="44" cy="29" rx="7" ry="3.5" fill="#fff" opacity=".22"/>`:''}
+${beardSvg}
+${brw(41,0)}${brw(59,0)}${eye(41.5)}${eye(58.5)}
+<path d="M50 48 Q48.6 56 47 58.6 Q50 60.4 53 58.6" stroke="${sh(sk,-.35)}" stroke-width="1" fill="none"/><ellipse cx="47.6" cy="58.8" rx="1.1" ry=".7" fill="${sh(sk,-.5)}"/><ellipse cx="52.4" cy="58.8" rx="1.1" ry=".7" fill="${sh(sk,-.5)}"/>
+<path d="M44 64.5 Q50 ${66.5+r()*1.5} 56 64.5 Q50 68.5 44 64.5Z" fill="${sh(sk,-.38)}"/><path d="M44.5 64.6 Q50 63.4 55.5 64.6" stroke="${sh(sk,-.55)}" stroke-width=".7" fill="none"/>
+<ellipse cx="38" cy="56" rx="4" ry="2.4" fill="#e0706a" opacity=".13"/><ellipse cx="62" cy="56" rx="4" ry="2.4" fill="#e0706a" opacity=".13"/>
+${top}</svg>`;
+ return FACEC[key]=svg}
+
 function cardHTML(c,opt={}){
   const lb=c.role==='GK'?LBL.GK:LBL.X;
   return `<div class="card ${tier(c.ovr)}${opt.sm?' sm':''}${opt.isNew?' new':''}" data-card="${c.id}" style="--skin:${c.skin};--hair:${c.hair};--shirt:${opt.shirt||'#2b6cff'}">
-   <div class="ovr">${c.ovr}</div><div class="pos">${c.pos}</div><div class="flag">${c.flag}</div><div class="face"></div>
+   <div class="ovr">${c.ovr}</div><div class="pos">${c.pos}</div><div class="flag">${c.flag}</div><div class="face">${faceSVG(c,opt.shirt||'#2b6cff')}</div>
    <div class="name">${c.name}</div>
    <div class="stats">${c.stats.map((s,i)=>`<div><span>${lb[i]}</span>${s}</div>`).join('')}</div></div>`;
 }
@@ -677,6 +714,19 @@ function initGL(){
 // boneco do jogador
 const numTexCache={};
 function numTex(n,fg,bg){const k=n+fg+bg;if(numTexCache[k])return numTexCache[k];const c=document.createElement('canvas');c.width=64;c.height=64;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,64,64);g.fillStyle=fg;g.font='bold 40px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(n,32,34);return numTexCache[k]=new THREE.CanvasTexture(c);}
+/* cara a sério para os bonecos 3D: olhos com íris e pupila, sobrancelhas, nariz, boca e orelhas (numa só malha com cores por vértice) */
+function c30face(THREE,o){const sph=o.r!=null,W=sph?o.r:o.w,H=sph?o.r:o.h,D=sph?o.r:o.d,f=o.fwd||1,P=[];
+ const zAt=(x,y)=>sph?Math.sqrt(Math.max(0,o.r*o.r-x*x-y*y)):D;const cs=(h,k)=>{const c=new THREE.Color(h);c.multiplyScalar(k);return c.getHex()};
+ const EY=[0x4a2e1a,0x3b2414,0x2f2014,0x3b6ea5,0x4f7a4a,0x6b4a2a],eye=o.eye!=null?o.eye:EY[Math.floor(Math.random()*EY.length)],ey=sph?.02:.1,br=sph?.24:.34,ns=sph?-.2:-.12,mo=sph?-.5:-.48;
+ const add=(sx,sy,sz,x,y,c,dz)=>P.push([sx,sy,sz,x,y,(zAt(x,y)+(dz||0))*f,c]);
+ for(const s of [-1,1]){add(W*.34,H*.16,W*.05,s*W*.36,H*ey,0xf6f3ec,0);add(W*.16,H*.16,W*.05,s*W*.36,H*(ey-.01),eye,W*.025);add(W*.07,H*.08,W*.04,s*W*.36,H*(ey-.01),0x080808,W*.05);
+  add(W*.4,H*.07,W*.06,s*W*.37,H*br,o.hair!=null?cs(o.hair,.9):0x2a1a10,W*.015);P.push([W*.1,H*.3,D*.3,s*W*1.02,0,0,cs(o.skin,.9)])}
+ add(W*.15,H*.28,W*.16,0,H*ns,cs(o.skin,.9),W*.02);add(W*.44,H*.075,W*.05,0,H*mo,cs(o.skin,.55),0);
+ let n=0;const gs=P.map(p=>{const q=new THREE.BoxGeometry(p[0],p[1],p[2]).toNonIndexed();q.translate(p[3],p[4],p[5]);n+=q.attributes.position.count;return [q,p[6]]});
+ const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),c=new THREE.Color();let k=0;
+ for(const [q,h] of gs){c.setHex(h);const A=q.attributes.position,N=q.attributes.normal;for(let i=0;i<A.count;i++,k++){pos[k*3]=A.getX(i);pos[k*3+1]=A.getY(i);pos[k*3+2]=A.getZ(i);nor[k*3]=N.getX(i);nor[k*3+1]=N.getY(i);nor[k*3+2]=N.getZ(i);col[k*3]=c.r;col[k*3+1]=c.g;col[k*3+2]=c.b}q.dispose()}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const m=new THREE.Mesh(g,c30face.m||(c30face.m=new THREE.MeshLambertMaterial({vertexColors:true})));if(o.x!=null)m.position.set(o.x,o.y,o.z);return m}
 function makeMan(shirt,shorts,card,num,gk){
   const g=new THREE.Group();const M=c=>new THREE.MeshLambertMaterial({color:c});
   const skin=M(card.skin),sh=M(gk?'#f5c542':shirt),sho=M(shorts),boot=M('#111'),hair=M(card.hair);
@@ -685,8 +735,8 @@ function makeMan(shirt,shorts,card,num,gk){
   const torso=new THREE.Mesh(new THREE.BoxGeometry(.5,.62,.28),[sh,sh,sh,sh,sh,new THREE.MeshLambertMaterial({map:numTex(num,gk?'#222':shorts,gk?'#f5c542':shirt)})]);torso.position.y=1.22;torso.castShadow=true;g.add(torso);
   const armL=new THREE.Group(),armR=new THREE.Group();
   for(const [ar,x] of [[armL,-.33],[armR,.33]]){ar.position.set(x,1.48,0);const a=new THREE.Mesh(new THREE.BoxGeometry(.14,.56,.16),sh);a.position.y=-.26;const h=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.12),skin);h.position.y=-.58;ar.add(a,h);a.castShadow=true;g.add(ar);}
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),skin);head.position.y=1.72;head.castShadow=true;g.add(head);
-  const hr=new THREE.Mesh(new THREE.SphereGeometry(.175,12,8,0,Math.PI*2,0,Math.PI/2),hair);hr.position.y=1.74;g.add(hr);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.17,16,12),skin);head.position.y=1.72;head.castShadow=true;g.add(head);head.add(c30face(THREE,{r:.17,skin:skin.color.getHex(),hair:hair.color.getHex()}));
+  const hr=new THREE.Mesh(new THREE.SphereGeometry(.175,12,8,0,Math.PI*2,0,Math.PI/2),hair);hr.position.y=1.775;g.add(hr);
   g.userData={legL,legR,armL,armR,ph:Math.random()*6};
   return g;
 }
