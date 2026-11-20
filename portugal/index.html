@@ -2013,6 +2013,7 @@ function enterBuilding(en){if(G.state!=='play'||!W.on)return;
  const S={en,g,spots:[],solid:[],npcs:[],W:20,D:16,H:5,door:[0,7],world:false,t:0};
  try{(IBUILD[en.type]||IBUILD.place)(S)}catch(e){console.warn(e)}
  if(!S.world){S.spots.push({x:S.door[0],z:S.door[1],r:2.4,label:'🚪 Sair para a rua',act:()=>exitBuilding()});ibox(g,3.2,3.2,.2,0x2a3a48,S.door[0],0,S.door[1]+.45);iplane(g,2.6,.6,ctex(128,32,(q,w,h)=>{q.fillStyle='#1d7a3a';q.fillRect(0,0,w,h);q.fillStyle='#fff';q.font='800 20px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('SAÍDA ⇢',w/2,h/2+1)}),S.door[0],3.6,S.door[1]+.3,Math.PI)}
+ try{if(!S.world)imarkers(S)}catch(e){}
  const m=makePerson();(S.world?S.wg:S.g).add(m);S.m=m;S.px=S.start?S.start[0]:S.door[0];S.pz=S.start?S.start[1]:S.door[1]-2;S.yaw=S.startYaw!=null?S.startYaw:0;S.v=0;S.ph=0;
  INS.on=S;G.state='inside';if(W.m)W.m.visible=false;IHUD.forEach(s=>$(s).hidden=true);if(engG)engG.gain.value=0;if(!S.world){S.light=[hemi.intensity,sun.intensity];hemi.intensity=.95;sun.intensity=.75}
  S.cam=null;updateInside(0,true);toast(S.hello||('Entraste: '+en.label+'.'),false,3)}
@@ -2116,7 +2117,7 @@ function enterTower(en){const l=en.lm||{};let top=60;try{const gg=scene.children
  const TX=l.x||en.x,TZ=l.z||en.z,y0=terrainH(TX,TZ);// altura real do miradouro dos mais famosos; e sempre acima dos telhados à volta
  const RH=[[/Burj Khalifa/i,555],[/Skytree/i,450],[/CN Tower/i,447],[/Shanghai|Oriental Pearl/i,263],[/Lakhta/i,357],[/Empire/i,373],[/One World/i,386],[/Eiffel/i,276],[/Torre de Tóquio|Tokyo Tower/i,250],[/Petronas/i,170],[/Moscow City/i,354],[/Taipei 101/i,382],[/Shard/i,244],[/Space Needle/i,160],[/Sky ?Tower/i,220],[/Clérigos/i,70],[/Ostankino/i,337],[/Torre Vasco/i,120]];let rh=0;for(const [r,h] of RH)if(r.test(en.label)){rh=h;break}
  let roof=0;for(const b of B){if(!b.h||b.hidden)continue;if(Math.abs(b.x-TX)<180&&Math.abs(b.z-TZ)<180)roof=Math.max(roof,b.h*(b.tall||1))}
- const vy=Math.max(30,top*.93,rh,roof+12);const S={en:Object.assign({},en,{x:W.x,z:W.z}),g:new THREE.Group(),spots:[],solid:[],npcs:[],tower:true,t:0,x:TX,z:TZ,y:y0+vy,yaw:W.yaw||0,fov:60};scene.add(S.g);
+ const vy=en.roofH?en.roofH+2:Math.max(30,top*.93,rh,roof+12);const S={en:Object.assign({},en,{x:W.x,z:W.z}),g:new THREE.Group(),spots:[],solid:[],npcs:[],tower:true,t:0,x:TX,z:TZ,y:y0+vy,yaw:W.yaw||0,fov:60};scene.add(S.g);
  INS.on=S;G.state='inside';if(W.m)W.m.visible=false;IHUD.forEach(s=>$(s).hidden=true);toast('🛗 Subiste ao miradouro de '+en.label+' ('+Math.round(vy)+' m). Roda com ← →, aproxima com ↑ ↓. E ou F para descer.',false,5);updateTower(0,S)}
 function updateTower(dt,S){const t=(K.KeyA||K.ArrowLeft||TB.left?1:0)-(K.KeyD||K.ArrowRight||TB.right?1:0),z=(K.KeyW||K.ArrowUp||TB.gas?1:0)-(K.KeyS||K.ArrowDown||TB.brake?1:0);S.yaw+=(t*.9+(t?0:.06))*dt;S.fov=clamp(S.fov-z*30*dt,18,75);
  camera.position.set(S.x+Math.sin(S.yaw)*3,S.y,S.z-Math.cos(S.yaw)*3);camera.lookAt(S.x+Math.sin(S.yaw)*200,S.y-28,S.z-Math.cos(S.yaw)*200);camera.fov=S.fov;camera.updateProjectionMatrix();sun.position.set(S.x+150,S.y+300,S.z+120);sun.target.position.set(S.x,0,S.z);
@@ -2126,7 +2127,7 @@ IBUILD.stadium=S=>{const pl=S.en.pl,st=pl.st;scene.remove(S.g);S.world=true;S.wg
  const PW=st.PW||105,PD=st.PD||68,ri=PW/2+9;S.W=PW+10;S.D=PD+10;S.H=60;S.floorY=()=>.25;S.start=[0,PD/2-3];S.startYaw=0;S.camD=6;S.camH=3.4;
  S.bound=(x,z)=>{const dx=x/(ri-1),dz=z/((ri-1)*st.D/st.W);return dx*dx+dz*dz>1};
  const ball=new THREE.Mesh(new THREE.SphereGeometry(.22,14,10),new THREE.MeshLambertMaterial({color:0xffffff}));ball.position.set(0,.47,0);S.g.add(ball);
- const kp=[];for(const sd of [-1,1]){const m=makePerson();m.scale.setScalar(1.02);m.position.set(sd*(PW/2-.6),.25,0);m.rotation.y=sd>0?-Math.PI/2:Math.PI/2;m.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.material.color.getHex()===PAINT[carColor]){o.material=o.material.clone();o.material.color.setHex(0x27c26a)}});S.g.add(m);kp.push({m,sd,z:0})}
+ const kp=[];for(const sd of [-1,1]){const m=makePerson();m.scale.setScalar(1.02);m.position.set(sd*(PW/2-.6),.25,0);m.rotation.y=sd>0?-Math.PI/2:Math.PI/2;m.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.material.color.getHex()===(G.shirt!=null?G.shirt:PAINT[carColor])){o.material=o.material.clone();o.material.color.setHex(0x27c26a)}});S.g.add(m);kp.push({m,sd,z:0})}
  const B2={v:new THREE.Vector3(),goals:0,reset:0,last:0};S.ball=B2;
  S.spots.push({x:0,z:PD/2+5.5,r:2.6,label:'🎟️ Bilheteira e loja do '+st.team+' (comprar bilhete para um jogo)',act:()=>{exitBuilding(true);openPlace(pl)}});
  S.spots.push({x:6,z:PD/2+5.5,r:2.2,label:'🚪 Sair pelo túnel',act:()=>exitBuilding()});
@@ -2143,6 +2144,45 @@ IBUILD.stadium=S=>{const pl=S.en.pl,st=pl.st;scene.remove(S.g);S.world=true;S.wg
   if(B2.reset<=0&&Math.abs(b.x)>PW/2&&Math.abs(b.x)<PW/2+2&&Math.abs(b.z)<3.66&&b.y<2.69){B2.goals++;B2.reset=2.2;v.multiplyScalar(.2);cheer(true);sfx.win();toast('⚽ GOLOOO! ('+B2.goals+' '+(B2.goals===1?'golo':'golos')+' no '+st.name+')',false,2.5);G.stats.golos=(G.stats.golos||0)+1}
   else if(B2.reset<=0&&(Math.abs(b.x)>PW/2+3||Math.abs(b.z)>PD/2+4)){B2.reset=1.2}}
  S.cleanup=()=>{st.g.remove(S.g)};S.hello='Estás no relvado do '+st.name+' (105 × 68 m). Leva a bola e remata com E!'};
+
+/* ================= PRÉDIOS DA CIDADE COM PORTA: lojas, cafés, bares, ginásios, apartamentos… (entra-se sem ecrã de espera) ================= */
+const BKINDS=[['mini','Minimercado','🛒'],['cafe','Café','☕'],['bar','Bar','🍹'],['farm','Farmácia','💊'],['barb','Barbearia','💈'],['roupa','Loja de roupa','👕'],['gym','Ginásio','🏋️'],['rest','Restaurante','🍽️'],['apt','Prédio de apartamentos','🏢'],['apt','Prédio de apartamentos','🏢']];
+function bldKind(b){const h=((Math.round(b.x)*73856093)^(Math.round(b.z)*19349663))>>>0;return BKINDS[h%BKINDS.length]}window.__bldKind=bldKind;
+function nearBuildingDoor(){if(!W.on)return null;const b=hitBuilding(W.x,W.z,1.8);if(!b||b.hidden||!b.h||b.keep)return null;if(!CITIES.some(c=>Math.hypot(c.x-b.x,c.z-b.z)<c.r+40))return null;const k=bldKind(b);return {type:'bld',label:k[2]+' '+k[1],b,kind:k[0],name:k[1],x:W.x,z:W.z}}
+{const _ne=nearEnterable;nearEnterable=function(){return _ne()||nearBuildingDoor()}}
+// marcadores no chão (anéis a brilhar) em cada sítio onde se pode fazer alguma coisa
+function imarkers(S){for(const s of S.spots){const r=new THREE.Mesh(new THREE.RingGeometry(.55,.75,28),new THREE.MeshBasicMaterial({color:/Sair|🚪/.test(s.label)?0x5ec8ff:0xffd23f,transparent:true,opacity:.8,side:THREE.DoubleSide,depthWrite:false}));r.rotation.x=-Math.PI/2;r.position.set(s.x,(S.floorY?S.floorY(s.x,s.z):0)+.04,s.z);(S.world?S.g:S.g).add(r);s.ring=r}}
+// empregado atrás do balcão, virado para quem entra
+function iclerk(S,x,z,c){const m=inpc(S.g,c||0x2e8b3a);m.position.set(x,0,z);m.rotation.y=0;S.clerks=(S.clerks||[]).concat([m]);return m}
+const SHIRTS=[0xd94b3a,0x2f6db5,0xf2b705,0xf2f2ee,0x2e8b6e,0x1c1f24,0x8e44ad,0xe67e22];const HAIRC=[0x2b1d14,0x5a3a20,0xc9a35a,0x111111,0xb03a2e,0x9aa1a8];
+function dressPlayer(m){if(!m)return;const ch=m.children;try{if(G.shirt!=null){ch[2].material.color.setHex(G.shirt)}if(G.hair!=null)ch[4].material.color.setHex(G.hair)}catch(e){}}
+G.shirt=MEM.get('shirt',null);G.hair=MEM.get('hair',null);
+IBUILD.bld=S=>{const g=S.g,k=S.en.kind,nm=S.en.name;S.W=20;S.D=15;S.H=4.4;S.door=[0,7.1];const P=[];
+ const counter=(x,z,w,c)=>{P.push([w,1.05,1.1,x,0,z,c||0x2a3a48],[w,.07,1.25,x,1.05,z,0xe8e2d0]);S.solid.push([x,z,w,1.1])};
+ const sign=(txt,bg)=>iplane(g,8,1.4,ctex(512,80,(q,w,h)=>{q.fillStyle=bg;q.fillRect(0,0,w,h);q.fillStyle='#fff';q.font='800 46px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,w/2,h/2+2)}),0,3.4,-7.45,0);
+ const buy=(lab,price,msg,fn)=>({label:lab+' · '+euro(price),act:()=>{if(pay(price)){toast(msg,false,3);G.stats.compras=(G.stats.compras||0)+1;if(fn)fn()}}});
+ const spot=(x,z,o)=>S.spots.push(Object.assign({x,z,r:2},o));
+ if(k==='mini'){iroom(g,20,15,4.4,'tiles',0xeef3ee,0xffffff,4);sign('MINIMERCADO','#2e8b3a');for(const x of [-5,0,5])for(let i=0;i<5;i++)for(let y=0;y<3;y++)P.push([.5,.4,.35,x+(i-2)*.55,.3+y*.7,-1,[0xc0392b,0x2980b9,0xf1c40f,0x27ae60,0xe67e22][(i+y)%5]]);for(const x of [-5,0,5]){P.push([3,2.2,.6,x,0,-1,0x9aa1a8]);S.solid.push([x,-1,3,.8])}
+  P.push([6,2.2,.8,-6,0,-6.9,0xdfe9f2],[6,.1,.8,-6,2.2,-6.9,0x5ec8ff]);counter(6,4,4);iclerk(S,6,2.9);spot(6,5.3,buy('Garrafa de água',1,'💧 Água fresquinha.'));spot(3.2,5.3,buy('Sandes e sumo',4.5,'🥪 Lanche comprado.'));spot(-6,-5.4,buy('Gelado do frigorífico',2.5,'🍦 Gelado de morango!'))}
+ else if(k==='cafe'){iroom(g,20,15,4.4,'wood',0xf3e3c8,0xffffff,4);sign('CAFÉ','#6a3c1c');counter(0,-5,8,0x6a3c1c);P.push([3,.6,.9,2,1.1,-5,0xdfe9f2]);iclerk(S,0,-6.2,0x6a3c1c);for(const [x,z] of [[-6,1],[-2,3],[3,2],[7,0]]){P.push([1.1,.06,1.1,x,.75,z,0xe8e2d0],[.1,.75,.1,x,0,z,0x333333],[.5,.45,.5,x-.9,0,z,0x6a3c1c],[.5,.45,.5,x+.9,0,z,0x6a3c1c]);S.solid.push([x,z,2.8,1.2])}
+  spot(0,-3.6,buy('Bica',.9,'☕ Um café, como deve ser.'));spot(2.4,-3.6,buy('Pastel de nata',1.3,'🥮 Com canela!'));spot(-2.4,-3.6,buy('Torrada e galão',3.2,'🍞 Pequeno-almoço tomado.'))}
+ else if(k==='bar'){iroom(g,20,15,4.4,'wood',0x3a2a3a,0x241a24,4);sign('BAR','#8e44ad');counter(-2,-4.6,12,0x4a2a1a);for(let i=0;i<14;i++)P.push([.18,.5,.18,-7.5+i*.85,1.6,-6.9,[0x27ae60,0xc0392b,0xf1c40f,0x2980b9][i%4]]);P.push([12,.08,.5,-2,1.55,-6.9,0x6a3c1c]);iclerk(S,-2,-5.9,0x111111);for(let i=0;i<6;i++)P.push([.45,.75,.45,-7+i*2,0,-3.4,0x222222]);
+  P.push([3.6,.85,2,5,0,3,0x1d6b3a],[3.8,.15,2.2,5,.85,3,0x5a3a20]);S.solid.push([5,3,3.8,2.2]);iplane(g,1.1,1.1,ctex(64,64,(q,w,h)=>{const c=['#111','#e8e2d0','#c0392b','#1d6b3a'];for(let r=5;r>0;r--){q.fillStyle=c[r%4];q.beginPath();q.arc(32,32,r*6,0,7);q.fill()}}),-9.95,1.8,3,Math.PI/2);
+  spot(-2,-3.2,buy('Refrigerante',2.5,'🥤 Fresquinho!'));spot(-8.3,3,{label:'🎯 Jogar aos dardos',act:()=>{const p=[...Array(3)].map(()=>[0,5,10,20,25,50][Math.floor(Math.random()*6)]);toast('🎯 Dardos: '+p.join(' + ')+' = '+p.reduce((a,b)=>a+b)+' pontos'+(p.includes(50)?' — mosca!':''),false,3);tone(500,.05,'square',.05)}});spot(5,5,buy('Partida de bilhar',2,'🎱 Ganhaste a partida de bilhar!'))}
+ else if(k==='farm'){iroom(g,20,15,4.4,'tiles',0xf6fbf6,0xffffff,4);sign('FARMÁCIA','#1d9a4a');counter(0,-4.5,8,0xf2f2ee);iclerk(S,0,-5.8,0xffffff);for(const sx of [-1,1])for(let y=0;y<4;y++)P.push([.5,.08,10,sx*9.6,.4+y*.6,0,0xdfe3e6]);for(let i=0;i<40;i++)P.push([.3,.3,.3,(i%2?9.6:-9.6),.5+Math.floor(i/10)*.6,-4.5+(i%10),[0xffffff,0x2980b9,0x27ae60,0xe67e22][i%4]]);S.solid.push([-9.6,0,1,10],[9.6,0,1,10]);
+  spot(0,-3.2,buy('Protetor solar',12,'🧴 Protetor solar FPS 50.'));spot(2.6,-3.2,buy('Pastilhas para a garganta',6,'💊 Já está melhor.'));spot(-2.6,-3.2,buy('Pensos e desinfetante',4,'🩹 Kit de primeiros socorros.'))}
+ else if(k==='barb'){iroom(g,20,15,4.4,'tiles',0xf2ece4,0xffffff,4);sign('BARBEARIA','#b03a2e');for(const x of [-5,0,5]){P.push([.9,.6,.9,x,0,-5,0x111111],[.9,.8,.15,x,.6,-5.4,0x111111]);iplane(g,1.6,1.2,null,x,1.9,-7.4,0,0xcfe4f5);S.solid.push([x,-5,1.2,1.2])}iclerk(S,2.5,-4.8,0xffffff);P.push([.3,1.8,.3,8.6,0,6.6,0xb03a2e]);
+  spot(0,-3.4,{label:'💈 Cortar e pintar o cabelo · '+euro(12),act:()=>{if(!pay(12))return;const i=(HAIRC.indexOf(G.hair)+1)%HAIRC.length;G.hair=HAIRC[i];MEM.set('hair',G.hair);dressPlayer(S.m);dressPlayer(W.m);toast('💈 Cabelo novo! Fica-te bem.',false,2.5)}})}
+ else if(k==='roupa'){iroom(g,20,15,4.4,'wood',0xf4f1ec,0xffffff,4);sign('LOJA DE ROUPA','#2f6db5');for(const z of [-3,1]){P.push([8,.06,.06,0,1.7,z,0x9aa1a8]);for(let i=0;i<12;i++)P.push([.55,.8,.1,-3.6+i*.65,.85,z,SHIRTS[i%SHIRTS.length]]);S.solid.push([0,z,8,.8])}counter(6,5,3,0xf2f2ee);iclerk(S,6,6.1,0x2f6db5);iplane(g,1.4,2.4,null,-9.95,1.4,4,Math.PI/2,0xcfe4f5);
+  spot(-4,-1,{label:'👕 Comprar camisola nova (muda a cor) · '+euro(25),act:()=>{if(!pay(25))return;const i=(SHIRTS.indexOf(G.shirt)+1)%SHIRTS.length;G.shirt=SHIRTS[i];MEM.set('shirt',G.shirt);dressPlayer(S.m);dressPlayer(W.m);toast('👕 Camisola nova vestida!',false,2.5)}});spot(4,-1,buy('Ténis novos',60,'👟 Ténis novos, prontos para andar pela cidade.'))}
+ else if(k==='gym'){iroom(g,20,15,4.4,'concrete',0xdfe3e6,0xf2f2f2,4);sign('GINÁSIO','#d35400');for(const x of [-6,-3,0]){P.push([1,.9,2.2,x,0,-5,0x222222],[.9,.05,1.8,x,.9,-5,0x444444],[.1,1.2,.1,x,.9,-6,0x777777]);S.solid.push([x,-5,1.2,2.4])}for(let i=0;i<8;i++)P.push([.3,.3,.3,5+(i%4)*.8,0,-6+Math.floor(i/4)*1.4,0x111111]);P.push([3,.4,1,6,0,2,0x2a3a48]);S.solid.push([6,2,3,1]);
+  spot(-3,-2.6,{label:'🏃 Treinar 30 minutos na passadeira · '+euro(8),act:()=>{if(!pay(8))return;G.stats.treinos=(G.stats.treinos||0)+1;toast('🏃 Treino feito! Já fizeste '+G.stats.treinos+' treino'+(G.stats.treinos>1?'s':'')+'.',false,3)}});spot(6,3.6,buy('Garrafa de bebida isotónica',2,'🧃 Para recuperar do treino.'))}
+ else if(k==='rest'){iroom(g,20,15,4.4,'wood',0xf6efe2,0xffffff,4);sign('RESTAURANTE','#a01818');counter(0,-6,10,0x8a6a48);iclerk(S,-3,-6.9,0xffffff);iclerk(S,3,-6.9,0xffffff);for(const [x,z] of [[-6,-1],[-2,1],[2,-1],[6,1],[-4,4],[4,4]]){P.push([1.6,.06,1.2,x,.75,z,0xf4f2ee],[.1,.75,.1,x,0,z,0x333333],[.5,.45,.5,x-1.1,0,z,0x6a3c1c],[.5,.45,.5,x+1.1,0,z,0x6a3c1c]);S.solid.push([x,z,3.4,1.4])}
+  spot(0,-4.4,buy('Prato do dia',12,'🍽️ Bacalhau com natas e uma sobremesa. Estava ótimo!'));spot(3,-4.4,buy('Sobremesa',4,'🍮 Pudim caseiro.'))}
+ else{// prédio de apartamentos: entrada, caixas do correio e elevador até ao terraço
+  S.W=14;S.D=12;S.door=[0,5.6];iroom(g,14,12,4.4,'marble',0xe9e4da,0xffffff,4);for(let i=0;i<12;i++)P.push([.5,.35,.12,-5.5+(i%6)*.55,1.2+Math.floor(i/6)*.4,-5.9,0x9aa1a8]);P.push([2.2,3,.1,4,0,-5.95,0x6f767b],[.04,3,.11,4,0,-5.9,0x333333],[3,1,1,-4,0,2,0x6a3c1c]);S.solid.push([-4,2,3,1]);iclerk(S,-4,1,0x34495e);
+  const bb=S.en.b;spot(4,-4.6,{label:'🛗 Elevador até ao terraço',act:()=>{const e=S.en;exitBuilding(true);enterTower({type:'tower',label:'terraço do prédio',x:e.x,z:e.z,lm:{x:bb.x,z:bb.z},paid:1,roofH:bb.h})}});spot(-4,3.3,{label:'🛎️ Porteiro',act:()=>toast('«Boa tarde! O terraço está aberto aos visitantes. O elevador é ali à direita.»',false,3.5)})}
+ imerge(g,P);S.hello=S.en.label+'. '+(k==='apt'?'O elevador leva-te ao terraço.':'Vai ao balcão (E nos círculos amarelos).');for(let i=0;i<(k==='apt'?1:3);i++)S.npcs.push({m:inpc(g,SHIRTS[(i*3+1)%SHIRTS.length])})};
 
 /* ================= AVIÕES DE CARREIRA: descolam, voam entre aeroportos e aterram sozinhos ================= */
 const BOTP=[];
@@ -2377,9 +2417,9 @@ function updateIndicators(dt){IND.blink+=dt;const ph=(IND.blink%0.8)<0.42;const 
   if(m&&Math.floor((IND.blink-dt)/0.4)!==Math.floor(IND.blink/0.4))tone(ph?1500:1100,.025,'square',.025);
   // trânsito: pisca antes de virar no fim da rua
   for(const T of TRAF){const r=T.r,last=T.dir>0?T.seg===r.pts.length-2&&T.t>.7:T.seg===0&&T.t<.3;if(T.m)setInd(T.m,ph&&last&&T.side<0,ph&&last&&T.side>0)}}
-function makePerson(){const g=new THREE.Group(),M=c=>lam({color:c});const sk=M(0xe0b08a),sh=M(PAINT[carColor]),pa=M(0x2a3140);
+function makePerson(){const g=new THREE.Group(),M=c=>lam({color:c});const sk=M(0xe0b08a),sh=M(G.shirt!=null?G.shirt:PAINT[carColor]),pa=M(0x2a3140);
   const legL=new THREE.Mesh(new THREE.BoxGeometry(.2,.8,.22),pa),legR=legL.clone();legL.geometry=legL.geometry.clone();legL.geometry.translate(0,-.4,0);legR.geometry=legL.geometry;legL.position.set(-.13,.82,0);legR.position.set(.13,.82,0);
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.5,.62,.28),sh);body.position.y=1.15;const head=new THREE.Mesh(new THREE.BoxGeometry(.3,.32,.3),sk);head.position.y=1.65;const hair=new THREE.Mesh(new THREE.BoxGeometry(.32,.1,.32),M(0x2b1d14));hair.position.y=1.82;
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.5,.62,.28),sh);body.position.y=1.15;const head=new THREE.Mesh(new THREE.BoxGeometry(.3,.32,.3),sk);head.position.y=1.65;const hair=new THREE.Mesh(new THREE.BoxGeometry(.32,.1,.32),M(G.hair!=null?G.hair:0x2b1d14));hair.position.y=1.82;
   const armG=new THREE.BoxGeometry(.13,.58,.15);armG.translate(0,-.29,0);const armL=new THREE.Mesh(armG,sh),armR=new THREE.Mesh(armG,sh);armL.position.set(-.33,1.44,0);armR.position.set(.33,1.44,0);
   g.add(legL,legR,body,head,hair,armL,armR);g.userData={legL,legR,armL,armR};g.traverse(o=>{if(o.isMesh)o.castShadow=true});return g}
 function toggleFoot(){if(G.state==='inside'){exitBuilding();return}if(G.state!=='play'||G.mission&&!W.on&&G.mission.type!=='empresa'&&false)return;
