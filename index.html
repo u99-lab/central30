@@ -121,7 +121,8 @@ html,body{max-width:100%;overflow-x:hidden}
 (function(){var H='27b28511b0560198ec8c7b1347d9f128cf6f00644fce8ae6b4304f0c26ecba42',g=document.getElementById('c30gate');
  // bloqueios reiniciados (12 de novembro de 2026): toda a gente volta a ter 5 entradas sem código e depois tem de pôr o código outra vez
  // reinício de 18/11/2026: todos os aparelhos esquecem a palavra-passe; quem já a tinha posto (ex.: PC da escola) não ganha entradas grátis novas
- try{var GV='2026-11-18b';if(localStorage.getItem('c30.gateV')!==GV){var had=!!localStorage.getItem('c30.pass2')||!!localStorage.getItem('c30.pass');['c30.pass','c30.pass2','c30.passN'].forEach(function(k){localStorage.removeItem(k)});if(had)localStorage.setItem('c30.trialN','5');localStorage.setItem('c30.gateV',GV);}}catch(e){}
+ // reinício de 20/11/2026: todos os aparelhos esquecem a palavra-passe e voltam a ter 5 entradas sem código
+ try{var GV='2026-11-20a';if(localStorage.getItem('c30.gateV')!==GV){['c30.pass','c30.pass2','c30.passN','c30.trialN'].forEach(function(k){localStorage.removeItem(k)});localStorage.setItem('c30.gateV',GV);}}catch(e){}
  try{localStorage.removeItem('c30.pass');if(localStorage.getItem('c30.pass2')===H){g.remove();return;}var n=+localStorage.getItem('c30.trialN')||0;if(n<5){localStorage.setItem('c30.trialN',String(n+1));window.__C30_TRIAL_LEFT=4-n;g.remove();return;}}catch(e){} // 5 entradas para experimentar; à 6.ª pede o código
  document.documentElement.style.overflow='hidden';try{var gh=document.getElementById('c30gateHide');if(gh)gh.remove();}catch(e){} // o ecrã do código só aparece quando é mesmo preciso (antes piscava e desaparecia)
  var inp=document.getElementById('c30gatePw'),msg=document.getElementById('c30gateMsg');setTimeout(function(){inp.focus();},50);
