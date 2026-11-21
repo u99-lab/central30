@@ -921,6 +921,11 @@ ui();
  $('c30mOff').addEventListener('click',()=>{m.hidden=true;});
  $('c30mPub').addEventListener('click',()=>{m.hidden=true;setAutoPub(true);toast2('🌍 Online sem sala ligado: escolhe um jogo e encontras quem estiver nele.');});  $('c30mOn').addEventListener('click',()=>{m.hidden=true;try{window.__c30together=true;}catch{}openPanel();});
  setTimeout(()=>{try{$('c30mOff').focus();}catch{}},50);
+ // só pergunta uma vez por sessão (as atualizações automáticas recarregam a página e voltava a perguntar) e nunca por cima de um jogo
+ const asked=()=>{try{sessionStorage.setItem('c30.modeAsked','1')}catch{}};
+ try{if(sessionStorage.getItem('c30.modeAsked'))m.hidden=true}catch{}
+ ['c30mOff','c30mPub','c30mOn'].forEach(id=>$(id).addEventListener('click',asked));
+ new MutationObserver(()=>{if(document.documentElement.classList.contains('c30playing')&&!m.hidden){m.hidden=true;asked();}}).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
 })();
 // o chat acompanha o ecrã inteiro
 const moveChat=()=>{const c=$('c30chat');if(!c)return;const fs=document.fullscreenElement||document.webkitFullscreenElement;const h=fs&&fs!==document.documentElement&&fs.tagName!=='IFRAME'?fs:document.body;if(c.parentNode!==h)h.appendChild(c);};
