@@ -242,7 +242,7 @@ function stepKart(k,dt){let thr=0,steer=0,drift=false;
  if(state==='race'&&!k.spin){if(k.ai){const look=Math.round(7+Math.abs(k.sp)*.35),i=(k.idx+look)%N;if(Math.random()<dt*.4)k.tl=K.rand(-4.2,4.2);const tx=P[i].x+Nr[i].x*k.tl,tz=P[i].z+Nr[i].z*k.tl,d=K.angDiff(k.a,Math.atan2(tx-k.x,tz-k.z));steer=K.clamp(-d*2.6,-1,1);
    let cv=0;for(let j=3;j<24;j+=3)cv=Math.max(cv,curv[(k.idx+j)%N]);let gap=me.prog-k.prog,rb=gap>50?1.07:gap<-70?.95:1;if(k.fin)rb=.8;const vt=Math.min(k.top*k.skill*rb,19.5/Math.max(.05,cv));thr=k.sp>vt?-.4:1;
    if(k.item){k.itT-=dt;if(k.itT<=0&&(k.item!=='turbo'||cv<.2))useItem(k);}}
-  else if(!k.fin){const ax=K.axis();steer=ax.x;thr=K.touch&&!K.down('KeyS','ArrowDown','KeyB')?(ax.y<-.6?-1:1):ax.y>0.2?1:ax.y<-.2?-1:0;drift=K.down('Space');if(K.hit('KeyE','ShiftLeft','ShiftRight','KeyX'))useItem(k);}
+  else if(!k.fin){const ax=K.axis();steer=ax.x;thr=K.down('KeyS','ArrowDown','KeyB')?-1:K.touch?(ax.y>.22?1:ax.y<-.35?-1:0):ax.y>.2?1:ax.y<-.2?-1:0/* no ecrã tátil já não acelera sozinho: joystick para cima acelera */;drift=K.down('Space');if(K.hit('KeyE','ShiftLeft','ShiftRight','KeyX'))useItem(k);}
   else{const i=(k.idx+10)%N,d=K.angDiff(k.a,Math.atan2(P[i].x-k.x,P[i].z-k.z));steer=K.clamp(-d*2.6,-1,1);thr=k.sp>16?0:1;}}
  const off=Math.abs(k.lat)>HW+.9;if(k.boost>0)k.boost-=dt;
  if(k.spin>0){k.spin-=dt;k.sp*=Math.pow(.12,dt);k.va+=dt*14;if(k.spin<=0){k.va=0;k.spin=0;}}
