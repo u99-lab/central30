@@ -19,6 +19,7 @@ const pinG=new THREE.LatheGeometry([[0,0],[.05,0],[.06,.05],[.075,.14],[.06,.24]
 const pinM=new THREE.MeshPhongMaterial({color:0xfafafa,shininess:90}),stripe=new THREE.MeshBasicMaterial({color:0xe8352c});
 const PIN0=[];for(let r=0;r<4;r++)for(let i=0;i<=r;i++)PIN0.push([(i-r/2)*.305,-LL+.9+r*.264*-1+0]);
 const pins=PIN0.map(([x,z])=>{const g=new THREE.Group(),m=new THREE.Mesh(pinG,pinM);m.castShadow=true;g.add(m);const s=new THREE.Mesh(new THREE.CylinderGeometry(.062,.062,.03,14),stripe);s.position.y=.43;g.add(s);scene.add(g);return {g,x0:x,z0:z,x,z,vx:0,vz:0,tilt:0,dir:0,down:false,out:false};});
+const guide=new THREE.Mesh(new THREE.PlaneGeometry(.025,1),new THREE.MeshBasicMaterial({color:0xffe066,transparent:true,opacity:.55,depthWrite:false}));guide.rotation.x=-Math.PI/2;guide.position.y=.012;scene.add(guide);
 const ballM=new THREE.MeshPhongMaterial({color:0x2a6bd7,shininess:120});const ball=new THREE.Mesh(new THREE.SphereGeometry(BR,20,14),ballM);ball.castShadow=true;scene.add(ball);
 // estado
 let state='menu',players=[],turn=0,frameN=0,roll=0,phase='aim',aim={x:0,ang:0,spin:0,pow:0},pdir=1,bl={x:0,z:0,vx:0,vz:0,spin:0,live:false,gutter:false},rollT=0,pinsBefore=0,cpuT=0,swept=false;
@@ -46,20 +47,21 @@ let charging=false,ptrOn=false;const cv=K.renderer.domElement;
 cv.addEventListener('pointerdown',e=>{K.audio();if(state==='play'&&phase==='aim'&&!players[turn].cpu){ptrOn=true;charging=true;aim.pow=0;pdir=1;}});
 cv.addEventListener('pointermove',e=>{if(state==='play'&&phase==='aim'&&!players[turn].cpu&&!charging){aim.x=K.clamp((e.clientX/innerWidth-.5)*1.4,-.42,.42);aim.ang=K.clamp((.5-e.clientY/innerHeight)*-.0,-.12,.12);}});
 addEventListener('pointerup',()=>{if(charging&&ptrOn){ptrOn=false;release();}});
-function release(){charging=false;phase='roll';const sp=4+aim.pow*7,err=Math.abs(aim.pow-.72),dev=(Math.random()-.5)*(.02+err*.12);aim.ang+=dev;bl.x+=(Math.random()-.5)*.04;bl.vx=Math.sin(aim.ang)*sp;bl.vz=-Math.cos(aim.ang)*sp;bl.spin=aim.spin;bl.live=true;rollT=0;K.sfx.whoosh();}
+function release(){charging=false;phase='roll';const sp=4+aim.pow*7,err=Math.max(0,Math.abs(aim.pow-.72)-.08),dev=(Math.random()-.5)*(.004+err*.035);aim.ang+=dev;bl.x+=(Math.random()-.5)*.01;/* mais justo: a força perto do verde já não desvia a bola */bl.vx=Math.sin(aim.ang)*sp;bl.vz=-Math.cos(aim.ang)*sp;bl.spin=aim.spin;bl.live=true;rollT=0;K.sfx.whoosh();}
 function update(dt){const pl=players[turn];
  if(state==='menu'||state==='end'){const t=K.time*.2;cam.position.set(Math.sin(t)*1.8,1.7,2.6);cam.lookAt(0,.2,-LL);return;}
  if(phase==='aim'){if(pl.cpu){cpuT-=dt;aim.x=K.damp(aim.x,.08,3,dt);aim.spin=-.35;if(cpuT<.6)aim.pow=Math.min(.76,aim.pow+dt*1.8);if(cpuT<=0){aim.ang=-.004+K.rand(-.012,.012);aim.pow=.74+K.rand(-.06,.06);release();}}
   else{if(K.down('KeyA','ArrowLeft'))aim.x-=dt*.6;if(K.down('KeyD','ArrowRight'))aim.x+=dt*.6;aim.x=K.clamp(aim.x,-.42,.42);if(K.down('KeyW','ArrowUp'))aim.ang+=dt*.15;if(K.down('KeyS','ArrowDown'))aim.ang-=dt*.15;aim.ang=K.clamp(aim.ang,-.1,.1);
    if(K.hit('KeyQ'))aim.spin=Math.max(-1,aim.spin-.5);if(K.hit('KeyE'))aim.spin=Math.min(1,aim.spin+.5);if(K.hit('Space')){charging=true;aim.pow=0;pdir=1;}
-   if(charging){aim.pow+=pdir*dt*1.1;if(aim.pow>=1){aim.pow=1;pdir=-1;}if(aim.pow<=0){aim.pow=0;pdir=1;}if(!K.down('Space')&&!ptrOn)release();}}
-  bl.x=aim.x;ball.position.set(bl.x,BR,-.2);const pw=K.$('pw');if(pw)pw.style.width=aim.pow*100+'%';const hh=K.$('hh');if(hh)hh.textContent=pl.cpu?'Vez do Rui…':'Efeito: '+(aim.spin<0?'◀ '.repeat(-aim.spin*2):aim.spin>0?'▶ '.repeat(aim.spin*2):'nenhum')+' · mantém ESPAÇO (ou o dedo) e larga no verde';}
+   if(charging){aim.pow+=pdir*dt*.8;if(aim.pow>=1){aim.pow=1;pdir=-1;}if(aim.pow<=0){aim.pow=0;pdir=1;}if(!K.down('Space')&&!ptrOn)release();}}
+  bl.x=aim.x;ball.position.set(bl.x,BR,-.2);{const L=LL-1.2;guide.visible=!pl.cpu;guide.scale.y=L;guide.rotation.z=-aim.ang;guide.position.x=aim.x+Math.sin(aim.ang)*L/2;guide.position.z=-.2-Math.cos(aim.ang)*L/2;}const pw=K.$('pw');if(pw)pw.style.width=aim.pow*100+'%';const hh=K.$('hh');if(hh)hh.textContent=pl.cpu?'Vez do Rui…':'Efeito: '+(aim.spin<0?'◀ '.repeat(-aim.spin*2):aim.spin>0?'▶ '.repeat(aim.spin*2):'nenhum')+' · mantém ESPAÇO (ou o dedo) e larga no verde';}
+ if(phase!=='aim')guide.visible=false;
  if(phase==='roll'){rollT+=dt;const st=4;for(let s=0;s<st;s++){const h=dt/st;
-   if(bl.live){if(!bl.gutter){bl.vx+=bl.spin*h*.55*(bl.z<-LL*.45?2.2:.6);bl.x+=bl.vx*h;bl.z+=bl.vz*h;if(Math.abs(bl.x)>LW/2-.02){bl.gutter=true;bl.x=Math.sign(bl.x)*(LW/2+.12);bl.vx=0;K.tone(160,.3,'sine',.12,90);}}else{bl.z+=bl.vz*h;}
+   if(bl.live){if(!bl.gutter){bl.vx+=bl.spin*h*.45*(bl.z<-LL*.45?1.6:.5);if(bl.z<-LL+4&&Math.abs(bl.x)<.22)bl.vx+=(-bl.x*.7-bl.vx*.2)*h;bl.x+=bl.vx*h;bl.z+=bl.vz*h;if(Math.abs(bl.x)>LW/2-.02){bl.gutter=true;bl.x=Math.sign(bl.x)*(LW/2+.12);bl.vx=0;K.tone(160,.3,'sine',.12,90);}}else{bl.z+=bl.vz*h;}
     if(!bl.gutter)for(const p of pins){if(p.out)continue;const dx=p.x-bl.x,dz=p.z-bl.z,d=Math.hypot(dx,dz);if(d<BR+PR&&d>.001){const nx=dx/d,nz=dz/d,vn=bl.vx*nx+bl.vz*nz;if(vn>0){const k=1.2+Math.random()*.7;p.vx+=nx*vn*k;p.vz+=nz*vn*k;bl.vx-=nx*vn*.35;bl.vz-=nz*vn*.35;if(!p.down){p.down=true;p.dir=Math.atan2(nx,-nz);K.tone(700+Math.random()*400,.08,'triangle',.18,300);}}}}
     if(bl.z<-LL-.6){bl.live=false;}}
    for(const p of pins){if(p.out||(!p.vx&&!p.vz))continue;p.x+=p.vx*h;p.z+=p.vz*h;const f=Math.pow(.25,h);p.vx*=f;p.vz*=f;if(Math.hypot(p.vx,p.vz)<.05){p.vx=p.vz=0;}if(Math.abs(p.x)>LW/2+.15||p.z<-LL-.5){p.down=true;}
-    for(const q of pins){if(q===p||q.out)continue;const dx=q.x-p.x,dz=q.z-p.z,d=Math.hypot(dx,dz);if(d<PR*2&&d>.001){const nx=dx/d,nz=dz/d,vn=(p.vx-q.vx)*nx+(p.vz-q.vz)*nz;if(vn>0){const k=.55+Math.random()*.55;q.vx+=nx*vn*k;q.vz+=nz*vn*k;p.vx-=nx*vn*.5;p.vz-=nz*vn*.5;if(!q.down){q.down=true;q.dir=Math.atan2(nx,-nz);K.tone(800+Math.random()*300,.07,'triangle',.14,300);}}const o=(PR*2-d)/2;p.x-=nx*o;p.z-=nz*o;q.x+=nx*o;q.z+=nz*o;}}}}
+    for(const q of pins){if(q===p||q.out)continue;const dx=q.x-p.x,dz=q.z-p.z,d=Math.hypot(dx,dz);if(d<PR*2&&d>.001){const nx=dx/d,nz=dz/d,vn=(p.vx-q.vx)*nx+(p.vz-q.vz)*nz;if(vn>0){const k=.65+Math.random()*.5;q.vx+=nx*vn*k;q.vz+=nz*vn*k;p.vx-=nx*vn*.5;p.vz-=nz*vn*.5;if(!q.down){q.down=true;q.dir=Math.atan2(nx,-nz);K.tone(800+Math.random()*300,.07,'triangle',.14,300);}}const o=(PR*2-d)/2;p.x-=nx*o;p.z-=nz*o;q.x+=nx*o;q.z+=nz*o;}}}}
   for(const p of pins)if(p.down)p.tilt=K.damp(p.tilt,1.45,9,dt);placePins();
   ball.position.set(bl.x,bl.gutter?BR-.06:BR,bl.z);ball.rotation.x-=bl.vz*dt/BR;ball.visible=bl.z>-LL-.5;
   const moving=pins.some(p=>p.vx||p.vz);if(!bl.live&&!moving&&rollT>1.2&&!swept){swept=true;phase='wait';setTimeout(endRoll,500);}if(rollT>9&&!swept){swept=true;phase='wait';endRoll();}}
