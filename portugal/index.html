@@ -1406,6 +1406,7 @@ function label(text,x,y,z,ry,w,h,bg,fg){const t=ctex(512,Math.round(512*h/w),(g,
 // placas com o nome à entrada das cidades
 CITIES.forEach(c=>{const n=nearRoad(c.x+c.r*.85,c.z);const x=c.x+c.r*.92,z=c.z;if(zoneAt(x,z)!=='terra')return;label(c.n.toUpperCase(),x,terrainH(x,z)+3.2,z,Math.PI/2,Math.min(14,4+c.n.length*.7),1.6,'#f4f1e8','#1b2a33');const po=new THREE.Mesh(new THREE.BoxGeometry(.15,2.4,.15),lam({color:0x8a9096}));po.position.set(x,terrainH(x,z)+1.2,z);scene.add(po)});
 
+const FOLM=[];const FOL=c=>{const m=lam({color:c});FOLM.push([m,m.color.clone()]);return m};window.__folm=FOLM;
 /* ---- árvores: pinhal, eucaliptos, sobreiros e oliveiras (em instâncias) ---- */
 {const PALMR=['pt','es','it','gr','mt','cy','tr','ma','eg','ae','in','th','sg','br','mx','usla','au','za','mc','al','hr','me'].includes(REGION_ID);const PIN=[],ROUND=[],CON=[],PALM=[],N=mobile?5000:14000;let tries=0;while((PIN.length+ROUND.length+CON.length+PALM.length)<N&&tries<N*5){tries++;const x=WB.x0+rnd()*(WB.x1-WB.x0),z=WB.z0+rnd()*(WB.z1-WB.z0);if(maskAt(x,z)!==1)continue;const h=TH0(x,z);if(h<1.2||h>140)continue;const dc=coastD(x,z);if(dc<45)continue;
   const f=fbm(x/700+3,z/700-2);if(f<.48&&rnd()<.75)continue;if(cityAt(x,z)||!roadClear(x,z,4)||nearRail(x,z).d<9||hitBuilding(x,z,4))continue;
@@ -1413,13 +1414,13 @@ CITIES.forEach(c=>{const n=nearRoad(c.x+c.r*.85,c.z);const x=c.x+c.r*.92,z=c.z;i
  // pinhal denso nas serras dentro das cidades (Serra da Boa Viagem)
  for(const m of KEEPM){let k=0,t2=0;const want=mobile?140:380;while(k<want&&t2<want*6){t2++;const a2=rnd()*6.283,r2=Math.sqrt(rnd())*m.r*1.25,x=m.x+Math.cos(a2)*r2,z=m.z+Math.sin(a2)*r2;if(maskAt(x,z)!==1||keepBump(x,z)<4||TH0(x,z)<1.2||!roadClear(x,z,4)||hitBuilding(x,z,4))continue;PIN.push({x,z,s:.7+rnd()*.6});k++}}
  const tg=new THREE.CylinderGeometry(.3,.42,6,5);tg.translate(0,3,0);const cg=new THREE.SphereGeometry(3.4,7,5);cg.scale(1,.5,1);cg.translate(0,7,0);
- inst(tg,lam({color:0x7a5a3a}),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cg,lam({color:0x355f2e}),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);
+ inst(tg,lam({color:0x7a5a3a}),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cg,FOL(0x355f2e),PIN,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);
  const tg2=new THREE.CylinderGeometry(.35,.5,3,5);tg2.translate(0,1.5,0);const rg=new THREE.SphereGeometry(3,7,5);rg.scale(1,.7,1);rg.translate(0,4.2,0);
- inst(tg2,lam({color:0x5a4030}),ROUND,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(rg,lam({color:0x56682f}),ROUND,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);
+ inst(tg2,lam({color:0x5a4030}),ROUND,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(rg,FOL(0x56682f),ROUND,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);
  // palmeiras nos países quentes: tronco alto e fino e copa achatada de folhas
- if(PALM.length){const pt=new THREE.CylinderGeometry(.22,.34,9,6);pt.translate(0,4.5,0);const pc=new THREE.ConeGeometry(3.4,1.6,7);pc.rotateX(Math.PI);pc.translate(0,9.4,0);const pc2=new THREE.SphereGeometry(.7,6,4);pc2.translate(0,9.2,0);inst(pt,lam({color:0x8a6a48}),PALM,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s);d.rotation.z=(t.s-1)*.25},1);inst(pc,lam({color:0x3f7a2c}),PALM,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s);d.rotation.z=(t.s-1)*.25},1)}
+ if(PALM.length){const pt=new THREE.CylinderGeometry(.22,.34,9,6);pt.translate(0,4.5,0);const pc=new THREE.ConeGeometry(3.4,1.6,7);pc.rotateX(Math.PI);pc.translate(0,9.4,0);const pc2=new THREE.SphereGeometry(.7,6,4);pc2.translate(0,9.2,0);inst(pt,lam({color:0x8a6a48}),PALM,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s);d.rotation.z=(t.s-1)*.25},1);inst(pc,FOL(0x3f7a2c),PALM,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s);d.rotation.z=(t.s-1)*.25},1)}
  // abetos (pinheiros do norte), em forma de cone
- if(CON.length){const ct=new THREE.CylinderGeometry(.25,.35,2.4,5);ct.translate(0,1.2,0);const cc=new THREE.ConeGeometry(2.6,8.5,7);cc.translate(0,6.2,0);inst(ct,lam({color:0x5a4030}),CON,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cc,lam({color:0x2a4a2c}),CON,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1)}}
+ if(CON.length){const ct=new THREE.CylinderGeometry(.25,.35,2.4,5);ct.translate(0,1.2,0);const cc=new THREE.ConeGeometry(2.6,8.5,7);cc.translate(0,6.2,0);inst(ct,lam({color:0x5a4030}),CON,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1);inst(cc,FOL(0x2a4a2c),CON,(d,t)=>{d.position.set(t.x,terrainH(t.x,t.z),t.z);d.scale.setScalar(t.s)},1)}}
 
 // estações de comboio e os comboios
 const MOLI=[],TRAINS=[],STATIONS=[],PUMPS=[];
@@ -2779,6 +2780,10 @@ function updSnow(dt){if(!snow||!snow.visible)return;snow.position.set(P.x,P.y,P.
 
 // neve só onde neva: conforme a estação, a latitude e a altitude (no Brasil é verão quando em França é inverno)
 const SEASON_PT={primavera:'primavera',verao:'verão',outono:'outono',inverno:'inverno'};
+function paintSnow(low,line){const T=window.__terr;
+ if(T){const c=T.g.attributes.color,b=T.base,SN=[.93,.95,.98];for(let i=0;i<c.count;i++){const h=HV[i];let a=0;if(h>-.5){const sand=b[i*3]>.8&&b[i*3+1]>.75&&b[i*3+2]<.75&&h<3;if(low&&!sand)a=Math.max(low*(h<1.2?.6:1),h>line?Math.min(1,(h-line)/25):0);else if(h>line)a=Math.min(.95,(h-line)/25)}const k=i*3;if(a>0){c.array[k]=b[k]*(1-a)+SN[0]*a;c.array[k+1]=b[k+1]*(1-a)+SN[1]*a;c.array[k+2]=b[k+2]*(1-a)+SN[2]*a}else{c.array[k]=b[k];c.array[k+1]=b[k+1];c.array[k+2]=b[k+2]}}c.needsUpdate=true}
+ /* árvores com neve nas copas */try{const k=low?.62*low:0;for(const [m,c0] of (window.__folm||[])){m.color.copy(c0);if(k)m.color.lerp(new THREE.Color(.92,.94,.97),k)}}catch(e){}
+}
 function applySeason(){const T=window.__terr;const ls=localSeason(),lat=Math.abs(RG.lat0||0),iso=ISOR?ISOR():REGION_ID,DES=['eg','ae','sa','qa','kw','bh','om','ma','dz','ly','tn','in','mx'].includes(iso);let full=false,line=9999;
  if(iso==='gl'||iso==='aq'||iso==='sj')full=true;
  else if(!DES){if(lat>=63){if(ls!=='verao')full=true;else line=40}
@@ -2786,10 +2791,11 @@ function applySeason(){const T=window.__terr;const ls=localSeason(),lat=Math.abs
   else if(lat>=42){if(ls==='inverno'){line=40;if(Math.random()<.35)full=true}else if(ls!=='verao')line=90}
   else if(lat>=33){if(ls==='inverno')line=75}}
  G.snowGround=full?2:line<9999?1:0;
- if(T){const c=T.g.attributes.color,b=T.base,SN=[.93,.95,.98];for(let i=0;i<c.count;i++){const h=HV[i];let a=0;if(h>-.5){if(full)a=.82;else if(h>line)a=Math.min(.9,(h-line)/25)}const k=i*3;if(a>0){c.array[k]=b[k]*(1-a)+SN[0]*a;c.array[k+1]=b[k+1]*(1-a)+SN[1]*a;c.array[k+2]=b[k+2]*(1-a)+SN[2]*a}else{c.array[k]=b[k];c.array[k+1]=b[k+1];c.array[k+2]=b[k+2]}}c.needsUpdate=true}
- const r=Math.random();if(full&&r<.55||G.snowGround===1&&r<.15){setSnow(true);P.wet=true}else setSnow(false);
+ const r=Math.random(),snowing=full&&r<.55||G.snowGround===1&&r<.15;/* quando neva (ou o país está todo coberto) a relva fica branca: neve no chão em vez de relva */const low=full?1:snowing?.7:0;
+ paintSnow(low,line);
+ if(snowing){setSnow(true);P.wet=true}else setSnow(false);
  const sp=SEASON_PT[ls];setTimeout(()=>{try{toast((ls==='inverno'?'❄️':ls==='verao'?'☀️':ls==='outono'?'🍂':'🌸')+' É '+sp+' '+emP(REGIONS[iso]?iso:REGION_ID).replace(/ \(.*\)/,'')+(full?': está tudo coberto de neve.':G.snowGround===1?': há neve nas montanhas.':'.'),false,3.5)}catch(e){}},2500)}
-function climaStart(){try{if(G.snow)return;if(G.weather!=='dia')return setSnow(false);const r=Math.random();if(CLIMA.snow&&r<CLIMA.snow){setSnow(true);applyWeather('dia');P.wet=true;if(CLIMA.msg)toast(CLIMA.msg,false,3.5)}else if(CLIMA.rain&&r<(CLIMA.snow||0)+CLIMA.rain){setSnow(false);applyWeather('chuva');G.clock=15*3600;toast('🌧️ Está a chover '+emP(REGION_ID).replace(/^(no|na|nos|em) /,m=>m)+'.',false,3)}else{setSnow(false);if(CLIMA.msg&&!CLIMA.snow&&!CLIMA.rain)toast(CLIMA.msg,false,3)}}catch(e){}}
+function climaStart(){try{if(G.snow)return;if(G.weather!=='dia')return setSnow(false);const r=Math.random();if(CLIMA.snow&&r<CLIMA.snow){setSnow(true);try{paintSnow(.7,9999)}catch(e){}applyWeather('dia');P.wet=true;if(CLIMA.msg)toast(CLIMA.msg,false,3.5)}else if(CLIMA.rain&&r<(CLIMA.snow||0)+CLIMA.rain){setSnow(false);applyWeather('chuva');G.clock=15*3600;toast('🌧️ Está a chover '+emP(REGION_ID).replace(/^(no|na|nos|em) /,m=>m)+'.',false,3)}else{setSnow(false);if(CLIMA.msg&&!CLIMA.snow&&!CLIMA.rain)toast(CLIMA.msg,false,3)}}catch(e){}}
 
 /* ================= CICLO ================= */
 let last=performance.now(),TM=0,uiT=0;const _v=new THREE.Vector3();
