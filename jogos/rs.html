@@ -2294,7 +2294,7 @@ function drawMinimap(camYaw) {
   } else {
     EVENTS.forEach(ev => drawIcon(g, (ev.x + HALF) * MK, (ev.z + HALF) * MK, ev.type, iconR));
     drawIcon(g, (FEST.x + HALF) * MK, (FEST.z + HALF) * MK, 'fest', iconR * 1.2);
-    NET.peers.forEach(f => { g.fillStyle = f.color; g.strokeStyle = '#fff'; g.lineWidth = 1.2; g.beginPath(); g.arc((f.x + HALF) * MK, (f.z + HALF) * MK, 4.2 / sc * 2, 0, TAU); g.fill(); g.stroke(); });
+    /* amigos online: seta na direção para onde vão, com a cor de cada um */NET.peers.forEach(f => { let yh = 0; try { if (f.q) yh = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(f.q[0], f.q[1], f.q[2], f.q[3]), 'YXZ').y; } catch (e) { } const u = 1 / sc * 2; g.save(); g.translate((f.x + HALF) * MK, (f.z + HALF) * MK); g.rotate(Math.PI - yh); g.fillStyle = f.color; g.strokeStyle = '#fff'; g.lineWidth = 1.2 * u; g.beginPath(); g.moveTo(0, -7 * u); g.lineTo(5 * u, 6 * u); g.lineTo(0, 3 * u); g.lineTo(-5 * u, 6 * u); g.closePath(); g.fill(); g.stroke(); g.restore(); });
     g.fillStyle = 'rgba(255,255,255,.55)'; TRAFFIC.forEach(t => { g.beginPath(); g.arc((t.x + HALF) * MK, (t.z + HALF) * MK, 1.6 / sc * 2, 0, TAU); g.fill(); });
   }
   g.restore();

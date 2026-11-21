@@ -7939,6 +7939,8 @@ function drawMinimap() {
   if (heli.active) { const [x, z] = toM(heli.pos.x, heli.pos.z); drawBlip(c, x, z, flash ? '#ff3030' : '#3060ff', 'sq', 3 * inv); }
   if (M?.blips) for (const b of M.blips) { const [x, z] = toM(b.x, b.z); drawBlip(c, x, z, '#ff4a4a', 'c', 4 * inv); }
   if (objective) { const [x, z] = toM(objective.x, objective.z); drawBlip(c, x, z, M.blipRed ? '#ff4a4a' : '#ffd23a', 'c', 5 * inv); }
+  // amigos online: seta com a cor de cada um
+  try { for (const q of (window.C30peersMap ? window.C30peersMap() : [])) { const [x, z] = toM(q.x, q.z); c.save(); c.translate(x, z); c.rotate(-(q.yaw || 0) + Math.PI); c.fillStyle = q.color || '#ff8a3d'; c.strokeStyle = '#000'; c.lineWidth = 1.5 * inv; c.beginPath(); c.moveTo(0, -6 * inv); c.lineTo(4.5 * inv, 5 * inv); c.lineTo(0, 2.5 * inv); c.lineTo(-4.5 * inv, 5 * inv); c.closePath(); c.fill(); c.stroke(); c.restore(); } } catch (e) { }
   // player arrow
   const ph = player.inCar ? player.inCar.heading : player.ped.heading;
   c.save(); c.rotate(-Math.atan2(Math.sin(ph), Math.cos(ph)) + 0); c.rotate(Math.PI);
@@ -7961,6 +7963,7 @@ function drawBigMap() {
   for (const pk of pickups) if (pk.persistent && pk.mesh.visible) drawBlip(c, X(pk.x), X(pk.z), '#' + new THREE.Color(PK_COL[pk.type]).getHexString(), 'c', 3.5);
   for (const it of interiors) drawBlip(c, X(it.out.x), X(it.out.z), '#' + new THREE.Color(DOOR_COL[it.type]).getHexString(), 'tri', 6);
   if (GAME.mission?.blip) drawBlip(c, X(GAME.mission.blip.x), X(GAME.mission.blip.z), '#ffd23a', 'c', 7);
+  try { for (const q of (window.C30peersMap ? window.C30peersMap() : [])) { c.save(); c.translate(X(q.x), X(q.z)); c.rotate(-(q.yaw || 0) + Math.PI); c.fillStyle = q.color || '#ff8a3d'; c.strokeStyle = '#000'; c.lineWidth = 2; c.beginPath(); c.moveTo(0, -9); c.lineTo(7, 8); c.lineTo(0, 4); c.lineTo(-7, 8); c.closePath(); c.fill(); c.stroke(); c.restore(); c.fillStyle = '#fff'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center'; c.fillText(q.name, X(q.x), X(q.z) - 13); } } catch (e) { }
   const pp = worldPos(), ph = player.inCar ? player.inCar.heading : player.ped.heading;
   c.save(); c.translate(X(pp.x), X(pp.z)); c.rotate(-ph + Math.PI);
   c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = 2; c.beginPath(); c.moveTo(0, -9); c.lineTo(7, 8); c.lineTo(0, 4); c.lineTo(-7, 8); c.closePath(); c.fill(); c.stroke(); c.restore();

@@ -5934,6 +5934,8 @@ function drawMinimap(){
     ctx.fillStyle='#22ff88'; ctx.font='5px Courier New'; ctx.textAlign='center';
     ctx.fillText('J2',wx(p2X),wz(p2Z)-7);
   }
+  // amigos online da sala: seta com a cor e o nome
+  try{(window.C30peersMap?window.C30peersMap():[]).forEach(function(q){ctx.save();ctx.translate(wx(q.x),wz(q.z));ctx.rotate(q.yaw||0);ctx.fillStyle=q.color||'#ff8a3d';ctx.strokeStyle='#000';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(0,-5.5);ctx.lineTo(3,3.5);ctx.lineTo(0,1.8);ctx.lineTo(-3,3.5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();ctx.fillStyle=q.color||'#ff8a3d';ctx.font='5px Courier New';ctx.textAlign='center';ctx.fillText(String(q.name).slice(0,10),wx(q.x),wz(q.z)-7);});}catch(e){}
   for(var xi=1;xi<C30X.length;xi++){var xe=C30X[xi];if(!xe||!xe.g.visible)continue;ctx.fillStyle='#'+C30XCOL[xi-1].toString(16).padStart(6,'0');ctx.font='5px Courier New';ctx.textAlign='center';ctx.fillText('J'+(xi+2),wx(xe.x),wz(xe.z)-7);ctx.beginPath();ctx.arc(wx(xe.x),wz(xe.z),2.5,0,7);ctx.fill();}
   // Label P1
   ctx.fillStyle='#ff6622'; ctx.font='5px Courier New'; ctx.textAlign='center';
