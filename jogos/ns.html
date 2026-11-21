@@ -43,7 +43,7 @@ canvas{display:block}
 #replayTag{pointer-events:auto;position:absolute;left:calc(18px + env(safe-area-inset-left,0px));top:calc(64px + env(safe-area-inset-top,0px));font-family:var(--display);font-size:20px;color:#ff4060;letter-spacing:.08em;text-shadow:0 0 12px #ff4060}
 #pauseBtn{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));top:calc(40px + env(safe-area-inset-top,0px));pointer-events:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;font:700 16px var(--ui);padding:6px 12px}
 
-#menu{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 120%,rgba(47,140,255,.25),transparent 60%),radial-gradient(ellipse at 50% -20%,rgba(255,122,26,.22),transparent 60%),rgba(4,6,16,.55);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;overflow:auto}
+#menu{position:fixed;inset:0;display:grid;justify-items:center;align-items:start;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:radial-gradient(ellipse at 50% 120%,rgba(47,140,255,.25),transparent 60%),radial-gradient(ellipse at 50% -20%,rgba(255,122,26,.22),transparent 60%),rgba(4,6,16,.55);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;overflow:auto}
 .card{width:min(520px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px;box-shadow:0 20px 80px rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:16px}
 h1{font-family:var(--display);font-weight:400;margin:0;font-size:clamp(40px,9vw,60px);line-height:.95;text-wrap:balance;letter-spacing:.02em}
 h1 .n1{color:var(--blue);text-shadow:0 0 24px rgba(47,140,255,.7)}
@@ -71,6 +71,8 @@ h1 .n2{color:var(--orange);text-shadow:0 0 24px rgba(255,122,26,.7)}
 .tb.down{filter:brightness(1.6);transform:scale(.94)}
 @media (max-width:600px){#boostUI{width:96px;height:96px}#bval{font-size:26px}#score .t{font-size:24px;min-width:44px}#clock{font-size:19px;min-width:70px}}
 @media (prefers-reduced-motion:reduce){#msg{transition:none}}
+#menu{z-index:50}#menu>.card{margin-block:auto}/* se o cartão for maior que o ecrã (com o resultado), dá para deslizar e chegar aos modos */
+@media (pointer:coarse){#menu .keys{display:none}}
 </style>
 
 </head>
@@ -464,7 +466,7 @@ function endGame(){
   const [b,o]=S.score;const r=$('result');r.hidden=false;
   r.textContent=b>o?`Vitória! ${b} – ${o}`:`Derrota… ${b} – ${o}`;r.style.color=b>o?'var(--blue)':'var(--orange)';
   $('tagline').textContent=b>o?`Marcaste ${S.goals} golo${S.goals===1?'':'s'}. A arena é tua.`:`Marcaste ${S.goals} golo${S.goals===1?'':'s'}. Tenta outra vez ou baixa a dificuldade.`;
-  $('play').textContent='JOGAR OUTRA VEZ';$('menu').hidden=false;$('touch').hidden=true;$('pauseBtn').hidden=true;
+  $('play').textContent='JOGAR OUTRA VEZ';$('menu').hidden=false;try{$('menu').scrollTop=0}catch(e){}$('touch').hidden=true;$('pauseBtn').hidden=true;
 }
 // replay: last 6 s recorded at 30 fps; the button shows from 13 Nov 2026 17:50 (Lisbon = UTC in November)
 const REPLAY_FROM=Date.UTC(2026,10,13,17,50);

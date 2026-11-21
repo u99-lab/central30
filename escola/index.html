@@ -1875,7 +1875,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyF') kick();
   if (e.code === 'KeyM') $('bigmap').style.display = $('bigmap').style.display === 'block' ? 'none' : 'block';
   if (e.code === 'KeyQ') cycleTracked();
-  if (e.code === 'KeyC' || e.code === 'KeyV') setCam((G.cam + 1) % 3);
+  if (e.code === 'KeyC' || e.code === 'KeyV') setCam((G.cam + 1) % 4);
   if (e.code === 'Space' && !dlg && P.onGround) { P.vy = 5.2; P.onGround = false; }
   if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
 });
@@ -1949,7 +1949,7 @@ if (isTouch) {
   // tocar no aviso "E ..." também serve para interagir
   $('prompt').addEventListener('touchstart', e => { e.preventDefault(); if (dlg) nextLine(); else { holdE = true; tryInteract(); } });
   $('prompt').addEventListener('touchend', e => { e.preventDefault(); holdE = false; });
-  tb('tC', () => setCam((G.cam + 1) % 3));
+  tb('tC', () => setCam((G.cam + 1) % 4));
   tb('tM', () => $('bigmap').style.display = $('bigmap').style.display === 'block' ? 'none' : 'block');
 }
 
@@ -2255,8 +2255,8 @@ function buildAvatar(o) {
   carry = itemMesh('rodo'); scene.remove(carry); carry.scale.setScalar(1.1);
   carry.position.set(0, -0.6, 0.1); carry.rotation.x = 0.4; avatar.userData.armR.add(carry); carry.visible = false;
 }
-const CAMS = ['1.ª pessoa', '3.ª pessoa', 'Vista aérea'];
-function setCam(i, quiet) { G.cam = i; camDist = 3.6; if (i === 2) camera.position.set(P.x + Math.sin(P.yaw) * 13, P.feet + 17, P.z + Math.cos(P.yaw) * 13); if (!quiet) toast('📷 Câmara: ' + CAMS[i]); $('cross').style.display = i === 2 ? 'none' : 'block'; saveSettings(); }
+const CAMS = ['1.ª pessoa', '3.ª pessoa', 'Vista aérea', 'Ver a tua cara (arrasta para rodar o corpo)'];
+function setCam(i, quiet) { G.cam = i; camDist = 3.6; if (i === 2) camera.position.set(P.x + Math.sin(P.yaw) * 13, P.feet + 17, P.z + Math.cos(P.yaw) * 13); if (!quiet) toast('📷 Câmara: ' + CAMS[i]); $('cross').style.display = i >= 2 ? 'none' : 'block'; saveSettings(); }
 function pointSolid(x, y, z) {
   if (y < 0.15) return true;
   for (const s of nearSolids(x, z, 0.3)) if (!s.off && x > s.x0 - 0.18 && x < s.x1 + 0.18 && z > s.z0 - 0.18 && z < s.z1 + 0.18 && y > s.y0 - 0.18 && y < s.y1 + 0.18) return true;
@@ -2267,7 +2267,7 @@ let camDist = 3.6;
 function updateCamera(dt) {
   const moving = Math.hypot(P.vx, P.vz);
   if (avatar) {
-    avatar.visible = G.cam === 2 || (G.cam === 1 && camDist > 0.9);
+    avatar.visible = G.cam >= 2 || (G.cam === 1 && camDist > 0.9);
     avatar.position.set(P.x, P.feet, P.z); avatar.rotation.y = P.yaw + Math.PI;
     animPerson(avatar, Math.min(moving, 5) * 0.9, dt);
     carry.visible = G.inv.has('rodo');
@@ -2289,6 +2289,11 @@ function updateCamera(dt) {
     const t = camDist;
     camera.position.set(_head.x - fx * t + rx * 0.45 * t / want, _head.y - fy * t + 0.3 * t / want, _head.z - fz * t + rz * 0.45 * t / want);
     camera.rotation.set(P.pitch, P.yaw, 0);
+  } else if (G.cam === 3) {
+    /* ver a cara: a câmara fica à frente do boneco a olhar para ele; rodar (rato/dedo) roda o corpo */
+    const fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw);_head.set(P.x, P.feet + 1.55, P.z);
+    let d = 2.6;for (let t = .6; t <= 2.6; t += .2) { if (pointSolid(P.x + fx * t, P.feet + 1.7, P.z + fz * t)) { d = Math.max(.6, t - .2); break; } }
+    _des.set(P.x + fx * d, P.feet + 1.75 + Math.sin(P.pitch) * .8, P.z + fz * d);camera.position.lerp(_des, Math.min(1, dt * 8));camera.lookAt(_head);
   } else {
     _des.set(P.x + Math.sin(P.yaw) * 13, P.feet + 17, P.z + Math.cos(P.yaw) * 13);
     camera.position.lerp(_des, Math.min(1, dt * 6));
