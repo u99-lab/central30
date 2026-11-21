@@ -327,7 +327,7 @@ function newCar(spec,team,isPlayer,teamColor,slot){
   ring.rotation.x=-Math.PI/2;scene.add(ring);
   let marker=null;
   if(isPlayer){marker=new THREE.Mesh(new THREE.ConeGeometry(.7,1.4,4),new THREE.MeshBasicMaterial({color:0xffee00}));marker.rotation.x=Math.PI;scene.add(marker);}
-  return {team,isPlayer,spec,mesh,ring,marker,slot,pos:new THREE.Vector3(),vel:new THREE.Vector3(),yaw:0,boost:100,onGround:true,jumps:2,jumpHeld:false,flip:0,flipDir:1,
+  return {team,isPlayer,spec,mesh,ring,marker,slot,pos:new THREE.Vector3(),vel:new THREE.Vector3(),yaw:0,boost:33,onGround:true,jumps:2,jumpHeld:false,flip:0,flipDir:1,
     in:{f:0,s:0,boost:false,jump:false},hx:spec.wid/2,hz:spec.len/2,role:'attack',stuck:0,touchCd:0,dead:0};
 }
 function clearCars(){for(const c of cars){scene.remove(c.mesh);scene.remove(c.ring);if(c.marker)scene.remove(c.marker);}cars=[];player=null;}
@@ -342,11 +342,11 @@ ball.mesh.add(new THREE.Mesh(new THREE.SphereGeometry(BR*1.15,16,12),new THREE.M
 const pads=[];
 const padPos=[];
 for(const sx of[-1,1])for(const sz of[-1,1])padPos.push([sx*(W-7),sz*(L-10),true]);
-padPos.push([-(W-7),0,false],[W-7,0,false],[0,0,false]);
-for(const sz of[-1,1]){padPos.push([0,sz*L*.5,false],[-W*.5,sz*L*.28,false],[W*.5,sz*L*.28,false]);}
+padPos.push([-(W-7),0,true],[W-7,0,true],[0,0,false],[-W*.3,0,false],[W*.3,0,false]);/* 6 grandes (4 cantos + 2 laterais do meio) e muitas pequenas, como nos jogos do género */
+for(const sz of[-1,1]){padPos.push([0,sz*L*.5,false],[-W*.5,sz*L*.28,false],[W*.5,sz*L*.28,false],[0,sz*L*.8,false],[-W*.3,sz*L*.65,false],[W*.3,sz*L*.65,false],[-W*.7,sz*L*.55,false],[W*.7,sz*L*.55,false]);}
 for(const [x,z,big] of padPos){
   const m=new THREE.Mesh(new THREE.CylinderGeometry(2,2,.25,24),new THREE.MeshStandardMaterial({color:0xffb300,emissive:0xff8800,emissiveIntensity:.8}));
-  m.position.set(x,.15,z);if(big)m.scale.set(1.5,1.5,1.5);scene.add(m);pads.push({x,z,m,t:0,big});
+  m.position.set(x,.15,z);if(big)m.scale.set(1.5,1.5,1.5);else m.scale.set(.65,1,.65);scene.add(m);pads.push({x,z,m,t:0,big});
 }
 
 // ================= Estado =================
@@ -413,7 +413,7 @@ function placeCar(c){
   c.mesh.position.copy(c.pos);c.mesh.position.y=0;c.mesh.rotation.set(0,c.yaw,0);
 }
 function kickoff(){
-  for(const c of cars){placeCar(c);c.boost=Math.max(c.boost,33);}
+  for(const c of cars){placeCar(c);c.boost=33;}/* regra: em cada pontapé de saída todos começam com 33 de turbo */
   ball.pos.set(0,BR+9,0);ball.vel.set(0,0,0);ball.last=null;
   camPos.set(0,9,player.pos.z+14);
   state='countdown';stateT=3;
@@ -613,7 +613,7 @@ function aiThink(c,dt){
   if(dBall<8&&!c.onGround&&c.jumps>0&&ball.pos.y>c.pos.y+1&&Math.random()<0.05*difficulty)i.jump=true;
   if(state==='play'&&c.vel.length()<2&&role!=='defend')c.stuck+=dt;else c.stuck=0;
   if(c.stuck>1.2){i.f=-1;i.s=-i.s;if(c.stuck>2.2)c.stuck=0;}
-  c.boost=Math.min(100,c.boost+4*dt);
+  /* os bots já não ganham turbo do nada: só nas pastilhas, como tu */
 }
 
 // ================= Partículas =================
@@ -713,7 +713,7 @@ function stepCar(c,dt){
   if(c.pos.y<=0.9&&c.vel.y<=0){c.pos.y=0.9;c.vel.y=0;if(!c.onGround){c.onGround=true;c.flip=0;}}
   if(c.pos.y>WALLH-1){c.pos.y=WALLH-1;c.vel.y=Math.min(0,c.vel.y);}
   for(const p of pads){
-    if(p.t<=0&&Math.abs(c.pos.x-p.x)<2.8&&Math.abs(c.pos.z-p.z)<2.8&&c.pos.y<3){c.boost=Math.min(100,c.boost+(p.big?100:35));p.t=6;p.m.visible=false;if(c.isPlayer)tone(700,.18,'sine',.12,1400);}
+    if(p.t<=0&&c.boost<100&&Math.abs(c.pos.x-p.x)<(p.big?3:2.4)&&Math.abs(c.pos.z-p.z)<(p.big?3:2.4)&&c.pos.y<3){/* regras: pequena +12 (volta em 4 s), grande enche até 100 (volta em 10 s); com o turbo cheio não se apanha */c.boost=p.big?100:Math.min(100,c.boost+12);p.t=p.big?10:4;p.m.visible=false;if(c.isPlayer)tone(700,.18,'sine',.12,1400);}
   }
   c.mesh.position.set(c.pos.x,c.pos.y-0.9,c.pos.z);
   c.mesh.rotation.set(0,c.yaw,0);
