@@ -208,6 +208,7 @@ const toTable=e=>{ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1)
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||ptrOn)toTable(e);});cv.addEventListener('pointerdown',e=>{K.audio();ptrOn=true;toTable(e);});addEventListener('pointerup',()=>{ptrOn=false;});
 function moveMallet(m,tx,tz,maxV,dt,zmin,zmax){tx=K.clamp(tx,-TW/2+MR,TW/2-MR);tz=K.clamp(tz,zmin,zmax);const dx=tx-m.x,dz=tz-m.z,d=Math.hypot(dx,dz),st=Math.min(d,maxV*dt);const nx=d?m.x+dx/d*st:m.x,nz=d?m.z+dz/d*st:m.z;m.vx=(nx-m.x)/dt;m.vz=(nz-m.z)/dt;m.x=nx;m.z=nz;}
 function hit(m){const dx=pk.x-m.x,dz=pk.z-m.z,d=Math.hypot(dx,dz);if(d<PR+MR&&d>1e-4){const nx=dx/d,nz=dz/d;pk.x=m.x+nx*(PR+MR);pk.z=m.z+nz*(PR+MR);const lx=TW/2-PR,lz=TL/2-PR;if(Math.abs(pk.x)>lx||(Math.abs(pk.z)>lz&&Math.abs(pk.x)>=GW/2)){pk.x=K.clamp(pk.x,-lx,lx);if(Math.abs(pk.x)>=GW/2)pk.z=K.clamp(pk.z,-lz,lz);const ex=pk.x-m.x,ez=pk.z-m.z,ed=Math.hypot(ex,ez)||1;m.x=pk.x-ex/ed*(PR+MR+.002);m.z=pk.z-ez/ed*(PR+MR+.002);}const rv=(pk.vx-m.vx)*nx+(pk.vz-m.vz)*nz;if(rv<0){pk.vx-=1.9*rv*nx;pk.vz-=1.9*rv*nz;K.tone(500+Math.min(600,-rv*60),.05,'triangle',.25,250);}}}
+let areaT=0;
 function update(dt){
  if(state==='menu'||state==='end'){const t=K.time*.2;cam.position.set(Math.sin(t)*4,3.2,Math.cos(t)*4);cam.lookAt(0,.9,0);return;}
  cam.position.set(0,3.4,3.3);cam.lookAt(0,.6,-.3);
@@ -215,8 +216,9 @@ function update(dt){
  // tu
  let tx=me.x,tz=me.z;if(ptr){tx=ptr.x;tz=ptr.z;}const ax=K.axis();if(ax.x||ax.y){tx=me.x+ax.x*.6;tz=me.z-ax.y*.6;ptr=null;}
  moveMallet(me,tx,tz,9,dt,.12,TL/2-MR);
+ /* regra da área: não se pode ficar sempre colado à baliza — ao fim de 2 s és empurrado para fora */{const inA=me.z>TL/2-.55&&Math.abs(me.x)<GW*.75;areaT=inA?areaT+dt:Math.max(0,areaT-dt*2);if(areaT>2){areaT=0;me.z=TL/2-.8;ptr=null;K.toast('Não podes ficar sempre na área! Sai da frente da baliza.');K.tone(220,.12,'square',.1);}}
  // adversário: defende a baliza e ataca quando o disco está do lado dele
- const L=RIV[lvl][1];let ox=K.clamp(pk.x*(.5+L*.5),-GW,GW),oz=-TL/2+.45;if(pk.z<-.1&&pk.vz<3){if(pk.z<-TL/2+MR+PR){ox=pk.x+(pk.x>0?-.5:.5);oz=-TL/2+.5;}else{ox=pk.x;oz=pk.z-(pk.z<-TL/2+.6?-.15:.12);}}
+ const L=RIV[lvl][1];let ox=K.clamp(pk.x*(.5+L*.5),-GW,GW),oz=-TL/2+.62;if(pk.z<-.1&&pk.vz<3){if(pk.z<-TL/2+MR+PR){ox=pk.x+(pk.x>0?-.5:.5);oz=-TL/2+.5;}else{ox=pk.x;oz=pk.z-(pk.z<-TL/2+.6?-.15:.12);}}
  moveMallet(op,ox+Math.sin(K.time*3)*.05*(1-L),oz,3+L*5,dt,-TL/2+MR,-.12);
  if(serveT>0)serveT-=dt;
  const steps=6,h=dt/steps;for(let i=0;i<steps;i++){if(serveT<=0){pk.x+=pk.vx*h;pk.z+=pk.vz*h;}const f=Math.pow(.7,h);pk.vx*=f;pk.vz*=f;const sp=Math.hypot(pk.vx,pk.vz);if(sp>14){pk.vx*=14/sp;pk.vz*=14/sp;}
