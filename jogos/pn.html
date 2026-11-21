@@ -8134,6 +8134,98 @@ function sharpenTextures() {
   } });
 }
 setTimeout(sharpenTextures, 1500); // uma vez só, no menu (repetir de 5 em 5 s reenviava texturas à placa gráfica a meio do jogo e dava engasgos)
+// ============================================================ MAIS VIDA NA CIDADE: telemóvel, Neon Feed, corridas de rua, mecânico, táxi e latas de spray escondidas
+const C30X = (() => {
+  const LS = (k, d) => { try { const v = localStorage.getItem('pn.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
+  const SS = (k, v) => { try { localStorage.setItem('pn.' + k, JSON.stringify(v)); } catch (e) { } };
+  const S = { feed: [], races: LS('races', 0), best: LS('raceBest', null), got: new Set(LS('cans', [])), race: null, open: false, lastW: 0, lastM: null, feedT: 8 };
+  // ---- telemóvel (ecrã por cima do jogo)
+  const ph = document.createElement('div');
+  ph.style.cssText = 'position:fixed;right:14px;bottom:90px;width:250px;max-height:62vh;z-index:60;background:linear-gradient(170deg,#141824,#0b0d14);border:2px solid #2b3550;border-radius:26px;box-shadow:0 10px 40px #000a;color:#e8ecff;font:600 13px system-ui;padding:12px 12px 14px;display:none;overflow:auto';
+  document.body.appendChild(ph);
+  const btn = document.createElement('button'); btn.textContent = '📱'; btn.title = 'Telemóvel (T)';
+  btn.style.cssText = 'position:fixed;right:14px;bottom:44px;z-index:60;width:44px;height:44px;border-radius:14px;border:1px solid #2b3550;background:#141824cc;font-size:22px;cursor:pointer;display:none';
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); toggle(); }); document.body.appendChild(btn);
+  const APPS = [['📰', 'Neon Feed', feedApp], ['🏁', 'Corrida de rua', raceApp], ['🔧', 'Mecânico', mechApp], ['🚕', 'Táxi', taxiApp], ['🏦', 'Banco e estatísticas', bankApp]];
+  let page = null;
+  function render() {
+    const hh = String(Math.floor(GAME.clock)).padStart(2, '0') + ':' + String(Math.floor((GAME.clock % 1) * 60)).padStart(2, '0');
+    let h = '<div style="display:flex;justify-content:space-between;opacity:.7;font-size:11px;margin-bottom:8px"><span>' + hh + '</span><span>NEON 5G ▮▮▮</span></div>';
+    if (!page) { h += '<div style="font:800 15px system-ui;margin-bottom:8px">Telemóvel</div>'; APPS.forEach((a, i) => { h += '<button data-app="' + i + '" style="display:flex;gap:10px;align-items:center;width:100%;margin:5px 0;padding:9px 10px;border-radius:12px;border:1px solid #2b3550;background:#1a2133;color:#e8ecff;font:700 13px system-ui;cursor:pointer"><span style="font-size:18px">' + a[0] + '</span>' + a[1] + '<kbd style="margin-left:auto;opacity:.6">' + (i + 1) + '</kbd></button>'; }); h += '<div style="opacity:.55;font-size:11px;margin-top:6px">T fecha · 1–5 abre uma app</div>'; }
+    else h += '<button data-back="1" style="border:0;background:none;color:#8fb3ff;font:700 12px system-ui;cursor:pointer;padding:0 0 6px">‹ voltar</button>' + page();
+    ph.innerHTML = h;
+    ph.querySelectorAll('[data-app]').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); openApp(+b.dataset.app); }));
+    ph.querySelectorAll('[data-back]').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); page = null; render(); }));
+    ph.querySelectorAll('[data-act]').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ACT[b.dataset.act] && ACT[b.dataset.act](b.dataset.v); }));
+  }
+  const ACT = {};
+  const bt = (act, label, v) => '<button data-act="' + act + '"' + (v != null ? ' data-v="' + v + '"' : '') + ' style="width:100%;margin:4px 0;padding:8px;border-radius:10px;border:1px solid #2b3550;background:#1f2a44;color:#fff;font:700 12px system-ui;cursor:pointer;text-align:left">' + label + '</button>';
+  function openApp(i) { const a = APPS[i]; if (!a) return; page = a[2]; render(); }
+  function toggle() { if (GAME.state !== 'play') return; S.open = !S.open; ph.style.display = S.open ? 'block' : 'none'; page = null; if (S.open) { render(); try { SFX.cash && 0; } catch (e) { } } }
+  // ---- Neon Feed: a cidade comenta o que acontece
+  const post = (who, txt) => { S.feed.unshift({ who, txt, t: GAME.clock }); if (S.feed.length > 25) S.feed.pop(); if (S.open && page === feedApp) render(); };
+  function feedApp() { return '<div style="font:800 15px system-ui;margin-bottom:6px">📰 Neon Feed</div>' + (S.feed.length ? S.feed.map(p => '<div style="background:#1a2133;border-radius:12px;padding:8px 9px;margin:6px 0"><b style="color:#ff6ad5">@' + p.who + '</b><div style="margin-top:3px;font-weight:500">' + p.txt + '</div></div>').join('') : '<div style="opacity:.6">Ainda não há nada. Faz alguma coisa na cidade!</div>'); }
+  const CITY = [['portoneon_fm', 'Trânsito intenso na ponte vermelha. Paciência, malta 🚗🚗🚗'], ['cais_food', 'Bifanas a sair no cais até à meia-noite 🔥'], ['meteo_neon', 'Nuvens a chegar do mar. Leva casaco ☁️'], ['ritmo_club', 'Hoje há DJ no Club Neon 🎧'], ['skate_ribeira', 'Novo spot de skate atrás dos armazéns 🛹'], ['gato_do_bairro', 'Alguém viu o meu gato laranja? 🐈'], ['barbearia_tó', 'Cortes a 40, fila curta agora ✂️'], ['ginasio_ferro', 'Segunda-feira = dia de peito 💪']];
+  // ---- corridas de rua contra o relógio (6 checkpoints pela cidade)
+  function raceApp() {
+    if (S.race) return '<div style="font:800 15px system-ui">🏁 Corrida em curso</div><div>Checkpoint ' + (S.race.i + 1) + '/' + S.race.cps.length + ' · ' + S.race.t.toFixed(1) + ' s</div>' + bt('raceStop', '✖ Desistir');
+    return '<div style="font:800 15px system-ui;margin-bottom:4px">🏁 Corrida de rua</div><div style="opacity:.8;margin-bottom:6px">6 checkpoints pelas ruas. Quanto mais depressa, mais ganhas. Precisas de estar num carro.</div>' + bt('raceGo', '🚦 Começar corrida (prémio até ' + fmtMoney(1500) + ')') + '<div style="opacity:.7;margin-top:6px">Recorde: ' + (S.best ? S.best.toFixed(1) + ' s' : '—') + ' · vitórias: ' + S.races + '</div>';
+  }
+  ACT.raceGo = () => {
+    if (!player.inCar) { showHint('Entra num carro para fazer a corrida.', 2); return; }
+    if (GAME.mission || S.race) { showHint('Acaba primeiro o que estás a fazer.', 2); return; }
+    const cps = []; let last = player.inCar.pos;
+    for (let k = 0; k < 6; k++) { let p = null; for (let tr = 0; tr < 80 && !p; tr++) { const q = randomRoadPoint(); const d = Math.hypot(q.x - last.x, q.z - last.z); if (d > 140 && d < 320 && onRoad(q.x, q.z) && groundAt(q.x, q.z) > -1 && bridgeAt(q.z) < 0) p = q; } if (!p) p = farRoadPoint(150); cps.push(p); last = p; }
+    S.race = { cps, i: 0, t: 0, cp: makeCheckpoint(cps[0].x, cps[0].z, 5) }; S.open = false; ph.style.display = 'none'; showHint('🚦 Corrida! Passa pelos 6 checkpoints o mais depressa possível.', 3);
+  };
+  ACT.raceStop = () => { if (S.race) { S.race.cp.remove(); S.race = null; showHint('Desististe da corrida.', 2); render(); } };
+  // ---- mecânico: arranja e pinta o carro onde estiveres
+  const COLS = [[0xd23c3c, 'vermelho'], [0x2f6fb5, 'azul'], [0xf2c21c, 'amarelo'], [0x111111, 'preto'], [0xf2f2f2, 'branco'], [0x3d8c4a, 'verde'], [0xff40d0, 'rosa néon'], [0x7a3f9a, 'roxo']];
+  function mechApp() {
+    const v = player.inCar; if (!v) return '<div style="font:800 15px system-ui">🔧 Mecânico</div><div style="opacity:.8">Liga quando estiveres num carro.</div>';
+    const hp = Math.round(v.health / v.T.hp * 100);
+    return '<div style="font:800 15px system-ui;margin-bottom:4px">🔧 Mecânico</div><div style="margin-bottom:6px">' + v.name + ' · estado ' + hp + '%</div>' + bt('fix', '🔩 Arranjar o carro · ' + fmtMoney(150)) + '<div style="margin:8px 0 2px;opacity:.8">Pintura nova · ' + fmtMoney(300) + '</div>' + COLS.map((c, i) => bt('paint', '🎨 ' + c[1], i)).join('');
+  }
+  ACT.fix = () => { const v = player.inCar; if (!v) return; buy(150, () => { v.health = v.T.hp; v.burning = false; showHint('O carro ficou como novo 🔧', 2); render(); }); };
+  ACT.paint = i => { const v = player.inCar; if (!v) return; const c = COLS[+i]; if (!c) return; buy(300, () => { try { const old = paintMat(v.color), nw = paintMat(c[0]); v.mesh.traverse(o => { if (o.isMesh && o.material === old) o.material = nw; }); v.color = c[0]; } catch (e) { } if (GAME.wanted > 0 && GAME.wanted <= 2) { GAME.wanted = 0; showHint('Pintura nova: a polícia já não te reconhece!', 2.5); } else showHint('Carro pintado de ' + c[1] + ' 🎨', 2); render(); }); };
+  // ---- táxi: leva-te a uma porta da cidade
+  function taxiApp() { if (player.inCar) return '<div style="font:800 15px system-ui">🚕 Táxi</div><div style="opacity:.8">Sai do carro para chamar um táxi.</div>'; return '<div style="font:800 15px system-ui;margin-bottom:4px">🚕 Táxi · ' + fmtMoney(40) + '</div>' + interiors.map((it, i) => bt('taxi', '📍 ' + it.name, i)).join(''); }
+  ACT.taxi = i => { const it = interiors[+i]; if (!it || INSIDE || player.inCar) return; if (GAME.wanted > 0) { showHint('Nenhum táxi pára com a polícia atrás de ti.', 2); return; } buy(40, () => { S.open = false; ph.style.display = 'none'; fadeTo(() => { player.ped.pos.set(it.out.x, CURB, it.out.z); }); showHint('🚕 A caminho de ' + it.name + '…', 2); }); };
+  // ---- banco
+  function bankApp() { return '<div style="font:800 15px system-ui;margin-bottom:6px">🏦 Banco Neon</div><div style="font:800 22px system-ui;color:#7CFC9A">' + fmtMoney(GAME.money) + '</div><div style="margin-top:8px;line-height:1.6">🎨 Latas de spray: ' + S.got.size + '/' + CANS.length + '<br>🏁 Corridas ganhas: ' + S.races + (S.best ? ' · recorde ' + S.best.toFixed(1) + ' s' : '') + '</div>'; }
+  // ---- latas de spray escondidas pela cidade (30), cada uma vale dinheiro; todas dão um prémio grande
+  const CANS = []; {
+    const rng = mulberry(777123), geo = new THREE.CylinderGeometry(0.18, 0.18, 0.55, 10), cap = new THREE.SphereGeometry(0.16, 8, 6);
+    const land = blocks.filter(b => b.type !== 'water');
+    for (let k = 0; k < 30 && land.length; k++) { const b = land[Math.floor(rng() * land.length)], side = Math.floor(rng() * 4), t = rng();
+      const x = side === 0 ? b.x0 + 1.4 : side === 1 ? b.x1 - 1.4 : b.x0 + (b.x1 - b.x0) * t, z = side === 2 ? b.z0 + 1.4 : side === 3 ? b.z1 - 1.4 : b.z0 + (b.z1 - b.z0) * t;
+      const col = [0xff40d0, 0x40e0ff, 0x7CFC9A, 0xffd040][k % 4], g = new THREE.Group(); const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col })); m.position.y = 0.45; g.add(m); const c2 = new THREE.Mesh(cap, new THREE.MeshBasicMaterial({ color: 0xffffff })); c2.position.y = 0.8; g.add(c2);
+      g.position.set(x, CURB, z); scene.add(g); const id = k; if (S.got.has(id)) g.visible = false; CANS.push({ id, x, z, g }); }
+  }
+  // ---- ciclo
+  function update(dt) {
+    if (consumeKey('KeyT')) toggle();
+    for (let i = 0; i < 5; i++) if (consumeKey('Digit' + (i + 1)) && S.open) openApp(i);
+    btn.style.display = 'block';
+    // Neon Feed reage ao que acontece
+    if (GAME.wanted > S.lastW) post('policia_neon', GAME.wanted >= 3 ? 'Perseguição a alta velocidade no centro! Evitem a zona 🚨🚁' : 'Condutor em fuga visto perto do canal 🚓');
+    if (S.lastW > 0 && GAME.wanted === 0) post('vizinha_curiosa', 'Afinal a polícia perdeu-lhe o rasto 👀');
+    S.lastW = GAME.wanted;
+    if (S.lastM != null && GAME.money - S.lastM >= 500) post('banco_neon', 'Alguém acabou de fazer ' + fmtMoney(GAME.money - S.lastM) + ' de uma vez 💸');
+    S.lastM = GAME.money;
+    S.feedT -= dt; if (S.feedT <= 0) { S.feedT = 35 + Math.random() * 40; const c = CITY[Math.floor(Math.random() * CITY.length)]; post(c[0], c[1]); }
+    // corrida
+    const R = S.race; if (R) { R.t += dt; const v = player.inCar; if (!v) { R.cp.remove(); S.race = null; showHint('Saíste do carro: corrida cancelada.', 2); } else { const c = R.cps[R.i]; if (Math.hypot(v.pos.x - c.x, v.pos.z - c.z) < 7) { R.cp.remove(); R.i++; if (R.i >= R.cps.length) { const t = R.t, prize = Math.max(200, Math.round(1500 - t * 12)); addMoney(prize); S.races++; SS('races', S.races); const rec = !S.best || t < S.best; if (rec) { S.best = t; SS('raceBest', t); } post('corridas_neon', 'Alguém fez a corrida de rua em ' + t.toFixed(1) + ' s' + (rec ? ' — NOVO RECORDE 🏆' : ' 🏁')); showHint('🏁 Chegaste em ' + t.toFixed(1) + ' s! +' + fmtMoney(prize) + (rec ? ' · recorde!' : ''), 4); S.race = null; } else { const n = R.cps[R.i]; R.cp = makeCheckpoint(n.x, n.z, 5); try { SFX.cash(); } catch (e) { } } } } }
+    // latas
+    const pp = player.inCar ? player.inCar.pos : player.ped.pos;
+    for (const c of CANS) { if (!c.g.visible) continue; c.g.rotation.y += dt * 2; if (Math.abs(pp.x - c.x) < 3 && Math.abs(pp.z - c.z) < 3 && Math.hypot(pp.x - c.x, pp.z - c.z) < (player.inCar ? 3 : 1.6)) { c.g.visible = false; S.got.add(c.id); SS('cans', [...S.got]); addMoney(250); try { SFX.cash(); } catch (e) { } if (S.got.size >= CANS.length) { addMoney(5000); showHint('🎨 Encontraste as 30 latas de spray! Prémio: ' + fmtMoney(5000), 4); post('arte_urbana', 'Alguém encontrou TODAS as latas escondidas da cidade 🎨🏆'); } else showHint('🎨 Lata de spray ' + S.got.size + '/' + CANS.length + ' · +' + fmtMoney(250), 2); } }
+    if (S.open && page === raceApp && R) render();
+  }
+  const consumeKey = k => { const v = pressed[k]; if (v) pressed[k] = false; return v; };
+  function hide() { btn.style.display = 'none'; if (S.open) { S.open = false; ph.style.display = 'none'; } }
+  return { update, hide, post };
+})();
+
 function frame(now) {
   requestAnimationFrame(frame);
   const rawDt = Math.min(0.5, (now - last) / 1000), dt = Math.min(0.05, rawDt); last = now;
@@ -8141,7 +8233,9 @@ function frame(now) {
     update(dt);
     updateCamera(dt);
     updateHUD(dt);
-  } else if (GAME.state === 'menu') {
+    try { C30X.update(dt); } catch (e) { }
+  } else { try { C30X.hide(); } catch (e) { } }
+  if (GAME.state === 'menu') {
     menuT += dt * 0.05;
     GAME.time += dt; updateTrafficLights(GAME.time);
     for (const v of vehicles) { if (v.driver === 'ai') updateTrafficAI(v, dt); if (v.driver) v.update(dt); }
