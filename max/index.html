@@ -1167,7 +1167,7 @@ if(location.protocol!=='file:')globalStart();else refreshCounts();
 window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,roomGame,roster:roster.map(p=>p.name),states:[...roomStates.keys()],mqtt:mq.up(),online:pres.size+1,myName})};
 })();
 </script><!-- c30-autoupdate -->
-<div id="c30upd" role="status" aria-live="polite" hidden><span id="c30updT">Há uma versão nova da Central 30 MAX.</span><button type="button" id="c30updB">Atualizar agora</button></div>
+<div id="c30upd" role="status" aria-live="polite" hidden><span id="c30updT">Há uma versão nova da Central 30 MAX.</span><button type="button" id="c30updB">Atualizar agora</button><button type="button" id="c30updX" aria-label="Agora não" style="background:transparent;color:#edf0e9;border:1px solid #4a5560">Agora não</button></div>
 <script>
 // Atualizações rápidas: a página pergunta ao servidor, a cada minuto e quando voltas ao separador,
 // se o index.html mudou (ETag / Last-Modified). Se mudou, recarrega sozinha na lista de jogos;
@@ -1179,8 +1179,8 @@ window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,room
   const url=()=>location.pathname+(location.pathname.endsWith('/')?'':'')+'?c30check='+Date.now();
   const playing=()=>{try{return typeof active!=='undefined'&&!!active}catch(e){return false}};
   const box=document.getElementById('c30upd'),txt=document.getElementById('c30updT');
-  document.getElementById('c30updB').onclick=()=>location.reload();
-  function show(){found=true;box.hidden=false;
+  document.getElementById('c30updB').onclick=()=>location.reload();document.getElementById('c30updX').onclick=()=>{clearInterval(timer);box.hidden=true;window.__c30noUpd=1};
+  function show(){found=true;if(window.__c30noUpd)return;box.hidden=false;
     if(playing()){txt.textContent='Há uma versão nova da Central 30 MAX. Atualiza quando acabares o jogo.';return}
     let n=5;txt.textContent='Há uma versão nova da Central 30 MAX. A atualizar em '+n+'…';clearInterval(timer);
     timer=setInterval(()=>{if(playing()){clearInterval(timer);txt.textContent='Há uma versão nova da Central 30 MAX. Atualiza quando acabares o jogo.';return}
