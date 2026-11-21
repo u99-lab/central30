@@ -215,7 +215,7 @@ function menu(){state='menu';engine(false);K.play(false);const d=S.data;
 K.onQuit=menu;K.me=()=>state==='play'?me&&me.g:null;
 addEventListener('keydown',e=>{if(e.code==='KeyH'&&!e.repeat&&state==='play')K.sfx.horn();});
 function update(dt){if(state!=='play'){const t=K.time*.06;cam.position.set(W/2+Math.sin(t)*150,70,W/2+Math.cos(t)*150);cam.lookAt(W/2,0,W/2);K.sunFollow(W/2,W/2);return;}
- const ax=K.axis(),hb=K.down('Space'),thr=K.touch&&!K.down('KeyB')?(ax.y<-.6?-1:1):K.down('KeyB')?-1:ax.y>.2?1:ax.y<-.2?-1:0;drive(me,thr,ax.x,hb,dt);
+ const ax=K.axis(),hb=K.down('Space'),thr=K.down('KeyB')?-1:K.touch?(ax.y>.22?1:ax.y<-.35?-1:0):ax.y>.2?1:ax.y<-.2?-1:0/* no ecrã tátil: joystick para cima acelera, para baixo trava/recua, ao centro o carro não anda sozinho */;drive(me,thr,ax.x,hb,dt);
  for(const v of civs){const tx=v.ni*D+v.dz*-3.2,tz=v.nj*D+v.dx*3.2;if(Math.abs(tx-v.x)+Math.abs(tz-v.z)<3)pickCiv(v);v.a=Math.atan2(v.dx,v.dz);const dx=tx-v.x,dz=tz-v.z,d=Math.hypot(dx,dz)||1,st=Math.min(d,9*dt);v.x+=dx/d*st;v.z+=dz/d*st;v.g.position.set(v.x,0,v.z);v.g.rotation.y=v.a;
   const ex=me.x-v.x,ez=me.z-v.z,e=Math.hypot(ex,ez);if(e<2.6&&e>.01){me.x+=ex/e*(2.6-e);me.z+=ez/e*(2.6-e);if(Math.abs(me.sp)>10)crash();me.sp*=.7;}}
  for(const q of K.peers()){const dx=me.x-q.x,dz=me.z-q.z,d=Math.hypot(dx,dz);if(d<2.7&&d>.01){me.x=q.x+dx/d*2.7;me.z=q.z+dz/d*2.7;me.sp*=.6;}}
