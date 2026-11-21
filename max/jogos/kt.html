@@ -180,7 +180,10 @@ const scene=K.scene,cam=K.camera;
 const TRACKS=[
  {n:'Marginal da Figueira',th:'praia',pts:[[0,0],[60,-10],[110,10],[130,60],[100,100],[50,90],[20,120],[-40,130],[-80,90],[-60,40],[-90,0],[-50,-30]]},
  {n:'Serra da Boa Viagem',th:'serra',pts:[[0,0],[50,0],[90,-30],[140,-20],[150,30],[110,50],[120,100],[70,120],[40,80],[0,110],[-50,90],[-40,40],[-80,10],[-40,-20]]},
- {n:'Noite em Tavarede',th:'noite',pts:[[0,0],[70,0],[100,30],[70,60],[100,90],[70,120],[10,110],[-20,70],[-70,90],[-110,50],[-80,10],[-100,-30],[-50,-40]]}];
+ {n:'Noite em Tavarede',th:'noite',pts:[[0,0],[70,0],[100,30],[70,60],[100,90],[70,120],[10,110],[-20,70],[-70,90],[-110,50],[-80,10],[-100,-30],[-50,-40]]},
+ {n:'Praia de Buarcos',th:'praia',pts:[[0,0],[80,0],[140,20],[160,70],[120,90],[90,60],[50,80],[60,130],[0,150],[-60,120],[-50,70],[-100,50],[-90,0],[-40,-20]]},
+ {n:'Pinhal de Quiaios',th:'serra',pts:[[0,0],[40,-20],[90,-10],[110,30],[80,60],[120,90],[100,140],[40,130],[20,90],[-20,120],[-70,110],[-60,60],[-100,30],[-60,-10]]},
+ {n:'Cabo Mondego à Noite',th:'noite',pts:[[0,0],[60,10],[90,-20],[140,0],[150,50],[110,80],[130,120],[80,150],[30,120],[-10,140],[-60,110],[-40,60],[-90,40],[-70,-10],[-30,-20]]}];
 const THEME={praia:{sky:0x8fd3ff,ground:0xefd9a3,hemi:.85,sun:.85,fog:[140,460],sunC:0xfff1d0},serra:{sky:0xffb984,ground:0x4f8a45,hemi:.72,sun:.8,fog:[90,340],sunC:0xffc890},noite:{sky:0x0d1330,ground:0x1c2238,hemi:.5,sun:.4,fog:[70,300],sunC:0x9fb4ff}};
 const HW=6.5,N=640,LAPS=3,NAMES=[K.name(),'Rui','Bia','Tomás','Mika','Bruno'],COLS=[0xff3d5a,0x2a8bff,0xffd23f,0x35d07f,0xb46bff,0xff8a3d],DIFF=[['Fácil',.84],['Normal',.92],['Difícil',1]];
 let world=null,P=[],Tn=[],Nr=[],curv=[],seg=1,track=null,ti=0,diff=1;
@@ -230,13 +233,15 @@ let karts=[],me=null,state='menu',raceT=0,startT=0,order=[],cup=null,finishN=0,e
 function grid(){for(const k of karts)scene.remove(k.g);karts=[];const ord=[1,2,3,4,5,0];
  ord.forEach((id,slot)=>{const back=6+slot*4.2,j=((N-Math.round(back/seg))%N+N)%N,lat=(slot%2?1:-1)*2.6,k={id,name:NAMES[id],g:mkKart(COLS[id]),x:P[j].x+Nr[j].x*lat,z:P[j].z+Nr[j].z*lat,a:Math.atan2(Tn[j].x,Tn[j].z),sp:0,idx:j,prog:j-N,lat,dr:0,ch:0,boost:0,spin:0,item:null,itT:0,fin:0,ai:id!==0,skill:DIFF[diff][1]*(1-(id-1)*.018),tl:lat,top:31,steer:0,va:0};
   karts.push(k);if(id===0)me=k;});}
-const ITEMS={turbo:'🚀',banana:'🍌',bola:'⚽'};
-function giveItem(k){const pos=order.indexOf(k),r=Math.random();k.item=pos===0?(r<.7?'banana':'turbo'):pos>=4?(r<.5?'turbo':'bola'):(r<.36?'turbo':r<.68?'banana':'bola');k.itT=K.rand(1,4);if(k===me){K.sfx.coin();hudItem();}}
+const ITEMS={turbo:'🚀',banana:'🍌',bola:'⚽',escudo:'🛡️',turbo3:'🚀🚀🚀',turbo2:'🚀🚀',banana3:'🍌🍌🍌'};
+function giveItem(k){const pos=order.indexOf(k),r=Math.random();k.item=pos===0?(r<.45?'banana':r<.7?'escudo':r<.85?'banana3':'turbo'):pos>=4?(r<.3?'turbo':r<.55?'turbo3':r<.8?'bola':'escudo'):(r<.25?'turbo':r<.45?'banana':r<.62?'bola':r<.76?'escudo':r<.88?'banana3':'turbo3');k.itT=K.rand(1,4);if(k===me){K.sfx.coin();hudItem();}}
 function useItem(k){const it=k.item;if(!it)return;k.item=null;if(k===me)hudItem();
- if(it==='turbo'){k.boost=1.6;if(k===me)K.sfx.boost();}
+ if(it==='turbo'||it==='turbo3'||it==='turbo2'){k.boost=1.6;if(k===me)K.sfx.boost();if(it!=='turbo'){k.item=it==='turbo3'?'turbo2':'turbo';if(k===me)hudItem();}}
+ else if(it==='escudo'){k.shield=7;if(k===me){K.sfx.coin();K.toast('Escudo ligado: o próximo golpe não te faz despistar');}}
+ else if(it==='banana3'){for(let q=0;q<3;q++){const m=new THREE.Group();K.sph(.42,0xffe14a,0,.35,0,m,8).scale.set(1,.55,1.5);scene.add(m);const d=2.4+q*1.6,x=k.x-Math.sin(k.a)*d,z=k.z-Math.cos(k.a)*d;m.position.set(x,0,z);bananas.push({m,x,z,o:k,t:0})}}
  else if(it==='banana'){const m=new THREE.Group();K.sph(.42,0xffe14a,0,.35,0,m,8).scale.set(1,.55,1.5);scene.add(m);const x=k.x-Math.sin(k.a)*2.4,z=k.z-Math.cos(k.a)*2.4;m.position.set(x,0,z);bananas.push({m,x,z,o:k,t:0});if(k===me)K.sfx.whoosh();}
  else{const m=K.sph(.5,0xffffff,k.x,.6,k.z,scene,10);balls.push({m,s:k.idx+3,lat:k.lat,o:k,t:0});if(k===me)K.sfx.kick();}}
-function spinOut(k,why){if(k.spin>0||k.fin)return;k.spin=1.25;k.boost=0;k.dr=0;k.ch=0;K.burst(new THREE.Vector3(k.x,.8,k.z),[0xffd23f,0xffffff],16,5,5,.7);if(k===me){K.sfx.hit();K.shake=.5;K.flash(why,'',900,'#ff6b6b');}}
+function spinOut(k,why){if(k.spin>0||k.fin)return;if(k.shield>0){k.shield=0;K.burst(new THREE.Vector3(k.x,1,k.z),[0x4fd0ff,0xffffff],14,5,5,.6);if(k===me){K.sfx.good();K.toast('O escudo protegeu-te!');}return;}k.spin=1.25;k.boost=0;k.dr=0;k.ch=0;K.burst(new THREE.Vector3(k.x,.8,k.z),[0xffd23f,0xffffff],16,5,5,.7);if(k===me){K.sfx.hit();K.shake=.5;K.flash(why,'',900,'#ff6b6b');}}
 function nearest(k){let best=k.idx,bd=1e9;for(let j=-14;j<=14;j++){const i=((k.idx+j)%N+N)%N,d=(P[i].x-k.x)**2+(P[i].z-k.z)**2;if(d<bd){bd=d;best=i;}}let di=best-k.idx;if(di>N/2)di-=N;if(di<-N/2)di+=N;k.prog+=di;k.idx=best;k.lat=(k.x-P[best].x)*Nr[best].x+(k.z-P[best].z)*Nr[best].z;}
 function stepKart(k,dt){let thr=0,steer=0,drift=false;
  if(state==='race'&&!k.spin){if(k.ai){const look=Math.round(7+Math.abs(k.sp)*.35),i=(k.idx+look)%N;if(Math.random()<dt*.4)k.tl=K.rand(-4.2,4.2);const tx=P[i].x+Nr[i].x*k.tl,tz=P[i].z+Nr[i].z*k.tl,d=K.angDiff(k.a,Math.atan2(tx-k.x,tz-k.z));steer=K.clamp(-d*2.6,-1,1);
@@ -253,9 +258,9 @@ function stepKart(k,dt){let thr=0,steer=0,drift=false;
  k.steer=K.damp(k.steer,steer,10,dt);const ma=k.a+k.dr*.24;k.x+=Math.sin(ma)*k.sp*dt;k.z+=Math.cos(ma)*k.sp*dt;nearest(k);
  const lim=HW+7.5;if(Math.abs(k.lat)>lim){const ex=k.lat-Math.sign(k.lat)*lim,n=Nr[k.idx];k.x-=n.x*ex;k.z-=n.z*ex;k.sp*=Math.pow(.2,dt);k.lat=Math.sign(k.lat)*lim;}
  // objetos
- if(state==='race'&&!k.fin){for(const b of boxes)if(!k.item&&(k.ai||b.t<=0)&&(b.m.position.x-k.x)**2+(b.m.position.z-k.z)**2<(k.ai?3.6:5.5)){giveItem(k);if(!k.ai){b.t=2;b.m.visible=false;K.burst(b.m.position,[0xffd23f,0xff8a3d],10,4,4,.5);K.flash(ITEMS[k.item],'E para usar',700,'#fff');}}
+ if(state==='race'&&!k.fin){for(const b of boxes)if(b.t<=0&&(b.m.position.x-k.x)**2+(b.m.position.z-k.z)**2<(k.ai?3.6:5.5)){/* qualquer kart que passe parte a caixa (com animação); só ganha objeto se não tiver um */b.t=2;b.m.visible=false;K.burst(b.m.position,[0xffd23f,0xff8a3d],10,4,4,.5);if(!k.item){giveItem(k);if(!k.ai)K.flash(ITEMS[k.item],'E para usar',700,'#fff');}}
   for(let i=bananas.length-1;i>=0;i--){const b=bananas[i];if((b.o!==k||b.t>.6)&&(b.x-k.x)**2+(b.z-k.z)**2<2){scene.remove(b.m);bananas.splice(i,1);spinOut(k,'CASCA!');}}}
- const g=k.g,u=g.userData;g.position.set(k.x,0,k.z);g.rotation.y=k.a-k.dr*.38+k.va;u.b.rotation.z=K.damp(u.b.rotation.z,k.steer*.07*Math.min(1,k.sp/20)+k.dr*.05,8,dt);u.b.position.y=off&&Math.abs(k.sp)>4?Math.sin(K.time*40+k.id)*.05:0;
+ const g=k.g,u=g.userData;g.position.set(k.x,0,k.z);g.rotation.y=k.a-k.dr*.38+k.va;/* despiste: o kart salta, abana e aparecem estrelas à volta do piloto; escudo: bolha azul */{const sp=k.spin>0?(1.25-k.spin)/1.25:0;g.position.y=sp?Math.abs(Math.sin(sp*Math.PI*2))*.55:0;g.rotation.z=sp?Math.sin(sp*Math.PI*6)*.25:0;if(!u.st){u.st=new THREE.Group();for(let q=0;q<3;q++){const st=new THREE.Mesh(new THREE.OctahedronGeometry(.16),new THREE.MeshBasicMaterial({color:0xffe14a}));st.position.set(Math.cos(q*2.09)*.55,0,Math.sin(q*2.09)*.55);u.st.add(st)}u.st.position.y=1.75;g.add(u.st);u.sh=new THREE.Mesh(new THREE.SphereGeometry(1.5,14,10),new THREE.MeshBasicMaterial({color:0x4fd0ff,transparent:true,opacity:.22,depthWrite:false}));u.sh.position.y=.7;g.add(u.sh)}u.st.visible=k.spin>0;u.st.rotation.y+=dt*9;u.sh.visible=k.shield>0;if(k.shield>0){k.shield-=dt;u.sh.scale.setScalar(1+Math.sin(K.time*6)*.04)}}u.b.rotation.z=K.damp(u.b.rotation.z,k.steer*.07*Math.min(1,k.sp/20)+k.dr*.05,8,dt);u.b.position.y=off&&Math.abs(k.sp)>4?Math.sin(K.time*40+k.id)*.05:0;
  for(let i=0;i<4;i++){K.roll(u.w[i].children[0],k.sp*dt/.32);if(i<2)u.w[i].rotation.y=-k.steer*.45;}}
 // ----- corrida
 function startRace(i){buildTrack(i);grid();state='count';startT=3.6;raceT=0;lapT=0;bestLap=0;finishN=0;order=karts.slice();K.screen(null);K.play(true);K.useStick=true;K.pad([['Space','Derrapar'],['KeyE','Objeto'],['KeyB','Travar']]);hud();engine(true);camSnap();K.flash('3','',700,'#ffd23f');}
@@ -290,7 +295,7 @@ function update(dt){if(state==='menu'||state==='done'){/* câmara do menu a desl
    else if(k===me){if(!bestLap||lapT<bestLap)bestLap=lapT;K.flash(lap1+1===LAPS?'ÚLTIMA VOLTA!':'Volta '+(lap1+1),tfmt(lapT),1100,'#fff');K.sfx.good();lapT=0;}}}
  // choques entre karts
  for(let i=0;i<karts.length;i++)for(let j=i+1;j<karts.length;j++){const a=karts[i],b=karts[j],dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz);if(d<1.7&&d>.01){const p=(1.7-d)/2,nx=dx/d,nz=dz/d;a.x-=nx*p;a.z-=nz*p;b.x+=nx*p;b.z+=nz*p;const s=(a.sp+b.sp)/2;a.sp=K.lerp(a.sp,s,.3);b.sp=K.lerp(b.sp,s,.3);if((a===me||b===me)&&Math.random()<.2)K.sfx.bounce(.5);}}
- for(const b of boxes){if(b.t>0){b.t-=dt;if(b.t<=0)b.m.visible=true;}b.m.rotation.y+=dt*2;b.m.rotation.x+=dt;b.m.position.y=1.2+Math.sin(K.time*3+b.m.position.x)*.15;}
+ for(const b of boxes){if(b.t>0){b.t-=dt;if(b.t<=0){b.m.visible=true;b.g=0}}if(b.g!=null&&b.g<1){b.g=Math.min(1,b.g+dt*2.5);b.m.scale.setScalar(.05+.95*b.g*(1+Math.sin(b.g*Math.PI)*.25))}b.m.rotation.y+=dt*2;b.m.rotation.x+=dt;b.m.position.y=1.2+Math.sin(K.time*3+b.m.position.x)*.15;}
  for(const b of bananas)b.t+=dt;
  for(let i=balls.length-1;i>=0;i--){const b=balls[i];b.t+=dt;b.s+=50*dt/seg;const j=((Math.floor(b.s)%N)+N)%N;let tgt=null,bd=1e9;for(const k of karts){if(k===b.o||k.fin)continue;let d=k.prog-b.o.prog;if(d>0&&d<bd){bd=d;tgt=k;}}if(tgt)b.lat=K.damp(b.lat,tgt.lat,6,dt);const x=P[j].x+Nr[j].x*b.lat,z=P[j].z+Nr[j].z*b.lat;b.m.position.set(x,.6+Math.abs(Math.sin(b.t*9))*.5,z);b.m.rotation.x+=dt*12;let dead=b.t>5;
   for(const k of karts)if(k!==b.o&&(k.x-x)**2+(k.z-z)**2<3.4){spinOut(k,'BOLADA!');dead=true;if(b.o===me){K.sfx.good();K.toast('Acertaste no '+k.name+'!');}break;}if(dead){scene.remove(b.m);balls.splice(i,1);}}

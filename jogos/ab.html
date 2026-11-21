@@ -650,7 +650,7 @@ function build3D(){
   if(bushes.length){
     const bm=new THREE.InstancedMesh(new THREE.SphereGeometry(.5,10,8),new THREE.MeshLambertMaterial({color:th[4]}),bushes.length*3);
     let k=0;const r=rng(7);
-    bushes.forEach(p=>{for(let j=0;j<3;j++){dummy.position.set(p[0]+.25+r()*.5,.35,p[1]+.25+r()*.5);const s=.9+r()*.35;dummy.scale.set(s,.95,s);dummy.updateMatrix();bm.setMatrixAt(k++,dummy.matrix)}});
+    const BI=[];bushes.forEach(p=>{for(let j=0;j<3;j++){const x=p[0]+.25+r()*.5,z=p[1]+.25+r()*.5,s=.9+r()*.35;dummy.position.set(x,.35,z);dummy.scale.set(s,.95,s);dummy.updateMatrix();BI.push({x,z,s,k:1});bm.setMatrixAt(k++,dummy.matrix)}});G.bushM=bm;G.bushI=BI;
     dummy.scale.set(1,1,1);bm.castShadow=false;sc.add(bm);
   }
   // caixas
@@ -1563,6 +1563,7 @@ function loop(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
   if(G){
     if(!paused)update(dt);
+    /* relva: quando estás lá dentro, os arbustos à tua volta baixam e ficam a abanar, para te veres (os inimigos continuam sem te ver) */try{const bm=G.bushM,P=G.player;if(bm&&P){const D=new THREE.Object3D();let ch=false;for(let i=0;i<G.bushI.length;i++){const b=G.bushI[i],d=Math.hypot(b.x-P.x,b.z-(P.y!=null&&P.z==null?P.y:P.z));const want=d<1.3?.38:1;if(Math.abs(b.k-want)>.01||(d<1.3)){b.k+=(want-b.k)*Math.min(1,dt*10);const w=d<1.3?Math.sin(now/90+i)*.05:0;D.position.set(b.x+w,.35*b.k,b.z);D.scale.set(b.s*(.7+.3*b.k),.95*b.k,b.s*(.7+.3*b.k));D.updateMatrix();bm.setMatrixAt(i,D.matrix);ch=true}}if(ch)bm.instanceMatrix.needsUpdate=true}}catch(e){}
     render3D(paused?0:dt);drawHUD();
   }else if(screen==='home'&&hModel){
     hx.clearRect(0,0,hudc.width,hudc.height);
