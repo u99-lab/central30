@@ -946,13 +946,13 @@ window.__c30tgOn=()=>tgOn();window.__c30netTime=()=>window.C30netTime?window.C30
 function ghostRoomKey(){return (typeof code==='string'&&/^\d{6}$/.test(code))?code:'pub'}
 window.__c30gotGhost=m=>gotGhostMq(m);window.__c30ghDbg=()=>{try{return {size:mqGhosts.size,tg:tgOn(),inRoom:inRoom(),g:curGame(),key:ghostRoomKey(),e:[...mqGhosts.values()].map(q=>q.g+'/'+q.k)}}catch(e){return 'ERR '+e.message}};function gotGhostMq(m){if(!m||typeof m.id!=='string'||m.id===myId||m.id.length>20||!okState(m.st))return;mqGhosts.set(m.id,{n:String(m.n||'Amigo').slice(0,16),c:/^#[0-9a-f]{6}$/i.test(m.c||'')?m.c:'#5ec8ff',g:String(m.g||'').slice(0,6),k:String(m.k||'pub').slice(0,8),st:trimState(m.st),at:Date.now()});}
 setInterval(()=>{const g=curGame();if(!g||!(tgOn()||inRoom())||!myState||myStateGame!==g||!navigator.onLine)return;try{mq.pub(TOPIC+'/g/'+g,{id:myId,n:myName,c:myColor(),g,k:ghostRoomKey(),st:trimState(myState)});}catch{}},180);
-setInterval(()=>{if(!inRoom()&&(tgOn()||mqGhosts.size))feedGhosts();},120);
+setInterval(()=>{if(tgOn()||mqGhosts.size)feedGhosts();},120);
 function feedGhosts(){
  const g=curGame();let fw=null;try{fw=$('gameFrame').contentWindow;}catch{}
  if(!fw||!g)return;
  const list=[];const now=Date.now();const ids=new Set();
  for(const [id,s] of roomStates){if(id===selfRoomId||s.g!==g||now-s.at>5000)continue;const p=roster.find(x=>x.id===id);if(!p)continue;list.push({id,name:p.name,color:p.color,st:s.st});ids.add(p.name);}
- if(tgOn()||inRoom()){const key=ghostRoomKey();for(const [id,q] of mqGhosts){if(now-q.at>4000){mqGhosts.delete(id);continue}if(q.g!==g||q.k!==key||ids.has(q.n))continue;list.push({id:'m'+id,name:q.n,color:q.c,st:q.st});}}
+ if(tgOn()||inRoom()){const key=ghostRoomKey();for(const [id,q] of mqGhosts){if(now-q.at>4000){mqGhosts.delete(id);continue}if(q.g!==g||ids.has(q.n))continue;/* vê-se toda a gente do mesmo jogo com o online ligado, mesmo em salas diferentes ou sem sala */list.push({id:'m'+id,name:q.n,color:q.c,st:q.st});}}
  feedModels(fw,g);
  try{fw.postMessage({c30:true,type:'ghosts',list},'*');}catch{}
 }
