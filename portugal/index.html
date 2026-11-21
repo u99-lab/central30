@@ -1512,7 +1512,7 @@ const SA_LIST=PUMPS.filter(p=>/Área de Serviço/.test(p.name)).map(p=>({x:p.x,z
 const A17=[],A17LEN=0;
 // onde se começa (ou onde se chega de avião)
 // chegada de carro pela fronteira (Portugal <-> Espanha): começa na estrada mais perto do sítio por onde passaste
-const BORDER_AT=(()=>{try{const v=sessionStorage.getItem('ea.at');sessionStorage.removeItem('ea.at');return v?JSON.parse(v):null}catch(e){return null}})();
+const BORDER_AT=(()=>{try{const v=sessionStorage.getItem('ea.at');/* só se apaga passado um bocado: no modo de 2 jogadores o jogo arranca duas vezes e perdia o sítio escolhido */setTimeout(()=>{try{sessionStorage.removeItem('ea.at')}catch(e){}},25000);return v?JSON.parse(v):null}catch(e){return null}})();
 const unPJ=(x,z)=>[x/KX+LON0,LAT0-z/KY];
 const inPolyLL=(lon,lat,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>lat)!==(b[1]>lat)&&lon<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
 function borderSpot(x,z){// estrada um pouco afastada da fronteira (para não voltar logo para trás), o mais perto possível de onde se passou
@@ -1668,10 +1668,11 @@ function updateFugitive(dt){if(G.state!=='play'||W.on){if(FUG)FUG.hide=true;retu
 // distância no mapa do jogo (1 unidade = 1 m, a mesma escala do conta-quilómetros, das placas e do combustível)
 function realDist(d){const m=d;return m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km'}
 // a polícia vai atrás de ti se te vir fazer uma infração (passar no vermelho, bater num carro…), não só por excesso de velocidade
-function policeSees(why,fine,range){if(G.chase||W.on||G.state!=='play')return false;let best=null,bd=range||90;for(const T of POLICE){if(T.x==null)continue;const d=Math.hypot(T.x-P.x,T.z-P.z);if(d<bd){bd=d;best=T}}if(!best)return false;const T=best;
+/* a polícia só persegue se o carro dela existir, estiver à vista e houver linha de vista (sem prédios no meio) */function copSees(T){if(!T||T.x==null||!T.m||T.m.visible===false||T.parked)return false;const dx=P.x-T.x,dz=P.z-T.z,d=Math.hypot(dx,dz),n=Math.max(2,Math.ceil(d/6));for(let i=1;i<n;i++){const x=T.x+dx*i/n,z=T.z+dz*i/n;const b=hitBuilding(x,z,.3);if(b&&!b.hidden)return false}return true}
+function policeSees(why,fine,range){if(G.chase||W.on||G.state!=='play')return false;let best=null,bd=range||90;for(const T of POLICE){if(T.x==null||!copSees(T))continue;const d=Math.hypot(T.x-P.x,T.z-P.z);if(d<bd){bd=d;best=T}}if(!best)return false;const T=best;
  G.chase={T,over:0,lim:speedLimit(P.x,P.z),t:0,far:0,stop:0,why,fine};T.chase=true;T.cx=T.x;T.cz=T.z;T.ch=Math.atan2(T.dx,-T.dz);T.cv=T.cur;T.m.userData.tag.visible=true;sfx.bad();toast((T.gnr?((RG.police||[])[1]||'GNR'):((RG.police||[])[0]||'Polícia'))+' viu-te a '+why+'! Encosta e para!',true,3.5);return true}
 function updatePolice(dt){if(W.on&&!G.chase){for(const T of POLICE)policeLights(T,false);return}const spd=Math.hypot(P.vx,P.vz)*3.6;
- if(!G.chase&&G.state==='play'&&!W.on){const lim=speedLimit(P.x,P.z);if(spd>lim+12){for(const T of POLICE){if(T.x==null)continue;const d=Math.hypot(T.x-P.x,T.z-P.z);if(d<70){G.chase={T,over:Math.round(spd-lim),lim,t:0,far:0,stop:0};T.chase=true;T.cx=T.x;T.cz=T.z;T.ch=Math.atan2(T.dx,-T.dz);T.cv=T.cur;T.m.userData.tag.visible=true;sfx.bad();toast((T.gnr?((RG.police||[])[1]||'GNR'):((RG.police||[])[0]||'Polícia'))+'! Ias a '+spdTxt(spd)+' num limite de '+spdTxt(lim)+'. Encosta e para!',true,3.5);break}}}}
+ if(!G.chase&&G.state==='play'&&!W.on){const lim=speedLimit(P.x,P.z);if(spd>lim+12){for(const T of POLICE){if(T.x==null||!copSees(T))continue;const d=Math.hypot(T.x-P.x,T.z-P.z);if(d<70){G.chase={T,over:Math.round(spd-lim),lim,t:0,far:0,stop:0};T.chase=true;T.cx=T.x;T.cz=T.z;T.ch=Math.atan2(T.dx,-T.dz);T.cv=T.cur;T.m.userData.tag.visible=true;sfx.bad();toast((T.gnr?((RG.police||[])[1]||'GNR'):((RG.police||[])[0]||'Polícia'))+'! Ias a '+spdTxt(spd)+' num limite de '+spdTxt(lim)+'. Encosta e para!',true,3.5);break}}}}
  for(const T of POLICE)policeLights(T,T.chase);
  const C=G.chase;$('#wanted').hidden=!C;if(!C)return;const T=C.T;C.t+=dt;
  // o carro da polícia vai atrás de ti
@@ -1682,7 +1683,7 @@ function updatePolice(dt){if(W.on&&!G.chase){for(const T of POLICE)policeLights(
  sirenT-=dt;if(sirenT<=0&&d<260){sirenT=.42;const hi=(C.t/.42|0)%2;tone(hi?960:700,.4,'sawtooth',.035*clamp(1-d/260,.15,1))}
  $('#wantedT').textContent=d<16&&spd<6?'Para o carro… ('+Math.max(0,1.5-C.stop).toFixed(1).replace('.',',')+' s)':(T.gnr?((RG.police||[])[1]||'GNR'):((RG.police||[])[0]||'Polícia'))+' atrás de ti · '+realDist(d)+(d>300?' · quase a fugir!':' · encosta e para (ou foge!)');
  if(d<16&&spd<6){C.stop+=dt;if(C.stop>1.5){const fine=C.why?C.fine:C.over>=40?250:C.over>=25?120:60;G.stats.multas=(G.stats.multas||0)+1;endChase();sfx.bad();payFine(fine,C.why?C.why:'excesso de velocidade ('+spdTxt(C.over)+' acima do limite)')}}else C.stop=Math.max(0,C.stop-dt);
- if(d>380){C.far+=dt;if(C.far>5){endChase();sfx.win();toast('Fugiste à polícia! Cuidado com a velocidade…',false,3)}}else C.far=0}
+ if(d>380){C.far+=dt;if(C.far>5){endChase();sfx.win();toast('Fugiste à polícia! Cuidado com a velocidade…',false,3)}}else C.far=0;/* se o carro da polícia desaparecer (ficou para trás, preso ou fora do mapa) a perseguição acaba */if(!C.T.m||C.T.m.visible===false){C.lost=(C.lost||0)+dt;if(C.lost>3&&G.chase){endChase();toast('A polícia perdeu-te o rasto.',false,2.5)}}else C.lost=0}
 // a polícia anda pelas estradas (e pelas pontes): mapa de estradas como rede de pontos e caminho mais curto (A*)
 let RNET=null;
 function buildRoadNet(){const N=[],adj=[],grid=new Map(),key=(x,z)=>Math.floor(x/25)+','+Math.floor(z/25);
@@ -2683,7 +2684,7 @@ function mapClamp(){MZ.cx=Math.max(W0,Math.min(W1,MZ.cx));MZ.cz=Math.max(Z0,Math
 
 /* ================= AVIÕES: voar entre aeroportos (e para outros países) ================= */
 // o que se leva na viagem para outro país (dinheiro, combustível, carros…)
-(()=>{try{const v=sessionStorage.getItem('ea.carry');if(!v)return;sessionStorage.removeItem('ea.carry');const c=JSON.parse(v);if(typeof c.money==='number')G.money=c.money;if(typeof c.fuel==='number')P.fuel=c.fuel;if(Array.isArray(c.owned))G.owned=c.owned;if(typeof c.clock==='number')G.clock=c.clock;if(typeof c.car==='number')carType=c.car;if(typeof c.col==='number')carColor=c.col;G.casa=!!c.casa;G.fromFlight=c.from||null;G.byRoad=!!c.road;G.pickName=c.name||null;if(c.passport)G.passport=true;G.carryWx=c.wx||null;if(c.sn)G.season=c.sn}catch(e){}})();
+(()=>{try{const v=sessionStorage.getItem('ea.carry');if(!v)return;setTimeout(()=>{try{if(sessionStorage.getItem('ea.carry')===v)sessionStorage.removeItem('ea.carry')}catch(e){}},25000);const c=JSON.parse(v);if(typeof c.money==='number')G.money=c.money;if(typeof c.fuel==='number')P.fuel=c.fuel;if(Array.isArray(c.owned))G.owned=c.owned;if(typeof c.clock==='number')G.clock=c.clock;if(typeof c.car==='number')carType=c.car;if(typeof c.col==='number')carColor=c.col;G.casa=!!c.casa;G.fromFlight=c.from||null;G.byRoad=!!c.road;G.pickName=c.name||null;if(c.passport)G.passport=true;G.carryWx=c.wx||null;if(c.sn)G.season=c.sn}catch(e){}})();
 function nearAirport(){const F=focus();return AIRPORTS.find(a=>Math.hypot(F.x-a.door.x,F.z-a.door.z)<10)}
 const flyPrice=(a,b)=>Math.round(29+Math.hypot(a.x-b.x,a.z-b.z)*SCALE/1000*.12);
 function openFly(ap){G.state='flymenu';G.flyFrom=ap;$('#flyS').hidden=false;$('#touch').hidden=true;if(engG)engG.gain.value=0;$('#flyE').textContent='✈ '+ap.n.toUpperCase()+' · '+hhmm(G.clock||36000)+' · tens '+euro(G.money);
@@ -2720,7 +2721,7 @@ function endFlight(){const f=FL;if(!f)return;FL=null;flyPlane.visible=false;
  Object.assign(P,{x:n.px-uz*g.r.w*.25*DRV,z:n.pz+ux*g.r.w*.25*DRV,vx:0,vz:0,h:Math.atan2(ux,-uz)});P.y=surfaceAt(P.x,P.z)+1;G.clock=((G.clock||36000)+3600)%86400;
  G.state='play';car.visible=!W.on;if(W.on){W.x=P.x;W.z=P.z;if(W.m)W.m.visible=true}['#tl','#spd','#mapw'].forEach(s2=>$(s2).hidden=false);if(touchOn)$('#touch').hidden=false;if(typeof snapCam==='function')snapCam();sfx.win();toast('Bem-vindo a '+a.city+'! ('+a.n+')',false,3)}
 // depois de aterrar noutro país, o jogo começa logo
-try{if(sessionStorage.getItem('ea.autostart')){window.__eaAuto=1;sessionStorage.removeItem('ea.autostart');setTimeout(()=>{if(G.state==='menu')start();else window.__bootDone&&window.__bootDone()},300)}}catch(e){}
+try{if(sessionStorage.getItem('ea.autostart')){window.__eaAuto=1;setTimeout(()=>{try{sessionStorage.removeItem('ea.autostart')}catch(e){}},25000);setTimeout(()=>{if(G.state==='menu')start();else window.__bootDone&&window.__bootDone()},300)}}catch(e){}
 
 /* ================= LÓGICA DAS MISSÕES ================= */
 function dist(a,b){return Math.hypot(a.x-b.x,a.z-b.z)}
