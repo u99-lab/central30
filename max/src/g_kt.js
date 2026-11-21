@@ -110,7 +110,7 @@ function menu(){state='menu';engine(false);K.play(false);if(!world)buildTrack(0)
  ${K.keysHelp([['W A S D','conduzir'],['ESPAÇO','derrapar (larga = turbo)'],['E','usar objeto'],['P','pausa']])}`,
  {d:v=>{diff=+v;menu();},cup:()=>{cup={r:0,pts:[0,0,0,0,0,0]};startRace(0);},one:v=>{cup=null;startRace(+v);}});}
 K.onQuit=()=>{cup=null;menu();};
-function update(dt){if(state==='menu'||state==='done'){const t=K.time*.12,j=Math.floor((t*40)%N+N)%N;cam.position.set(P[j].x+Nr[j].x*14,9,P[j].z+Nr[j].z*14);const q=P[(j+30)%N];cam.lookAt(q.x,1,q.z);K.sunFollow(P[j].x,P[j].z);if(state==='done')for(const k of karts)stepKart(k,dt);return;}
+function update(dt){if(state==='menu'||state==='done'){/* câmara do menu a deslizar pela pista */const t=K.time*.12,u=((t*40)%N+N)%N,j=Math.floor(u),f=u-j,j2=(j+1)%N,L=(a,b)=>a+(b-a)*f;cam.position.set(L(P[j].x+Nr[j].x*14,P[j2].x+Nr[j2].x*14),9,L(P[j].z+Nr[j].z*14,P[j2].z+Nr[j2].z*14));const q=P[(j+30)%N],q2=P[(j+31)%N];cam.lookAt(L(q.x,q2.x),1,L(q.z,q2.z));K.sunFollow(P[j].x,P[j].z);if(state==='done')for(const k of karts)stepKart(k,dt);return;}
  if(state==='count'){const p=Math.ceil(startT-.6);startT-=dt;const n=Math.ceil(startT-.6);if(n!==p){if(n>0){K.flash(String(n),'',700,'#ffd23f');K.tone(440,.18,'square',.1);}else{K.flash('VAI!','',800,'#3dffa2');K.tone(880,.4,'square',.12);state='race';startBoostOk=true;}}}
  if(state==='race'){raceT+=dt;lapT+=dt;if(startBoostOk){if(raceT>.4)startBoostOk=false;else if(K.hit('KeyW','ArrowUp')){me.boost=1;startBoostOk=false;K.sfx.boost();K.flash('ARRANQUE PERFEITO!','',800,'#4fd0ff');K.unlock('kt-start','Kart · Arranque perfeito');}}}
  for(const k of karts){const lap0=Math.floor(k.prog/N);stepKart(k,dt);const lap1=Math.floor(k.prog/N);
