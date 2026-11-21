@@ -5641,6 +5641,16 @@ if (IS_TOUCH) {
 (function initTouch() {
   const layer = $('touch'), base = $('stick'), knob = $('knob');
   const R = 60;
+  // joystick visível (por omissão) ou invisível (só aparece onde se toca) — escolhe-se nas opções
+  let JOYVIS = true; try { JOYVIS = localStorage.getItem('pn.joyVis') !== '0'; } catch (e) { }
+  const homeStick = () => { const sx = SWAPC ? innerWidth - 2 * R - 40 : 40, sy = innerHeight - 2 * R - 40; base.style.left = sx + 'px'; base.style.top = sy + 'px'; knob.style.transform = ''; };
+  const showHome = () => { const can = JOYVIS && document.body.classList.contains('touch') && GAME.state === 'play' && !(document.body.classList.contains('incar') && CAR_ARROWS); if (TOUCH.stickId === null) { if (can) { homeStick(); base.hidden = false; } else base.hidden = true; } };
+  setInterval(showHome, 300);
+  const paintJoy = () => { for (const id of ['joyBtn', 'joyBtn2']) { const b = $(id); if (b) { b.textContent = '🕹️ Joystick: ' + (JOYVIS ? 'visível' : 'invisível (aparece onde tocas)'); const a = $(id === 'joyBtn' ? 'arrowsBtn' : 'arrowsBtn2'); b.hidden = a ? a.hidden : !IS_TOUCH; } } };
+  for (const [aid, jid] of [['arrowsBtn', 'joyBtn'], ['arrowsBtn2', 'joyBtn2']]) { const a = $(aid); if (!a) continue; const b = document.createElement('button'); b.id = jid; b.type = 'button'; b.className = a.className; a.after(b);
+    const tog = () => { JOYVIS = !JOYVIS; try { localStorage.setItem('pn.joyVis', JOYVIS ? '1' : '0'); } catch (e) { } paintJoy(); showHome(); };
+    b.addEventListener('click', tog); b.addEventListener('pointerdown', e => e.stopPropagation()); }
+  paintJoy(); setInterval(paintJoy, 1000);
   const setStick = (x, y) => {
     let dx = x - TOUCH.sx, dy = y - TOUCH.sy; const d = Math.hypot(dx, dy);
     if (d > R) { dx *= R / d; dy *= R / d; }
@@ -5671,7 +5681,7 @@ if (IS_TOUCH) {
     e.preventDefault();
   });
   const end = e => {
-    if (e.pointerId === TOUCH.stickId) { TOUCH.stickId = null; TOUCH.mx = TOUCH.my = TOUCH.mag = 0; base.hidden = true; knob.style.transform = ''; stickKeys(0, 0); }
+    if (e.pointerId === TOUCH.stickId) { TOUCH.stickId = null; TOUCH.mx = TOUCH.my = TOUCH.mag = 0; base.hidden = true; knob.style.transform = ''; stickKeys(0, 0); showHome(); }
     if (e.pointerId === TOUCH.camId) TOUCH.camId = null;
   };
   layer.addEventListener('pointerup', end); layer.addEventListener('pointercancel', end);
@@ -7082,17 +7092,24 @@ function addWanted(n, reason) {
   const old = GAME.wanted; GAME.wanted = clamp(GAME.wanted + n, 0, 5);
   if (GAME.wanted > old) { GAME.wantedLoseT = 0; if (reason) showHint(reason, 2); starsPop(); }
 }
+function copLOS(a, b) { // linha de vista entre um polícia e o jogador (pára nos prédios)
+  const dx = b.x - a.x, dz = b.z - a.z, n = Math.ceil(Math.hypot(dx, dz) / 5);
+  for (let k = 1; k < n; k++) { const x = a.x + dx * k / n, z = a.z + dz * k / n; for (const c of nearColliders(x, z, 0.5)) { if (c.circ || c.h < 4) continue; if (x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1) return false; } }
+  return true;
+}
 function updateWanted(dt) {
   if (GAME.wanted === 0) { GAME.searchFlash = 0; return; }
   const pp = player.inCar ? player.inCar.pos : player.ped.pos;
+  // a polícia só te vê se não houver um prédio pelo meio (já dá para te esconderes atrás dos quarteirões); muito perto vê sempre
   let seen = false;
-  for (const p of peds) if (p.kind === 'cop' && !p.dead && p.pos.distanceToSquared(pp) < 60 * 60) { seen = true; break; }
-  if (!seen) for (const v of vehicles) if (v.type === 'police' && v.driver === 'cop' && !v.dead && v.pos.distanceToSquared(pp) < 75 * 75) { seen = true; break; }
+  for (const p of peds) if (p.kind === 'cop' && !p.dead) { const d2 = p.pos.distanceToSquared(pp); if (d2 < 60 * 60 && (d2 < 15 * 15 || copLOS(p.pos, pp))) { seen = true; break; } }
+  if (!seen) for (const v of vehicles) if (v.type === 'police' && v.driver === 'cop' && !v.dead) { const d2 = v.pos.distanceToSquared(pp); if (d2 < 75 * 75 && (d2 < 18 * 18 || copLOS(v.pos, pp))) { seen = true; break; } }
   if (!seen && heli.active && !heli.falling && heli.pos.distanceTo(pp) < 110) seen = true;
   if (seen) { GAME.wantedLoseT = 0; lastSeen.copy(pp); GAME.searchFlash = 0; }
   else {
+    // as estrelas apagam-se uma a uma enquanto ninguém te vê (as estrelas piscam)
     GAME.wantedLoseT += dt; GAME.searchFlash = 1;
-    if (GAME.wantedLoseT > 9 + GAME.wanted * 3.5) { GAME.wanted = 0; showHint('Despistaste a polícia.', 2.5); }
+    if (GAME.wantedLoseT > 6 + GAME.wanted * 1.5) { GAME.wanted--; GAME.wantedLoseT = 0; showHint(GAME.wanted === 0 ? 'Despistaste a polícia.' : 'A polícia perdeu-te de vista · ' + '★'.repeat(GAME.wanted), 2.5); }
   }
   if (GAME.wanted >= 3 && !heli.active) heli.spawn();
 }
@@ -8223,6 +8240,14 @@ const C30X = (() => {
     S.feedT -= dt; if (S.feedT <= 0) { S.feedT = 35 + Math.random() * 40; const c = CITY[Math.floor(Math.random() * CITY.length)]; post(c[0], c[1]); }
     // corrida
     const R = S.race; if (R) { R.t += dt; const v = player.inCar; if (!v) { R.cp.remove(); S.race = null; showHint('Saíste do carro: corrida cancelada.', 2); } else { const c = R.cps[R.i]; if (Math.hypot(v.pos.x - c.x, v.pos.z - c.z) < 7) { R.cp.remove(); R.i++; if (R.i >= R.cps.length) { const t = R.t, prize = Math.max(200, Math.round(1500 - t * 12)); addMoney(prize); S.races++; SS('races', S.races); const rec = !S.best || t < S.best; if (rec) { S.best = t; SS('raceBest', t); } post('corridas_neon', 'Alguém fez a corrida de rua em ' + t.toFixed(1) + ' s' + (rec ? ' — NOVO RECORDE 🏆' : ' 🏁')); showHint('🏁 Chegaste em ' + t.toFixed(1) + ' s! +' + fmtMoney(prize) + (rec ? ' · recorde!' : ''), 4); S.race = null; } else { const n = R.cps[R.i]; R.cp = makeCheckpoint(n.x, n.z, 5); try { SFX.cash(); } catch (e) { } } } } }
+    // semáforos: se a polícia te vir passar no vermelho, vai atrás de ti
+    { const v = player.inCar; let inJ = false;
+      if (v && !v.dead) { const i = Math.round((v.pos.x + HALF) / P), j = Math.round((v.pos.z + HALF) / P), cx = roadC(i), cz = roadC(j);
+        if (Math.abs(v.pos.x - cx) < ROAD / 2 && Math.abs(v.pos.z - cz) < ROAD / 2) { inJ = true; const key = i + ',' + j;
+          if (S.rlKey !== key) { S.rlKey = key; const sp = Math.hypot(v.vx || 0, v.vz || 0);
+            if (sp > 4) { const ax = Math.abs(v.vx) > Math.abs(v.vz), dx = ax ? Math.sign(v.vx) : 0, dz = ax ? 0 : Math.sign(v.vz);
+              try { if (tlHeadAt(i, j, dx, dz) && tlState(i, j, ax ? 1 : 0, GAME.time) === 2) { if (copsNear(v.pos, 75)) { addWanted(1, '🚦 A polícia viu-te passar no vermelho!'); post('policia_neon', 'Condutor apanhado a passar no vermelho junto ao cruzamento 🚦🚓'); } else showHint('🚦 Passaste no vermelho…', 1.5); } } catch (e) { } } } } }
+      if (!inJ) S.rlKey = null; }
     // latas
     const pp = player.inCar ? player.inCar.pos : player.ped.pos;
     for (const c of CANS) { if (!c.g.visible) continue; c.g.rotation.y += dt * 2; if (Math.abs(pp.x - c.x) < 3 && Math.abs(pp.z - c.z) < 3 && Math.hypot(pp.x - c.x, pp.z - c.z) < (player.inCar ? 3 : 1.6)) { c.g.visible = false; S.got.add(c.id); SS('cans', [...S.got]); addMoney(250); try { SFX.cash(); } catch (e) { } if (S.got.size >= CANS.length) { addMoney(5000); showHint('🎨 Encontraste as 30 latas de spray! Prémio: ' + fmtMoney(5000), 4); post('arte_urbana', 'Alguém encontrou TODAS as latas escondidas da cidade 🎨🏆'); } else showHint('🎨 Lata de spray ' + S.got.size + '/' + CANS.length + ' · +' + fmtMoney(250), 2); } }

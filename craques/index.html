@@ -767,7 +767,7 @@ function startMatch(ci,tour,vsTeam){
     M.players.push({team:ti,i,card,st:(()=>{const st=statsOf(card),pen=posPen(card,b.r);if(pen){const f=1-pen/100;for(const k in st)if(k!=='gk')st[k]=Math.round(st[k]*f)}return st})(),role:b.r,base:b,x:0,z:0,vx:0,vz:0,face:ti?Math.PI:0,mesh,cd:0,tackleCd:0,stun:0,run:0,recv:0});});});
   $('hn1').textContent=teams[0].short;$('hn2').textContent=teams[1].short;$('hc1').style.background=teams[0].c1;$('hc2').style.background=teams[1].c1;
   for(const s of screens)$(s).hidden=true;
-  $('hud').hidden=false;$('pauseBtn').hidden=false;$('touch').hidden=!isTouch;document.body.classList.add('playing');
+  $('hud').hidden=false;$('pauseBtn').hidden=false;$('touch').hidden=!isTouch;document.body.classList.add('playing');setTimeout(()=>{try{window.__cqHome&&window.__cqHome()}catch(e){}},50);
   $('hint').hidden=false;$('hint').textContent=isTouch?'Joystick: mexer · REMATE (manter) · PASSE · SPRINT':'WASD mexer · Espaço rematar · F passe · E passe longo · Shift sprint';
   setTimeout(()=>{$('hint').hidden=true;},6000);
   kickoff(0);sfx('whistle');
@@ -1238,9 +1238,16 @@ function clearEdges(){input.shootPress=input.shootRelease=input.passPress=input.
 // toque
 (function(){
   const z=$('stickZone'),base=$('stickBase'),knob=$('stickKnob');let id=null,ox=0,oy=0;
+  // joystick visível por omissão (fica no canto); na pausa dá para o pôr invisível (só aparece onde tocas)
+  let JOYVIS=true;try{JOYVIS=localStorage.getItem('cq.joyVis')!=='0'}catch(e){}
+  const home=()=>{const r=z.getBoundingClientRect();base.style.left='110px';base.style.top=(r.height-110)+'px';knob.style.transform='';base.hidden=!JOYVIS};
+  const jb=document.createElement('button');jb.className='btn ghost';jb.type='button';const paintJ=()=>{jb.textContent='🕹️ Joystick: '+(JOYVIS?'visível':'invisível');};paintJ();
+  jb.addEventListener('click',()=>{JOYVIS=!JOYVIS;try{localStorage.setItem('cq.joyVis',JOYVIS?'1':'0')}catch(e){}paintJ();if(id===null)home();});
+  {const row=document.querySelector('#mPause .row');if(row)row.appendChild(jb);}
+  window.__cqHome=()=>{if(id===null)home()};setTimeout(home,0);addEventListener('resize',()=>{if(id===null)home()});
   z.addEventListener('pointerdown',e=>{e.preventDefault();id=e.pointerId;z.setPointerCapture(id);const r=z.getBoundingClientRect();ox=e.clientX;oy=e.clientY;base.style.left=(ox-r.left)+'px';base.style.top=(oy-r.top)+'px';base.hidden=false;});
   z.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;let dx=e.clientX-ox,dy=e.clientY-oy;const l=Math.hypot(dx,dy),m=55;if(l>m){dx=dx/l*m;dy=dy/l*m;}knob.style.transform=`translate(${dx}px,${dy}px)`;touchMove={x:dx/m,z:dy/m};});
-  const end=e=>{if(e.pointerId!==id)return;id=null;base.hidden=true;knob.style.transform='';touchMove={x:0,z:0};};
+  const end=e=>{if(e.pointerId!==id)return;id=null;base.hidden=true;knob.style.transform='';touchMove={x:0,z:0};home();};
   z.addEventListener('pointerup',end);z.addEventListener('pointercancel',end);z.addEventListener('lostpointercapture',end);
   const hold=(el,down,up)=>{el.addEventListener('pointerdown',e=>{e.preventDefault();try{el.setPointerCapture(e.pointerId);}catch{}el.classList.add('on');down();});
     const u=()=>{if(!el.classList.contains('on'))return;el.classList.remove('on');up&&up();};el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u);el.addEventListener('lostpointercapture',u);};
