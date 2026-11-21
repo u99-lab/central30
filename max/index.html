@@ -276,7 +276,7 @@ html.reduce-motion .spot-art{transform:none}
  // bloqueios reiniciados e palavra-passe nova (13 de novembro de 2026): toda a gente volta a ter 5 entradas sem código e depois tem de pôr o código outra vez
  // reinício de 18/11/2026: todos os aparelhos esquecem a palavra-passe; quem já a tinha posto não ganha entradas grátis novas
  // reinício de 20/11/2026: todos os aparelhos esquecem a palavra-passe e voltam a ter 5 entradas sem código
- try{var GV='2026-11-20a';if(localStorage.getItem('c30max.gateV')!==GV){['c30max.pass','c30max.passN','c30max.trialN'].forEach(function(k){localStorage.removeItem(k)});localStorage.setItem('c30max.gateV',GV);}}catch(e){}
+ try{var GV='2026-11-21a';if(localStorage.getItem('c30max.gateV')!==GV){['c30max.pass','c30max.passN','c30max.trialN'].forEach(function(k){localStorage.removeItem(k)});localStorage.setItem('c30max.gateV',GV);}}catch(e){}
  try{if(localStorage.getItem('c30max.pass')===H){g.remove();return;}var n=+localStorage.getItem('c30max.trialN')||0;if(n<5){localStorage.setItem('c30max.trialN',String(n+1));window.__C30_TRIAL_LEFT=4-n;g.remove();return;}}catch(e){} // 5 entradas para experimentar; à 6.ª pede o código
  document.documentElement.style.overflow='hidden';try{var gh=document.getElementById('c30gateHide');if(gh)gh.remove();}catch(e){} // o ecrã do código só aparece quando é mesmo preciso (antes piscava e desaparecia)
  var inp=document.getElementById('c30gatePw'),msg=document.getElementById('c30gateMsg');setTimeout(function(){inp.focus();},50);
@@ -323,7 +323,7 @@ html.reduce-motion .spot-art{transform:none}
 <script>'use strict';
 // Recomeço geral (8 de novembro de 2026, 7.ª vez): apaga uma única vez o progresso de toda a gente, mesmo de quem
 // tinha "Guardar dados: SIM". As definições (incluindo guardar dados) ficam; a partir daqui guarda normalmente.
-try{const RESET='2026-11-14a';if(localStorage.getItem('c30.reset')!==RESET){const keep=new Set(['c30.reset','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN','c30.gateV','c30max.gateV']);const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('c30.')||k.startsWith('craques3d.')||/^(vfig|patrao|jdc)\./.test(k)||k==='central30.aviso')&&!keep.has(k)&&!k.startsWith('c30.gpass.'))del.push(k);}del.forEach(k=>localStorage.removeItem(k));localStorage.setItem('c30.reset',RESET);window.__C30_DID_RESET=true;}}catch{}
+try{const RESET='2026-11-21a';if(localStorage.getItem('c30.reset')!==RESET){const keep=new Set(['c30.reset','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN','c30.gateV','c30max.gateV']);const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('c30.')||k.startsWith('craques3d.')||/^(vfig|patrao|jdc)\./.test(k)||k==='central30.aviso')&&!keep.has(k)&&!k.startsWith('c30.gpass.'))del.push(k);}del.forEach(k=>localStorage.removeItem(k));localStorage.setItem('c30.reset',RESET);window.__C30_DID_RESET=true;}}catch{}
 try{const k=JSON.parse(localStorage.getItem('c30.settings')||'{}');if(!k.keepProgress)['c30.saves','c30.discoveries','c30.lastGame','c30.favs'].forEach(x=>localStorage.removeItem(x));}catch{}
 const $=id=>document.getElementById(id);
 const GAMES=[
