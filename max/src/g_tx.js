@@ -21,7 +21,7 @@ function mkCar(col,taxi){const g=new THREE.Group(),b=new THREE.Group();g.add(b);
 const marker=(col,txt)=>{const g=new THREE.Group(),c=new THREE.Mesh(new THREE.CylinderGeometry(5,5,8,24,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));c.position.y=4;g.add(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:K.tex(128,128,x=>{x.font='96px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText(txt,64,70);}),depthTest:false}));s.scale.set(7,7,1);s.position.y=12;g.add(s);scene.add(g);g.visible=false;return g;};
 const pickM=marker(0xffd23f,'🙋'),dropM=marker(0x3dffa2,'🏁'),pax=K.person({shirt:0xff3d8b});pax.visible=false;
 let state='menu',me=null,civs=[],goal={x:0,z:0},has=false,timer=0,score=0,rides=0,fare=0,mood=1,combo=0,eng=null,engG=null,stopT=0;
-const NAMES=['a D. Rosa','o Sr. Manel','a Bia','o Rui','o Stôr Paulo','a avó do Isaac','um turista','a Mika'],PLACES=['à praia','ao estádio','à escola','ao mercado','à estação','ao casino','ao farol','ao centro'];
+const NAMES=['a D. Rosa','o Sr. Manel','a Bia','o Rui','o Stôr Paulo','a avó do Tomás','um turista','a Mika'],PLACES=['à praia','ao estádio','à escola','ao mercado','à estação','ao casino','ao farol','ao centro'];
 const car=(g,x,z)=>({g,x,z,a:0,sp:0,steer:0});
 function pickCiv(v){const o=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>v.ni+d[0]>=0&&v.ni+d[0]<=NB&&v.nj+d[1]>=0&&v.nj+d[1]<=NB&&!(d[0]===-v.dx&&d[1]===-v.dz)),d=K.pick(o);v.dx=d[0];v.dz=d[1];v.ni+=d[0];v.nj+=d[1];}
 function newGoal(far){let i,j,n=0;do{i=K.irand(0,NB);j=K.irand(0,NB);n++;}while((Math.hypot(i*D-me.x,j*D-me.z)<(far?150:60)||Math.hypot(i*D-me.x,j*D-me.z)>(far?330:190))&&n<60);goal.x=i*D;goal.z=j*D;}

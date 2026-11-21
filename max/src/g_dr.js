@@ -6,7 +6,7 @@ document.documentElement.style.setProperty('--kc','#ff3d5a');
 K.init({sky:0x0b1030,fog:[80,330],fov:58,far:700,shadow:30,hemi:.55,sunI:.45,sunColor:0x9fb4ff,sunPos:[20,50,-20]});
 const scene=K.scene,cam=K.camera,LEN=402;
 const CARS=[['Gazela GTi',0xe8352c,1,0],['Falcon GT',0x2a8bff,1.2,3000],['Aurora Racer',0xffd23f,1.42,9000],['Relâmpago X',0xb46bff,1.66,22000]];
-const RIV=[['Rui',.84,0x35d07f],['Bia',.95,0xff8ac0],['Isaac',1.06,0xffffff],['Mika',1.2,0xff8a3d],['Bruno',1.36,0x2a8bff],['Rafa',1.54,0x1b1b1b],['Stôr Paulo',1.76,0xc0c0c0],['O Patrão',2.02,0xffd23f]];
+const RIV=[['Rui',.84,0x35d07f],['Bia',.95,0xff8ac0],['Tomás',1.06,0xffffff],['Mika',1.2,0xff8a3d],['Bruno',1.36,0x2a8bff],['Rafa',1.54,0x1b1b1b],['Stôr Paulo',1.76,0xc0c0c0],['O Patrão',2.02,0xffd23f]];
 const UPS=[['m','Motor','+8% de força'],['c','Caixa','mudanças mais rápidas'],['n','Nitro','+0,5 s de nitro'],['p','Pneus','melhor arranque']];
 const GR=[1,.66,.47,.36,.29,.24],VM=[15,26,38,51,65,82];
 // ----- cenário
