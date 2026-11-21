@@ -387,7 +387,7 @@ class Car{
     if(this.mega>0)this.mega-=dt;
   }
   visual(dt){
-    this.group.position.copy(this.pos);this.group.rotation.y=this.yaw;
+    const ia=window.__nsA==null?1:window.__nsA;if(this.pp&&ia<1&&this.pp.distanceToSquared(this.pos)<9){this.group.position.lerpVectors(this.pp,this.pos,ia);let d=this.yaw-this.pyaw;d=Math.atan2(Math.sin(d),Math.cos(d));this.group.rotation.y=this.pyaw+d*ia;}else{this.group.position.copy(this.pos);this.group.rotation.y=this.yaw;}
     if(this.flip){const a=Math.min(1,this.flip.t/.55)*Math.PI*2;this.fg.rotation.x=a*this.flip.ax;this.fg.rotation.z=a*this.flip.az;}
     else{this.fg.rotation.x*=.8;this.fg.rotation.z*=.8;
       if(!this.onGround)this.fg.rotation.x=clamp(-this.vel.y*.012,-.25,.25);}
@@ -709,7 +709,7 @@ let camPos=new V(0,30,90),camLook=new V(),camInit=true,shake=0,fov=72,menuT=0;
 function updateCam(dt){
   if(S.state==='menu'||(S.state==='over'&&!player)){
     menuT+=dt*.12;camera.position.set(Math.sin(menuT)*170,60,Math.cos(menuT)*195);camera.lookAt(0,0,0);return;}
-  const c=player,fwd=c.fwd();let des,look;
+  const c0=player,fwd=new V(Math.sin(c0.group.rotation.y),0,Math.cos(c0.group.rotation.y)),c={pos:c0.group.position};let des,look;
   if(S.cam==='ball'&&ballMesh.visible){
     const d=new V(c.pos.x-ball.pos.x,0,c.pos.z-ball.pos.z);if(d.lengthSq()<.5)d.copy(fwd).negate();d.normalize();
     des=c.pos.clone().addScaledVector(d,12.5);des.y=c.pos.y+5.2;
@@ -722,9 +722,9 @@ function updateCam(dt){
   if(camInit){camPos.copy(des);camLook.copy(look);camInit=false;}
   camPos.lerp(des,1-Math.exp(-9*dt));camLook.lerp(look,1-Math.exp(-14*dt));
   camera.position.copy(camPos);if(camera.position.y<1)camera.position.y=1;
-  if(shake>0){shake-=dt;camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;}
+  if(shake>0)shake=0;/* sem tremer: a câmara e o carro ficam sempre estáveis */
   camera.lookAt(camLook);
-  const tf=c.boosting&&c.vel.length()>40?84:72;fov+=(tf-fov)*Math.min(1,dt*4);
+  const tf=c0.boosting&&c0.vel.length()>40?84:72;fov+=(tf-fov)*Math.min(1,dt*4);
   camera.fov=fov;camera.updateProjectionMatrix();
 }
 
@@ -775,10 +775,11 @@ function frame(now){
   }
   if(S.state==='paused'||S.state==='menu'||S.state==='over'){acc=0;}
   else{acc+=dt;let first=true;
-    while(acc>=STEP){step(STEP,inputs);if(first&&inputs){inputs.forEach(i=>i.jump=false);first=false;}acc-=STEP;}
+    while(acc>=STEP){/* guarda a posição antes de cada passo para desenhar o meio-termo (sem tremer) */for(const c of cars){(c.pp||(c.pp=new V())).copy(c.pos);c.pyaw=c.yaw;}(ball.pp||(ball.pp=new V())).copy(ball.pos);step(STEP,inputs);if(first&&inputs){inputs.forEach(i=>i.jump=false);first=false;}acc-=STEP;}
   }
   // visuals
-  ballMesh.position.copy(ball.pos);
+  window.__nsA=(S.state==='play'||S.state==='kickoff'||S.state==='goal'||S.state==='countdown')?Math.max(0,Math.min(1,acc/STEP)):1;
+  if(ball.pp&&window.__nsA<1)ballMesh.position.lerpVectors(ball.pp,ball.pos,window.__nsA);else ballMesh.position.copy(ball.pos);
   const hv=new V(ball.vel.z,0,-ball.vel.x),hs=hv.length();
   if(hs>.01&&S.state!=='paused')ballMesh.rotateOnWorldAxis(hv.multiplyScalar(1/hs),hs/BR*dt);
   ballWire.material.color.set(ball.last?(ball.last.mega>0?0xffd23f:TEAMCOL[ball.last.team]):0x33ddff);
