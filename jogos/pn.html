@@ -7105,6 +7105,7 @@ function updateWanted(dt) {
   for (const p of peds) if (p.kind === 'cop' && !p.dead) { const d2 = p.pos.distanceToSquared(pp); if (d2 < 60 * 60 && (d2 < 15 * 15 || copLOS(p.pos, pp))) { seen = true; break; } }
   if (!seen) for (const v of vehicles) if (v.type === 'police' && v.driver === 'cop' && !v.dead) { const d2 = v.pos.distanceToSquared(pp); if (d2 < 75 * 75 && (d2 < 18 * 18 || copLOS(v.pos, pp))) { seen = true; break; } }
   if (!seen && heli.active && !heli.falling && heli.pos.distanceTo(pp) < 110) seen = true;
+  if (INSIDE) seen = false;
   if (seen) { GAME.wantedLoseT = 0; lastSeen.copy(pp); GAME.searchFlash = 0; }
   else {
     // as estrelas apagam-se uma a uma enquanto ninguém te vê (as estrelas piscam)
@@ -7765,7 +7766,9 @@ fadeEl.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;pointer
 document.body.appendChild(fadeEl);
 function fadeTo(fn) { fadeEl.style.opacity = 1; setTimeout(() => { fn(); camState.init = false; setTimeout(() => fadeEl.style.opacity = 0, 60); }, 300); }
 function enterInterior(it) {
-  if (GAME.wanted > 0) { showHint('Despista a polícia antes de entrar.', 2); return; }
+  /* com 1 ou 2 estrelas podes esconder-te num prédio (lá dentro a polícia não te vê e as estrelas vão-se apagando); com 3 ou mais tens de fugir primeiro */
+  if (GAME.wanted >= 3) { showHint('Com ' + GAME.wanted + ' estrelas não te deixam entrar: despista a polícia primeiro.', 2.5); return; }
+  if (GAME.wanted > 0) showHint('Escondeste-te! Fica cá dentro até as estrelas se apagarem.', 3);
   SFX.door();
   fadeTo(() => {
     INSIDE = it;
