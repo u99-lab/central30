@@ -4314,9 +4314,11 @@ const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth * (LOW_DEV ? 0.5 
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+let rsW = innerWidth, rsH = innerHeight, rsT = 0;
+addEventListener('resize', () => { // só quando o tamanho muda mesmo (no iPad a barra do Safari dispara isto e apagava o ecrã por um instante)
+  clearTimeout(rsT); rsT = setTimeout(() => { if (innerWidth === rsW && innerHeight === rsH) return; rsW = innerWidth; rsH = innerHeight;
+    camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); }, 150);
 });
 
 // ============================================================ TEXTURES
@@ -8265,24 +8267,30 @@ function frame(now) {
   if (playT > 8) { fpsAcc += rawDt; fpsN++; }
   if (fpsAcc > 1.5) {
     const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
+    // sem «sobe e desce»: cada mudança de resolução apaga o ecrã por um instante (era o ecrã preto de 0,2 s); por isso muda pouco e com calma
+    const now = performance.now() / 1000, canPR = now - prT > 12;
     if (fps < 42) {
+      upN = 0;
       if (++slowN >= 2) { slowN = 0;
         if (gfxLow === 0) { gfxLow = 1; renderer.shadowMap.autoUpdate = false; }
         else if (gfxLow === 1) { gfxLow = 2; bloom.enabled = false; }
-        else if (PIXEL_RATIO > 0.85) setPR(Math.max(0.85, PIXEL_RATIO - 0.15));
+        else if (PIXEL_RATIO > 0.85 && canPR) { setPR(Math.max(0.85, PIXEL_RATIO - 0.15)); prT = now; prDown++; }
       }
     } else {
       slowN = 0;
-      if (fps > 50) {
-        if (PIXEL_RATIO < Math.min(1, PR_MAX)) setPR(Math.min(PR_MAX, PIXEL_RATIO + 0.15));
-        else if (gfxLow === 2) { gfxLow = 1; bloom.enabled = true; }
-        else if (gfxLow === 1 && ++upN >= 3) { gfxLow = 0; upN = 0; renderer.shadowMap.autoUpdate = true; }
-        else if (PIXEL_RATIO < PR_MAX) setPR(Math.min(PR_MAX, PIXEL_RATIO + 0.1));
-      }
+      if (fps > 55) {
+        if (++upN >= 4) { upN = 0;
+          const prUp = canPR && prDown < 2 && prUps < 3;
+          if (prUp && PIXEL_RATIO < Math.min(1, PR_MAX)) { setPR(Math.min(PR_MAX, PIXEL_RATIO + 0.15)); prT = now; prUps++; }
+          else if (gfxLow === 2) { gfxLow = 1; bloom.enabled = true; }
+          else if (gfxLow === 1) { gfxLow = 0; renderer.shadowMap.autoUpdate = true; }
+          else if (prUp && PIXEL_RATIO < PR_MAX) { setPR(Math.min(PR_MAX, PIXEL_RATIO + 0.1)); prT = now; prUps++; }
+        }
+      } else upN = 0;
     }
   }
 }
-let upN = 0, shadowTick = 0;
+let upN = 0, shadowTick = 0, prT = 0, prDown = 0, prUps = 0;
 function setPR(pr) { PIXEL_RATIO = pr; renderer.setPixelRatio(pr); composer.setPixelRatio(pr); composer.setSize(innerWidth, innerHeight); }
 
 // ============================================================ MENUS

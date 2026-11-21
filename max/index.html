@@ -439,7 +439,7 @@ function renderCards(){const G=$('gameGrid'),filtered=F.q||F.fav||F.genre!=='Tod
  if(filtered){const grp=GROUPS.find(x=>x[0]===F.genre);const l=sorted(GAMES.filter(g=>(F.genre==='Todos'||(F.genre==='Arcade'?NEW.has(g.id):grp&&grp[2](g)))&&(!F.fav||favs.includes(g.id))&&(g.name+g.genre+g.desc+g.feature).toLowerCase().includes(F.q)));
   G.innerHTML=l.length?`<section class="shelf"><h2>${F.fav?'Os teus favoritos':F.q?'Resultados':F.genre==='Todos'?'Todos os jogos':F.genre==='Arcade'?'Arcade · jogos rápidos':grp[1]}<small>${l.length} ${l.length===1?'jogo':'jogos'}</small></h2><div class="row grid">${l.map(g=>tile(g)).join('')}</div></section>`:'<div class="empty-state">Nada por aqui. '+(F.fav?'Carrega na ★ de um jogo para o guardares nos favoritos.':'Tenta outra pesquisa.')+'</div>';return;}
  const recent=GAMES.filter(g=>st(g.id).plays).sort((a,b)=>st(b.id).last-st(a.id).last).slice(0,8);
- G.innerHTML=shelf('Continuar a jogar',recent,false,'os teus últimos')+shelf('Arcade 🕹️',GAMES.filter(g=>NEW.has(g.id)),true,'jogos rápidos: entras e jogas em segundos')+GROUPS.map(x=>shelf(x[1],GAMES.filter(x[2]))).join('');}
+ G.innerHTML=shelf('Continuar a jogar',recent,false,'os teus últimos')+shelf('Arcade 🕹️',GAMES.filter(g=>NEW.has(g.id)),true,GAMES.filter(g=>NEW.has(g.id)).length+' jogos rápidos · entras e jogas em segundos')+GROUPS.map(x=>shelf(x[1],GAMES.filter(x[2]))).join('');}
 // ----- destaque
 let spotId=null,holdUntil=0,feat=[],bdN=0;
 function featured(){const last=read('c30.lastGame',null),rest=GAMES.filter(g=>!NEW.has(g.id)&&g.id!==last).sort(()=>Math.random()-.5).slice(0,3).map(g=>g.id);feat=[...new Set([...(byId(last)?[last]:[]),...NEW,...rest])];}
