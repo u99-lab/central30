@@ -8146,6 +8146,10 @@ const C30X = (() => {
   const btn = document.createElement('button'); btn.textContent = '📱'; btn.title = 'Telemóvel (T)';
   btn.style.cssText = 'position:fixed;right:14px;bottom:44px;z-index:60;width:44px;height:44px;border-radius:14px;border:1px solid #2b3550;background:#141824cc;font-size:22px;cursor:pointer;display:none';
   btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); toggle(); }); document.body.appendChild(btn);
+  // no iPad: o botão fica na barra de cima dos controlos de toque (não tapa o acelerador nem os botões de tiro) e o telemóvel abre no centro
+  const ttop = document.querySelector('.ttop');
+  if (ttop) { const tb2 = document.createElement('button'); tb2.className = 'tbtn small'; tb2.type = 'button'; tb2.textContent = '📱 TELEMÓVEL'; tb2.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); toggle(); }); ttop.appendChild(tb2); }
+  const isTouch = () => document.body.classList.contains('touch') || (typeof TOUCH !== 'undefined' && TOUCH.used);
   const APPS = [['📰', 'Neon Feed', feedApp], ['🏁', 'Corrida de rua', raceApp], ['🔧', 'Mecânico', mechApp], ['🚕', 'Táxi', taxiApp], ['🏦', 'Banco e estatísticas', bankApp]];
   let page = null;
   function render() {
@@ -8206,7 +8210,8 @@ const C30X = (() => {
   function update(dt) {
     if (consumeKey('KeyT')) toggle();
     for (let i = 0; i < 5; i++) if (consumeKey('Digit' + (i + 1)) && S.open) openApp(i);
-    btn.style.display = 'block';
+    const tch = isTouch(); btn.style.display = tch && ttop ? 'none' : 'block';
+    if (tch) { ph.style.left = '50%'; ph.style.right = 'auto'; ph.style.transform = 'translateX(-50%)'; ph.style.top = 'calc(64px + env(safe-area-inset-top, 0px))'; ph.style.bottom = 'auto'; ph.style.width = 'min(300px, 80vw)'; }
     // Neon Feed reage ao que acontece
     if (GAME.wanted > S.lastW) post('policia_neon', GAME.wanted >= 3 ? 'Perseguição a alta velocidade no centro! Evitem a zona 🚨🚁' : 'Condutor em fuga visto perto do canal 🚓');
     if (S.lastW > 0 && GAME.wanted === 0) post('vizinha_curiosa', 'Afinal a polícia perdeu-lhe o rasto 👀');

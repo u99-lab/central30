@@ -136,6 +136,8 @@ kbd{font:600 11px var(--fm);background:#1d2f3c;border:1px solid #34505f;border-b
 .bt-steps span:nth-child(2){animation-delay:1.5s}.bt-steps span:nth-child(3){animation-delay:3s}.bt-steps span:nth-child(4){animation-delay:4.5s}.bt-steps span:nth-child(5){animation-delay:6s}.bt-steps span:nth-child(6){animation-delay:7.5s}
 .bt-bar{width:min(320px,70vw);height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.bt-bar i{display:block;height:100%;width:40%;background:#ff8a3d;border-radius:3px;animation:btbar 1.4s ease-in-out infinite;will-change:transform}
 @keyframes btspin{to{transform:rotate(360deg)}}@keyframes btstep{0%{opacity:0}3%{opacity:1}15%{opacity:1}18%{opacity:0}100%{opacity:0}}@keyframes btbar{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+
+#touch.inbld #tPanel .tb:not(#tF),#touch.inbld #tNit,#touch.intower #tPanel .tb:not(#tF),#touch.intower #tNit,#touch.intower #tHand{display:none!important}
 </style>
 <style>/* avisos (ex.: dinheiro insuficiente) sempre por cima dos menus e lojas */#toast{z-index:60!important}body:has(.screen:not([hidden])) #toast{background:rgba(10,18,24,.94);padding:12px 18px;border-radius:14px;border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 30px rgba(0,0,0,.5)}</style>
 </head>
@@ -2032,6 +2034,10 @@ function nearEnterable(){if(!W.on)return null;const F=focus();for(const a of AIR
  for(const p of PLACES)if(Math.hypot(F.x-p.door.x,F.z-p.door.z)<7){if(p.kind==='tunnel')return null;return {type:p.kind==='stadium'?'stadium':'place',label:p.name,pl:p,x:p.door.x,z:p.door.z}}
  let best=null,bd=1e9;for(const e of entList()){const d=Math.hypot(F.x-e.x,F.z-e.z);if(d<e.rad&&d<bd){bd=d;best=e}}if(best)return Object.assign({},best,{x:F.x,z:F.z});return null}
 const IHUD=['#tl','#spd','#mapw'];
+// no iPad: dentro dos prédios e no miradouro os botões mudam (só ficam os que servem lá dentro)
+function touchMode(m){const T=$('#touch');if(!T)return;const ids=['#tGas','#tBrk','#tE','#tF'];if(m){T._orig={};ids.forEach(id=>{const e=$(id);if(e)T._orig[id]=e.innerHTML})}
+ T.classList.toggle('inbld',m==='inside');T.classList.toggle('intower',m==='tower');const L=m==='tower'?{'#tGas':'＋ ZOOM','#tBrk':'－ ZOOM','#tE':'DESCER','#tF':'<b>🛗</b><span> DESCER</span>'}:m?{'#tGas':'ANDAR','#tBrk':'RECUAR','#tE':'USAR','#tF':'<b>🚪</b><span> SAIR</span>'}:null;
+ ids.forEach(id=>{const e=$(id);if(!e)return;if(L)e.innerHTML=L[id];else if(T._orig&&T._orig[id]!=null)e.innerHTML=T._orig[id]})}
 function enterBuilding(en){if(G.state!=='play'||!W.on)return;
  if(en.type==='tower'){enterTower(en);return}
  if(en.type==='museum'||en.type==='tower'){const fee=en.lm&&/Castelo|Kremlin|Palácio|Hermitage|Louvre|Museu|Peterhof|Alhambra|Versalhes/i.test(en.label)?15:10;const k='tk:'+REGION_ID+':'+en.label;if(!INS.paid)INS.paid={};if(!INS.paid[k]){if(G.money<fee){toast('🎟️ O bilhete para '+en.label+' custa '+euro(fee)+'. Não tens dinheiro suficiente.',true,3);sfx.bad();return}G.money-=fee;MEM.set('money',G.money);INS.paid[k]=1;toast('🎟️ Bilhete comprado: '+euro(fee)+'.',false,2)}}
@@ -2041,11 +2047,11 @@ function enterBuilding(en){if(G.state!=='play'||!W.on)return;
  if(!S.world){S.spots.push({x:S.door[0],z:S.door[1],r:2.4,label:'🚪 Sair para a rua',act:()=>exitBuilding()});ibox(g,3.2,3.2,.2,0x2a3a48,S.door[0],0,S.door[1]+.45);iplane(g,2.6,.6,ctex(128,32,(q,w,h)=>{q.fillStyle='#1d7a3a';q.fillRect(0,0,w,h);q.fillStyle='#fff';q.font='800 20px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('SAÍDA ⇢',w/2,h/2+1)}),S.door[0],3.6,S.door[1]+.3,Math.PI)}
  try{if(!S.world)imarkers(S)}catch(e){}
  const m=makePerson();(S.world?S.wg:S.g).add(m);S.m=m;S.px=S.start?S.start[0]:S.door[0];S.pz=S.start?S.start[1]:S.door[1]-2;S.yaw=S.startYaw!=null?S.startYaw:0;S.v=0;S.ph=0;
- INS.on=S;G.state='inside';if(W.m)W.m.visible=false;IHUD.forEach(s=>$(s).hidden=true);if(engG)engG.gain.value=0;if(!S.world){S.light=[hemi.intensity,sun.intensity];hemi.intensity=.95;sun.intensity=.75}
+ INS.on=S;G.state='inside';if(W.m)W.m.visible=false;IHUD.forEach(s=>$(s).hidden=true);if(engG)engG.gain.value=0;touchMode('inside');if(!S.world){S.light=[hemi.intensity,sun.intensity];hemi.intensity=.95;sun.intensity=.75}
  S.cam=null;updateInside(0,true);toast(S.hello||('Entraste: '+en.label+'.'),false,3)}
 function exitBuilding(silent){const S=INS.on;if(!S)return;INS.on=null;if(S.cleanup)try{S.cleanup()}catch(e){}if(S.light){hemi.intensity=S.light[0];sun.intensity=S.light[1]}
  if(S.m&&S.m.parent)S.m.parent.remove(S.m);scene.remove(S.g);S.g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&!Object.values(IBM).includes(o.material)){if(o.material.map)o.material.map.dispose();o.material.dispose()}});
- G.state='play';if(W.m)W.m.visible=true;W.x=S.en.x;W.z=S.en.z;W.y=surfaceAt(W.x,W.z,W.y);IHUD.forEach(s=>$(s).hidden=false);$('#prompt').hidden=true;if(touchOn)$('#touch').hidden=false;camera.fov=62;camera.updateProjectionMatrix();if(!silent)toast('De volta à rua.',false,1.2);canvas.focus()}
+ touchMode(null);G.state='play';if(W.m)W.m.visible=true;W.x=S.en.x;W.z=S.en.z;W.y=surfaceAt(W.x,W.z,W.y);IHUD.forEach(s=>$(s).hidden=false);$('#prompt').hidden=true;if(touchOn)$('#touch').hidden=false;camera.fov=62;camera.updateProjectionMatrix();if(!silent)toast('De volta à rua.',false,1.2);canvas.focus()}
 function insideBlocked(S,x,z){if(S.bound){if(S.bound(x,z))return true}else if(Math.abs(x)>S.W/2-.45||Math.abs(z)>S.D/2-.45)return true;for(const b of S.solid)if(Math.abs(x-b[0])<b[2]/2+.3&&Math.abs(z-b[1])<b[3]/2+.3)return true;return false}
 function insideSpot(S){let b=null,bd=1e9;for(const s of S.spots){const d=Math.hypot(S.px-s.x,S.pz-s.z);if(d<s.r&&d<bd){bd=d;b=s}}return b}
 function insideAction(){const S=INS.on;if(!S)return;if(S.tower){exitBuilding();return}if(S.onE&&S.onE())return;const sp=insideSpot(S);if(sp)sp.act()}
@@ -2144,7 +2150,7 @@ function enterTower(en){const l=en.lm||{};let top=60;try{const gg=scene.children
  const RH=[[/Burj Khalifa/i,555],[/Skytree/i,450],[/CN Tower/i,447],[/Shanghai|Oriental Pearl/i,263],[/Lakhta/i,357],[/Empire/i,373],[/One World/i,386],[/Eiffel/i,276],[/Torre de Tóquio|Tokyo Tower/i,250],[/Petronas/i,170],[/Moscow City/i,354],[/Taipei 101/i,382],[/Shard/i,244],[/Space Needle/i,160],[/Sky ?Tower/i,220],[/Clérigos/i,70],[/Ostankino/i,337],[/Torre Vasco/i,120]];let rh=0;for(const [r,h] of RH)if(r.test(en.label)){rh=h;break}
  let roof=0;for(const b of B){if(!b.h||b.hidden)continue;if(Math.abs(b.x-TX)<180&&Math.abs(b.z-TZ)<180)roof=Math.max(roof,b.h*(b.tall||1))}
  const vy=en.roofH?en.roofH+2:Math.max(30,top*.93,rh,roof+12);const S={en:Object.assign({},en,{x:W.x,z:W.z}),g:new THREE.Group(),spots:[],solid:[],npcs:[],tower:true,t:0,x:TX,z:TZ,y:y0+vy,yaw:W.yaw||0,fov:60};scene.add(S.g);
- INS.on=S;G.state='inside';if(W.m)W.m.visible=false;IHUD.forEach(s=>$(s).hidden=true);toast('🛗 Subiste ao miradouro de '+en.label+' ('+Math.round(vy)+' m). Roda com ← →, aproxima com ↑ ↓. E ou F para descer.',false,5);updateTower(0,S)}
+ INS.on=S;G.state='inside';if(W.m)W.m.visible=false;IHUD.forEach(s=>$(s).hidden=true);touchMode('tower');toast('🛗 Subiste ao miradouro de '+en.label+' ('+Math.round(vy)+' m). '+(touchOn?'Roda com ◀ ▶, aproxima com ＋ ZOOM e − ZOOM. DESCER para sair.':'Roda com ← →, aproxima com ↑ ↓. E ou F para descer.'),false,5);updateTower(0,S)}
 function updateTower(dt,S){const t=(K.KeyA||K.ArrowLeft||TB.left?1:0)-(K.KeyD||K.ArrowRight||TB.right?1:0),z=(K.KeyW||K.ArrowUp||TB.gas?1:0)-(K.KeyS||K.ArrowDown||TB.brake?1:0);S.yaw+=(t*.9+(t?0:.06))*dt;S.fov=clamp(S.fov-z*30*dt,18,75);
  camera.position.set(S.x+Math.sin(S.yaw)*3,S.y,S.z-Math.cos(S.yaw)*3);camera.lookAt(S.x+Math.sin(S.yaw)*200,S.y+(S.pitch!=null?S.pitch:-28),S.z-Math.cos(S.yaw)*200);camera.fov=S.fov;camera.updateProjectionMatrix();sun.position.set(S.x+150,S.y+300,S.z+120);sun.target.position.set(S.x,0,S.z);
  const pr=$('#prompt');pr.hidden=false;$('#promptT').textContent='🔭 Miradouro · E para descer'}
@@ -2208,7 +2214,7 @@ IBUILD.bld=S=>{const g=S.g,k=S.en.kind,nm=S.en.name;S.W=20;S.D=15;S.H=4.4;S.door
  else{// prédio de apartamentos: entrada, caixas do correio e elevador até ao terraço
   S.W=14;S.D=12;S.door=[0,5.6];iroom(g,14,12,4.4,'marble',0xe9e4da,0xffffff,4);for(let i=0;i<12;i++)P.push([.5,.35,.12,-5.5+(i%6)*.55,1.2+Math.floor(i/6)*.4,-5.9,0x9aa1a8]);P.push([2.2,3,.1,4,0,-5.95,0x6f767b],[.04,3,.11,4,0,-5.9,0x333333],[3,1,1,-4,0,2,0x6a3c1c]);S.solid.push([-4,2,3,1]);iclerk(S,-4,1,0x34495e);
   const bb=S.en.b;spot(4,-4.6,{label:'🛗 Elevador até ao terraço',act:()=>{const e=S.en;exitBuilding(true);enterTower({type:'tower',label:'terraço do prédio',x:e.x,z:e.z,lm:{x:bb.x,z:bb.z},paid:1,roofH:bb.h})}});spot(-4,3.3,{label:'🛎️ Porteiro',act:()=>toast('«Boa tarde! O terraço está aberto aos visitantes. O elevador é ali à direita.»',false,3.5)})}
- imerge(g,P);S.hello=S.en.label+'. '+(k==='apt'?'O elevador leva-te ao terraço.':'Vai ao balcão (E nos círculos amarelos).');for(let i=0;i<(k==='apt'?1:3);i++)S.npcs.push({m:inpc(g,SHIRTS[(i*3+1)%SHIRTS.length])})};
+ imerge(g,P);S.hello=S.en.label+'. '+(k==='apt'?'O elevador leva-te ao terraço.':touchOn?'Vai aos círculos amarelos e toca em USAR.':'Vai ao balcão (E nos círculos amarelos).');for(let i=0;i<(k==='apt'?1:3);i++)S.npcs.push({m:inpc(g,SHIRTS[(i*3+1)%SHIRTS.length])})};
 
 /* ================= CÉU MAIS VIVO: nuvens a passar com o vento e bandos de pássaros (as cores mudam com o dia, o pôr do sol, a noite e a chuva) ================= */
 {const cloudT=ctex(256,128,(q,w,h)=>{for(let i=0;i<22;i++){const x=40+Math.random()*(w-80),y=h*.55+(Math.random()-.5)*h*.3,r=18+Math.random()*30,g=q.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.6,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');q.fillStyle=g;q.beginPath();q.arc(x,y,r,0,7);q.fill()}});
