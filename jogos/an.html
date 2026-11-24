@@ -1290,6 +1290,8 @@ window.FlightInstruments=(()=>{
   for(const dy of [-19,7,-34,22]){for(const dx of [7,-w-7]){const a={x:clamp(x+dx,5,W-w-5),y:clamp(y+dy,26,H-h-27),w,h};if(!labels.some(b=>a.x<b.x+b.w+3&&a.x+a.w+3>b.x&&a.y<b.y+b.h+2&&a.y+a.h+2>b.y)){chosen=a;break;}}if(chosen)break;}
   if(!chosen)chosen={x:clamp(x+7,5,W-w-5),y:clamp(y-19,26,H-h-27),w,h};labels.push(chosen);box(c,chosen.x,chosen.y,w,h,'#09191fcc');text(c,label,chosen.x+4,chosen.y+11,10,color,'left');
  };
+ /* amigos online: ponto com o nome e a distância (na borda do mapa se estiverem longe) */
+ try{for(const q of (window.C30peersMap?window.C30peersMap():[])){let [x,y]=project(q.x,q.z);const out=x<8||x>W-8||y<28||y>H-28;x=clamp(x,8,W-8);y=clamp(y,28,H-28);c.fillStyle=q.color||'#ff8a3d';c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(x,y,out?4:6,0,Math.PI*2);c.fill();c.stroke();const km=Math.hypot(q.x-px,q.z-pz)/1000;mapLabel(q.name+' · '+(km<10?km.toFixed(1):Math.round(km))+' km',x,y,q.color||'#ffd28a');}}catch(e){}
 
  if(route?.length){c.strokeStyle='#dc9ac6';c.lineWidth=1.6;c.setLineDash([5,4]);c.beginPath();route.forEach((p,i)=>{const [x,y]=project(p.x,p.z);if(i===0)c.moveTo(x,y);else c.lineTo(x,y);});c.stroke();c.setLineDash([]);route.forEach((p,i)=>{const [x,y]=project(p.x,p.z);diamond(c,x,y,'#efa9d5');if(i===options.activeWaypoint&&x>=0&&x<=W&&y>23&&y<H-24){mapLabel(p.name||'WPT',x,y,'#efb7df');}});}
  for(const a of world.airports){const [x,y]=project(a.x,a.z);if(x<-10||x>W+10||y<12||y>H-13)continue;c.save();c.translate(x,y);c.rotate(a.heading*Math.PI/180);box(c,-2,-Math.max(4,a.length*scale/2),4,Math.max(8,a.length*scale),'#b3d9e0');c.restore();mapLabel(a.code,x,y,a.id===options.airport?'#ffe28d':'#c8e0e4');}
