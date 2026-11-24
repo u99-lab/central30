@@ -989,7 +989,8 @@ const chaikin=(P,n)=>{for(let k=0;k<n;k++){const Q=[P[0]];for(let i=0;i<P.length
 const dens=(P,step)=>{const Q=[];for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/step));for(let k=0;k<n;k++)Q.push([lerp(a[0],b[0],k/n),lerp(a[1],b[1],k/n)])}Q.push(P[P.length-1]);return Q};
 const JUNCTIONS=[];// pontos onde se pode atravessar o separador (nós de ligação)
 // autoestradas
-(RG.highways||[]).forEach(h=>{const P=chaikin(PJL(h.pts),3);road(h.name,P,22,{auto:true,rural:true,hw:h})});
+/* autoestradas: nas cidades grandes onde se cruzam duas ou mais (ex.: Munique), acabam no anel à volta da cidade em vez de se cruzarem de nível no meio das ruas */
+{const HW=(RG.highways||[]).map(h=>({h,P:chaikin(PJL(h.pts),3)}));const cut=[];for(const c of CITIES){if(c.big!==2)continue;const R=c.r*.75,n=HW.filter(o=>o.P.some(p=>Math.hypot(p[0]-c.x,p[1]-c.z)<R)).length;if(n>=2)cut.push({x:c.x,z:c.z,R:c.r*.68})} for(const o of HW){if(!cut.length){road(o.h.name,o.P,22,{auto:true,rural:true,hw:o.h});continue}let cur=[],c0=0;const pcs=[];for(const p of o.P){if(cut.some(c=>Math.hypot(p[0]-c.x,p[1]-c.z)<c.R)){if(cur.length>1)pcs.push([cur,c0,1]);cur=[];c0=1}else cur.push(p)}if(cur.length>1)pcs.push([cur,c0,0]);for(const [q,a,b] of pcs){const r=road(o.h.name,q,22,{auto:true,rural:true,hw:o.h});if(r&&(a||b))r.cutE={0:a,1:b}}}}
 // estradas nacionais
 (RG.nroads||[]).forEach(h=>{const P=chaikin(PJL(h.pts),2);road(h.name,P,10,{rural:true})});
 // cidades: ruas em grelha (só em terra) e ligação à autoestrada mais perto
@@ -1064,7 +1065,7 @@ function cutRoad(r,s0,s1){const cum=[0];for(let i=0;i<r.pts.length-1;i++)cum.pus
  const before=[],after=[];for(let i=0;i<r.pts.length;i++){if(cum[i]<s0-1)before.push(r.pts[i]);else if(cum[i]>s1+1)after.push(r.pts[i])}if(s0>2)before.push(at(s0));if(s1<tot-2)after.unshift(at(s1));
  const ri=ROADS.indexOf(r),ex=Object.assign({},r);delete ex.name;delete ex.pts;delete ex.w;ROADS.splice(ri,1);if(before.length>1&&s0>15)road(r.name,before,r.w,Object.assign({},ex,{deadEnd:true}));if(after.length>1&&tot-s1>15)road(r.name,after,r.w,Object.assign({},ex,{deadEnd:true}));return true}
 // autoestradas que acabam perto da fronteira: continuam até lá (para se poder passar para o outro país de carro)
-for(const r of ROADS.filter(r=>r.auto))for(const end of [0,1]){const P=r.pts;if(P.length<2)continue;const e=end?P[P.length-1]:P[0],q=end?P[P.length-2]:P[1];const L=Math.hypot(e[0]-q[0],e[1]-q[1])||1,ux=(e[0]-q[0])/L,uz=(e[1]-q[1])/L;
+for(const r of ROADS.filter(r=>r.auto))for(const end of [0,1]){const P=r.pts;if(P.length<2||(r.cutE&&r.cutE[end]))continue;const e=end?P[P.length-1]:P[0],q=end?P[P.length-2]:P[1];const L=Math.hypot(e[0]-q[0],e[1]-q[1])||1,ux=(e[0]-q[0])/L,uz=(e[1]-q[1])/L;
  let hit=-1;for(let d=20;d<=3000*WU;d+=20){const x=e[0]+ux*d,z=e[1]+uz*d;const m=maskAt(x,z);if(m===2){hit=d;break}if(m!==1)break}
  if(hit>0){const ext=[];for(let d=20;d<=hit+60;d+=20)ext.push([e[0]+ux*d,e[1]+uz*d]);if(end)r.pts=P.concat(ext);else r.pts=ext.reverse().concat(P);r.toBorder=true;(r.bEnds=r.bEnds||{})[end]=1}}
 // ligações de fronteira ("A8 · Alemanha") que ainda não chegam lá: seguem até ao ponto do país vizinho mais perto (sem passar pelo mar)
@@ -1072,7 +1073,7 @@ for(const r of ROADS.filter(r=>r.auto))for(const end of [0,1]){const P=r.pts;if(
  const NBL=[];{const nb=RG.nb||{};for(const k in nb)for(const poly of nb[k])if(!inP(LON0,LAT0,poly))NBL.push(poly)}const inNb=(x,z)=>{const lon=x/KX+LON0,lat=LAT0-z/KY;for(const poly of NBL)if(inP(lon,lat,poly))return true;return false};
  const foreignish=(x,z)=>{const m=maskAt(x,z);return m===2||(m===1&&inNb(x,z))};
  const endsF=r=>{const P=r.pts;return [P[0],P[P.length-1]].some(e=>maskAt(e[0],e[1])===2)};
- for(const r of ROADS.filter(r=>r.auto&&!r.bridge&&/ · /.test(r.name)&&!(r.toBorder&&endsF(r)))){let bestE=null,bd=1e9,bt=null;for(const end of [0,1]){const P=r.pts;if(P.length<2)continue;const e=end?P[P.length-1]:P[0];
+ for(const r of ROADS.filter(r=>r.auto&&!r.bridge&&/ · /.test(r.name)&&!(r.toBorder&&endsF(r)))){let bestE=null,bd=1e9,bt=null;for(const end of [0,1]){const P=r.pts;if(P.length<2||(r.cutE&&r.cutE[end]))continue;const e=end?P[P.length-1]:P[0];
    for(let rad=30;rad<=6000*WU&&rad<bd;rad+=30){const n=Math.max(12,Math.round(rad/40));for(let k=0;k<n;k++){const a=k/n*Math.PI*2,x=e[0]+Math.cos(a)*rad,z=e[1]+Math.sin(a)*rad;if(!foreignish(x,z))continue;let ok=true;for(let t=20;t<rad;t+=20){const m=maskAt(e[0]+Math.cos(a)*t,e[1]+Math.sin(a)*t);if(m===0||rawH(e[0]+Math.cos(a)*t,e[1]+Math.sin(a)*t)<-.5){ok=false;break}}if(ok&&rad<bd){bd=rad;bestE=end;bt=[x,z,Math.cos(a),Math.sin(a)]}}if(bt)break}}
   if(bt){const P=r.pts,e=bestE?P[P.length-1]:P[0];const ext=[];for(let d=20;d<=bd+60;d+=20)ext.push([e[0]+bt[2]*d,e[1]+bt[3]*d]);if(bestE)r.pts=P.concat(ext);else r.pts=ext.reverse().concat(P);r.toBorder=true;(r.bEnds=r.bEnds||{})[bestE]=1}}}
 // autoestradas que começam ou acabam soltas (ou dentro de água, ex.: Lisboa à beira do Tejo): prolongar até à rua em terra mais perto
@@ -1663,7 +1664,7 @@ function updateFugitive(dt){if(G.state!=='play'||W.on){if(FUG)FUG.hide=true;retu
  const k=(performance.now()/160|0)%2;F.sprites.forEach((sp,i)=>sp.material.opacity=(i%2)===k?1:0);
  const d=Math.hypot(P.x-q.x,P.z-q.z),dp=Math.hypot(P.x-h[0],P.z-h[2]);sirenT-=dt;if(sirenT<=0&&Math.min(d,dp)<300){sirenT=.42;tone((F.t/.42|0)%2?960:700,.4,'sawtooth',.03*clamp(1-Math.min(d,dp)/300,.15,1))}
  // choques: o carro em fuga e o da polícia são sólidos
- for(const [ox,oz,isF] of [[q.x,q.z,true],[h[0],h[2],false]]){const dx=P.x-ox,dz=P.z-oz,dd=Math.hypot(dx,dz);if(dd<3.3&&dd>.01){const nx=dx/dd,nz=dz/dd;P.x=ox+nx*3.3;P.z=oz+nz*3.3;const vn=P.vx*nx+P.vz*nz,imp=Math.abs(vn);if(vn<0){P.vx-=1.5*vn*nx;P.vz-=1.5*vn*nz}if(imp>3){sfx.hit();shake=Math.min(1,imp/20)}
+ for(const [ox,oz,isF,oy,om] of [[q.x,q.z,true,y,F.m],[h[0],h[2],false,h[1],F.pol]]){/* só bate se o carro estiver à vista e à mesma altura (antes batia-se em nada, por baixo/cima de pontes) */if(om&&om.visible===false)continue;if(oy!=null&&Math.abs(P.y-oy)>2.5)continue;const dx=P.x-ox,dz=P.z-oz,dd=Math.hypot(dx,dz);if(dd<3.3&&dd>.01){const nx=dx/dd,nz=dz/dd;P.x=ox+nx*3.3;P.z=oz+nz*3.3;const vn=P.vx*nx+P.vz*nz,imp=Math.abs(vn);if(vn<0){P.vx-=1.5*vn*nx;P.vz-=1.5*vn*nz}if(imp>3){sfx.hit();shake=Math.min(1,imp/20)}
    if(isF&&!F.caught&&F.cd<=0&&imp>3){F.hits++;F.cd=1.2;if(F.hits>=3){F.caught=1;const rew=250+Math.round(Math.random()*250);G.money+=rew;MEM.set('money',G.money);G.stats.fugitivos=(G.stats.fugitivos||0)+1;sfx.win();toast('👮 Apanhado! Ajudaste a '+((RG.police||[])[0]||'polícia')+' a parar o fugitivo. Recompensa: +'+euro(rew),false,5)}else toast('💥 Bateste no carro em fuga! ('+F.hits+'/3)',false,2)}}}
  if((!F.caught&&d>650&&F.t>8)||F.t>(F.caught?F.t0||(F.t0=F.t+6):90)||F.hide){scene.remove(F.m);scene.remove(F.pol);FUG=null}}
 // distância no mapa do jogo (1 unidade = 1 m, a mesma escala do conta-quilómetros, das placas e do combustível)
@@ -2317,7 +2318,7 @@ const BOTP=[];
    m.position.set(p.x,p.y+4.1,p.z);m.rotation.set(0,0,0);m.rotation.order='YXZ';m.rotation.y=p.h+Math.PI;m.rotation.x=p.pitch;m.rotation.z=p.bank;
    const u=m.userData;if(u.strobe){u.strobe.material.opacity=(Math.sin(bpT*7+p.x)>.92)?1:0;for(const n of u.nav)n.material.opacity=night?.95:.5;u.land.material.opacity=night&&p.wp&&p.wp[p.i]&&(p.wp[p.i].ph==='app'||p.wp[p.i].ph==='land'||p.wp[p.i].ph==='roll')?.9:0}}};
  window.__botp=BOTP}
-window.__ea2={get ARRIVE(){return ARRIVE},get AIRPORTS(){return AIRPORTS},get SPAWN(){return SPAWN},get START(){return START},get RID(){return REGION_ID},get WM(){return WM},get SEGS(){return SEGS},get REGIONS(){return REGIONS},get WCOUNTRY(){return WCOUNTRY},drawWorld:()=>drawWorld(),get INS(){return INS},enterBuilding,exitBuilding,nearEnterable,entList,get STADIA(){return STADIA},get FREIGHT(){return FREIGHT},get W(){return W},get P(){return P},get G(){return G},BOTP,get carType(){return carType},speedLimit:(x,z)=>speedLimit(x,z),renderFreight,get STSITE(){return STSITE}};
+window.__ea2={get CITIES(){return CITIES},get ARRIVE(){return ARRIVE},get AIRPORTS(){return AIRPORTS},get SPAWN(){return SPAWN},get START(){return START},get RID(){return REGION_ID},get WM(){return WM},get SEGS(){return SEGS},get REGIONS(){return REGIONS},get WCOUNTRY(){return WCOUNTRY},drawWorld:()=>drawWorld(),get INS(){return INS},enterBuilding,exitBuilding,nearEnterable,entList,get STADIA(){return STADIA},get FREIGHT(){return FREIGHT},get W(){return W},get P(){return P},get G(){return G},BOTP,get carType(){return carType},speedLimit:(x,z)=>speedLimit(x,z),renderFreight,get STSITE(){return STSITE}};
 
 /* ================= CAMIÕES: carta de pesados, limitador a 90 km/h e fretes entre armazéns ================= */
 G.cartaC=!!MEM.get('cartaC',false);
