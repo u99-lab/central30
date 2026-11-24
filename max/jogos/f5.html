@@ -265,4 +265,9 @@ K.me=()=>state==='play'||state==='goal'?ctl&&ctl.g:null;
 K.loop(update);menu();
 })();
 </script>
+<script>
+/* joystick sempre visível no ecrã tátil (em baixo à esquerda); tocar em qualquer sítio da metade esquerda também o mexe */
+(()=>{const st=document.getElementById('k-stick');if(!st)return;const rest=()=>{if(!K.touch||!K.inGame||K.paused||K.stick.id!==null)return;st.style.display='block';st.style.left='110px';st.style.top=(innerHeight-130)+'px';st.style.opacity='.55';};
+ setInterval(()=>{if(K.stick.id===null){if(K.touch&&K.inGame&&!K.paused)rest();else if(st.style.opacity==='.55')st.style.display='none';}else st.style.opacity='1';},120);})();
+</script>
 </body></html>
