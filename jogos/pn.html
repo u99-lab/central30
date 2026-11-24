@@ -5701,7 +5701,7 @@ if (IS_TOUCH) {
   // keyboard use hides the touch layer again (iPad with keyboard)
   addEventListener('keydown', () => { if (TOUCH.used) return; document.body.classList.remove('touch'); });
   document.addEventListener('gesturestart', e => e.preventDefault());
-  document.addEventListener('touchmove', e => { if (GAME.state === 'play') e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if (GAME.state === 'play' && !(e.target && e.target.closest && e.target.closest('[data-scroll]'))) e.preventDefault(); }, { passive: false });/* o telemóvel (mensagens, Neon Feed) pode deslizar */
 })();
 // aim assist for touch: pick the most central target in front of the camera
 function touchAimTarget(camDir) {
@@ -5815,7 +5815,7 @@ class Ped {
     this.mesh.userData.gun.visible = !!this.weapon;
     peds.push(this);
   }
-  remove() { scene.remove(this.mesh); this.mesh.userData.geos.forEach(g => g.dispose()); const i = peds.indexOf(this); if (i >= 0) peds.splice(i, 1); }
+  remove() { scene.remove(this.mesh); try { (this.mesh.userData.geos || []).forEach(g => g.dispose()); } catch (e) { } const i = peds.indexOf(this); if (i >= 0) peds.splice(i, 1); }
   setRing(r) {
     this.ring = r; const per = 2 * (r.x1 - r.x0 + r.z1 - r.z0); this.s = this.closestS(r, this.pos.x, this.pos.z); this.per = per;
   }
@@ -6324,7 +6324,10 @@ function vehicleCollisions() {
           a.impact(imp, { x: best.x, z: best.z }); b.impact(imp, null);
           if (a.driver === 'player' || b.driver === 'player') {
             const other = a.driver === 'player' ? b : a;
-            if (other.type === 'police' && other.driver) addWanted(1, 'Agrediste um carro da polícia');
+            const me = a.driver === 'player' ? a : b, ddx = other.pos.x - me.pos.x, ddz = other.pos.z - me.pos.z, dl = Math.hypot(ddx, ddz) || 1;
+            const mine = (me.vx * ddx + me.vz * ddz) / dl, theirs = -(other.vx * ddx + other.vz * ddz) / dl;
+            /* só conta se fores tu a ir contra o carro da polícia (se for ele a bater-te, não és culpado) */
+            if (other.type === 'police' && other.driver && mine > 4 && mine > theirs + 1) addWanted(1, 'Bateste num carro da polícia');
             if (other.ai) other.ai.angry = 4;
           }
         }
@@ -6508,7 +6511,9 @@ function updatePoliceAI(car, dt) {
   }
   ai.patrol = false;
   // deploy officers when close
-  if (d < 22 && (!player.inCar || Math.abs(player.inCar.speed) < 6) && !ai.deployed && car.speed < 8) {
+  /* a pé, se estiveres no meio dos prédios (sem estrada até ti), os polícias saem do carro mais longe e vão atrás de ti a pé */
+  const footFar = !player.inCar && d < 55 && (d < 32 || rayStatic(_v1.set(car.pos.x, 1.2, car.pos.z), _v2.set(dx / d, 0, dz / d), d) < d - 1 || (ai.stuckN || 0) > 1);
+  if ((d < 22 || footFar) && (!player.inCar || Math.abs(player.inCar.speed) < 6) && !ai.deployed && car.speed < (footFar ? 12 : 8)) {
     ai.deployT = (ai.deployT || 0) + dt;
     car.throttle = 0; car.brake = 1;
     if (ai.deployT > 0.6) {
@@ -6549,7 +6554,7 @@ function updatePoliceAI(car, dt) {
   driveToward(car, tx, tz, d < 20 ? 15 : car.T.maxV * 0.88, dt, true);
   // stuck
   ai.stuck = Math.abs(car.speed) < 1.5 ? (ai.stuck || 0) + dt : 0;
-  if (ai.stuck > 1.5) { ai.rev = 1.2; ai.stuck = 0; ai.wp = null; }
+  if (ai.stuck > 1.5) { ai.rev = 1.2; ai.stuck = 0; ai.wp = null; ai.stuckN = (ai.stuckN || 0) + 1; }
   if (ai.rev > 0) { ai.rev -= dt; car.throttle = -1; car.brake = 0; car.steer = -Math.sign(angDiff(car.heading, Math.atan2(tx - car.pos.x, tz - car.pos.z))); car.handbrake = false; }
 }
 
@@ -6927,7 +6932,7 @@ function updateCamera(dt) {
     const ped = P.ped;
     target = _v1.set(ped.pos.x, ped.pos.y + 1.62, ped.pos.z);
     dist = P.aiming ? 2.1 : INSIDE ? 3.2 : 4.4; side = P.aiming ? 0.65 : 0.35; fov = P.aiming ? 50 : 65;
-    if (P.dead) { dist = 7 + P.deadT * 1.5; }
+    if (P.dead) { dist = Math.min(14, 7 + P.deadT * 1.5); }
   }
   P.fov = damp(P.fov, fov, 6, dt);
   if (Math.abs(camera.fov - P.fov) > 0.05) { camera.fov = P.fov; camera.updateProjectionMatrix(); }
@@ -8123,7 +8128,7 @@ function update(dt) {
   GAME.time += dt;
   GAME.clock = (GAME.clock + dt / 50) % 24;
   updatePlayer(dt);
-  if (player.dead && player.deadT > 5.5) respawn();
+  if (player.dead && player.deadT > 5.5) { try { respawn(); } catch (e) { console.error(e); try { if (INSIDE) { INSIDE = null; intLights.forEach(l => l.intensity = 0); } spawnPlayer(hospitalSpot.x, hospitalSpot.z); } catch (_) { } player.dead = false; player.busted = false; GAME.wanted = 0; document.body.classList.remove('dead'); HUD.big.hidden = true; } }/* se algo falhar ao renascer, nasce na mesma (antes ficava morto e a câmara afastava-se até só se verem montanhas) */
   updateTrafficLights(GAME.time);
   // vehicles (2 substeps when frame is long)
   const steps = dt > 0.022 ? 2 : 1, h = dt / steps;
@@ -8166,8 +8171,8 @@ const C30X = (() => {
   const S = { feed: [], races: LS('races', 0), best: LS('raceBest', null), got: new Set(LS('cans', [])), race: null, open: false, lastW: 0, lastM: null, feedT: 8 };
   // ---- telemóvel (ecrã por cima do jogo)
   const ph = document.createElement('div');
-  ph.style.cssText = 'position:fixed;right:14px;bottom:90px;width:250px;max-height:62vh;z-index:60;background:linear-gradient(170deg,#141824,#0b0d14);border:2px solid #2b3550;border-radius:26px;box-shadow:0 10px 40px #000a;color:#e8ecff;font:600 13px system-ui;padding:12px 12px 14px;display:none;overflow:auto';
-  document.body.appendChild(ph);
+  ph.style.cssText = 'position:fixed;right:14px;bottom:90px;width:250px;max-height:62vh;z-index:60;background:linear-gradient(170deg,#141824,#0b0d14);border:2px solid #2b3550;border-radius:26px;box-shadow:0 10px 40px #000a;color:#e8ecff;font:600 13px system-ui;padding:12px 12px 14px;display:none;overflow:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y';
+  ph.dataset.scroll='1';document.body.appendChild(ph);
   const btn = document.createElement('button'); btn.textContent = '📱'; btn.title = 'Telemóvel (T)';
   btn.style.cssText = 'position:fixed;right:14px;bottom:44px;z-index:60;width:44px;height:44px;border-radius:14px;border:1px solid #2b3550;background:#141824cc;font-size:22px;cursor:pointer;display:none';
   btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); toggle(); }); document.body.appendChild(btn);
