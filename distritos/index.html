@@ -402,10 +402,12 @@ function drawLabels(){
     for(const fs of [fs0, fs0-1, fs0-2]){
       for(const mx of [99,16,11]){
         const lines = wrap(f.m.n,mx); const w = Math.max(...lines.map(l=>tw(l,fs))); const h = lines.length*fs*1.1;
-        if(w <= rpx*2.05 && h <= rpx*1.9){ placed={lines,fs}; break; }
+        const fw = state.lvl===0 ? 2.5 : 2.05, fh = state.lvl===0 ? 2.3 : 1.9;
+        if(w <= rpx*fw && h <= rpx*fh){ placed={lines,fs}; break; }
       }
       if(placed) break;
     }
+    if(!placed && state.lvl===0){ const fs = W < 600 ? 9 : 10.5; placed={lines:wrap(f.m.n, 10), fs}; }  // os 18 distritos têm sempre nome
     if(!placed){ const num=String(i+1); if(rpx*2 >= tw(num,11)+4 && state.lvl>0) placed={lines:[num],fs:11,num:true}; else return; }
     const gg = g.append('g').style('animation-delay', reduce?'0s':`${Math.min(.8,i*0.02)*speed()}s`);
     const tx = gg.append('text').attr('x',x).attr('y',y - (placed.lines.length-1)*placed.fs*0.55).style('font-size',placed.fs+'px').style('font-weight',placed.num?800:650);
