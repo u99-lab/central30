@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cálculo rápido · Aprender · Central 30</title>
+<meta name="description" content="Quantas contas consegues fazer em 60 segundos?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: 'Cálculo rápido', subject: 'mat', emoji: '⚡', key: 'calc1',
+  intro: 'Tens <b>60 segundos</b>. Escreve o resultado e carrega em Enter (ou no ✓). Quanto mais certas, melhor!' });
+const box = K.el('div'); main.append(box);
+const LV = { 1: ['Fácil', 'Somas e subtrações até 20, tabuada até 5'], 2: ['Médio', 'As quatro operações, tabuada completa'], 3: ['Difícil', 'Números negativos e contas maiores'] };
+function gen(lv) {
+  const op = K.one(lv === 1 ? ['+', '−', '×'] : ['+', '−', '×', '÷']);
+  let a, b, r;
+  const R = lv === 1 ? 10 : lv === 2 ? 50 : 100, T = lv === 1 ? 5 : lv === 2 ? 10 : 12;
+  const neg = lv === 3;
+  if (op === '+') { a = K.rand(neg ? -R : 1, R); b = K.rand(neg ? -R : 1, R); r = a + b; }
+  if (op === '−') { a = K.rand(neg ? -R : 1, R); b = K.rand(neg ? -R : 1, lv === 3 ? R : a); r = a - b; }
+  if (op === '×') { a = K.rand(neg ? -T : 1, T); b = K.rand(1, T); r = a * b; }
+  if (op === '÷') { b = K.rand(2, T); r = K.rand(neg ? -T : 1, T); a = b * r; }
+  const p = (n) => n < 0 ? '(' + n + ')' : String(n);
+  return { t: p(a) + ' ' + op + ' ' + p(b), r };
+}
+function menu() {
+  box.innerHTML = '';
+  box.append(K.el('div', { class: 'card' }, K.el('div', { class: 'q' }, 'Escolhe o nível'),
+    K.el('div', { class: 'opts' }, Object.entries(LV).map(([k, [n, d]]) => K.el('button', { class: 'opt', onclick: () => play(+k) },
+      K.el('span', {}, K.el('b', {}, n), K.el('br'), K.el('small', { class: 'muted' }, d + (K.best.get('calc' + k) ? ' · melhor: ' + K.best.get('calc' + k) : ''))))))));
+}
+function play(lv) {
+  let left = 60, ok = 0, wrong = 0, cur = gen(lv), t0 = performance.now();
+  box.innerHTML = '';
+  const time = K.el('span', {}, '60 s'), sc = K.el('span', {}, '✔ 0');
+  const bar = K.el('i', { style: 'width:100%' });
+  const q = K.el('div', { class: 'q center', style: 'font-size:clamp(34px,7vw,52px);margin:18px 0' });
+  const inp = K.el('input', { type: 'text', inputmode: 'numeric', id: 'resp', autocomplete: 'off', 'aria-label': 'Resultado', style: 'font-size:28px;text-align:center;width:min(240px,60vw)' });
+  const fb = K.el('div', { class: 'center muted', style: 'min-height:1.5em', 'aria-live': 'polite' });
+  const pad = K.el('div', { style: 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:300px;margin:14px auto 0' },
+    ['7','8','9','4','5','6','1','2','3','−','0','⌫'].map(k => K.el('button', { class: 'btn', onclick: () => { if (k === '⌫') inp.value = inp.value.slice(0, -1); else if (k === '−') inp.value = inp.value.startsWith('-') ? inp.value.slice(1) : '-' + inp.value; else inp.value += k; inp.focus(); } }, k)));
+  const go = K.el('button', { class: 'btn primary', onclick: () => submit() }, '✓');
+  const card = K.el('div', { class: 'card' }, K.el('div', { class: 'prog' }, time, K.el('div', { class: 'bar' }, bar), sc), q, K.el('div', { class: 'row', style: 'justify-content:center' }, inp, go), fb, pad);
+  box.append(card);
+  const show = () => { q.textContent = cur.t + ' = ?'; inp.value = ''; inp.focus(); };
+  function submit() {
+    const v = inp.value.trim().replace('−', '-'); if (v === '' || v === '-') return;
+    if (+v === cur.r) { ok++; fb.innerHTML = '<b style="color:var(--good)">Certo!</b>'; } else { wrong++; fb.innerHTML = '<b style="color:var(--bad)">' + cur.t + ' = ' + cur.r + '</b>'; }
+    sc.textContent = '✔ ' + ok; cur = gen(lv); show();
+  }
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  show();
+  const iv = setInterval(() => {
+    left = Math.max(0, 60 - (performance.now() - t0) / 1000);
+    time.textContent = Math.ceil(left) + ' s'; bar.style.width = (left / 60) * 100 + '%';
+    if (left <= 0 || !card.isConnected) { clearInterval(iv); if (card.isConnected) K.result(box, { score: ok, total: 0, unit: 'certas', key: 'calc' + lv, again: menu, note: ok + ' certas e ' + wrong + ' erradas no nível ' + LV[lv][0] + '.' }); }
+  }, 200);
+}
+menu();
+</script>
+</body>
+</html>

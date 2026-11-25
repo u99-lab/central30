@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sistema Solar · Aprender · Central 30</title>
+<meta name="description" content="Explora os oito planetas e testa o que sabes.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Sistema Solar', subject: 'cie', emoji: '🪐', key: 'sol',
+  intro: 'Toca num planeta para o conhecer. As órbitas e os tamanhos não estão à escala: na realidade as distâncias são enormes. (UA = unidade astronómica, a distância média da Terra ao Sol, cerca de 150 milhões de km.)' });
+const PL = [
+  { n: 'Mercúrio', c: '#b7b0a6', s: 5, t: 'Rochoso', d: 0.39, dia: 0.38, per: '88 dias', x: 'O mais pequeno e o mais próximo do Sol.' },
+  { n: 'Vénus', c: '#e8c27a', s: 8, t: 'Rochoso', d: 0.72, dia: 0.95, per: '225 dias', x: 'O planeta mais quente (cerca de 460 °C), por causa da atmosfera muito densa.' },
+  { n: 'Terra', c: '#4fa3e0', s: 8.5, t: 'Rochoso', d: 1, dia: 1, per: '365 dias', x: 'O único planeta conhecido com vida e água líquida à superfície.' },
+  { n: 'Marte', c: '#d9653b', s: 6, t: 'Rochoso', d: 1.52, dia: 0.53, per: '687 dias', x: 'O "planeta vermelho", por causa do óxido de ferro no solo.' },
+  { n: 'Júpiter', c: '#d8b08a', s: 18, t: 'Gigante gasoso', d: 5.2, dia: 11.2, per: '11,9 anos', x: 'O maior planeta. Tem a Grande Mancha Vermelha, uma tempestade gigante.' },
+  { n: 'Saturno', c: '#e6d29a', s: 15, t: 'Gigante gasoso', d: 9.5, dia: 9.4, per: '29,5 anos', x: 'Famoso pelos seus anéis de gelo e rocha, os mais visíveis do Sistema Solar.' },
+  { n: 'Urano', c: '#8fd8e0', s: 11, t: 'Gigante gelado', d: 19.2, dia: 4.0, per: '84 anos', x: 'Roda "deitado": o seu eixo está muito inclinado.' },
+  { n: 'Neptuno', c: '#4f6fe0', s: 11, t: 'Gigante gelado', d: 30.1, dia: 3.9, per: '165 anos', x: 'O planeta mais afastado do Sol, com ventos muito fortes.' },
+];
+const NS = 'http://www.w3.org/2000/svg', W = 640, H = 400, cx = 320, cy = 200;
+const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('style', 'width:100%;height:auto;display:block;background:radial-gradient(circle at 50% 50%,#1a2230,#0b1014);border-radius:12px');
+let stars = ''; for (let i = 0; i < 70; i++) stars += `<circle cx="${Math.random() * W}" cy="${Math.random() * H}" r="${Math.random() * 1.2}" fill="#fff" opacity="${.3 + Math.random() * .5}"/>`;
+svg.innerHTML = stars + `<circle cx="${cx}" cy="${cy}" r="22" fill="#ffd34d"/><circle cx="${cx}" cy="${cy}" r="30" fill="#ffd34d" opacity=".18"/>`;
+const info = K.el('div', { 'aria-live': 'polite' });
+const bodies = PL.map((p, i) => {
+  const rx = 50 + i * 33, ry = rx * 0.55;
+  const o = document.createElementNS(NS, 'ellipse'); o.setAttribute('cx', cx); o.setAttribute('cy', cy); o.setAttribute('rx', rx); o.setAttribute('ry', ry); o.setAttribute('fill', 'none'); o.setAttribute('stroke', '#ffffff1f'); svg.append(o);
+  const g = document.createElementNS(NS, 'g'); g.style.cursor = 'pointer'; g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', p.n);
+  const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', p.s); c.setAttribute('fill', p.c); g.append(c);
+  if (p.n === 'Saturno') { const r = document.createElementNS(NS, 'ellipse'); r.setAttribute('rx', p.s + 9); r.setAttribute('ry', 4); r.setAttribute('fill', 'none'); r.setAttribute('stroke', '#e6d29a'); r.setAttribute('stroke-width', 2); g.append(r); }
+  const hit = document.createElementNS(NS, 'circle'); hit.setAttribute('r', Math.max(p.s + 6, 14)); hit.setAttribute('fill', 'transparent'); g.append(hit);
+  g.addEventListener('click', () => show(i)); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(i); } });
+  svg.append(g);
+  return { g, rx, ry, a: Math.random() * Math.PI * 2, w: 0.9 / Math.pow(p.d, 1.5) };
+});
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let sel = 2, last = performance.now(), running = true;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  bodies.forEach((b, i) => { if (running && !reduce) b.a += b.w * dt * 0.6; b.g.setAttribute('transform', `translate(${cx + Math.cos(b.a) * b.rx},${cy + Math.sin(b.a) * b.ry})`); b.g.querySelector('circle').setAttribute('stroke', i === sel ? '#fff' : 'none'); b.g.querySelector('circle').setAttribute('stroke-width', 2.5); });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+function show(i) {
+  sel = i; const p = PL[i];
+  info.innerHTML = '';
+  info.append(K.el('h2', { style: 'margin:0 0 6px;font:700 22px var(--disp);color:' + p.c }, (i + 1) + '.º · ' + p.n), K.el('p', { style: 'margin:0' }, p.x),
+    K.el('div', { class: 'facts' }, [[p.t, 'tipo'], [p.d.toLocaleString('pt-PT') + ' UA', 'distância média ao Sol'], [p.dia.toLocaleString('pt-PT') + ' × Terra', 'diâmetro'], [p.per, 'uma volta ao Sol']].map(f => K.el('div', { class: 'fact' }, K.el('b', {}, f[0]), K.el('span', {}, f[1])))));
+}
+const pause = K.el('button', { class: 'btn', onclick: () => { running = !running; pause.textContent = running ? '⏸ Parar' : '▶ Mexer'; } }, '⏸ Parar');
+main.append(K.el('div', { class: 'card' }, svg, K.el('div', { class: 'row', style: 'margin:12px 0' }, pause, K.el('span', { class: 'muted' }, 'Toca num planeta.')), info));
+show(2);
+const box = K.el('div'); main.append(box);
+const Q = [
+  { q: 'Quantos planetas tem o Sistema Solar?', o: ['8', '9', '7', '10'], a: '8', e: 'São <b>8</b>. Plutão passou a ser considerado planeta anão em 2006.' },
+  { q: 'Qual é o maior planeta?', o: ['Júpiter', 'Saturno', 'Terra', 'Neptuno'], a: 'Júpiter', e: '<b>Júpiter</b> tem um diâmetro cerca de 11 vezes o da Terra.' },
+  { q: 'Qual é o planeta mais próximo do Sol?', o: ['Mercúrio', 'Vénus', 'Terra', 'Marte'], a: 'Mercúrio', e: '<b>Mercúrio</b>, a 0,39 UA.' },
+  { q: 'Qual é o planeta mais quente?', o: ['Vénus', 'Mercúrio', 'Marte', 'Júpiter'], a: 'Vénus', e: '<b>Vénus</b>, por causa do efeito de estufa da sua atmosfera densa (cerca de 460 °C).' },
+  { q: 'Qual destes é um planeta rochoso?', o: ['Marte', 'Saturno', 'Urano', 'Júpiter'], a: 'Marte', e: 'Os rochosos são Mercúrio, Vénus, Terra e <b>Marte</b>.' },
+  { q: 'Que planeta demora 687 dias a dar uma volta ao Sol?', o: ['Marte', 'Vénus', 'Júpiter', 'Mercúrio'], a: 'Marte', e: 'Um ano em <b>Marte</b> dura 687 dias terrestres.' },
+  { q: 'Qual é o planeta mais afastado do Sol?', o: ['Neptuno', 'Urano', 'Plutão', 'Saturno'], a: 'Neptuno', e: '<b>Neptuno</b>, a cerca de 30 UA. Plutão é um planeta anão.' },
+  { q: 'A Terra é o … planeta a contar do Sol.', o: ['3.º', '2.º', '4.º', '1.º'], a: '3.º', e: 'Mercúrio, Vénus, <b>Terra</b>.' },
+  { q: 'Qual é conhecido como o "planeta vermelho"?', o: ['Marte', 'Júpiter', 'Vénus', 'Mercúrio'], a: 'Marte', e: '<b>Marte</b>, pelo óxido de ferro (ferrugem) no solo.' },
+  { q: 'O Sol é…', o: ['uma estrela', 'um planeta', 'um satélite', 'um cometa'], a: 'uma estrela', e: 'O Sol é uma <b>estrela</b>, a mais próxima da Terra.' },
+  { q: 'Que planeta é famoso pelos anéis mais visíveis?', o: ['Saturno', 'Júpiter', 'Urano', 'Neptuno'], a: 'Saturno', e: '<b>Saturno</b>. (Júpiter, Urano e Neptuno também têm anéis, mas muito ténues.)' },
+];
+main.append(K.el('div', { class: 'row' }, K.el('button', { class: 'btn primary', onclick: (e) => { e.target.parentNode.remove(); K.quiz(box, { key: 'sol', questions: Q, n: 8 }); box.scrollIntoView({ behavior: 'smooth' }); } }, 'Testar o que aprendi ↓')));
+main.append(box);
+</script>
+</body>
+</html>

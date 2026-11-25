@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Números inteiros · Aprender · Central 30</title>
+<meta name="description" content="Reta numérica, comparação e operações com números negativos.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: 'Números inteiros', subject: 'mat', emoji: '➖', key: 'int',
+  intro: 'Os números inteiros são …, −3, −2, −1, 0, 1, 2, 3, … Na reta numérica, quanto mais à direita, maior é o número.' });
+const box = K.el('div'); main.append(box);
+function line(mark) {
+  const X = (n) => 30 + (n + 10) * 29;
+  let s = `<line x1="16" y1="40" x2="624" y2="40" stroke="#eef2ec" stroke-width="2"/><path d="M624 40 l-10 -6 v12 z" fill="#eef2ec"/>`;
+  for (let n = -10; n <= 10; n++) s += `<line x1="${X(n)}" y1="${n % 5 === 0 ? 30 : 34}" x2="${X(n)}" y2="${n % 5 === 0 ? 50 : 46}" stroke="#eef2ec"/>` + (n % 5 === 0 ? `<text x="${X(n)}" y="70" text-anchor="middle" fill="#93a29c" font-size="13" font-family="Inter">${n}</text>` : '');
+  if (mark != null) s += `<circle cx="${X(mark)}" cy="40" r="9" fill="#ff7a6b" stroke="#fff" stroke-width="2"/><text x="${X(mark)}" y="20" text-anchor="middle" fill="#ff7a6b" font-weight="700" font-size="16" font-family="Inter">?</text>`;
+  return K.svg(640, 80, s, 'style="width:100%"');
+}
+const p = (n) => n < 0 ? '(' + n + ')' : String(n);
+function gen() {
+  const t = K.rand(0, 5);
+  if (t === 0) { const m = K.rand(-10, 10); while (m % 5 === 0 && Math.random() < .7) return gen(); return { v: line(m), q: 'Que número está assinalado na reta?', o: [String(m), ...K.near(m, 3, 3)], a: String(m), e: 'É o <b>' + m + '</b>.' }; }
+  if (t === 1) { const ns = [...new Set(Array.from({ length: 6 }, () => K.rand(-15, 15)))].slice(0, 4); while (ns.length < 4) ns.push(K.rand(-20, 20)); const u = [...new Set(ns)]; if (u.length < 4) return gen(); const mx = Math.max(...u);
+    return { q: 'Qual é o <b>maior</b> número?', o: u.map(String), a: String(mx), e: '<b>' + mx + '</b> é o que fica mais à direita na reta.' }; }
+  if (t === 2) { const a = K.rand(-12, 12), b = K.rand(-12, 12), r = a + b; return { q: p(a) + ' + ' + p(b) + ' = ?', o: [String(r), String(a - b), String(-r === r ? r + 2 : -r), String(r + K.one([-2, -1, 1, 2]))].filter((v, i, s) => s.indexOf(v) === i).concat(K.near(r, 4, 3)).slice(0, 4), a: String(r),
+    e: p(a) + ' + ' + p(b) + ' = <b>' + r + '</b>.' + (a * b < 0 ? ' Sinais diferentes: subtrai-se e fica o sinal do que tem maior valor absoluto.' : '') }; }
+  if (t === 3) { const a = K.rand(-12, 12), b = K.rand(-12, 12), r = a - b; return { q: p(a) + ' − ' + p(b) + ' = ?', o: [String(r), String(a + b), String(b - a), ...K.near(r, 3, 3)].filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: String(r),
+    e: 'Subtrair é somar o simétrico: ' + p(a) + ' + ' + p(-b) + ' = <b>' + r + '</b>.' }; }
+  if (t === 4) { const n = K.rand(-20, 20) || 7; return { q: 'Qual é o <b>simétrico</b> de ' + n + '?', o: [String(-n), String(n), '0', String(n * 2)].filter((v, i, s) => s.indexOf(v) === i).concat(K.near(-n, 3, 2)).slice(0, 4), a: String(-n), e: 'O simétrico de ' + n + ' é <b>' + (-n) + '</b>: estão à mesma distância do zero.' }; }
+  const n = K.rand(-25, -1) * (Math.random() < .3 ? -1 : 1); return { q: 'Qual é o valor absoluto de ' + n + ', ou seja, |' + n + '|?', o: [String(Math.abs(n)), String(-Math.abs(n)), '0', String(Math.abs(n) + 1)], a: String(Math.abs(n)), e: '|' + n + '| = <b>' + Math.abs(n) + '</b>: é a distância ao zero, sempre positiva.' };
+}
+K.quiz(box, { key: 'int', gen, n: 10 });
+</script>
+</body>
+</html>

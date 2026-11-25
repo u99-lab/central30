@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Onde fica o concelho? · Aprender · Central 30</title>
+<meta name="description" content="Escolhe um distrito e encontra todos os seus concelhos no mapa.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="../mapa.js"></script>
+<script>
+const main = K.page({ title: 'Onde fica o concelho?', subject: 'geo', emoji: '🗺️', key: 'ofc',
+  intro: 'Escolhe um distrito e encontra cada um dos seus concelhos no mapa. Portugal Continental tem 278 concelhos.' });
+const box = K.el('div'); main.append(box);
+K.mapQuiz(box, { mode: 'concelhos', key: 'ofc' });
+</script>
+</body>
+</html>

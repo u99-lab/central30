@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ângulos · Aprender · Central 30</title>
+<meta name="description" content="Classifica e calcula ângulos, incluindo os de um triângulo.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: 'Ângulos', subject: 'mat', emoji: '📐', key: 'ang',
+  intro: '<b>Agudo</b>: menos de 90°. <b>Reto</b>: 90°. <b>Obtuso</b>: entre 90° e 180°. <b>Raso</b>: 180°. A soma dos ângulos de um triângulo é sempre <b>180°</b>.' });
+const box = K.el('div'); main.append(box);
+function draw(deg) {
+  const cx = 160, cy = 150, L = 130, r = deg * Math.PI / 180;
+  const x = cx + Math.cos(-r) * L, y = cy + Math.sin(-r) * L;
+  const ar = 40, ax = cx + Math.cos(-r) * ar, ay = cy + Math.sin(-r) * ar;
+  let s = `<line x1="${cx}" y1="${cy}" x2="${cx + L}" y2="${cy}" stroke="#eef2ec" stroke-width="4" stroke-linecap="round"/><line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#eef2ec" stroke-width="4" stroke-linecap="round"/>`;
+  s += deg === 90 ? `<path d="M${cx + 24} ${cy} V${cy - 24} H${cx}" fill="none" stroke="#f47cc8" stroke-width="3"/>` : `<path d="M${cx + ar} ${cy} A${ar} ${ar} 0 ${deg > 180 ? 1 : 0} 0 ${ax} ${ay}" fill="none" stroke="#f47cc8" stroke-width="3"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="5" fill="#f47cc8"/>`;
+  return K.svg(320, 170, s, 'style="width:min(320px,90vw)"');
+}
+const cls = (d) => d < 90 ? 'Agudo' : d === 90 ? 'Reto' : d < 180 ? 'Obtuso' : 'Raso';
+function gen() {
+  const t = K.rand(0, 3);
+  if (t === 0) { const d = K.one([K.rand(15, 80), 90, K.rand(100, 170), 180, K.rand(20, 85), K.rand(95, 165)]);
+    return { v: draw(d), q: 'Como se classifica este ângulo?', o: ['Agudo', 'Reto', 'Obtuso', 'Raso'], a: cls(d), keep: true, e: 'Mede ' + d + '°, por isso é <b>' + cls(d).toLowerCase() + '</b>.' }; }
+  if (t === 1) { const d = K.rand(2, 34) * 5; const opts = new Set([d]); while (opts.size < 4) { const w = d + K.one([-60, -45, -30, 30, 45, 60, 90]); if (w > 0 && w <= 180) opts.add(w); }
+    return { v: draw(d), q: 'Qual é a amplitude aproximada deste ângulo?', o: [...opts].map(v => v + '°'), a: d + '°', e: 'Mede <b>' + d + '°</b>. Compara com o ângulo reto (90°) para estimar.' }; }
+  if (t === 2) { const a = K.rand(20, 100), b = K.rand(20, 150 - a), c = 180 - a - b;
+    return { q: 'Num triângulo, dois ângulos medem <b>' + a + '°</b> e <b>' + b + '°</b>. Quanto mede o terceiro?', o: [c + '°', ...K.near(c, 4, 3, 5).filter(v => +v > 0).map(v => v + '°')].slice(0, 4), a: c + '°', e: '180° − ' + a + '° − ' + b + '° = <b>' + c + '°</b>.' }; }
+  const sup = Math.random() < .5, a = sup ? K.rand(10, 170) : K.rand(5, 85), r = (sup ? 180 : 90) - a;
+  return { q: 'Qual é o ângulo <b>' + (sup ? 'suplementar' : 'complementar') + '</b> de ' + a + '°?', o: [r + '°', ((sup ? 90 : 180) - a > 0 ? (sup ? 90 : 180) - a : a + 10) + '°', ...K.near(r, 3, 2, 5).filter(v => +v > 0).map(v => v + '°')].filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: r + '°',
+    e: (sup ? 'Suplementares somam 180°' : 'Complementares somam 90°') + ': ' + (sup ? 180 : 90) + '° − ' + a + '° = <b>' + r + '°</b>.' };
+}
+K.quiz(box, { key: 'ang', gen, n: 10 });
+</script>
+</body>
+</html>

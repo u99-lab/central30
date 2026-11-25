@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Camadas da Terra · Aprender · Central 30</title>
+<meta name="description" content="Explora a estrutura interna da Terra: crusta, manto e núcleo.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Camadas da Terra', subject: 'cie', emoji: '🌍', key: 'cam',
+  intro: 'Toca em cada camada para saber como é. Depois testa o que aprendeste. (O desenho não está à escala: a crusta é muito mais fina.)' });
+const L = [
+  { id: 'crusta', n: 'Crusta', r: 300, c: '#8a6f4e', d: 'Camada exterior, sólida e rochosa. Tem cerca de 35 km de espessura nos continentes (até 70 km nas montanhas) e cerca de 7 km sob os oceanos.', f: [['0 – 35 km', 'profundidade média (continental)'], ['Sólida', 'estado'], ['Rochas', 'granito, basalto…']] },
+  { id: 'manto', n: 'Manto', r: 282, c: '#e0763e', d: 'A camada mais volumosa. Vai até cerca de 2900 km. É sólido, mas na parte superior (astenosfera) as rochas deformam-se muito lentamente, o que permite o movimento das placas.', f: [['até 2900 km', 'profundidade'], ['Sólido', 'mas deformável'], ['~84%', 'do volume da Terra']] },
+  { id: 'next', n: 'Núcleo externo', r: 165, c: '#f2b13a', d: 'Entre cerca de 2900 e 5150 km. É líquido e formado sobretudo por ferro e níquel. Os movimentos deste metal líquido criam o campo magnético da Terra.', f: [['2900 – 5150 km', 'profundidade'], ['Líquido', 'estado'], ['Ferro e níquel', 'composição']] },
+  { id: 'nint', n: 'Núcleo interno', r: 70, c: '#fde68a', d: 'O centro da Terra, de 5150 a cerca de 6370 km. Apesar de ser muito quente (mais de 5000 °C), é sólido por causa da enorme pressão. Também é de ferro e níquel.', f: [['5150 – 6370 km', 'profundidade'], ['Sólido', 'estado'], ['> 5000 °C', 'temperatura']] },
+];
+const info = K.el('div', { 'aria-live': 'polite' });
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 640 340'); svg.setAttribute('style', 'width:100%;height:auto;display:block');
+svg.innerHTML = '<defs><clipPath id="half"><rect x="0" y="0" width="640" height="320"/></clipPath></defs>';
+const g = document.createElementNS(NS, 'g'); g.setAttribute('clip-path', 'url(#half)'); svg.append(g);
+const els = {};
+function select(id) {
+  L.forEach(l => { els[l.id].setAttribute('stroke', l.id === id ? '#ffffff' : '#0b1014'); els[l.id].setAttribute('stroke-width', l.id === id ? 4 : 2); });
+  const l = L.find(x => x.id === id);
+  info.innerHTML = '';
+  info.append(K.el('h2', { style: 'margin:0 0 6px;font:700 22px var(--disp);color:' + l.c }, l.n), K.el('p', { style: 'margin:0' }, l.d),
+    K.el('div', { class: 'facts' }, l.f.map(f => K.el('div', { class: 'fact' }, K.el('b', {}, f[0]), K.el('span', {}, f[1])))));
+}
+L.forEach(l => {
+  const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', 320); c.setAttribute('cy', 320); c.setAttribute('r', l.r);
+  c.setAttribute('fill', l.c); c.setAttribute('stroke', '#0b1014'); c.setAttribute('stroke-width', 2); c.style.cursor = 'pointer';
+  c.setAttribute('tabindex', '0'); c.setAttribute('role', 'button'); c.setAttribute('aria-label', l.n);
+  c.addEventListener('click', () => select(l.id)); c.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(l.id); } });
+  g.append(c); els[l.id] = c;
+});
+const labs = [['Crusta', 320, 34, '#fff'], ['Manto', 320, 110], ['Núcleo externo', 320, 200], ['Núcleo interno', 320, 296]];
+labs.forEach(([t, x, y, col]) => { const e = document.createElementNS(NS, 'text'); e.setAttribute('x', x); e.setAttribute('y', y); e.setAttribute('text-anchor', 'middle');
+  e.setAttribute('style', 'font:700 ' + (col ? 12 : 15) + 'px Inter,sans-serif;fill:' + (col || '#0b1014') + ';pointer-events:none'); e.textContent = t; svg.append(e); });
+const base = document.createElementNS(NS, 'line'); base.setAttribute('x1', 0); base.setAttribute('x2', 640); base.setAttribute('y1', 320); base.setAttribute('y2', 320); base.setAttribute('stroke', '#ffffff33'); svg.append(base);
+main.append(K.el('div', { class: 'card' }, svg, K.el('div', { style: 'margin-top:14px' }, info)));
+select('crusta');
+const box = K.el('div'); main.append(box);
+const Q = [
+  { q: 'Qual é a camada mais exterior da Terra?', o: ['Crusta', 'Manto', 'Núcleo externo', 'Núcleo interno'], a: 'Crusta', e: 'A <b>crusta</b> é a camada exterior, onde vivemos.' },
+  { q: 'Qual é a camada com maior volume?', o: ['Manto', 'Crusta', 'Núcleo interno', 'Núcleo externo'], a: 'Manto', e: 'O <b>manto</b> ocupa cerca de 84% do volume da Terra.' },
+  { q: 'Que camada está no estado líquido?', o: ['Núcleo externo', 'Núcleo interno', 'Crusta', 'Manto'], a: 'Núcleo externo', e: 'O <b>núcleo externo</b> é líquido (ferro e níquel fundidos).' },
+  { q: 'Porque é que o núcleo interno é sólido, apesar de tão quente?', o: ['Por causa da enorme pressão', 'Porque é frio', 'Porque é feito de rocha', 'Porque não tem metais'], a: 'Por causa da enorme pressão', e: 'A <b>pressão</b> no centro da Terra é tão grande que o ferro fica sólido.' },
+  { q: 'De que é feito principalmente o núcleo?', o: ['Ferro e níquel', 'Granito', 'Água', 'Calcário'], a: 'Ferro e níquel', e: 'O núcleo é sobretudo <b>ferro e níquel</b>.' },
+  { q: 'A crusta é mais espessa…', o: ['nos continentes', 'nos oceanos', 'igual em todo o lado', 'no Polo Sul apenas'], a: 'nos continentes', e: 'Nos continentes tem ~35 km (até 70 km nas montanhas); nos oceanos ~7 km.' },
+  { q: 'A que profundidade começa o núcleo?', o: ['cerca de 2900 km', 'cerca de 35 km', 'cerca de 100 km', 'cerca de 6370 km'], a: 'cerca de 2900 km', e: 'A fronteira manto/núcleo (descontinuidade de Gutenberg) fica a <b>~2900 km</b>.' },
+  { q: 'Qual é o raio aproximado da Terra?', o: ['6370 km', '637 km', '63 700 km', '2900 km'], a: '6370 km', e: 'Do centro à superfície são cerca de <b>6370 km</b>.' },
+  { q: 'Como se chama a fronteira entre a crusta e o manto?', o: ['Descontinuidade de Mohorovičić', 'Descontinuidade de Gutenberg', 'Equador', 'Astenosfera'], a: 'Descontinuidade de Mohorovičić', e: 'É a <b>descontinuidade de Mohorovičić</b> (ou "Moho").' },
+  { q: 'O que cria o campo magnético da Terra?', o: ['O movimento do metal líquido do núcleo externo', 'A crusta oceânica', 'O Sol', 'Os vulcões'], a: 'O movimento do metal líquido do núcleo externo', e: 'O ferro líquido do <b>núcleo externo</b>, em movimento, gera o campo magnético.' },
+];
+main.insertBefore(K.el('div', { class: 'row' }, K.el('button', { class: 'btn primary', onclick: (e) => { e.target.parentNode.remove(); K.quiz(box, { key: 'cam', questions: Q, n: 8 }); box.scrollIntoView({ behavior: 'smooth' }); } }, 'Testar o que aprendi ↓')), box);
+</script>
+</body>
+</html>

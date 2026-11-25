@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rosa dos ventos · Aprender · Central 30</title>
+<meta name="description" content="Pontos cardeais e colaterais: aprende a orientar-te.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Rosa dos ventos', subject: 'geo', emoji: '🧭', key: 'rosa',
+  intro: 'Os <b>pontos cardeais</b> são Norte, Sul, Este e Oeste. Entre eles ficam os <b>pontos colaterais</b>: Nordeste, Sudeste, Sudoeste e Noroeste.' });
+const P = [['Norte','N',0],['Nordeste','NE',45],['Este','E',90],['Sudeste','SE',135],['Sul','S',180],['Sudoeste','SO',225],['Oeste','O',270],['Noroeste','NO',315]];
+const NAMES = P.map(p => p[0]);
+function rose(mark, arrow) {
+  let s = '<circle cx="150" cy="150" r="118" fill="#141c22" stroke="#ffffff22" stroke-width="2"/>';
+  P.forEach(([n, a, g], i) => {
+    const r = g * Math.PI / 180, big = i % 2 === 0, len = big ? 100 : 62, w = big ? 15 : 10;
+    const x = 150 + Math.sin(r) * len, y = 150 - Math.cos(r) * len;
+    const lx = 150 + Math.sin(r - Math.PI / 2) * w, ly = 150 - Math.cos(r - Math.PI / 2) * w;
+    const rx = 150 + Math.sin(r + Math.PI / 2) * w, ry = 150 - Math.cos(r + Math.PI / 2) * w;
+    s += `<path d="M150 150 L${lx} ${ly} L${x} ${y} Z" fill="${big ? '#c5f47c' : '#7cc8f4'}"/><path d="M150 150 L${rx} ${ry} L${x} ${y} Z" fill="${big ? '#8fb85a' : '#4f8fb3'}"/>`;
+    const tx = 150 + Math.sin(r) * 135, ty = 150 - Math.cos(r) * 135;
+    const hide = mark != null;
+    const on = mark === i;
+    if (on) s += `<circle cx="${tx}" cy="${ty}" r="16" fill="#ff7a6b"/>`;
+    else if (hide) s += `<circle cx="${tx}" cy="${ty}" r="4" fill="#ffffff44"/>`;
+    s += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-family="Inter,sans-serif" font-weight="700" font-size="${big ? 17 : 13}" fill="${on ? '#0b1014' : '#eef2ec'}">${hide ? (on ? '?' : '') : a}</text>`;
+  });
+  if (arrow != null) {
+    s += `<g transform="rotate(${P[arrow][2]} 150 150)"><line x1="150" y1="190" x2="150" y2="70" stroke="#ff7a6b" stroke-width="8" stroke-linecap="round"/><path d="M150 52 L134 82 L166 82 Z" fill="#ff7a6b"/></g>`;
+  }
+  s += '<circle cx="150" cy="150" r="7" fill="#eef2ec"/>';
+  return K.svg(300, 300, s, 'style="width:min(300px,80vw)"');
+}
+const learn = K.el('div', { class: 'card' }, K.el('div', { class: 'visual', html: rose() }),
+  K.el('p', { class: 'muted center', style: 'margin:0' }, 'N = Norte · NE = Nordeste · E = Este · SE = Sudeste · S = Sul · SO = Sudoeste · O = Oeste · NO = Noroeste'));
+main.append(learn);
+const box = K.el('div'); main.append(box);
+function gen() {
+  const t = K.rand(0, 3), i = K.rand(0, 7);
+  const wrong = (a) => K.pick(NAMES.filter(n => n !== a), 3);
+  if (t === 0) return { v: rose(i), q: 'Que ponto está assinalado com <b>?</b>', o: [P[i][0], ...wrong(P[i][0])], a: P[i][0], e: 'É o <b>' + P[i][0] + '</b> (' + P[i][1] + ').' };
+  if (t === 1) return { v: rose(-1, i), q: 'Para onde aponta a seta vermelha?', o: [P[i][0], ...wrong(P[i][0])], a: P[i][0], e: 'A seta aponta para <b>' + P[i][0] + '</b>.' };
+  if (t === 2) { const op = P[(i + 4) % 8][0]; return { q: 'Qual é o ponto oposto a <b>' + P[i][0] + '</b>?', o: [op, ...wrong(op)], a: op, e: 'O oposto de ' + P[i][0] + ' é <b>' + op + '</b>: estão a 180°.' }; }
+  const turn = K.one([[90, 'direita', 2], [90, 'esquerda', -2], [180, 'direita', 4], [45, 'direita', 1], [45, 'esquerda', -1]]);
+  const s = K.one([0, 2, 4, 6]); const end = P[(s + turn[2] + 8) % 8][0];
+  return { q: 'Estás virado para <b>' + P[s][0] + '</b> e rodas ' + turn[0] + '° para a ' + turn[1] + '. Para onde ficas virado?', o: [end, ...wrong(end)], a: end, e: 'Ficas virado para <b>' + end + '</b>. Cada 45° é um passo na rosa dos ventos.' };
+}
+K.quiz(box, { key: 'rosa', gen, n: 10 });
+</script>
+</body>
+</html>

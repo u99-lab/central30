@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Classes de palavras · Aprender · Central 30</title>
+<meta name="description" content="Nome, adjetivo, verbo, advérbio… descobre a classe da palavra destacada.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: 'Classes de palavras', subject: 'lin', emoji: '📝', key: 'cls',
+  intro: 'Lê a frase e diz a que <b>classe</b> pertence a palavra destacada.' });
+const box = K.el('div'); main.append(box);
+const C = ['Nome', 'Adjetivo', 'Verbo', 'Advérbio', 'Determinante', 'Pronome', 'Preposição', 'Conjunção'];
+const WHY = { Nome: 'designa pessoas, animais, coisas, lugares ou sentimentos.', Adjetivo: 'caracteriza um nome (diz como é).', Verbo: 'indica uma ação, estado ou processo e varia em tempo e pessoa.',
+  'Advérbio': 'modifica um verbo, um adjetivo ou outro advérbio (indica tempo, lugar, modo, intensidade…).', Determinante: 'vem antes do nome e acompanha-o (artigo, demonstrativo, possessivo, indefinido…).',
+  Pronome: 'substitui um nome (ou um grupo nominal).', 'Preposição': 'liga palavras, estabelecendo uma relação entre elas (de, em, para, sobre…).', 'Conjunção': 'liga frases ou palavras (e, mas, porque, se…).' };
+const S = [
+  ['O *gato* dorme no sofá.', 'Nome'], ['A Ana comprou um vestido *azul*.', 'Adjetivo'], ['Nós *corremos* no parque.', 'Verbo'], ['Ele chegou *cedo* à escola.', 'Advérbio'],
+  ['*O* professor explicou a matéria.', 'Determinante'], ['*Ela* gosta muito de ler.', 'Pronome'], ['Vou *para* casa depois das aulas.', 'Preposição'], ['Gosto de maçãs *e* de peras.', 'Conjunção'],
+  ['O Rui estuda, *mas* a irmã brinca.', 'Conjunção'], ['*Este* caderno é do Tiago.', 'Determinante'], ['*Ontem* fomos ao cinema.', 'Advérbio'], ['A *cidade* de Coimbra é antiga.', 'Nome'],
+  ['O rio é muito *bonito*.', 'Adjetivo'], ['O rio é *muito* bonito.', 'Advérbio'], ['Os alunos *escreveram* uma carta.', 'Verbo'], ['Eu vi-*o* no recreio.', 'Pronome'],
+  ['*Alguns* alunos faltaram ao teste.', 'Determinante'], ['O bolo é *de* chocolate.', 'Preposição'], ['Ficámos em casa *porque* chovia.', 'Conjunção'], ['A Maria é *simpática*.', 'Adjetivo'],
+  ['*Nós* vamos à praia no sábado.', 'Pronome'], ['Ele fala *devagar*.', 'Advérbio'], ['A *alegria* das crianças contagia.', 'Nome'], ['O João *é* alto.', 'Verbo'],
+  ['O avião voa *sobre* o mar.', 'Preposição'], ['*Se* estudares, passas no teste.', 'Conjunção'], ['*Aquela* casa é muito antiga.', 'Determinante'], ['Quem *te* contou isso?', 'Pronome'],
+  ['Não *gosto* de sopa de feijão.', 'Verbo'], ['O *Porto* fica no Norte de Portugal.', 'Nome'], ['Foi um dia *feliz*.', 'Adjetivo'], ['*Talvez* chova amanhã.', 'Advérbio'],
+];
+const Q = S.map(([f, c]) => ({ q: f.replace(/\*(.+?)\*/, '<mark style="background:#c7a6ff33;color:#e3d4ff;padding:0 6px;border-radius:6px;font-weight:700">$1</mark>'), o: [c, ...K.pick(C.filter(x => x !== c), 3)], a: c,
+  e: '<b>' + c + '</b>: ' + WHY[c] }));
+K.quiz(box, { key: 'cls', questions: Q, n: 12 });
+</script>
+</body>
+</html>

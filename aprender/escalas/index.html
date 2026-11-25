@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escalas dos mapas · Aprender · Central 30</title>
+<meta name="description" content="Calcula distâncias reais a partir da escala de um mapa.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Escalas dos mapas', subject: 'geo', emoji: '📏', key: 'esc',
+  intro: 'Numa escala <b>1 : 100 000</b>, 1 cm no mapa corresponde a 100 000 cm na realidade, ou seja, <b>1 km</b>. Lembra-te: 1 km = 1000 m = 100 000 cm.' });
+const box = K.el('div'); main.append(box);
+const SC = [10000, 20000, 25000, 50000, 100000, 200000, 250000, 500000, 1000000];
+const nf = (x) => (+x.toFixed(3)).toLocaleString('pt-PT');
+function km(cm) { return cm / 100000; }
+function ruler(cm) {
+  const u = 26, w = Math.max(cm * u + 30, 120);
+  let s = `<rect x="10" y="20" width="${cm * u}" height="16" rx="3" fill="#c5f47c"/>`;
+  for (let i = 0; i <= cm; i++) s += `<line x1="${10 + i * u}" y1="14" x2="${10 + i * u}" y2="42" stroke="#eef2ec" stroke-width="1.5"/><text x="${10 + i * u}" y="58" text-anchor="middle" font-size="11" fill="#93a29c" font-family="Inter">${i}</text>`;
+  return K.svg(w, 66, s, 'style="max-width:100%"');
+}
+function opts(ans, unit) {
+  const c = [ans, ans * 10, ans / 10, ans * 2, ans / 2, ans * 100];
+  const uniq = [...new Set(c.map(v => nf(v)))].filter(v => v !== '0');
+  return [nf(ans) + ' ' + unit, ...K.pick(uniq.slice(1), 3).map(v => v + ' ' + unit)];
+}
+function gen() {
+  const t = K.rand(0, 2), s = K.one(SC), sTxt = '1 : ' + s.toLocaleString('pt-PT');
+  if (t === 0) { const cm = K.rand(1, 12), real = cm * s, k = km(real); const unit = k >= 1 ? 'km' : 'm', val = k >= 1 ? k : real / 100;
+    const o = opts(val, unit);
+    return { v: ruler(Math.min(cm, 12)), q: 'Num mapa à escala <b>' + sTxt + '</b>, ' + cm + ' cm correspondem a quanto na realidade?', o, a: o[0],
+      e: cm + ' cm × ' + s.toLocaleString('pt-PT') + ' = ' + real.toLocaleString('pt-PT') + ' cm = <b>' + o[0] + '</b>.' }; }
+  if (t === 1) { const k = km(s); const unit = k >= 1 ? 'km' : 'm', val = k >= 1 ? k : s / 100; const o = opts(val, unit);
+    return { q: 'Num mapa à escala <b>' + sTxt + '</b>, 1 cm corresponde a…', o, a: o[0], e: '1 cm × ' + s.toLocaleString('pt-PT') + ' = ' + s.toLocaleString('pt-PT') + ' cm = <b>' + o[0] + '</b>.' }; }
+  const cm = K.rand(1, 10), real = cm * s; const k = km(real);
+  const o = opts(cm, 'cm');
+  return { q: 'Num mapa à escala <b>' + sTxt + '</b>, quantos centímetros representam ' + (k >= 1 ? nf(k) + ' km' : nf(real / 100) + ' m') + '?', o, a: o[0],
+    e: (k >= 1 ? nf(k) + ' km' : nf(real / 100) + ' m') + ' = ' + real.toLocaleString('pt-PT') + ' cm; ' + real.toLocaleString('pt-PT') + ' ÷ ' + s.toLocaleString('pt-PT') + ' = <b>' + cm + ' cm</b>.' };
+}
+K.quiz(box, { key: 'esc', gen, n: 10 });
+</script>
+</body>
+</html>

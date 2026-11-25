@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tipos de rochas · Aprender · Central 30</title>
+<meta name="description" content="Magmáticas, sedimentares ou metamórficas? Classifica as rochas.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Tipos de rochas', subject: 'cie', emoji: '🪨', key: 'roc',
+  intro: '<b>Magmáticas</b>: formam-se quando o magma arrefece. <b>Sedimentares</b>: formam-se a partir de sedimentos que se acumulam e compactam. <b>Metamórficas</b>: outras rochas transformadas por calor e pressão.' });
+const T = ['Magmática', 'Sedimentar', 'Metamórfica'];
+const R = [
+  ['Granito', 'Magmática', 'Magmática plutónica: o magma arrefeceu devagar, em profundidade, por isso vêem-se os cristais. Muito comum no Norte e Centro de Portugal (Serra da Estrela).'],
+  ['Basalto', 'Magmática', 'Magmática vulcânica: a lava arrefeceu depressa à superfície. Existe nos Açores e na zona de Lisboa.'],
+  ['Gabro', 'Magmática', 'Magmática plutónica, escura, com a mesma composição do basalto mas arrefecida em profundidade.'],
+  ['Pedra-pomes', 'Magmática', 'Magmática vulcânica cheia de buraquinhos de gás: é tão leve que pode flutuar na água.'],
+  ['Calcário', 'Sedimentar', 'Sedimentar, muitas vezes com restos de conchas e seres vivos. Forma as Serras de Aire e Candeeiros e muitas grutas.'],
+  ['Arenito', 'Sedimentar', 'Sedimentar: grãos de areia colados (cimentados) uns aos outros.'],
+  ['Argilito', 'Sedimentar', 'Sedimentar, formada por partículas muito finas de argila compactadas.'],
+  ['Conglomerado', 'Sedimentar', 'Sedimentar: calhaus arredondados unidos por um cimento natural.'],
+  ['Sal-gema', 'Sedimentar', 'Sedimentar, formada pela evaporação de água salgada. Há uma mina de sal-gema em Loulé.'],
+  ['Mármore', 'Metamórfica', 'Metamórfica, resulta da transformação do calcário. Famoso o de Estremoz e Vila Viçosa.'],
+  ['Xisto', 'Metamórfica', 'Metamórfica, parte-se em placas. Dá nome às Aldeias do Xisto e é comum no Douro e na Beira.'],
+  ['Ardósia', 'Metamórfica', 'Metamórfica, resulta do argilito. Usada em telhados e quadros. Extrai-se em Valongo.'],
+  ['Gnaisse', 'Metamórfica', 'Metamórfica de alto grau, com bandas claras e escuras alternadas.'],
+  ['Quartzito', 'Metamórfica', 'Metamórfica, resulta da transformação do arenito; muito dura.'],
+];
+const box = K.el('div'); main.append(box);
+const extra = [
+  { q: 'Como se formam as rochas magmáticas?', o: ['Pelo arrefecimento do magma', 'Pela acumulação de sedimentos', 'Por calor e pressão sobre outras rochas', 'Pela evaporação da água'], a: 'Pelo arrefecimento do magma', e: 'As magmáticas nascem do <b>arrefecimento do magma</b> (em profundidade ou à superfície).' },
+  { q: 'Um fóssil encontra-se mais facilmente numa rocha…', o: ['Sedimentar', 'Magmática', 'Metamórfica', 'Vulcânica'], a: 'Sedimentar', e: 'Os fósseis ficam preservados nas camadas das rochas <b>sedimentares</b>.' },
+  { q: 'O mármore resulta da transformação de que rocha?', o: ['Calcário', 'Granito', 'Basalto', 'Arenito'], a: 'Calcário', e: 'O calcário transformado pelo calor e pressão dá <b>mármore</b>.' },
+  { q: 'Porque é que o granito tem cristais grandes?', o: ['Arrefeceu devagar, em profundidade', 'Arrefeceu depressa, à superfície', 'Foi aquecido duas vezes', 'Tem conchas'], a: 'Arrefeceu devagar, em profundidade', e: 'Arrefecimento <b>lento</b> dá tempo aos cristais para crescerem.' },
+];
+const Q = R.map(([n, t, e]) => ({ q: 'O <b>' + n.toLowerCase() + '</b> é uma rocha…', o: T, a: t, e: '<b>' + t + '.</b> ' + e, keep: true })).concat(extra);
+K.quiz(box, { key: 'roc', questions: Q, n: 10 });
+</script>
+</body>
+</html>

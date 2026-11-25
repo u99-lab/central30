@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coordenadas geográficas · Aprender · Central 30</title>
+<meta name="description" content="Latitude e longitude: localiza pontos na Terra.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Coordenadas geográficas', subject: 'geo', emoji: '🌐', key: 'coord',
+  intro: 'A <b>latitude</b> mede-se a partir do Equador (0° a 90° Norte ou Sul). A <b>longitude</b> mede-se a partir do meridiano de Greenwich (0° a 180° Este ou Oeste).' });
+const box = K.el('div'); main.append(box);
+const latT = (v) => v === 0 ? '0°' : Math.abs(v) + '° ' + (v > 0 ? 'N' : 'S');
+const lonT = (v) => (v === 0 || Math.abs(v) === 180) ? Math.abs(v) + '°' : Math.abs(v) + '° ' + (v > 0 ? 'E' : 'O');
+function grid(lat, lon) {
+  const X = (l) => 56 + (l + 180) * 1.6, Y = (l) => 16 + (90 - l) * 1.6;
+  let s = `<rect x="56" y="16" width="576" height="288" rx="6" fill="#10202b" stroke="#ffffff22"/>`;
+  for (let l = -60; l <= 60; l += 30) s += `<line x1="56" y1="${Y(l)}" x2="632" y2="${Y(l)}" stroke="${l === 0 ? '#c5f47c' : '#ffffff22'}" stroke-width="${l === 0 ? 2.5 : 1}"/><text x="50" y="${Y(l) + 4}" text-anchor="end" font-size="11" fill="#93a29c" font-family="Inter">${latT(l)}</text>`;
+  for (let l = -150; l <= 180; l += 30) s += `<line x1="${X(l)}" y1="16" x2="${X(l)}" y2="304" stroke="${l === 0 ? '#7cc8f4' : '#ffffff22'}" stroke-width="${l === 0 ? 2.5 : 1}"/><text x="${X(l)}" y="320" text-anchor="middle" font-size="11" fill="#93a29c" font-family="Inter">${lonT(l)}</text>`;
+  s += `<text x="${X(-178)}" y="${Y(0) - 6}" font-size="11" fill="#c5f47c" font-family="Inter" font-weight="700">Equador</text>`;
+  s += `<text x="${X(0) + 5}" y="30" font-size="11" fill="#7cc8f4" font-family="Inter" font-weight="700">Greenwich</text>`;
+  s += `<text x="64" y="${Y(75)}" font-size="11" fill="#93a29c" font-family="Inter">N ↑</text>`;
+  if (lat != null) s += `<circle cx="${X(lon)}" cy="${Y(lat)}" r="11" fill="#ff7a6b55"/><circle cx="${X(lon)}" cy="${Y(lat)}" r="6" fill="#ff7a6b" stroke="#fff" stroke-width="2"/>`;
+  return K.svg(650, 330, s, 'style="width:100%"');
+}
+const FACTS = [
+  { q: 'O Equador divide a Terra em dois hemisférios. Quais?', o: ['Norte e Sul', 'Este e Oeste', 'Oriental e Ocidental', 'Ártico e Antártico'], a: 'Norte e Sul', e: 'O Equador separa o hemisfério <b>Norte</b> do hemisfério <b>Sul</b>.' },
+  { q: 'O meridiano de Greenwich separa…', o: ['o hemisfério Este (Oriental) do Oeste (Ocidental)', 'o hemisfério Norte do Sul', 'o dia da noite', 'os trópicos'], a: 'o hemisfério Este (Oriental) do Oeste (Ocidental)', e: 'Greenwich (0°) separa os hemisférios <b>Oriental</b> (Este) e <b>Ocidental</b> (Oeste).' },
+  { q: 'Em que hemisférios fica Portugal Continental?', o: ['Norte e Ocidental', 'Sul e Oriental', 'Norte e Oriental', 'Sul e Ocidental'], a: 'Norte e Ocidental', e: 'Lisboa fica a cerca de 39° N e 9° O: hemisfério <b>Norte</b> e <b>Ocidental</b>.' },
+  { q: 'A latitude máxima é…', o: ['90°', '180°', '360°', '45°'], a: '90°', e: 'A latitude vai de 0° (Equador) a <b>90°</b> (polos).' },
+  { q: 'A longitude máxima é…', o: ['180°', '90°', '360°', '60°'], a: '180°', e: 'A longitude vai de 0° (Greenwich) a <b>180°</b>, para Este ou Oeste.' },
+  { q: 'Qual é a latitude do Polo Norte?', o: ['90° N', '0°', '180°', '90° S'], a: '90° N', e: 'O Polo Norte está a <b>90° N</b>.' },
+];
+function gen(j) {
+  if (j % 4 === 3) return K.one(FACTS);
+  const lat = K.one([-60, -30, 0, 30, 60]), lon = K.one([-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150]);
+  const ans = latT(lat) + ', ' + lonT(lon);
+  const alt = new Set([latT(-lat) + ', ' + lonT(lon), latT(lat) + ', ' + lonT(-lon), latT(-lat) + ', ' + lonT(-lon), latT(lat + (lat < 60 ? 30 : -30)) + ', ' + lonT(lon), latT(lat) + ', ' + lonT(lon + (lon < 150 ? 30 : -30))]);
+  alt.delete(ans);
+  return { v: grid(lat, lon), q: 'Quais são as coordenadas do ponto vermelho?', o: [ans, ...K.pick([...alt], 3)], a: ans,
+    e: 'Latitude <b>' + latT(lat) + '</b> (linhas horizontais) e longitude <b>' + lonT(lon) + '</b> (linhas verticais). Diz-se primeiro a latitude.' };
+}
+K.quiz(box, { key: 'coord', gen, n: 10 });
+</script>
+</body>
+</html>

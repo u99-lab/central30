@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Frações e percentagens · Aprender · Central 30</title>
+<meta name="description" content="Frações, decimais e percentagens: tudo ligado.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: 'Frações e percentagens', subject: 'mat', emoji: '🥧', key: 'fr',
+  intro: '<b>50%</b> = <b>1/2</b> = <b>0,5</b>: são formas diferentes de dizer a mesma coisa. Percentagem quer dizer "em cada 100".' });
+const box = K.el('div'); main.append(box);
+const EQ = [['1/2', 50, '0,5'], ['1/4', 25, '0,25'], ['3/4', 75, '0,75'], ['1/5', 20, '0,2'], ['2/5', 40, '0,4'], ['3/5', 60, '0,6'], ['4/5', 80, '0,8'], ['1/10', 10, '0,1'], ['3/10', 30, '0,3'], ['7/10', 70, '0,7'], ['9/10', 90, '0,9'], ['1/8', 12.5, '0,125'], ['1/20', 5, '0,05'], ['1/100', 1, '0,01']];
+const pc = (v) => v.toLocaleString('pt-PT') + '%';
+function pie(k, n) {
+  let s = ''; const cx = 90, cy = 90, r = 80;
+  for (let i = 0; i < n; i++) { const a0 = i / n * 2 * Math.PI - Math.PI / 2, a1 = (i + 1) / n * 2 * Math.PI - Math.PI / 2;
+    const p0 = [cx + r * Math.cos(a0), cy + r * Math.sin(a0)], p1 = [cx + r * Math.cos(a1), cy + r * Math.sin(a1)];
+    s += `<path d="M${cx} ${cy} L${p0[0]} ${p0[1]} A${r} ${r} 0 ${1 / n > .5 ? 1 : 0} 1 ${p1[0]} ${p1[1]} Z" fill="${i < k ? '#f47cc8' : '#26343d'}" stroke="#0b1014" stroke-width="2"/>`; }
+  return K.svg(180, 180, s, 'style="width:150px"');
+}
+function gen() {
+  const t = K.rand(0, 4), e = K.one(EQ), others = K.pick(EQ.filter(x => x !== e), 3);
+  if (t === 0) return { q: 'A fração <b>' + e[0] + '</b> é igual a que percentagem?', o: [pc(e[1]), ...others.map(x => pc(x[1]))], a: pc(e[1]), e: e[0] + ' = ' + e[2] + ' = <b>' + pc(e[1]) + '</b>.' };
+  if (t === 1) return { q: '<b>' + pc(e[1]) + '</b> é igual a que fração?', o: [e[0], ...others.map(x => x[0])], a: e[0], e: pc(e[1]) + ' = ' + e[1].toLocaleString('pt-PT') + '/100 = <b>' + e[0] + '</b>.' };
+  if (t === 2) return { q: 'O número decimal <b>' + e[2] + '</b> corresponde a…', o: [pc(e[1]), ...others.map(x => pc(x[1]))], a: pc(e[1]), e: e[2] + ' × 100 = <b>' + pc(e[1]) + '</b>.' };
+  if (t === 3) { const n = K.rand(3, 8), k = K.rand(1, n - 1); const ans = k + '/' + n; const wr = [...new Set([(n - k) + '/' + n, k + '/' + (n + 1), (k + 1) + '/' + n, n + '/' + k].filter(x => x !== ans))];
+    return { v: pie(k, n), q: 'Que fração do círculo está pintada?', o: [ans, ...K.pick(wr, 3)], a: ans, e: 'Há ' + n + ' partes iguais e ' + k + ' estão pintadas: <b>' + ans + '</b>.' }; }
+  const p = K.one([10, 20, 25, 50, 75, 5]), base = K.one([20, 40, 60, 80, 100, 120, 200, 300, 400]), r = p * base / 100;
+  return { q: 'Quanto é <b>' + p + '% de ' + base + '</b>?', o: [String(r), String(r * 2), String(r / 2), String(base - r)].filter((v, i, s) => s.indexOf(v) === i).concat(K.near(r, 5, 3, 5)).slice(0, 4), a: String(r), e: p + '% de ' + base + ' = ' + p + ' × ' + base + ' ÷ 100 = <b>' + r + '</b>.' };
+}
+K.quiz(box, { key: 'fr', gen, n: 10 });
+</script>
+</body>
+</html>

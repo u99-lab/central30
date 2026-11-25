@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deuses gregos e romanos · Aprender · Central 30</title>
+<meta name="description" content="Jogo da memória: junta cada deus grego ao seu nome romano.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Deuses gregos e romanos', subject: 'his', emoji: '⚡', key: 'deus',
+  intro: 'Os Romanos adotaram muitos deuses gregos, mas deram-lhes outros nomes. Junta cada deus grego ao seu equivalente romano.' });
+const G = [['Zeus','Júpiter','rei dos deuses, céu e trovão'],['Hera','Juno','rainha dos deuses, casamento'],['Poseidon','Neptuno','mar'],['Atena','Minerva','sabedoria e estratégia'],
+  ['Ares','Marte','guerra'],['Afrodite','Vénus','amor e beleza'],['Hermes','Mercúrio','mensageiro, comércio e viajantes'],['Ártemis','Diana','caça e Lua'],
+  ['Hefesto','Vulcano','fogo e forja'],['Deméter','Ceres','agricultura e colheitas'],['Dionísio','Baco','vinho e festa'],['Hades','Plutão','mundo dos mortos']];
+const box = K.el('div'); main.append(box);
+K.memory(box, { key: 'deus', pairs: G, n: 8, tags: ['GREGO', 'ROMANO'] });
+const tb = K.el('div', { class: 'card' }, K.el('h2', { style: 'margin:0 0 10px;font:700 18px var(--disp)' }, 'Tabela para estudar'),
+  K.el('div', { class: 'facts' }, G.map(g => K.el('div', { class: 'fact' }, K.el('b', {}, g[0] + ' · ' + g[1]), K.el('span', {}, g[2])))));
+main.append(tb);
+</script>
+</body>
+</html>

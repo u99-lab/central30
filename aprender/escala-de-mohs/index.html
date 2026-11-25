@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escala de Mohs · Aprender · Central 30</title>
+<meta name="description" content="Ordena os minerais do mais macio para o mais duro.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Escala de Mohs', subject: 'cie', emoji: '💎', key: 'mohs',
+  intro: 'A <b>escala de Mohs</b> ordena 10 minerais pela sua <b>dureza</b>: cada um risca os que estão abaixo dele. A unha tem dureza ~2,5 e o vidro ~5,5.' });
+const M = [
+  { t: 'Talco', s: 'dureza 1 · risca-se com a unha', v: 1 }, { t: 'Gesso', s: 'dureza 2 · risca-se com a unha', v: 2 },
+  { t: 'Calcite', s: 'dureza 3 · risca-se com uma moeda de cobre', v: 3 }, { t: 'Fluorite', s: 'dureza 4 · risca-se com um canivete', v: 4 },
+  { t: 'Apatite', s: 'dureza 5 · risca-se com um canivete', v: 5 }, { t: 'Ortóclase (feldspato)', s: 'dureza 6 · risca o vidro', v: 6 },
+  { t: 'Quartzo', s: 'dureza 7 · risca o vidro facilmente', v: 7 }, { t: 'Topázio', s: 'dureza 8', v: 8 },
+  { t: 'Corindo', s: 'dureza 9 · rubi e safira são corindo', v: 9 }, { t: 'Diamante', s: 'dureza 10 · o mineral natural mais duro', v: 10 },
+];
+const box = K.el('div'); main.append(box);
+K.order(box, { key: 'mohs', prompt: 'Do mais macio (em cima) para o mais duro (em baixo)', items: M, n: 5, hint: 'Depois de verificar, vês a dureza de cada mineral.' });
+main.append(K.el('div', { class: 'card' }, K.el('h2', { style: 'margin:0 0 10px;font:700 18px var(--disp)' }, 'A escala completa'),
+  K.el('div', { class: 'facts' }, M.map(m => K.el('div', { class: 'fact' }, K.el('b', {}, m.v + ' · ' + m.t), K.el('span', {}, m.s.replace(/^dureza \d+ · ?/, '') || ' '))))));
+</script>
+</body>
+</html>

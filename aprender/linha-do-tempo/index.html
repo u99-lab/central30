@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Linha do tempo · Aprender · Central 30</title>
+<meta name="description" content="Ordena acontecimentos da Pré-História à queda de Roma.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Linha do tempo', subject: 'his', emoji: '⏳', key: 'ldt',
+  intro: 'Põe os acontecimentos por ordem, do <b>mais antigo</b> (em cima) para o <b>mais recente</b> (em baixo). Lembra-te: em a.C. (antes de Cristo), quanto maior o número, mais antigo é.' });
+const box = K.el('div'); main.append(box);
+const E = [
+  { t: 'Surgem os primeiros Homo sapiens, em África', s: 'há cerca de 300 000 anos', v: -300000 },
+  { t: 'Gravuras rupestres do Vale do Côa', s: 'Paleolítico: há cerca de 25 000 anos', v: -23000 },
+  { t: 'Pinturas da gruta de Lascaux (França)', s: 'há cerca de 17 000 anos', v: -15000 },
+  { t: 'Começa a agricultura no Crescente Fértil (Neolítico)', s: 'há cerca de 12 000 anos (c. 10 000 a.C.)', v: -10000 },
+  { t: 'Invenção da escrita na Mesopotâmia', s: 'c. 3200 a.C.', v: -3200 },
+  { t: 'Construção da Grande Pirâmide de Gizé (Egito)', s: 'c. 2560 a.C.', v: -2560 },
+  { t: 'Código de Hamurabi, na Babilónia', s: 'c. 1754 a.C.', v: -1754 },
+  { t: 'Primeiros Jogos Olímpicos, na Grécia', s: '776 a.C.', v: -776 },
+  { t: 'Fundação de Roma (segundo a lenda)', s: '753 a.C.', v: -753 },
+  { t: 'Reformas de Clístenes: nasce a democracia em Atenas', s: '508 a.C.', v: -508 },
+  { t: 'Morte de Alexandre, o Grande', s: '323 a.C.', v: -323 },
+  { t: 'Morte de Viriato, chefe dos Lusitanos', s: '139 a.C.', v: -139 },
+  { t: 'Assassinato de Júlio César', s: '44 a.C.', v: -44 },
+  { t: 'Édito de Milão: liberdade de culto para os cristãos', s: '313 d.C.', v: 313 },
+  { t: 'Queda do Império Romano do Ocidente', s: '476 d.C.', v: 476 },
+];
+K.order(box, { key: 'ldt', prompt: 'Do mais antigo para o mais recente', items: E, n: 6, hint: 'Depois de verificar, aparecem as datas.' });
+</script>
+</body>
+</html>

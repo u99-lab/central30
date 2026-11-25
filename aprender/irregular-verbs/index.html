@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Irregular verbs · Aprender · Central 30</title>
+<meta name="description" content="Inglês: past simple e past participle dos verbos irregulares.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: 'Irregular verbs', subject: 'lin', emoji: '🇬🇧', key: 'irr',
+  intro: 'Os verbos irregulares não acabam em <b>-ed</b> no passado. Treina o <b>past simple</b> e o <b>past participle</b>, ou estuda a lista.' });
+const V = [['be','was / were','been','ser, estar'],['begin','began','begun','começar'],['break','broke','broken','partir'],['bring','brought','brought','trazer'],['buy','bought','bought','comprar'],
+  ['catch','caught','caught','apanhar'],['choose','chose','chosen','escolher'],['come','came','come','vir'],['do','did','done','fazer'],['drink','drank','drunk','beber'],
+  ['drive','drove','driven','conduzir'],['eat','ate','eaten','comer'],['fall','fell','fallen','cair'],['feel','felt','felt','sentir'],['find','found','found','encontrar'],
+  ['fly','flew','flown','voar'],['forget','forgot','forgotten','esquecer'],['get','got','got','obter, receber'],['give','gave','given','dar'],['go','went','gone','ir'],
+  ['have','had','had','ter'],['know','knew','known','saber, conhecer'],['leave','left','left','sair, deixar'],['make','made','made','fazer, construir'],['meet','met','met','encontrar-se com'],
+  ['pay','paid','paid','pagar'],['put','put','put','pôr'],['read','read','read','ler'],['run','ran','run','correr'],['say','said','said','dizer'],
+  ['see','saw','seen','ver'],['sell','sold','sold','vender'],['sing','sang','sung','cantar'],['sleep','slept','slept','dormir'],['speak','spoke','spoken','falar'],
+  ['swim','swam','swum','nadar'],['take','took','taken','levar, tirar'],['teach','taught','taught','ensinar'],['tell','told','told','contar, dizer'],['think','thought','thought','pensar'],
+  ['win','won','won','ganhar'],['write','wrote','written','escrever']];
+const tabs = K.el('div', { class: 'tabs', role: 'tablist' });
+const area = K.el('div');
+const bT = K.el('button', { role: 'tab', 'aria-selected': 'true', onclick: () => sel(0) }, 'Treinar'), bL = K.el('button', { role: 'tab', 'aria-selected': 'false', onclick: () => sel(1) }, 'Lista');
+tabs.append(bT, bL); main.append(tabs, area);
+function gen() {
+  const v = K.one(V), t = K.rand(0, 2);
+  const others = K.pick(V.filter(x => x !== v), 6);
+  if (t === 0) { const fake = v[0].replace(/e$/, '') + 'ed'; return { q: 'Past simple of <b>to ' + v[0] + '</b> (' + v[3] + ')?', o: [v[1], ...[...new Set([fake, v[2] !== v[1] ? v[2] : others[0][1], others[1][1], others[2][1]])].filter(x => x !== v[1]).slice(0, 3)], a: v[1], e: v[0] + ' → <b>' + v[1] + '</b> → ' + v[2] + '.' }; }
+  if (t === 1) { const fake = v[0].replace(/e$/, '') + 'ed'; return { q: 'Past participle of <b>to ' + v[0] + '</b> (' + v[3] + ')?', o: [v[2], ...[...new Set([fake, v[1] !== v[2] ? v[1] : others[0][2], others[1][2], others[2][2]])].filter(x => x !== v[2]).slice(0, 3)], a: v[2], e: v[0] + ' → ' + v[1] + ' → <b>' + v[2] + '</b>.' }; }
+  return { q: 'O que quer dizer <b>' + v[1] + '</b>?', o: [v[3], ...others.slice(0, 3).map(x => x[3])], a: v[3], e: '<b>' + v[1] + '</b> é o past simple de <i>to ' + v[0] + '</i>: ' + v[3] + '.' };
+}
+function sel(i) {
+  bT.setAttribute('aria-selected', String(i === 0)); bL.setAttribute('aria-selected', String(i === 1));
+  area.innerHTML = '';
+  if (i === 0) { const b = K.el('div'); area.append(b); K.quiz(b, { key: 'irr', gen, n: 12 }); }
+  else area.append(K.el('div', { class: 'card', style: 'overflow-x:auto' }, K.el('table', { style: 'width:100%;border-collapse:collapse;font-size:15px' },
+    K.el('thead', {}, K.el('tr', {}, ['Infinitive', 'Past simple', 'Past participle', 'Português'].map(h => K.el('th', { style: 'text-align:left;padding:8px;border-bottom:1px solid var(--line);color:var(--mute);font-weight:600' }, h)))),
+    K.el('tbody', {}, V.map(v => K.el('tr', {}, v.map((c, j) => K.el('td', { style: 'padding:8px;border-bottom:1px solid #ffffff0d' + (j === 0 ? ';font-weight:700' : j === 3 ? ';color:var(--mute)' : '') }, c))))))));
+}
+sel(0);
+</script>
+</body>
+</html>

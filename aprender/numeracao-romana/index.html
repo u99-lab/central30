@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Numeração romana · Aprender · Central 30</title>
+<meta name="description" content="Converte números árabes em romanos e treina com perguntas.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+
+<script>
+const main = K.page({ title: 'Numeração romana', subject: 'his', emoji: '🏛️', key: 'rom',
+  intro: 'I = 1 · V = 5 · X = 10 · L = 50 · C = 100 · D = 500 · M = 1000. Um símbolo menor à esquerda de um maior subtrai (IV = 4, IX = 9, XL = 40, XC = 90, CD = 400, CM = 900).' });
+const V = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+const toR = (n) => { let s = ''; for (const [v, r] of V) while (n >= v) { s += r; n -= v; } return s; };
+const fromR = (s) => { s = s.toUpperCase().trim(); if (!/^[MDCLXVI]+$/.test(s)) return null; const m = { M: 1000, D: 500, C: 100, L: 50, X: 10, V: 5, I: 1 }; let t = 0;
+  for (let i = 0; i < s.length; i++) { const a = m[s[i]], b = m[s[i + 1]] || 0; t += a < b ? -a : a; } return toR(t) === s ? t : null; };
+const inp = K.el('input', { type: 'text', id: 'conv', inputmode: 'text', placeholder: 'Ex.: 2026 ou MMXXVI', 'aria-label': 'Número a converter', style: 'flex:1;min-width:180px;font-size:18px' });
+const out = K.el('div', { class: 'q', style: 'margin:14px 0 0;min-height:1.3em', 'aria-live': 'polite' });
+inp.addEventListener('input', () => {
+  const v = inp.value.trim(); if (!v) { out.textContent = ''; return; }
+  if (/^\d+$/.test(v)) { const n = +v; out.innerHTML = n >= 1 && n <= 3999 ? n.toLocaleString('pt-PT') + ' = <b style="color:var(--acc)">' + toR(n) + '</b>' : 'Escreve um número de 1 a 3999.'; }
+  else { const n = fromR(v); out.innerHTML = n ? v.toUpperCase() + ' = <b style="color:var(--acc)">' + n.toLocaleString('pt-PT') + '</b>' : 'Esse número romano não está bem escrito.'; }
+});
+main.append(K.el('div', { class: 'card' }, K.el('h2', { style: 'margin:0 0 10px;font:700 18px var(--disp)' }, 'Conversor'), K.el('div', { class: 'row' }, inp), out));
+const box = K.el('div'); main.append(box);
+function gen() {
+  const big = Math.random() < .4, n = big ? K.rand(40, 2100) : K.rand(1, 60);
+  const near = new Set(); while (near.size < 3) { const d = n + K.one([-10, -9, -5, -4, -1, 1, 4, 5, 9, 10, 40, 50, -40, -50]); if (d > 0 && d !== n) near.add(d); }
+  if (Math.random() < .5) return { q: 'Como se escreve <b>' + n.toLocaleString('pt-PT') + '</b> em numeração romana?', o: [toR(n), ...[...near].map(toR)], a: toR(n), e: n.toLocaleString('pt-PT') + ' = <b>' + toR(n) + '</b>.' };
+  return { q: 'Que número é <b>' + toR(n) + '</b>?', o: [String(n), ...[...near].map(String)], a: String(n), e: toR(n) + ' = <b>' + n.toLocaleString('pt-PT') + '</b>.' };
+}
+K.quiz(box, { key: 'rom', gen, n: 10 });
+</script>
+</body>
+</html>

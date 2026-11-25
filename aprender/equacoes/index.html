@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Equações do 1.º grau · Aprender · Central 30</title>
+<meta name="description" content="Resolve equações com a ajuda de uma balança.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: 'Equações do 1.º grau', subject: 'mat', emoji: '⚖️', key: 'eq',
+  intro: 'Uma equação é como uma <b>balança em equilíbrio</b>: o que fizeres de um lado tens de fazer do outro. Objetivo: descobrir o valor de <b>x</b>.' });
+const box = K.el('div'); main.append(box);
+const sgn = (b) => b < 0 ? ' − ' + Math.abs(b) : ' + ' + b;
+function balance(left, right) {
+  const s = `<line x1="320" y1="40" x2="320" y2="170" stroke="#93a29c" stroke-width="6"/><path d="M290 180 h60 l-30 -20 z" fill="#93a29c"/>
+  <line x1="110" y1="60" x2="530" y2="60" stroke="#eef2ec" stroke-width="5" stroke-linecap="round"/>
+  <line x1="150" y1="60" x2="130" y2="110" stroke="#93a29c"/><line x1="150" y1="60" x2="170" y2="110" stroke="#93a29c"/><line x1="490" y1="60" x2="470" y2="110" stroke="#93a29c"/><line x1="490" y1="60" x2="510" y2="110" stroke="#93a29c"/>
+  <path d="M70 110 h160 a80 22 0 0 1 -160 0z" fill="#7cc8f4"/><path d="M410 110 h160 a80 22 0 0 1 -160 0z" fill="#c5f47c"/>
+  <text x="150" y="100" text-anchor="middle" font-family="Space Grotesk,Inter" font-weight="700" font-size="24" fill="#eef2ec">${left}</text>
+  <text x="490" y="100" text-anchor="middle" font-family="Space Grotesk,Inter" font-weight="700" font-size="24" fill="#eef2ec">${right}</text>`;
+  return K.svg(640, 190, s, 'style="width:min(560px,100%)"');
+}
+function gen() {
+  const a = K.one([1, 1, 2, 2, 3, 4, 5, 6]), x = K.rand(-5, 12), b = K.rand(-15, 15) || 3, c = a * x + b;
+  const lhs = (a === 1 ? '' : a) + 'x' + sgn(b);
+  const steps = (a === 1 ? 'x = ' + c + (b < 0 ? ' + ' + Math.abs(b) : ' − ' + b) + ' = <b>' + x + '</b>.' :
+    a + 'x = ' + c + (b < 0 ? ' + ' + Math.abs(b) : ' − ' + b) + ' = ' + (c - b) + '; x = ' + (c - b) + ' ÷ ' + a + ' = <b>' + x + '</b>.');
+  const wrong = [...new Set([x + 1, x - 1, c - b, c + b, -x, x + 2].filter(v => v !== x))];
+  return { v: balance(lhs, c), q: 'Resolve: <b>' + lhs + ' = ' + c + '</b>', o: ['x = ' + x, ...K.pick(wrong, 3).map(v => 'x = ' + v)], a: 'x = ' + x,
+    e: (b < 0 ? 'Soma ' + Math.abs(b) : 'Tira ' + b) + ' aos dois lados' + (a > 1 ? ' e divide por ' + a : '') + ': ' + steps + ' Verificação: ' + (a === 1 ? '' : a + ' × ') + '(' + x + ')' + sgn(b) + ' = ' + c + ' ✓' };
+}
+K.quiz(box, { key: 'eq', gen, n: 10 });
+</script>
+</body>
+</html>
