@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Mapa animado e interativo de Portugal Continental: distritos, concelhos e freguesias. Trabalho de Isaac Cardoso, N.º 15, 7.º B.">
+<meta name="author" content="Isaac Cardoso">
+<style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Distritos de Portugal Continental</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: palco do mapa (o "mar") à esquerda, painel à direita com a cadeia País → Distrito → Concelho; em telemóvel empilha. */
+:root{
+  --bg:#EEF3F6; --panel:#FFFFFF; --ink:#18232E; --muted:#5E6B78; --line:#D5DEE5;
+  --sea:#D6E7F1; --land:#E3E8EC; --land2:#EDF0F3; --edge:#FFFFFF; --outline:#18232E;
+  --accent:#C7372F; --accent-soft:#F6D9D6;
+  --c0:#F6D06F; --c1:#9FD3B4; --c2:#93C2E4; --c3:#F3A59B; --c4:#C6B1E3; --c5:#F8BE8C; --c6:#B9DA8F; --c7:#EBB0CF; --c8:#8FD4CD; --c9:#E2CE9C; --c10:#B7C7EE; --c11:#DDE29A;
+  --display:"Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --text:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D161E; --panel:#132029; --ink:#E7EEF3; --muted:#9AA9B6; --line:#24343F;
+  --sea:#102331; --land:#1E2C36; --land2:#192731; --edge:#0F1B23; --outline:#F2F6F9;
+  --accent:#FF6B5E; --accent-soft:#3A2324;
+  --c0:#C9A548; --c1:#5FA684; --c2:#5B93BC; --c3:#C9776D; --c4:#8F79B6; --c5:#C98D5C; --c6:#83A85B; --c7:#B57A9A; --c8:#55A39D; --c9:#AE9C6A; --c10:#7C8FC2; --c11:#A3AA5E;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D161E; --panel:#132029; --ink:#E7EEF3; --muted:#9AA9B6; --line:#24343F;
+  --sea:#102331; --land:#1E2C36; --land2:#192731; --edge:#0F1B23; --outline:#F2F6F9;
+  --accent:#FF6B5E; --accent-soft:#3A2324;
+  --c0:#C9A548; --c1:#5FA684; --c2:#5B93BC; --c3:#C9776D; --c4:#8F79B6; --c5:#C98D5C; --c6:#83A85B; --c7:#B57A9A; --c8:#55A39D; --c9:#AE9C6A; --c10:#7C8FC2; --c11:#A3AA5E;
+  color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--text);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px;box-sizing:border-box}
+*{box-sizing:border-box}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);gap:14px;height:100%;max-width:1500px;margin:0 auto}
+header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(20px,2.4vw,28px);line-height:1.1;margin:0;text-wrap:balance}
+.who{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 8px;font-size:14px;white-space:nowrap}
+.who .av{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.who b{font-weight:700}
+.who span{color:var(--muted)}
+.stage{position:relative;background:var(--sea);border-radius:18px;overflow:hidden;min-height:0;touch-action:manipulation}
+.stage > svg#map,.stage > canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage > svg#map{pointer-events:none}
+.stage > canvas.hot{cursor:pointer}
+.cap{position:absolute;left:18px;top:16px;right:60px;pointer-events:none;display:flex;flex-direction:column;gap:4px}
+.cap .crumbs{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.cap h2{font-family:var(--display);font-weight:800;font-size:clamp(18px,2.2vw,30px);line-height:1.1;margin:0;max-width:24ch;text-wrap:balance;
+  text-shadow:0 0 6px var(--sea),0 0 12px var(--sea)}
+.cap h2 em{font-style:normal;color:var(--accent)}
+.cap h2.swap{animation:capin .7s cubic-bezier(.2,.8,.2,1)}
+@keyframes capin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.north{position:absolute;right:16px;top:16px;width:34px;height:52px;pointer-events:none}
+.scale{position:absolute;left:18px;bottom:16px;font-size:11px;color:var(--ink);pointer-events:none;display:flex;flex-direction:column;gap:3px;font-variant-numeric:tabular-nums}
+.scale .bar{height:6px;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)}
+.back{position:absolute;right:16px;bottom:16px;display:flex;gap:8px}
+button{font:inherit;cursor:pointer;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+button:hover{border-color:var(--muted)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button[disabled]{opacity:.45;cursor:default}
+.tip{position:absolute;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.14);transform:translate(-50%,calc(-100% - 12px));white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.tip small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.sec{padding:16px 18px;border-bottom:1px solid var(--line)}
+.sec h3{margin:0 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.chain{display:grid;grid-template-columns:1fr 26px 1fr 26px 1fr;align-items:center;gap:2px}
+.mini{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.mini svg{width:100%;height:84px;display:block}
+.mini span{font-size:11px;font-weight:600;color:var(--muted);text-align:center;line-height:1.2;min-height:2.4em;overflow-wrap:anywhere}
+.mini.on span{color:var(--ink)}
+.arrow svg{width:26px;height:20px;display:block}
+.arrow path{stroke:var(--accent);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;transition:stroke-dashoffset .6s ease .3s}
+.arrow.on path{stroke-dashoffset:0}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.speed{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.speed select,.pick select{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:4px 6px}
+.pick{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;align-items:center;font-size:13px;color:var(--muted);margin-top:12px}
+.pick select{width:100%;min-width:0;font-size:14px;padding:6px 8px}
+.dl{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.dl a{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 11px;background:var(--bg)}
+.dl a:hover{border-color:var(--muted)}
+.dl a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dl small{color:var(--muted);font-weight:500}
+.foot{padding:10px 18px 14px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
+.foot a{color:inherit}
+.list{overflow:auto;padding:8px 10px 14px;flex:1;min-height:0}
+.list .head{padding:6px 8px 8px;font-size:13px;color:var(--muted)}
+.list .head b{color:var(--ink);font-size:14px}
+.list ol{list-style:none;margin:0;padding:0;columns:2;column-gap:6px}
+.list li{break-inside:avoid}
+.list button{width:100%;justify-content:flex-start;border:0;border-radius:8px;padding:5px 8px;font-weight:500;font-size:13px;text-align:left;background:transparent;line-height:1.25}
+.list button:hover,.list button.hl{background:var(--accent-soft)}
+.sw{width:11px;height:11px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.12)}
+.list .n{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11px;min-width:16px}
+/* mapa */
+.labels text{font-family:var(--text);font-weight:650;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round;text-anchor:middle;pointer-events:none}
+.labels g{animation:lab .5s ease both}
+@keyframes lab{from{opacity:0}to{opacity:1}}
+.zarrow{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.zdot{fill:var(--panel);stroke:var(--accent);stroke-width:2.5}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-weight:600}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 62vh auto;height:auto}
+  aside{max-height:none}
+  .list{max-height:none}
+  .who{font-size:13px}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <span class="eyebrow">Do país à freguesia</span>
+      <h1>Distritos de Portugal Continental</h1>
+    </div>
+    <div class="who" aria-label="Autor"><div class="av">IC</div><b>Isaac Cardoso</b><span>N.º 15 · 7.º B</span></div>
+  </header>
+
+  <main class="stage" id="stage" aria-label="Mapa animado">
+    <canvas id="cv" role="img" aria-label="Mapa de Portugal Continental"></canvas>
+    <svg id="map" aria-hidden="true">
+      <g id="zoomfx"></g>
+      <g class="labels" id="labels"></g>
+    </svg>
+    <div class="cap"><div class="crumbs" id="crumbs">Portugal Continental</div><h2 id="title">Distritos de Portugal Continental – <em>18 distritos</em></h2></div>
+    <svg class="north" viewBox="0 0 34 52" aria-hidden="true"><text x="17" y="12" text-anchor="middle" font-family="Inter" font-weight="700" font-size="12" fill="currentColor" style="fill:var(--ink)">N</text><path d="M17 16 L9 46 L17 39 Z" style="fill:var(--ink)"/><path d="M17 16 L25 46 L17 39 Z" style="fill:var(--panel);stroke:var(--ink)" stroke-width="1"/></svg>
+    <div class="scale" id="scale"><span id="scaleTxt">0 — 50 km</span><div class="bar" id="scaleBar" style="width:80px"></div></div>
+    <div class="back"><button id="up" disabled aria-label="Voltar ao nível anterior">↑ Voltar</button></div>
+    <div class="tip" id="tip" hidden></div>
+    <div class="loading" id="loading">A carregar o mapa…</div>
+  </main>
+
+  <aside>
+    <div class="sec">
+      <h3>Do maior para o mais pequeno</h3>
+      <div class="chain">
+        <div class="mini on" id="m0"><svg></svg><span>Portugal Continental</span></div>
+        <div class="arrow" id="a1"><svg viewBox="0 0 26 20"><path d="M2 10 H22 M16 4 L22 10 L16 16"/></svg></div>
+        <div class="mini" id="m1"><svg></svg><span>Distrito</span></div>
+        <div class="arrow" id="a2"><svg viewBox="0 0 26 20"><path d="M2 10 H22 M16 4 L22 10 L16 16"/></svg></div>
+        <div class="mini" id="m2"><svg></svg><span>Concelho</span></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="controls">
+        <button class="primary" id="play" aria-pressed="false">▶ Reproduzir</button>
+        <button id="home">Portugal</button>
+        <label class="speed" for="spd">Velocidade
+          <select id="spd"><option value="1.6">Lenta</option><option value="1" selected>Normal</option><option value="0.6">Rápida</option></select>
+        </label>
+      </div>
+      <div class="pick">
+        <label for="selD">Distrito</label><select id="selD"><option value="">Todos (Portugal)</option></select>
+        <label for="selC">Concelho</label><select id="selC" disabled><option value="">—</option></select>
+      </div>
+    </div>
+    <div class="sec">
+      <h3>Descarregar</h3>
+      <div class="dl">
+        <a href="downloads/Distritos_de_Portugal_Continental_completo.pdf" download>PDF <small>20,6 MB</small></a>
+        <a href="downloads/Distritos_de_Portugal_Continental_completo.docx" download>Word <small>18,8 MB</small></a>
+        <a href="downloads/Animacao_Distritos_de_Portugal_Isaac_Cardoso.mp4" download>Vídeo <small>22,5 MB</small></a>
+        <a href="downloads/Animacao_offline.html" download>Animação sem internet <small>2,7 MB</small></a>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="foot">Dados: Carta Administrativa Oficial de Portugal (CAOP), Direção-Geral do Território, licença CC BY 4.0. Divisão de freguesias de 2013.</div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+(async function(){
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), svg = d3.select('#map'), cv = $('#cv'), cx = cv.getContext('2d');
+let topo, meta;
+try {
+  [topo, meta] = await Promise.all([fetch('atlas.json').then(r=>r.json()), fetch('meta.json').then(r=>r.json())]);
+} catch(e){ $('#loading').textContent = 'Não foi possível carregar o mapa. Recarregue a página.'; return; }
+$('#loading').remove();
+
+const FR = topojson.feature(topo, topo.objects.fr).features;
+const CO = topojson.feature(topo, topo.objects.co).features;
+const DI = topojson.feature(topo, topo.objects.di).features;
+FR.forEach(f=>{f.key=f.properties.id; f.m=meta.f[f.key];});
+CO.forEach(f=>{f.key=f.properties.c; f.m=meta.c[f.key];});
+DI.forEach(f=>{f.key=f.properties.d; f.m=meta.d[f.key];});
+const byKey = {}; [...FR,...CO,...DI].forEach(f=>byKey[(f.properties.id?'f':f.properties.c?'c':'d')+f.key]=f);
+const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const sortN = (a,b)=> norm(a.m.n).localeCompare(norm(b.m.n),'pt');
+DI.sort(sortN);
+const capital = {}; CO.forEach(c=>{ if(norm(c.m.n)===norm(meta.d[c.properties.d].n)) capital[c.properties.d]=c.key; });
+
+const proj = d3.geoIdentity().reflectY(true);
+const path = d3.geoPath(proj);
+const all = {type:'FeatureCollection',features:DI};
+let W=0,H=0;
+let view = null;            // [cx, cy, w] em coordenadas base (px a k=1)
+let state = {lvl:0, d:null, c:null};
+
+// ---------- desenho em canvas ----------
+const LAYERS = [DI, CO, FR];
+const LW = [1.4, 1.0, 0.8];
+[...DI,...CO,...FR].forEach(f=>{ f.s='off'; f.cur={c:[0,0,0],a:0,st:0}; f.an=null; });
+DI.forEach(f=>{ f.s='on'; });
+let T = {};
+const probe = document.createElement('canvas').getContext('2d');
+function rgb(css){ probe.fillStyle='#000'; probe.fillStyle=css.trim()||'#000'; const v=probe.fillStyle;
+  if(v[0]==='#') return [parseInt(v.slice(1,3),16),parseInt(v.slice(3,5),16),parseInt(v.slice(5,7),16)];
+  const m=v.match(/[\d.]+/g); return m? m.slice(0,3).map(Number):[0,0,0]; }
+function readTokens(){
+  const cs=getComputedStyle(document.documentElement);
+  T={}; for(let i=0;i<12;i++) T['c'+i]=rgb(cs.getPropertyValue('--c'+i));
+  ['land','land2','edge','outline','line','sea'].forEach(k=>T[k]=rgb(cs.getPropertyValue('--'+k)));
+}
+function styleOf(f,s){
+  if(s==='on') return {c:T['c'+f.m.k],a:1,st:0};
+  if(s==='ctx'||s==='base') return {c:T.land,a:1,st:0};
+  if(s==='ctx2') return {c:T.land2,a:1,st:1};
+  return {c:f.cur.c,a:0,st:0};
+}
+function curStyle(f,now){
+  const A=f.an; if(!A) return f.cur;
+  let t=(now-A.t0)/A.dur; if(t<=0) return A.from; if(t>=1){ f.cur=A.to; f.an=null; return f.cur; }
+  t = t*t*(3-2*t);
+  return {c:[0,1,2].map(i=>A.from.c[i]+(A.to.c[i]-A.from.c[i])*t), a:A.from.a+(A.to.a-A.from.a)*t, st:A.to.st};
+}
+function setS(list, fn, stagger){
+  const now=performance.now(); const sp=speed();
+  const changed=[];
+  list.forEach(f=>{ const nv=fn(f); if(nv===f.s) return; changed.push([f,nv]); });
+  changed.forEach(([f,nv],i)=>{
+    const from=curStyle(f,now); f.s=nv; const to=styleOf(f,nv);
+    if(from.a===0) from.c=to.c;
+    const delay = (stagger && nv==='on' && !reduce) ? (i/Math.max(1,changed.length))*600*sp : 0;
+    if(reduce){ f.cur=to; f.an=null; } else f.an = {t0:now+delay, dur:480, from, to};
+  });
+  requestDraw();
+}
+let drawQueued=false, hoverKey=null, outlineF=null;
+function requestDraw(){ if(!drawQueued){ drawQueued=true; requestAnimationFrame(draw); } }
+function draw(){
+  drawQueued=false;
+  if(!view) return;
+  const now=performance.now(), dpr=cv._dpr||1, t=tf(view);
+  cx.setTransform(1,0,0,1,0,0); cx.clearRect(0,0,cv.width,cv.height);
+  cx.setTransform(dpr*t.k,0,0,dpr*t.k,dpr*t.x,dpr*t.y);
+  cx.lineJoin='round';
+  const vx0=-t.x/t.k, vy0=-t.y/t.k, vx1=(W-t.x)/t.k, vy1=(H-t.y)/t.k;
+  let busy=false;
+  LAYERS.forEach((L,li)=>{
+    const lw=LW[li]/t.k;
+    for(const f of L){
+      if(f.s==='off' && !f.an) continue;
+      const b=f.bb; if(b[1][0]<vx0||b[0][0]>vx1||b[1][1]<vy0||b[0][1]>vy1) continue;
+      const st=curStyle(f,now); if(f.an) busy=true;
+      if(st.a<=0.002) continue;
+      cx.globalAlpha=st.a;
+      let c=st.c; if(hoverKey===f.key && f.s==='on') c=c.map(v=>Math.min(255,v+(255-v)*0.25));
+      cx.fillStyle=`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`; cx.fill(f.p2d);
+      const e = st.st ? T.line : T.edge;
+      cx.strokeStyle=`rgb(${e[0]},${e[1]},${e[2]})`; cx.lineWidth=lw; cx.stroke(f.p2d);
+    }
+  });
+  cx.globalAlpha=1;
+  if(outlineF){ const o=T.outline; cx.strokeStyle=`rgb(${o[0]},${o[1]},${o[2]})`; cx.lineWidth=2.2/t.k; cx.stroke(outlineF.p2d); }
+  if(busy) requestDraw();
+}
+function layout(){
+  const r = stage.getBoundingClientRect(); W = r.width; H = r.height;
+  const padTop = Math.min(110, H*.16);
+  proj.fitExtent([[20,padTop],[W-20,H-46]], all);
+  const dpr = Math.min(2, window.devicePixelRatio||1); cv._dpr=dpr;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  [...DI,...CO,...FR].forEach(f=>{ f.p2d = new Path2D(path(f)); f.bb = path.bounds(f); });
+  readTokens();
+  if(!view) view = baseView();
+  const tgt = targetView(); view = tgt; apply(view); drawLabels(); drawMinis();
+}
+function baseView(){ return [W/2, H/2, W]; }
+function boundsOf(f){ return path.bounds(f); }
+function targetView(){
+  if(state.lvl===0) return [W/2, H/2+0, W];
+  const f = state.lvl===1 ? byKey['d'+state.d] : byKey['c'+state.c];
+  const [[x0,y0],[x1,y1]] = boundsOf(f);
+  const top = Math.min(120, H*.18), bot = 50;           // espaço para o título e a escala
+  const availH = H - top - bot, availW = W - 40;
+  const k = Math.min(availW/(x1-x0), availH/(y1-y0));
+  const w = W / k;
+  const cx = (x0+x1)/2, cy = (y0+y1)/2 - ((top-bot)/2)/k;
+  return [cx, cy, w];
+}
+function tf(v){ const k = W/v[2]; return {k, x: W/2 - v[0]*k, y: H/2 - v[1]*k}; }
+function apply(v){
+  const t = tf(v); requestDraw();
+  // escala gráfica: metros por px = 1/(proj.scale()*k)
+  const mpp = 1/(proj.scale()[0] !== undefined ? proj.scale()[0] : proj.scale()) / t.k;
+  const nice=[0.5,1,2,5,10,20,25,50,100]; let km=nice[0];
+  for(const n of nice){ if(n*1000/mpp <= 110) km=n; }
+  const bw=Math.round(km*1000/mpp); if(bw!==apply._bw){ apply._bw=bw; $('#scaleBar').style.width = bw+'px'; } if(km!==apply._km){ apply._km=km; $('#scaleTxt').textContent = `0 — ${km.toLocaleString('pt-PT')} km`; }
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r, reduce?0:ms)); }
+let flight = null;
+function flyTo(v, dur){
+  return new Promise(res=>{
+    svg.interrupt();
+    const from = view, I = d3.interpolateZoom(from, v); 
+    const d = reduce ? 0 : (dur ?? Math.max(1100, Math.min(2000, I.duration*0.85))) * speed();
+    clearLabels();
+    flight = svg.transition().duration(d).ease(d3.easeSinInOut)
+      .tween('z', ()=> t => { view = I(t); apply(view); })
+      .on('end', ()=>{ view=v; apply(v); res(); })
+      .on('interrupt', ()=>res());
+  });
+}
+const speed = () => +$('#spd').value;
+
+// ---------- estados ----------
+function paint(){
+  const {lvl,d,c} = state;
+  setS(DI, f => lvl===0 ? 'on' : (f.key===d ? 'base' : 'ctx'), lvl===0);
+  setS(CO, f => {
+    if(lvl===0) return 'off';
+    if(f.properties.d!==d) return 'off';
+    if(lvl===1) return 'on';
+    return f.key===c ? 'off' : 'ctx2';
+  }, lvl===1);
+  setS(FR, f => (lvl===2 && f.properties.c===c) ? 'on' : 'off', lvl===2);
+  outlineF = lvl===0 ? null : lvl===1 ? byKey['d'+d] : byKey['c'+c];
+}
+function children(){
+  const {lvl,d,c} = state;
+  if(lvl===0) return DI;
+  if(lvl===1) return CO.filter(f=>f.properties.d===d).sort(sortN);
+  return FR.filter(f=>f.properties.c===c).sort(sortN);
+}
+function titles(){
+  const {lvl,d,c} = state;
+  const kids = children().length;
+  if(lvl===0) return {crumbs:'Portugal Continental', html:`Distritos de Portugal Continental – <em>18 distritos</em>`};
+  const dn = meta.d[d].n;
+  if(lvl===1) return {crumbs:`Portugal Continental › Distrito de ${dn}`, html:`Concelhos do Distrito de <em>${dn}</em> – ${kids} concelhos`};
+  const cn = meta.c[c].n;
+  return {crumbs:`Portugal Continental › ${dn} › ${cn}`, html:`Freguesias do Concelho de <em>${cn}</em> – ${kids} ${kids===1?'freguesia':'freguesias'}`};
+}
+function setTitle(){
+  const t = titles(); $('#crumbs').textContent = t.crumbs;
+  const h = $('#title'); h.innerHTML = t.html; h.classList.remove('swap'); void h.offsetWidth; h.classList.add('swap');
+  $('#up').disabled = state.lvl===0;
+}
+function renderList(){
+  const kids = children(); const {lvl}=state;
+  const noun = ['distritos','concelhos','freguesias'][lvl];
+  const hint = lvl<2 ? 'Clique num nome ou no mapa para entrar.' : 'Passe o rato por cima para destacar.';
+  const box = $('#list');
+  box.innerHTML = `<div class="head"><b>${kids.length} ${noun}</b><br>${hint}</div><ol></ol>`;
+  const ol = box.querySelector('ol');
+  if(kids.length>30) ol.style.columns='2'; else ol.style.columns = kids.length>8 ? '2':'1';
+  kids.forEach((f,i)=>{
+    const li = document.createElement('li'); const b = document.createElement('button');
+    b.innerHTML = `<span class="n">${i+1}</span><span class="sw" style="background:var(--c${f.m.k})"></span><span>${f.m.n}</span>`;
+    b.onmouseenter = ()=>hl(f,true); b.onmouseleave = ()=>hl(f,false);
+    b.onfocus = ()=>hl(f,true); b.onblur = ()=>hl(f,false);
+    b.onclick = ()=>{ stopTour(); enter(f); };
+    b.dataset.key = f.key; li.appendChild(b); ol.appendChild(li);
+  });
+}
+function hl(f,on){
+  hoverKey = on ? f.key : (hoverKey===f.key ? null : hoverKey); requestDraw();
+  document.querySelectorAll('#list button').forEach(b=>b.classList.toggle('hl', on && b.dataset.key===f.key));
+}
+
+// ---------- rótulos ----------
+const LSIZE=[13,12,11];
+function wrap(s,max){ const w=s.split(' '); const L=[]; let cur='';
+  for(const x of w){ if((cur+' '+x).trim().length>max && cur){L.push(cur);cur=x;} else cur=(cur+' '+x).trim(); } if(cur)L.push(cur); return L; }
+const ctx2d = document.createElement('canvas').getContext('2d');
+function tw(s,fs){ ctx2d.font = `650 ${fs}px Inter, system-ui, sans-serif`; return ctx2d.measureText(s).width; }
+function clearLabels(){ d3.select('#labels').selectAll('*').remove(); }
+function drawLabels(){
+  clearLabels();
+  const t = tf(view), s = proj.scale ? (typeof proj.scale()==='number'?proj.scale():proj.scale()[0]) : 1;
+  const fs0 = LSIZE[state.lvl]; const g = d3.select('#labels');
+  const kids = children();
+  kids.forEach((f,i)=>{
+    const [lx,ly,r] = f.m.l; const p = proj([lx,ly]);
+    const x = p[0]*t.k + t.x, y = p[1]*t.k + t.y; const rpx = r*s*t.k;
+    let placed=null;
+    for(const fs of [fs0, fs0-1, fs0-2]){
+      for(const mx of [99,16,11]){
+        const lines = wrap(f.m.n,mx); const w = Math.max(...lines.map(l=>tw(l,fs))); const h = lines.length*fs*1.1;
+        if(w <= rpx*2.05 && h <= rpx*1.9){ placed={lines,fs}; break; }
+      }
+      if(placed) break;
+    }
+    if(!placed){ const num=String(i+1); if(rpx*2 >= tw(num,11)+4 && state.lvl>0) placed={lines:[num],fs:11,num:true}; else return; }
+    const gg = g.append('g').style('animation-delay', reduce?'0s':`${Math.min(.8,i*0.02)*speed()}s`);
+    const tx = gg.append('text').attr('x',x).attr('y',y - (placed.lines.length-1)*placed.fs*0.55).style('font-size',placed.fs+'px').style('font-weight',placed.num?800:650);
+    placed.lines.forEach((l,j)=>tx.append('tspan').attr('x',x).attr('dy', j?placed.fs*1.1:0).attr('dominant-baseline','middle').text(l));
+  });
+}
+
+// ---------- setas de zoom no mapa ----------
+function zoomArrow(f){
+  if(reduce) return Promise.resolve();
+  const t = tf(view); const [lx,ly] = f.m.l; const p = proj([lx,ly]);
+  const x = p[0]*t.k+t.x, y = p[1]*t.k+t.y;
+  const g = d3.select('#zoomfx'); g.selectAll('*').remove();
+  const right = x < W/2;
+  const sx = right ? Math.min(W-30, x + Math.max(150, W*0.22)) : Math.max(30, x - Math.max(150, W*0.22));
+  const sy = Math.max(150, Math.min(H-70, y - 70));
+  const mx = (sx+x)/2, my = Math.min(sy, y) - 40;
+  const sp = speed();
+  // etiqueta com o nome
+  const lab = g.append('g').attr('opacity',0);
+  const txt = lab.append('text').attr('x',sx).attr('y',sy).attr('text-anchor', right?'start':'end').attr('dominant-baseline','middle')
+    .style('font','700 14px Inter, system-ui, sans-serif').style('fill','var(--panel)').text(f.m.n);
+  const bb = txt.node().getBBox();
+  lab.insert('rect','text').attr('x',bb.x-10).attr('y',bb.y-6).attr('width',bb.width+20).attr('height',bb.height+12).attr('rx',(bb.height+12)/2).style('fill','var(--accent)');
+  const ax0 = right ? bb.x-10 : bb.x+bb.width+10;
+  const ar = g.append('path').attr('class','zarrow').attr('d',`M${ax0},${sy} Q${mx},${my} ${x},${y}`);
+  const L = ar.node().getTotalLength();
+  const ang = Math.atan2(y-my, x-mx), hs=12;
+  const head = g.append('path').attr('class','zarrow').attr('d',`M${x-hs*Math.cos(ang-0.45)},${y-hs*Math.sin(ang-0.45)} L${x},${y} L${x-hs*Math.cos(ang+0.45)},${y-hs*Math.sin(ang+0.45)}`).attr('opacity',0);
+  const ring = g.append('circle').attr('cx',x).attr('cy',y).attr('r',4).attr('fill','none').style('stroke','var(--accent)').attr('stroke-width',2.5).attr('opacity',0);
+  ar.attr('stroke-dasharray',L).attr('stroke-dashoffset',L);
+  lab.transition().duration(250*sp).attr('opacity',1);
+  return new Promise(res=>{
+    ar.transition().delay(150*sp).duration(600*sp).ease(d3.easeCubicOut).attr('stroke-dashoffset',0)
+      .on('end',()=>{ head.attr('opacity',1); ring.attr('opacity',1).transition().duration(700*sp).attr('r',28).attr('opacity',0); setTimeout(res, 450*sp); });
+  });
+}
+function clearFx(){ const g=d3.select('#zoomfx'); g.transition().duration(300).style('opacity',0).on('end',()=>{g.selectAll('*').remove(); g.style('opacity',1);}); }
+
+// ---------- mini-mapas da cadeia ----------
+function mini(el, feats, hlKey, outlineF){
+  const s = d3.select(el).select('svg'); s.selectAll('*').remove();
+  if(!feats || !feats.length) return;
+  const r = el.querySelector('svg').getBoundingClientRect();
+  const pr = d3.geoIdentity().reflectY(true).fitExtent([[3,3],[Math.max(10,r.width-3),Math.max(10,r.height-3)]], {type:'FeatureCollection',features:feats});
+  const pp = d3.geoPath(pr);
+  s.selectAll('path').data(feats).join('path').attr('d',pp)
+    .style('fill', f=> f.key===hlKey ? 'var(--accent)' : 'var(--land)')
+    .style('stroke', f=> f.key===hlKey ? 'var(--accent)' : 'var(--panel)').attr('stroke-width', .6);
+}
+function drawMinis(){
+  const {lvl,d,c}=state;
+  mini($('#m0'), DI, d, null);
+  $('#m1 span').textContent = d ? `Distrito de ${meta.d[d].n}` : 'Distrito';
+  $('#m2 span').textContent = c ? `Concelho de ${meta.c[c].n}` : 'Concelho';
+  mini($('#m1'), d ? CO.filter(f=>f.properties.d===d) : null, c);
+  mini($('#m2'), c ? FR.filter(f=>f.properties.c===c) : null, null);
+  if(c){ d3.select('#m2 svg').selectAll('path').style('fill',f=>`var(--c${f.m.k})`); }
+  $('#m1').classList.toggle('on', lvl>=1); $('#m2').classList.toggle('on', lvl>=2);
+  $('#a1').classList.toggle('on', lvl>=1); $('#a2').classList.toggle('on', lvl>=2);
+}
+
+// ---------- navegação ----------
+let busy = false;
+let navId = 0;
+async function go(next, arrowFrom){
+  const my = ++navId;
+  svg.interrupt(); d3.select('#zoomfx').interrupt().selectAll('*').interrupt().remove();
+  if(arrowFrom){ await zoomArrow(arrowFrom); if(my!==navId) return; }
+  state = next; paint(); setTitle(); renderList(); drawMinis(); syncPick();
+  try{ history.replaceState(null,'', state.lvl===0?'#':state.lvl===1?`#d${state.d}`:`#c${state.c}`); }catch(e){}
+  clearFx();
+  await flyTo(targetView());
+  if(my!==navId) return;
+  drawLabels();
+}
+function enter(f){
+  if(state.lvl===0 && f.properties.d && !f.properties.c) return go({lvl:1,d:f.key,c:null}, f);
+  if(state.lvl===1 && f.properties.c && !f.properties.id) return go({lvl:2,d:state.d,c:f.key}, f);
+}
+function up(){ stopTour(); if(state.lvl===2) go({lvl:1,d:state.d,c:null}); else if(state.lvl===1) go({lvl:0,d:null,c:null}); }
+
+// interação com o mapa
+const tip = $('#tip');
+function pick(ev){
+  const r=cv.getBoundingClientRect(); const x=ev.clientX-r.left, y=ev.clientY-r.top;
+  const t=tf(view); const bx=(x-t.x)/t.k, by=(y-t.y)/t.k;
+  cx.setTransform(1,0,0,1,0,0);
+  for(const L of [FR,CO,DI]){
+    for(const f of L){
+      if(!(f.s==='on'||f.s==='ctx'||f.s==='ctx2')) continue;
+      const b=f.bb; if(bx<b[0][0]||bx>b[1][0]||by<b[0][1]||by>b[1][1]) continue;
+      if(cx.isPointInPath(f.p2d,bx,by)) return {f,x,y};
+    }
+  }
+  return null;
+}
+cv.addEventListener('pointermove', ev=>{
+  const h=pick(ev);
+  if(!h){ tip.hidden=true; cv.classList.remove('hot'); if(hoverKey){ hoverKey=null; requestDraw(); } return; }
+  const f=h.f; cv.classList.add('hot');
+  if(hoverKey!==f.key){ hoverKey=f.key; requestDraw(); }
+  const sub = f.properties.id ? `Freguesia · ${meta.c[f.properties.c].n}` : f.properties.c ? `Concelho · Distrito de ${meta.d[f.properties.d].n}` : 'Distrito';
+  tip.innerHTML = `${f.m.n}<small>${sub}</small>`; tip.style.left=h.x+'px'; tip.style.top=h.y+'px'; tip.hidden=false;
+});
+cv.addEventListener('pointerleave', ()=>{ tip.hidden=true; if(hoverKey){ hoverKey=null; requestDraw(); } });
+cv.addEventListener('click', ev=>{
+  const h=pick(ev); tip.hidden=true; if(!h) return; const f=h.f, s=f.s;
+  stopTour();
+  if(s==='on') enter(f);
+  else if(s==='ctx' && f.properties.d && !f.properties.c){ go({lvl:1,d:f.key,c:null}); }
+  else if(s==='ctx2' && f.properties.c && !f.properties.id){ go({lvl:2,d:state.d,c:f.key}); }
+});
+const selD = $('#selD'), selC = $('#selC');
+DI.forEach(f=>{ const o=document.createElement('option'); o.value=f.key; o.textContent=f.m.n; selD.appendChild(o); });
+function syncPick(){
+  selD.value = state.d || '';
+  const d = state.d;
+  selC.innerHTML = '<option value="">' + (d ? 'Todos os concelhos' : '—') + '</option>';
+  selC.disabled = !d;
+  if(d) CO.filter(f=>f.properties.d===d).sort(sortN).forEach(f=>{ const o=document.createElement('option'); o.value=f.key; o.textContent=f.m.n; selC.appendChild(o); });
+  selC.value = state.c || '';
+}
+selD.onchange = ()=>{ stopTour(); const v=selD.value; if(!v) go({lvl:0,d:null,c:null}); else go({lvl:1,d:v,c:null}, state.lvl===0 ? byKey['d'+v] : null); };
+selC.onchange = ()=>{ stopTour(); const v=selC.value; if(!v) go({lvl:1,d:state.d,c:null}); else go({lvl:2,d:state.d,c:v}, state.lvl===1 ? byKey['c'+v] : null); };
+$('#up').onclick = up;
+$('#home').onclick = ()=>{ stopTour(); go({lvl:0,d:null,c:null}); };
+addEventListener('keydown', e=>{ if(e.key==='Escape') up(); });
+
+// ---------- visita guiada ----------
+let tourId = 0;
+function stopTour(){ tourId++; $('#play').textContent='▶ Reproduzir'; $('#play').setAttribute('aria-pressed','false'); }
+async function tour(){
+  const my = ++tourId; $('#play').textContent='❚❚ Pausa'; $('#play').setAttribute('aria-pressed','true');
+  const alive = ()=> my===tourId;
+  if(state.d){
+    const d = state.d;
+    const cs = CO.filter(f=>f.properties.d===d).sort(sortN);
+    let start = state.c ? Math.max(0, cs.findIndex(f=>f.key===state.c)+1) : 0;
+    if(start>=cs.length) start = 0;
+    if(state.lvl!==1){ await go({lvl:1,d,c:null}); if(!alive()) return; await sleep(1200*speed()); }
+    for(let i=start;i<cs.length;i++){
+      if(!alive()) return;
+      await go({lvl:2,d,c:cs[i].key}, cs[i]); if(!alive()) return;
+      await sleep(2800*speed()); if(!alive()) return;
+      await go({lvl:1,d,c:null}); if(!alive()) return;
+      await sleep(600*speed());
+    }
+    stopTour(); return;
+  }
+  let startIdx = 0;
+  if(state.lvl!==0){ await go({lvl:0,d:null,c:null}); if(!alive()) return; await sleep(900*speed()); }
+  else { await sleep(500*speed()); }
+  for(let i=startIdx; i<DI.length; i++){
+    if(!alive()) return;
+    const d = DI[i];
+    await go({lvl:1,d:d.key,c:null}, d); if(!alive()) return;
+    await sleep(2600*speed()); if(!alive()) return;
+    const c = byKey['c'+capital[d.key]];
+    await go({lvl:2,d:d.key,c:c.key}, c); if(!alive()) return;
+    await sleep(3000*speed()); if(!alive()) return;
+    await go({lvl:0,d:null,c:null}); if(!alive()) return;
+    await sleep(700*speed());
+  }
+  stopTour();
+}
+$('#play').onclick = ()=>{ if($('#play').getAttribute('aria-pressed')==='true') stopTour(); else tour(); };
+
+// ---------- arranque ----------
+function retheme(){ readTokens(); [...DI,...CO,...FR].forEach(f=>{ if(f.s!=='off'){ f.cur=styleOf(f,f.s); f.an=null; } }); requestDraw(); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
+new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+new ResizeObserver(()=>{ svg.interrupt(); layout(); }).observe(stage);
+layout(); DI.forEach(f=>{ f.cur=styleOf(f,'on'); }); setTitle(); renderList(); paint(); syncPick(); requestDraw();
+const h = (location.hash||'').slice(1);
+if(/^d\d\d$/.test(h) && meta.d[h.slice(1)]) go({lvl:1,d:h.slice(1),c:null});
+else if(/^c\d{4}$/.test(h) && meta.c[h.slice(1)]) go({lvl:2,d:meta.c[h.slice(1)].d,c:h.slice(1)});
+else if(!reduce){ setTimeout(()=>{ if(state.lvl===0 && tourId===0) tour(); }, 2200); }
+})();
+</script>
+
+</body>
+</html>
