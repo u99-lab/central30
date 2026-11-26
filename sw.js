@@ -1,7 +1,7 @@
 // Central 30 · modo offline: guarda a Central e os jogos no aparelho para dar para jogar sem internet.
 // Com internet vai buscar a versão nova primeiro (e guarda-a); sem internet usa a guardada; com internet muito lenta (mais de 15 s) usa a guardada e avisa quando chegar a nova.
-const CACHE = 'central30-v95';
-const CORE = ['./', 'index.html', 'escola/index.html', 'corrida/index.html', 'joaquim-3d/index.html', 'craques/index.html', 'liga/index.html', 'portugal/index.html', 'portugal/world/_paises.json', 'favicon.svg', 'apple-touch-icon.png', 'jogos/aa.html', 'jogos/rs.html', 'img/rs.jpg', 'jogos/pr.html', 'img/pr.jpg', 'jogos/ab.html', 'jogos/an.html', 'jogos/bf.html', 'jogos/cb.html', 'jogos/cl.html', 'jogos/cr.html', 'jogos/fb.html', 'jogos/mr.html', 'jogos/pn.html', 'jogos/sl.html', 'jogos/tb.html', 'jogos/ns.html', 'img/ns.jpg', 'jogos/be.html', 'img/be.jpg', 'engines/r160.js', 'engines/r128.js', 'engines/r134.js', 'img/aa.jpg', 'img/ab.jpg', 'img/an.jpg', 'img/bf.png', 'img/cb.jpg', 'img/cl.png', 'img/cm.jpg', 'img/cq.jpg', 'img/cr.png', 'img/ct.jpg', 'img/ea.jpg', 'img/fb.jpg', 'img/jc.jpg', 'img/lr.jpg', 'img/mr.png', 'img/pn.jpg', 'img/sl.jpg', 'img/tb.jpg'];
+const CACHE = 'central30-v96';
+const CORE = ['./', 'index.html', 'max/', 'max/index.html', 'max/favicon.svg', 'max/apple-touch-icon.png', 'escola/index.html', 'corrida/index.html', 'joaquim-3d/index.html', 'craques/index.html', 'liga/index.html', 'portugal/index.html', 'portugal/world/_paises.json', 'favicon.svg', 'apple-touch-icon.png', 'jogos/aa.html', 'jogos/rs.html', 'img/rs.jpg', 'jogos/pr.html', 'img/pr.jpg', 'jogos/ab.html', 'jogos/an.html', 'jogos/bf.html', 'jogos/cb.html', 'jogos/cl.html', 'jogos/cr.html', 'jogos/fb.html', 'jogos/mr.html', 'jogos/pn.html', 'jogos/sl.html', 'jogos/tb.html', 'jogos/ns.html', 'img/ns.jpg', 'jogos/be.html', 'img/be.jpg', 'engines/r160.js', 'engines/r128.js', 'engines/r134.js', 'img/aa.jpg', 'img/ab.jpg', 'img/an.jpg', 'img/bf.png', 'img/cb.jpg', 'img/cl.png', 'img/cm.jpg', 'img/cq.jpg', 'img/cr.png', 'img/ct.jpg', 'img/ea.jpg', 'img/fb.jpg', 'img/jc.jpg', 'img/lr.jpg', 'img/mr.png', 'img/pn.jpg', 'img/sl.jpg', 'img/tb.jpg'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(new Request(u, { cache: 'reload' })).catch(() => {})))).then(() => self.skipWaiting()));
 });
@@ -22,7 +22,9 @@ self.addEventListener('fetch', e => {
     if (res && (res.ok || res.type === 'opaque')) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(key, copy)).catch(() => {}); }
     return res;
   });
-  const cached = () => caches.match(key).then(r => r || (same && req.mode === 'navigate' ? caches.match('index.html') : undefined));
+  // sem internet: cada central abre a sua página guardada (antes a MAX podia abrir a Central 30 normal)
+  const home = /\/max\//.test(url.pathname) ? 'max/index.html' : (/\/aprender\//.test(url.pathname) ? 'aprender/index.html' : 'index.html');
+  const cached = () => caches.match(key).then(r => r || (same && req.mode === 'navigate' ? caches.match(home) : undefined));
   const fail = () => new Response('Sem internet e esta parte ainda não estava guardada.', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8' } });
   // imagens: a guardada logo (e atualiza por trás); o resto: a nova, mas se a internet demorar mais de 4 s usa a guardada
   if (img) { e.respondWith(cached().then(r => r || net).catch(() => net).catch(fail)); net.catch(() => {}); return; }
