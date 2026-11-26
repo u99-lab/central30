@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aprende+</title>
+<meta name="description" content="Aprende+: 21 atividades interativas de Geografia, História, Ciências, Matemática e Línguas para o 7.º ano.">
+<meta property="og:title" content="Aprende+">
+<meta property="og:description" content="21 atividades interativas para aprender: mapas, simuladores e jogos.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%237cc8f4'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Arial' font-weight='900' font-size='28' fill='%230b1014'%3EA+%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<style>
+/* Aprende+ · site à parte. Layout: barra de topo com a marca, abertura curta, filtros, grelha de 21 cartões e sugestões no fim. */
+:root{
+  --bg:#0b1014; --panel:#141c22; --line:#ffffff17; --ink:#eef2ec; --mute:#93a29c; --acc:#7cc8f4; --acc-ink:#0b1014; --c30:#c5f47c; --max:#ffe14a;
+  --disp:"Space Grotesk","Inter",system-ui,sans-serif; --text:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(900px 500px at 85% -10%,#1a3a4d66,transparent),radial-gradient(700px 400px at 0% 0%,#24361f55,transparent),var(--bg);color:var(--ink);font:16px/1.5 var(--text);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px;
+  --lc-bg:var(--panel);--lc-line:var(--line);--lc-mute:#a9b6b0;--lc-acc:var(--acc);--lc-acc-ink:var(--acc-ink)}
+a{color:inherit}
+.wrap{max-width:1200px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo{width:42px;height:42px;border-radius:12px;background:var(--acc);color:var(--acc-ink);display:grid;place-items:center;font:800 18px/1 var(--disp);letter-spacing:-.5px}
+.brand b{font:700 22px/1 var(--disp)}
+.brand small{display:block;font:600 10px ui-monospace,monospace;letter-spacing:1.6px;color:var(--mute);margin-top:4px;text-transform:uppercase}
+.top nav{display:flex;gap:8px;flex-wrap:wrap}
+.top nav a{text-decoration:none;font-size:13px;font-weight:600;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.top nav a:hover{color:var(--ink);border-color:#ffffff40}
+.hero{padding:34px 0 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.eyebrow{font:600 11px ui-monospace,monospace;letter-spacing:2px;color:var(--acc);text-transform:uppercase}
+h1{font:700 clamp(30px,5vw,52px)/1.05 var(--disp);margin:10px 0 10px;text-wrap:balance}
+h1 em{font-style:normal;color:var(--acc)}
+.hero p{margin:0;color:var(--mute);max-width:58ch}
+.count{display:flex;gap:18px}
+.count div{text-align:right}
+.count b{display:block;font:700 34px/1 var(--disp);font-variant-numeric:tabular-nums}
+.count span{font-size:12px;color:var(--mute)}
+h2.sec{font:700 20px var(--disp);margin:40px 0 14px}
+.sug{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
+.sg{display:flex;align-items:center;gap:16px;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;transition:border-color .2s,transform .15s}
+.sg:hover{border-color:var(--sg);transform:translateY(-2px)}
+.sg:focus-visible,.top nav a:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.sg-i{width:58px;height:58px;border-radius:14px;background:var(--sg);color:var(--sgi);display:grid;place-items:center;font:800 18px/1 var(--disp);flex:none}
+.sg b{display:block;font:700 18px/1.2 var(--disp)}
+.sg span span{display:block;color:var(--mute);font-size:14px;margin-top:3px}
+.sg i{margin-left:auto;font-style:normal;color:var(--mute);font-size:18px}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./" aria-label="Aprende+ — início"><span class="logo">A+</span><span><b>Aprende+</b><small>Aprender a jogar</small></span></a>
+    <nav aria-label="Outros sites"><a href="../">Central 30 ↗</a><a href="../max/">Central 30 MAX ↗</a></nav>
+  </header>
+
+  <section class="hero">
+    <div>
+      <div class="eyebrow">7.º ano · interativo</div>
+      <h1><em>21</em> coisas para aprender</h1>
+      <p>Mapas, simuladores e jogos de Geografia, História, Ciências, Matemática e Línguas. Escolhe uma e começa: cada atividade explica quando erras.</p>
+    </div>
+    <div class="count" aria-hidden="true"><div><b>21</b><span>atividades</span></div><div><b>5</b><span>disciplinas</span></div></div>
+  </section>
+
+  <div id="lcChips"></div>
+  <main id="lcGrid" aria-label="Atividades"></main>
+
+  <h2 class="sec">Sugestões</h2>
+  <div class="sug">
+    <a class="sg" href="../" style="--sg:var(--c30);--sgi:#142018"><span class="sg-i" aria-hidden="true">30</span><span><b>Central 30</b><span>21 jogos 3D para jogar no browser, sozinho ou com amigos.</span></span><i aria-hidden="true">↗</i></a>
+    <a class="sg" href="../max/" style="--sg:var(--max);--sgi:#1b1550"><span class="sg-i" aria-hidden="true">MAX</span><span><b>Central 30 MAX</b><span>40 jogos 3D no browser: ainda mais para jogar.</span></span><i aria-hidden="true">↗</i></a>
+  </div>
+
+  <footer><span>Aprende+ · dados geográficos: CAOP, Direção-Geral do Território (CC BY 4.0)</span><span id="mem"></span></footer>
+</div>
+<script src="catalogo.js"></script>
+<script>
+try { C30Aprender.render(document.getElementById('lcGrid'), document.getElementById('lcChips'), '../', ''); } catch (e) {}
+try {
+  const keep = !!JSON.parse(localStorage.getItem('c30.settings') || '{}').keepProgress;
+  document.getElementById('mem').textContent = keep ? 'Os teus resultados ficam guardados (Definições da Central: Guardar dados = Sim).' : 'Os resultados só contam nesta visita (Definições da Central: Guardar dados = Não).';
+} catch (e) {}
+</script>
+</body>
+</html>

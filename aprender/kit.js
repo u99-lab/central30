@@ -39,17 +39,14 @@
     set(k, v) { try { if (v > K.best.get(k)) box().setItem(store(k), v); } catch (e) {} },
   };
 
-  /* regressa à Central certa (normal ou MAX) */
-  K.backHref = () => {
-    const q = new URLSearchParams(location.search);
-    return q.get('de') === 'max' ? '../../max/#aprender' : '../../#aprender';
-  };
+  /* regressa à página inicial do Aprende+ */
+  K.backHref = () => '../';
 
   K.page = ({ title, subject, emoji, intro, key }) => {
-    document.title = title + ' · Aprender · Central 30';
+    document.title = title + ' · Aprende+';
     const best = key ? K.el('span', { class: 'best', id: 'kbest' }) : null;
     const head = K.el('header', { class: 'kh' },
-      K.el('a', { class: 'back', href: K.backHref() }, '← Aprender'),
+      K.el('a', { class: 'back', href: K.backHref() }, '← Aprende+'),
       K.el('div', { class: 'kt' }, K.el('span', { class: 'chip s-' + subject }, SUBJ[subject] || subject), K.el('h1', {}, (emoji ? emoji + ' ' : '') + title)),
       best);
     const main = K.el('main', { class: 'km' });
@@ -77,7 +74,7 @@
       K.el('div', { class: 'big' }, String(score), total ? K.el('small', {}, ' / ' + total) : K.el('small', {}, unit ? ' ' + unit : '')),
       K.el('p', {}, note || msg),
       key ? K.el('p', {}, 'O teu melhor: ' + best + (K.keep() ? '' : ' · só nesta visita')) : null,
-      key && !K.keep() ? K.el('p', { style: 'font-size:13px' }, 'Os resultados não ficam guardados. Para os guardar, abre as Definições da Central e escolhe "Guardar dados do jogo: Sim".') : null,
+      key && !K.keep() ? K.el('p', { style: 'font-size:13px' }, 'Os resultados não ficam guardados. Para os guardar, abre as Definições da Central 30 e escolhe "Guardar dados do jogo: Sim".') : null,
       K.el('div', { class: 'row', style: 'justify-content:center;margin-top:8px' },
         K.el('button', { class: 'btn primary', onclick: again }, 'Jogar outra vez'),
         K.el('a', { class: 'btn', href: K.backHref() }, 'Outras atividades'))));
