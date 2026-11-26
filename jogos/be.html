@@ -345,6 +345,10 @@ Object.defineProperty(settings, 'hq', { get() { return QUALITY[settings.q].bloom
 function saveSettings() { try { localStorage.setItem('baia-escarlate-settings', JSON.stringify(settings)); } catch (e) {} }
 
 const renderer = new THREE.WebGLRenderer({ antialias: !isTouch, powerPreference: 'high-performance' });
+/* se o navegador perder o contexto gráfico (memória cheia, várias aberturas seguidas), o jogo pára de desenhar em vez de rebentar e recarrega quando o contexto voltar */
+let glLost = false;
+renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); glLost = true; }, false);
+renderer.domElement.addEventListener('webglcontextrestored', () => { try { location.reload(); } catch (e) { glLost = false; } }, false);
 function applyQuality() {
   const Q = QUALITY[settings.q];
   renderer.setPixelRatio(Math.max(1, Math.min(window.devicePixelRatio || 1, Q.pr)));
@@ -5823,7 +5827,7 @@ function render() {
   renderPeds(camera.position);
   renderNeon();
   const r0 = performance.now();
-  if (composer && settings.hq) composer.render(); else renderer.render(scene, camera);
+  if (!glLost) { try { if (composer && settings.hq) composer.render(); else renderer.render(scene, camera); } catch (e) { if (renderer.getContext().isContextLost()) glLost = true; else throw e; } }
   game.renMs = lerp(game.renMs || 0, performance.now() - r0, 0.1);
 }
 function frame(now) {
