@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#07111d"><title>PROJECT INFINITY — Open World</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07111d;color:#eef6ff;font-family:Inter,system-ui,Arial}canvas{display:block}#hud{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.panel{background:#07111ddd;border:1px solid #9ddcff35;border-radius:13px;padding:11px 14px;backdrop-filter:blur(12px);box-shadow:0 8px 30px #0005}.brand{font-weight:900;letter-spacing:2px;font-size:13px}.brand span{color:#6ee7ff}.sub{font-size:10px;color:#9bb6c9;margin-top:4px}.stats{display:flex;gap:8px}.stat{min-width:75px;text-align:center}.stat b{display:block;font-size:17px}.stat small{font-size:9px;color:#91aabe;letter-spacing:1px}.mission{position:absolute;top:90px;left:14px;max-width:260px}.mission strong{font-size:11px;color:#70e7ff;letter-spacing:1px}.mission p{font-size:12px;margin:6px 0 0;color:#d9e9f5;line-height:1.4}.bottom{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:end}.help{font-size:10px;color:#c1d6e5;line-height:1.7}.pill{display:inline-block;padding:3px 6px;border:1px solid #8ebbd344;border-radius:5px;margin-right:3px}.mobile{display:none;gap:8px;pointer-events:auto;align-items:end}.cluster{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,48px);gap:5px}.ctrl{border:1px solid #b5eaff55;background:#071827bb;color:white;border-radius:12px;font-size:18px;touch-action:none}.ctrl:active,.ctrl.on{background:#1c8ba8}.pedals{display:flex;gap:6px}.pedals .ctrl{width:54px;height:68px;font-size:11px;font-weight:800}.toast{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);background:#071827eF;border:1px solid #70e7ff88;border-radius:14px;padding:15px 20px;text-align:center;display:none;min-width:220px}.toast b{color:#70e7ff}.maptag{position:absolute;right:14px;top:90px;font-size:10px;color:#a9c7d9}.bar{height:4px;background:#294254;border-radius:9px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:#70e7ff}#loading{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at center,#16364b,#07111d);z-index:4;text-align:center;padding:25px}#loading h1{letter-spacing:4px;font-size:clamp(24px,6vw,48px);margin:0}#loading h1 span{color:#70e7ff}#loading p{color:#a9c5d8;font-size:13px}#loading button{background:#70e7ff;color:#04121a;border:0;border-radius:10px;padding:12px 22px;font-weight:900}#error{color:#ffc2a6;max-width:420px;font-size:12px}@media(max-width:700px){.mobile{display:flex}.help{display:none}.stats{gap:4px}.stat{min-width:58px;padding:8px}.mission{top:83px;max-width:205px}.panel{padding:9px 10px}.brand{font-size:11px}}
+</style></head><body>
+<div id="loading"><div><h1>PROJECT <span>INFINITY</span></h1><p>Um mundo aberto 3D. Entra, conduz e explora.</p><p id="error">A preparar a cidade…</p><button id="start" hidden>ENTRAR NO MUNDO</button></div></div>
+<div id="hud"><div class="top"><div class="panel"><div class="brand">PROJECT <span>INFINITY</span></div><div class="sub">OPEN WORLD · BUILD 01</div></div><div class="stats"><div class="panel stat"><b id="speed">0</b><small>KM/H</small></div><div class="panel stat"><b id="cash">€ 500</b><small>CRÉDITOS</small></div><div class="panel stat"><b id="distance">0.0</b><small>KM</small></div></div></div>
+<div class="panel mission"><strong>MISSÃO · ENTREGA EXPRESS</strong><p id="mission">Encontra o anel azul e atravessa-o para ganhar €250.</p><div class="bar"><i id="progress"></i></div></div><div class="maptag panel" id="zone">DISTRITO CENTRAL · 09:30</div>
+<div class="bottom"><div class="panel help"><span class="pill">W A S D</span> conduzir <span class="pill">ESPAÇO</span> travão de mão<br><span class="pill">C</span> mudar câmara <span class="pill">R</span> reposicionar</div><div class="mobile"><div class="cluster"><button class="ctrl" data-k="ArrowLeft">↶</button><button class="ctrl" data-k="ArrowUp">▲</button><button class="ctrl" data-k="ArrowRight">↷</button><button class="ctrl" data-k="ArrowDown" style="grid-column:2">▼</button></div><div class="pedals"><button class="ctrl" data-k="Space">TRAVÃO</button><button class="ctrl" data-k="Shift">TURBO</button></div></div></div><div class="toast" id="toast"><b>MISSÃO CONCLUÍDA!</b><br>+ €250 · Próximo destino marcado</div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const $=id=>document.getElementById(id);let scene,camera,renderer,car,clock,world=[],keys={},speed=0,heading=0,dist=0,cash=500,camMode=0,checkpoint,goal,done=0,toastTime=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function mat(color,rough=.8,metal=0){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal})}
+function box(w,h,d,m,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);parent.add(o);return o}
+function init(){
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x91b8cf);scene.fog=new THREE.Fog(0x91b8cf,100,390);
+ camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,700);
+ renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight(0xd7efff,0x435363,2));const sun=new THREE.DirectionalLight(0xffedcf,2.2);sun.position.set(-70,120,40);scene.add(sun);
+ const ground=mat(0x526b59);box(700,1,700,ground,0,-.8,0);
+ // roads form a connected grid
+ const road=mat(0x29333b),line=mat(0xe4d6a4),side=mat(0x8d9995);
+ for(let n=-3;n<=3;n++){box(17,.12,620,road,n*75,.02,0);box(620,.12,17,road,0,.025,n*75);box(.22,.14,620,line,n*75,.1,0);box(620,.14,.22,line,0,.1,n*75);}
+ // pavements and city blocks
+ const colors=[0x8799a7,0xb6a48c,0x607b88,0xc0c6c1,0x8d8b9c,0x9caa91];
+ for(let gx=-3;gx<3;gx++)for(let gz=-3;gz<3;gz++){
+  const cx=gx*75+37.5,cz=gz*75+37.5;
+  for(let i=0;i<5;i++){let x=cx+(Math.random()-.5)*43,z=cz+(Math.random()-.5)*43,w=9+Math.random()*12,d=9+Math.random()*12,h=9+Math.random()*45;
+   const b=box(w,h,d,mat(colors[Math.floor(Math.random()*colors.length)]),x,h/2,z);world.push(b);
+   for(let yy=4;yy<h-2;yy+=5){for(let xx=-w/2+2;xx<w/2-1;xx+=3){box(.9,1.3,.08,mat(0x8ed5e6,.35),x+xx,yy,z+d/2+.05);}}
+  }
+ }
+ // park
+ const park=box(48,.18,48,mat(0x3c8057),-112,.05,-112);for(let i=0;i<16;i++){let x=-132+Math.random()*40,z=-132+Math.random()*40;let trunk=box(.8,3,.8,mat(0x62462e),x,1.5,z);let crown=new THREE.Mesh(new THREE.ConeGeometry(2.5,6,6),mat(0x286345));crown.position.set(x,5,z);scene.add(crown)}
+ // car body
+ car=new THREE.Group();const body=mat(0x12a8d0,.35,.55),glass=mat(0x172d3b,.22,.25),rubber=mat(0x101317);
+ box(2.2,.65,4.4,body,0,.8,0,car);box(1.65,.72,2,glass,0,1.45,-.25,car);box(2.12,.18,1.1,body,0,1.05,-1.35,car);
+ for(const x of [-1.12,1.12])for(const z of [-1.4,1.4]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.25,12),rubber);wheel.rotation.z=Math.PI/2;wheel.position.set(x,.48,z);car.add(wheel)}
+ const lamp=mat(0xfff1bd,.3);box(.5,.18,.08,lamp,-.65,.9,2.22,car);box(.5,.18,.08,lamp,.65,.9,2.22,car);
+ car.position.set(0,0,8);scene.add(car);
+ makeGoal();clock=new THREE.Clock();window.addEventListener('resize',resize);animate();
+}
+function makeGoal(){if(goal)scene.remove(goal);goal=new THREE.Group();const ring=new THREE.Mesh(new THREE.TorusGeometry(5,.32,8,32),new THREE.MeshBasicMaterial({color:0x26e6ff}));ring.position.y=5;goal.add(ring);const beam=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,5,8),new THREE.MeshBasicMaterial({color:0x26e6ff}));beam.position.y=2.5;goal.add(beam);goal.position.set((done%2?150:-150),0,done%3? -150:150);scene.add(goal);checkpoint=goal.position.clone()}
+function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);const forward=(keys.KeyW||keys.ArrowUp)?1:0,back=(keys.KeyS||keys.ArrowDown)?1:0,left=(keys.KeyA||keys.ArrowLeft)?1:0,right=(keys.KeyD||keys.ArrowRight)?1:0;
+ const turbo=keys.Shift?1.35:1;const braking=keys.Space;
+ speed+=(forward?24:back?-19:0)*dt;speed*=Math.pow(braking?.91:.985,dt*60);speed*=Math.pow(.992,dt*60);speed=clamp(speed,-13,braking?22:48*turbo);
+ const steer=(right-left)*Math.min(1,Math.abs(speed)/7);heading-=steer*dt*(speed>=0?1:-1)*1.65;
+ car.rotation.y=heading;car.position.x+=Math.sin(heading)*speed*dt;car.position.z+=Math.cos(heading)*speed*dt;
+ car.position.x=clamp(car.position.x,-290,290);car.position.z=clamp(car.position.z,-290,290);
+ const moved=Math.abs(speed)*dt;dist+=moved/1000;
+ const target=new THREE.Vector3(car.position.x-Math.sin(heading)*13,6.5,car.position.z-Math.cos(heading)*13);
+ if(camMode===1){target.set(car.position.x,18,car.position.z-1)}
+ camera.position.lerp(target,1-Math.pow(.001,dt));const look=new THREE.Vector3(car.position.x,1.2,car.position.z);look.x+=Math.sin(heading)*5;look.z+=Math.cos(heading)*5;camera.lookAt(look);
+ goal.rotation.y+=dt*.7;goal.position.y= Math.sin(performance.now()*.001)*.3;
+ if(car.position.distanceTo(checkpoint)<10){cash+=250;done++;makeGoal();$('mission').textContent='Excelente condução! Segue o próximo anel azul para ganhar mais €250.';$('toast').style.display='block';toastTime=2}
+ if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').style.display='none'}
+ $('speed').textContent=Math.round(Math.abs(speed)*3.6);$('cash').textContent='€ '+cash.toLocaleString('pt-PT');$('distance').textContent=dist.toFixed(1);$('progress').style.width=(Math.max(0,1-car.position.distanceTo(checkpoint)/240)*100)+'%';
+ const gx=Math.floor((car.position.x+300)/75),gz=Math.floor((car.position.z+300)/75);$('zone').textContent=['CENTRO','BAIRRO NOVO','ZONA RIBEIRINHA','DISTRITO VERDE'][(Math.abs(gx+gz))%4]+' · 09:30';
+ renderer.render(scene,camera)}
+function reset(){car.position.set(0,0,8);speed=0;heading=0}
+window.addEventListener('keydown',e=>{keys[e.code]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='KeyC')camMode=1-camMode;if(e.code==='KeyR')reset()});
+window.addEventListener('keyup',e=>keys[e.code]=false);
+document.querySelectorAll('[data-k]').forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();keys[k]=true;b.classList.add('on')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('on')};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off)});
+try{init();$('error').textContent='Cidade carregada. Preparado para conduzir?';$('start').hidden=false;$('start').onclick=()=>$('loading').style.display='none'}catch(e){$('error').textContent='Não foi possível iniciar o 3D. Confirma a ligação à internet e atualiza a página.';console.error(e)}
+</script></body></html>
