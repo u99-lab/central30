@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unidades de medida · Aprende+</title>
+<meta name="description" content="Metros, gramas, litros e horas: converte de uma unidade para outra.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Unidades de medida", subject: 'mat', emoji: '⚖️', key: 'udmda', intro: "<b>km → hm → dam → m → dm → cm → mm</b>: cada passo para a direita multiplica por 10. 1 kg = 1000 g; 1 L = 1000 mL; 1 h = 60 min." });
+const box = K.el('div'); main.append(box);
+function gen() { const T = [['km','m',1000],['m','cm',100],['m','mm',1000],['cm','mm',10],['kg','g',1000],['L','mL',1000],['h','min',60],['min','s',60],['L','cL',100],['t','kg',1000]];
+  const [A, B, f] = K.one(T), v = K.one([2, 3, 4, 5, 7, 8, 12, 15, 0.5, 2.5]), r = +(v * f).toFixed(3), fm = x => String(x).replace('.', ',');
+  if (Math.random() < .5) return { q: 'Quanto é <b>' + fm(v) + ' ' + A + '</b> em ' + B + '?', o: K.shuffle([fm(r), fm(r / 10), fm(r * 10), fm(v * (f === 60 ? 100 : f / 10))]).filter((x, i, s) => s.indexOf(x) === i).map(x => x + ' ' + B), a: fm(r) + ' ' + B, e: fm(v) + ' × ' + f + ' = <b>' + fm(r) + ' ' + B + '</b>.' };
+  return { q: 'Quanto é <b>' + fm(r) + ' ' + B + '</b> em ' + A + '?', o: K.shuffle([fm(v), fm(v * 10), fm(+(v / 10).toFixed(3)), fm(v * 100)]).filter((x, i, s) => s.indexOf(x) === i).map(x => x + ' ' + A), a: fm(v) + ' ' + A, e: fm(r) + ' ÷ ' + f + ' = <b>' + fm(v) + ' ' + A + '</b>.' }; }
+K.quiz(box, { key: 'udmda', gen, n: 10 });
+</script>
+</body>
+</html>

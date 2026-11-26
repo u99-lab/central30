@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Francês: vocabulário · Aprende+</title>
+<meta name="description" content="As primeiras palavras em francês: escola, família, comida e dias da semana.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Francês: vocabulário", subject: 'lin', emoji: '🇫🇷', key: 'fvio', intro: "Em francês muitas palavras parecem-se com o português: école (escola), famille (família), fenêtre (janela)." });
+const box = K.el('div'); main.append(box);
+const P = [["escola", "école"], ["livro", "livre"], ["caneta", "stylo"], ["mesa", "table"], ["casa", "maison"], ["família", "famille"], ["pai", "père"], ["mãe", "mère"], ["irmão", "frère"], ["irmã", "sœur"], ["pão", "pain"], ["queijo", "fromage"], ["água", "eau"], ["maçã", "pomme"], ["cão", "chien"], ["gato", "chat"], ["janela", "fenêtre"], ["carro", "voiture"], ["obrigado", "merci"], ["olá", "bonjour"], ["adeus", "au revoir"], ["segunda-feira", "lundi"], ["domingo", "dimanche"], ["vermelho", "rouge"], ["branco", "blanc"], ["preto", "noir"]];
+function gen() {
+  const [a, b] = K.one(P), rev = true && Math.random() < .5;
+  const pool = P.map(x => rev ? x[0] : x[1]).filter((v, i, s) => s.indexOf(v) === i && v !== (rev ? a : b));
+  const ans = rev ? a : b, o = K.shuffle([ans, ...K.pick(pool, 3)]);
+  return { q: rev ? 'O que quer dizer <b>' + b + '</b>?' : 'Como se diz <b>' + a + '</b> em francês?', o, a: ans, e: '<b>' + a + '</b> = <b>' + b + '</b>.' };
+}
+K.quiz(box, { key: 'fvio', gen, n: 10 });
+</script>
+</body>
+</html>

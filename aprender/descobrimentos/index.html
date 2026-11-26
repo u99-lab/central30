@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Descobrimentos portugueses · Aprende+</title>
+<meta name="description" content="Gil Eanes, Bartolomeu Dias, Vasco da Gama, Cabral, Magalhães… quem descobriu o quê?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Descobrimentos portugueses", subject: 'his', emoji: '⛵', key: 'dos', intro: "No século XV e XVI os navegadores portugueses abriram caminhos por mar para África, Índia e Brasil." });
+const box = K.el('div'); main.append(box);
+const Q = [["Quem dobrou o Cabo Bojador em 1434?", "Gil Eanes", ["Diogo Cão", "Bartolomeu Dias", "Vasco da Gama"], null], ["Quem dobrou o Cabo da Boa Esperança em 1488?", "Bartolomeu Dias", ["Vasco da Gama", "Pedro Álvares Cabral", "Gil Eanes"], null], ["Quem chegou à Índia por mar em 1498?", "Vasco da Gama", ["Bartolomeu Dias", "Fernão de Magalhães", "Diogo Cão"], null], ["Quem chegou ao Brasil em 1500?", "Pedro Álvares Cabral", ["Vasco da Gama", "Cristóvão Colombo", "Pêro Vaz de Caminha"], null], ["Que navegador português comandou a primeira viagem de circum-navegação?", "Fernão de Magalhães", ["Vasco da Gama", "Bartolomeu Dias", "Diogo Cão"], null], ["Quem escreveu a carta sobre a chegada ao Brasil?", "Pêro Vaz de Caminha", ["Luís de Camões", "Fernão Lopes", "Gil Vicente"], null], ["Que infante é lembrado como impulsionador dos Descobrimentos?", "Infante D. Henrique", ["Infante D. Pedro", "D. Duarte", "D. Fernando"], null], ["Que tipo de navio permitiu navegar contra o vento?", "Caravela", ["Galé", "Jangada", "Trirreme"], null], ["Que tratado dividiu o mundo entre Portugal e Espanha (1494)?", "Tratado de Tordesilhas", ["Tratado de Zamora", "Tratado de Windsor", "Tratado de Alcanizes"], null], ["Que ilhas foram descobertas/povoadas pelos portugueses a partir de 1419?", "Madeira", ["Canárias", "Baleares", "Cabo Verde"], null], ["Que poeta contou a viagem de Vasco da Gama n'Os Lusíadas?", "Luís de Camões", ["Fernando Pessoa", "Gil Vicente", "Bocage"], null], ["Que especiarias os portugueses traziam da Índia?", "Pimenta e canela", ["Batata e milho", "Tomate e cacau", "Café e chá"], null]];
+function gen() { const [q, a, w, e] = K.one(Q); return { q, o: K.shuffle([a, ...w]), a, e: e || ('Resposta: <b>' + a + '</b>.') }; }
+K.quiz(box, { key: 'dos', gen, n: 10 });
+</script>
+</body>
+</html>

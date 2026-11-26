@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elementos químicos · Aprende+</title>
+<meta name="description" content="H, O, Fe, Au… sabes o nome de cada símbolo químico?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Elementos químicos", subject: 'cie', emoji: '⚗️', key: 'eqos', intro: "Cada elemento tem um <b>símbolo</b> de uma ou duas letras. Alguns vêm do latim: Fe (ferrum, ferro), Au (aurum, ouro), Ag (argentum, prata), Na (natrium, sódio)." });
+const box = K.el('div'); main.append(box);
+const P = [["H", "Hidrogénio"], ["He", "Hélio"], ["C", "Carbono"], ["N", "Azoto"], ["O", "Oxigénio"], ["Na", "Sódio"], ["Mg", "Magnésio"], ["Al", "Alumínio"], ["Si", "Silício"], ["P", "Fósforo"], ["S", "Enxofre"], ["Cl", "Cloro"], ["K", "Potássio"], ["Ca", "Cálcio"], ["Fe", "Ferro"], ["Cu", "Cobre"], ["Zn", "Zinco"], ["Ag", "Prata"], ["Au", "Ouro"], ["Hg", "Mercúrio"], ["Pb", "Chumbo"], ["Sn", "Estanho"], ["Ne", "Néon"], ["Ar", "Árgon"], ["U", "Urânio"], ["I", "Iodo"]];
+function gen() {
+  const [a, b] = K.one(P), rev = true && Math.random() < .5;
+  const pool = P.map(x => rev ? x[0] : x[1]).filter((v, i, s) => s.indexOf(v) === i && v !== (rev ? a : b));
+  const ans = rev ? a : b, o = K.shuffle([ans, ...K.pick(pool, 3)]);
+  return { q: rev ? 'Qual é o símbolo do <b>' + b + '</b>?' : 'Que elemento tem o símbolo <b>' + a + '</b>?', o, a: ans, e: '<b>' + a + '</b> é o símbolo do <b>' + b + '</b>.' };
+}
+K.quiz(box, { key: 'eqos', gen, n: 10 });
+</script>
+</body>
+</html>

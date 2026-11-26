@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Números primos · Aprende+</title>
+<meta name="description" content="Um número primo só se divide por 1 e por ele próprio. Consegues apanhá-los?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Números primos", subject: 'mat', emoji: '🔢', key: 'npos', intro: "<b>Primos</b> até 50: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47. O 1 não é primo e o 2 é o único primo par." });
+const box = K.el('div'); main.append(box);
+const isP = n => { if (n < 2) return false; for (let d = 2; d * d <= n; d++) if (n % d === 0) return false; return true; };
+function gen() { const ps = [], cs = []; for (let n = 2; n <= 99; n++) (isP(n) ? ps : cs).push(n);
+  if (Math.random() < .6) { const a = K.one(ps), w = K.pick(cs.filter(c => c % 2 || c > 9), 3); return { q: 'Qual destes números é <b>primo</b>?', o: K.shuffle([a, ...w].map(String)), a: String(a), e: '<b>' + a + '</b> só se divide por 1 e por ' + a + '.' }; }
+  const a = K.one(cs.filter(c => c % 2 && c % 5)), w = K.pick(ps.filter(p => p > 10), 3); let d = 3; while (a % d) d += 2; return { q: 'Qual destes números <b>não</b> é primo?', o: K.shuffle([a, ...w].map(String)), a: String(a), e: '<b>' + a + '</b> = ' + d + ' × ' + (a / d) + ', por isso não é primo.' }; }
+K.quiz(box, { key: 'npos', gen, n: 10 });
+</script>
+</body>
+</html>

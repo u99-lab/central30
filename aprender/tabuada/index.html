@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tabuada · Aprende+</title>
+<meta name="description" content="Treina a tabuada do 2 ao 12 contra ti próprio.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Tabuada", subject: 'mat', emoji: '✖️', key: 'tda', intro: "Truque: a ordem não importa (7 × 8 = 8 × 7). Se souberes 7 × 8 = 56, já sabes duas contas." });
+const box = K.el('div'); main.append(box);
+function gen() { const a = K.rand(2, 12), b = K.rand(2, 12), r = a * b; const div = Math.random() < .3;
+  if (div) return { q: 'Quanto é <b>' + r + ' ÷ ' + a + '</b>?', o: K.shuffle([String(b), ...K.near(b, 3, 3)]), a: String(b), e: r + ' ÷ ' + a + ' = <b>' + b + '</b> porque ' + a + ' × ' + b + ' = ' + r + '.' };
+  return { q: 'Quanto é <b>' + a + ' × ' + b + '</b>?', o: K.shuffle([String(r), ...K.near(r, 3, 3, a)]), a: String(r), e: a + ' × ' + b + ' = <b>' + r + '</b>.' }; }
+K.quiz(box, { key: 'tda', gen, n: 12 });
+</script>
+</body>
+</html>

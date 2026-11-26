@@ -1,4 +1,4 @@
-/* Central 30 · Aprender — catálogo das 21 atividades, partilhado pela Central 30 e pela Central 30 MAX.
+/* Central 30 · Aprender — catálogo das atividades, partilhado pela Central 30 e pela Central 30 MAX.
    Uso: C30Aprender.render(grelha, chips, base, sufixo)  (base = caminho até à raiz da Central 30) */
 (function () {
   const S = {
@@ -27,6 +27,31 @@
     { p: 'aprender/angulos/', s: 'mat', e: '📐', t: 'Ângulos', k: 'Geometria', d: 'Agudo, reto, obtuso e raso; complementares, suplementares e triângulos.' },
     { p: 'aprender/classes-de-palavras/', s: 'lin', e: '📝', t: 'Classes de palavras', k: 'Português', d: 'Nome, adjetivo, verbo, advérbio… descobre a classe da palavra.' },
     { p: 'aprender/irregular-verbs/', s: 'lin', e: '🇬🇧', t: 'Irregular verbs', k: 'Inglês', d: 'Go, went, gone: treina os verbos irregulares mais usados.' },
+    { p: 'aprender/capitais-europa/', s: 'geo', e: '🏰', t: "Capitais da Europa", k: "Países e capitais", d: "43 países europeus: sabes a capital de cada um? E ao contrário?" },
+    { p: 'aprender/capitais-mundo/', s: 'geo', e: '🌎', t: "Capitais do mundo", k: "Países e capitais", d: "Da Lusofonia à Ásia e à Oceânia: 38 capitais para descobrir." },
+    { p: 'aprender/bandeiras/', s: 'geo', e: '🏳️', t: "Bandeiras do mundo", k: "Reconhecer", d: "Olha para a bandeira e diz de que país é (ou o contrário)." },
+    { p: 'aprender/monumentos-do-mundo/', s: 'geo', e: '🗼', t: "Monumentos do mundo", k: "Onde fica?", d: "Torre Eiffel, Machu Picchu, Taj Mahal… em que país fica cada monumento?" },
+    { p: 'aprender/rios-e-serras/', s: 'geo', e: '🏞️', t: "Rios e serras de Portugal", k: "Relevo e hidrografia", d: "O rio mais longo, a montanha mais alta, onde nasce o Tejo… Portugal por dentro." },
+    { p: 'aprender/continentes-e-oceanos/', s: 'geo', e: '🌍', t: "Continentes e oceanos", k: "Planeta Terra", d: "Quantos continentes há, qual é o maior oceano e onde fica cada país." },
+    { p: 'aprender/reis-de-portugal/', s: 'his', e: '👑', t: "Reis e dinastias", k: "Monarquia portuguesa", d: "De D. Afonso Henriques a D. Manuel II: quem foi quem e de que dinastia." },
+    { p: 'aprender/datas-de-portugal/', s: 'his', e: '📜', t: "Datas da história de Portugal", k: "Linha do tempo", d: "1143, 1385, 1640, 1755, 1910, 1974… o que aconteceu em cada data?" },
+    { p: 'aprender/descobrimentos/', s: 'his', e: '⛵', t: "Descobrimentos portugueses", k: "Navegadores", d: "Gil Eanes, Bartolomeu Dias, Vasco da Gama, Cabral, Magalhães… quem descobriu o quê?" },
+    { p: 'aprender/inventores/', s: 'his', e: '💡', t: "Inventos e inventores", k: "Ciência e história", d: "Quem inventou o telefone, a lâmpada ou descobriu a penicilina?" },
+    { p: 'aprender/tabuada/', s: 'mat', e: '✖️', t: "Tabuada", k: "Cálculo mental", d: "Treina a tabuada do 2 ao 12 contra ti próprio." },
+    { p: 'aprender/potencias-e-raizes/', s: 'mat', e: '²', t: "Potências e raízes", k: "Cálculo", d: "Quadrados, cubos e raízes quadradas: treina até saberes de cor." },
+    { p: 'aprender/numeros-primos/', s: 'mat', e: '🔢', t: "Números primos", k: "Divisores", d: "Um número primo só se divide por 1 e por ele próprio. Consegues apanhá-los?" },
+    { p: 'aprender/areas-e-perimetros/', s: 'mat', e: '⬛', t: "Áreas e perímetros", k: "Geometria", d: "Quadrados, retângulos, triângulos e círculos: calcula áreas e perímetros." },
+    { p: 'aprender/unidades-de-medida/', s: 'mat', e: '⚖️', t: "Unidades de medida", k: "Conversões", d: "Metros, gramas, litros e horas: converte de uma unidade para outra." },
+    { p: 'aprender/divisibilidade/', s: 'mat', e: '➗', t: "Critérios de divisibilidade", k: "Divisores", d: "Sem fazer a conta: é divisível por 2, 3, 5, 9 ou 10?" },
+    { p: 'aprender/elementos-quimicos/', s: 'cie', e: '⚗️', t: "Elementos químicos", k: "Tabela periódica", d: "H, O, Fe, Au… sabes o nome de cada símbolo químico?" },
+    { p: 'aprender/corpo-humano/', s: 'cie', e: '🫀', t: "Corpo humano", k: "Órgãos e sistemas", d: "Coração, pulmões, rins, ossos… para que serve cada parte do corpo?" },
+    { p: 'aprender/estados-da-materia/', s: 'cie', e: '🧊', t: "Estados da matéria", k: "Mudanças de estado", d: "Sólido, líquido e gasoso: fusão, evaporação, condensação e companhia." },
+    { p: 'aprender/animais-vertebrados/', s: 'cie', e: '🐸', t: "Classes de vertebrados", k: "Classificar animais", d: "Golfinho, pinguim, salamandra, tubarão… a que classe pertence cada animal?" },
+    { p: 'aprender/ingles-vocabulario/', s: 'lin', e: '🇬🇧', t: "Inglês: vocabulário", k: "Palavras", d: "Escola, casa, comida, animais e cores em inglês: traduz nos dois sentidos." },
+    { p: 'aprender/frances-vocabulario/', s: 'lin', e: '🇫🇷', t: "Francês: vocabulário", k: "Palavras", d: "As primeiras palavras em francês: escola, família, comida e dias da semana." },
+    { p: 'aprender/espanhol-vocabulario/', s: 'lin', e: '🇪🇸', t: "Espanhol: vocabulário", k: "Palavras", d: "Parecem iguais mas não são: as palavras de espanhol que mais enganam." },
+    { p: 'aprender/antonimos/', s: 'lin', e: '🔁', t: "Antónimos", k: "Palavras contrárias", d: "Alegre e triste, abrir e fechar: encontra a palavra com o significado contrário." },
+    { p: 'aprender/plural-das-palavras/', s: 'lin', e: '📝', t: "Plural das palavras", k: "Português", d: "Cão → cães, mão → mãos, papel → papéis: acerta no plural das palavras difíceis." },
   ];
   const css = `
 .lc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px}

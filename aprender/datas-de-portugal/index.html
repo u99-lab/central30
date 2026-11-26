@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Datas da história de Portugal · Aprende+</title>
+<meta name="description" content="1143, 1385, 1640, 1755, 1910, 1974… o que aconteceu em cada data?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Datas da história de Portugal", subject: 'his', emoji: '📜', key: 'ddpal', intro: "As datas mais importantes da história de Portugal, da fundação à democracia." });
+const box = K.el('div'); main.append(box);
+const Q = [["Em que ano o Tratado de Zamora reconheceu Portugal como reino?", "1143", ["1128", "1179", "1249"], null], ["Em que ano foi a batalha de Aljubarrota?", "1385", ["1383", "1415", "1348"], null], ["Em que ano os portugueses conquistaram Ceuta?", "1415", ["1385", "1498", "1500"], null], ["Em que ano Vasco da Gama chegou à Índia?", "1498", ["1488", "1500", "1415"], null], ["Em que ano Pedro Álvares Cabral chegou ao Brasil?", "1500", ["1498", "1492", "1520"], null], ["Em que ano Portugal recuperou a independência (Restauração)?", "1640", ["1580", "1668", "1755"], null], ["Em que ano foi o grande terramoto de Lisboa?", "1755", ["1640", "1807", "1910"], null], ["Em que ano foi implantada a República em Portugal?", "1910", ["1908", "1926", "1974"], "A 5 de outubro de 1910."], ["Em que ano foi a Revolução dos Cravos (25 de Abril)?", "1974", ["1975", "1910", "1986"], null], ["Em que ano Portugal entrou na CEE (atual União Europeia)?", "1986", ["1974", "1992", "2002"], null], ["Em que ano o euro chegou às carteiras dos portugueses?", "2002", ["1999", "1986", "2008"], null], ["Em que ano as tropas de Napoleão invadiram Portugal pela primeira vez?", "1807", ["1755", "1820", "1834"], null]];
+function gen() { const [q, a, w, e] = K.one(Q); return { q, o: K.shuffle([a, ...w]), a, e: e || ('Resposta: <b>' + a + '</b>.') }; }
+K.quiz(box, { key: 'ddpal', gen, n: 10 });
+</script>
+</body>
+</html>

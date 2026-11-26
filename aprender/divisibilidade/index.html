@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Critérios de divisibilidade · Aprende+</title>
+<meta name="description" content="Sem fazer a conta: é divisível por 2, 3, 5, 9 ou 10?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Critérios de divisibilidade", subject: 'mat', emoji: '➗', key: 'dde', intro: "Por <b>2</b>: acaba em número par. Por <b>3</b>: a soma dos algarismos é múltiplo de 3. Por <b>5</b>: acaba em 0 ou 5. Por <b>9</b>: a soma dos algarismos é múltiplo de 9. Por <b>10</b>: acaba em 0." });
+const box = K.el('div'); main.append(box);
+function gen() { const d = K.one([2, 3, 5, 9, 10]); const yes = Math.random() < .5; let n; do { n = K.rand(100, 9999) } while ((n % d === 0) !== yes);
+  const s = String(n).split('').reduce((a, b) => a + +b, 0), why = d === 3 || d === 9 ? 'a soma dos algarismos é ' + s + (s % d ? ', que não é' : ', que é') + ' múltiplo de ' + d : d === 2 ? 'acaba em ' + (n % 10) + (n % 2 ? ' (ímpar)' : ' (par)') : d === 5 ? 'acaba em ' + (n % 10) : 'acaba em ' + (n % 10);
+  return { q: '<b>' + K.fmt(n) + '</b> é divisível por <b>' + d + '</b>?', o: ['Sim', 'Não'], a: yes ? 'Sim' : 'Não', keep: true, e: (yes ? '<b>Sim</b>: ' : '<b>Não</b>: ') + why + '.' }; }
+K.quiz(box, { key: 'dde', gen, n: 12 });
+</script>
+</body>
+</html>

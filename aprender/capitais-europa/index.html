@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Capitais da Europa · Aprende+</title>
+<meta name="description" content="43 países europeus: sabes a capital de cada um? E ao contrário?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Capitais da Europa", subject: 'geo', emoji: '🏰', key: 'cepa', intro: "Cada país tem uma <b>capital</b>, a cidade onde fica o governo. Atenção às armadilhas: a capital da Turquia é Ancara (não Istambul) e a da Suíça é Berna." });
+const box = K.el('div'); main.append(box);
+const P = [["Portugal", "Lisboa"], ["Espanha", "Madrid"], ["França", "Paris"], ["Itália", "Roma"], ["Alemanha", "Berlim"], ["Reino Unido", "Londres"], ["Irlanda", "Dublin"], ["Bélgica", "Bruxelas"], ["Países Baixos", "Amesterdão"], ["Luxemburgo", "Luxemburgo"], ["Suíça", "Berna"], ["Áustria", "Viena"], ["Polónia", "Varsóvia"], ["Chéquia", "Praga"], ["Eslováquia", "Bratislava"], ["Hungria", "Budapeste"], ["Roménia", "Bucareste"], ["Bulgária", "Sófia"], ["Grécia", "Atenas"], ["Croácia", "Zagreb"], ["Eslovénia", "Liubliana"], ["Sérvia", "Belgrado"], ["Dinamarca", "Copenhaga"], ["Suécia", "Estocolmo"], ["Noruega", "Oslo"], ["Finlândia", "Helsínquia"], ["Islândia", "Reiquiavique"], ["Estónia", "Tallinn"], ["Letónia", "Riga"], ["Lituânia", "Vílnius"], ["Ucrânia", "Kiev"], ["Rússia", "Moscovo"], ["Bielorrússia", "Minsk"], ["Malta", "Valeta"], ["Chipre", "Nicósia"], ["Albânia", "Tirana"], ["Bósnia e Herzegovina", "Sarajevo"], ["Montenegro", "Podgorica"], ["Macedónia do Norte", "Escópia"], ["Moldávia", "Chisinau"], ["Andorra", "Andorra-a-Velha"], ["Mónaco", "Mónaco"], ["Turquia", "Ancara"]];
+function gen() {
+  const [a, b] = K.one(P), rev = true && Math.random() < .5;
+  const pool = P.map(x => rev ? x[0] : x[1]).filter((v, i, s) => s.indexOf(v) === i && v !== (rev ? a : b));
+  const ans = rev ? a : b, o = K.shuffle([ans, ...K.pick(pool, 3)]);
+  return { q: rev ? '<b>' + b + '</b> é a capital de que país?' : 'Qual é a capital de <b>' + a + '</b>?', o, a: ans, e: 'A capital de ' + a + ' é <b>' + b + '</b>.' };
+}
+K.quiz(box, { key: 'cepa', gen, n: 10 });
+</script>
+</body>
+</html>

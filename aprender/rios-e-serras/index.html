@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rios e serras de Portugal · Aprende+</title>
+<meta name="description" content="O rio mais longo, a montanha mais alta, onde nasce o Tejo… Portugal por dentro.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Rios e serras de Portugal", subject: 'geo', emoji: '🏞️', key: 'resas', intro: "O ponto mais alto de Portugal é a montanha do <b>Pico</b>, nos Açores (2351 m). No continente é a <b>Torre</b>, na Serra da Estrela (1993 m)." });
+const box = K.el('div'); main.append(box);
+const Q = [["Qual é o ponto mais alto de Portugal?", "Montanha do Pico (Açores)", ["Torre (Serra da Estrela)", "Pico Ruivo (Madeira)", "Serra do Gerês"], "A montanha do <b>Pico</b> tem 2351 m."], ["Qual é o ponto mais alto de Portugal Continental?", "Torre, na Serra da Estrela", ["Serra do Marão", "Serra do Caramulo", "Serra de Monchique"], "A <b>Torre</b> tem 1993 m."], ["Qual é o rio mais longo da Península Ibérica?", "Tejo", ["Douro", "Guadiana", "Mondego"], "O <b>Tejo</b> tem cerca de 1007 km."], ["Qual é o maior rio que nasce e corre só em Portugal?", "Mondego", ["Tejo", "Douro", "Minho"], "O <b>Mondego</b> nasce na Serra da Estrela e desagua na Figueira da Foz."], ["Onde desagua o rio Mondego?", "Figueira da Foz", ["Coimbra", "Aveiro", "Lisboa"], null], ["Que rio passa no Porto?", "Douro", ["Tejo", "Mondego", "Vouga"], null], ["Que rio passa em Lisboa?", "Tejo", ["Douro", "Sado", "Guadiana"], null], ["Que rio faz fronteira com Espanha no norte de Portugal?", "Minho", ["Lima", "Cávado", "Vouga"], null], ["Que rio faz fronteira com Espanha no sul (Algarve/Alentejo)?", "Guadiana", ["Sado", "Mira", "Tejo"], null], ["Em que serra nasce o Mondego?", "Serra da Estrela", ["Serra do Gerês", "Serra da Lousã", "Serra de Sintra"], null], ["Qual é a única serra portuguesa com estância de esqui?", "Serra da Estrela", ["Serra do Marão", "Serra do Gerês", "Serra de Monchique"], null], ["Em que distrito fica o Parque Nacional da Peneda-Gerês?", "Braga e Viana do Castelo", ["Bragança", "Guarda", "Vila Real e Porto"], "É o único parque nacional de Portugal."], ["Que rio passa em Coimbra?", "Mondego", ["Douro", "Tejo", "Zêzere"], null], ["Qual é o maior lago artificial (albufeira) de Portugal?", "Alqueva", ["Castelo do Bode", "Aguieira", "Cabril"], "A barragem do <b>Alqueva</b>, no Guadiana, é dos maiores lagos artificiais da Europa."]];
+function gen() { const [q, a, w, e] = K.one(Q); return { q, o: K.shuffle([a, ...w]), a, e: e || ('Resposta: <b>' + a + '</b>.') }; }
+K.quiz(box, { key: 'resas', gen, n: 10 });
+</script>
+</body>
+</html>

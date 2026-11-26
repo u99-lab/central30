@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monumentos do mundo · Aprende+</title>
+<meta name="description" content="Torre Eiffel, Machu Picchu, Taj Mahal… em que país fica cada monumento?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Monumentos do mundo", subject: 'geo', emoji: '🗼', key: 'mdmdo', intro: "Os monumentos mais famosos do mundo, incluindo várias <b>Maravilhas do Mundo</b>." });
+const box = K.el('div'); main.append(box);
+const P = [["Torre Eiffel", "França"], ["Coliseu", "Itália"], ["Big Ben", "Reino Unido"], ["Estátua da Liberdade", "Estados Unidos"], ["Cristo Redentor", "Brasil"], ["Taj Mahal", "Índia"], ["Grande Muralha", "China"], ["Machu Picchu", "Peru"], ["Pirâmides de Gizé", "Egito"], ["Ópera de Sydney", "Austrália"], ["Torre de Belém", "Portugal"], ["Sagrada Família", "Espanha"], ["Kremlin", "Rússia"], ["Pártenon", "Grécia"], ["Petra", "Jordânia"], ["Chichén Itzá", "México"], ["Burj Khalifa", "Emirados Árabes Unidos"], ["Porta de Brandemburgo", "Alemanha"], ["Monte Fuji", "Japão"], ["Torre de Pisa", "Itália"], ["Mosteiro dos Jerónimos", "Portugal"], ["Alhambra", "Espanha"]];
+function gen() {
+  const [a, b] = K.one(P), rev = false && Math.random() < .5;
+  const pool = P.map(x => rev ? x[0] : x[1]).filter((v, i, s) => s.indexOf(v) === i && v !== (rev ? a : b));
+  const ans = rev ? a : b, o = K.shuffle([ans, ...K.pick(pool, 3)]);
+  return { q: rev ? 'Em que país fica <b>' + a + '</b>?' : 'Em que país fica <b>' + a + '</b>?', o, a: ans, e: '<b>' + a + '</b> fica em <b>' + b + '</b>.' };
+}
+K.quiz(box, { key: 'mdmdo', gen, n: 10 });
+</script>
+</body>
+</html>

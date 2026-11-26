@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estados da matéria · Aprende+</title>
+<meta name="description" content="Sólido, líquido e gasoso: fusão, evaporação, condensação e companhia.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Estados da matéria", subject: 'cie', emoji: '🧊', key: 'edmia', intro: "<b>Fusão</b>: sólido → líquido. <b>Solidificação</b>: líquido → sólido. <b>Vaporização</b>: líquido → gasoso. <b>Condensação</b>: gasoso → líquido. <b>Sublimação</b>: sólido → gasoso." });
+const box = K.el('div'); main.append(box);
+const Q = [["Como se chama a passagem de sólido a líquido?", "Fusão", ["Solidificação", "Condensação", "Sublimação"], null], ["Como se chama a passagem de líquido a sólido?", "Solidificação", ["Fusão", "Vaporização", "Condensação"], null], ["Como se chama a passagem de líquido a gasoso?", "Vaporização", ["Condensação", "Fusão", "Sublimação"], null], ["Como se chama a passagem de gasoso a líquido?", "Condensação", ["Vaporização", "Solidificação", "Fusão"], null], ["Como se chama a passagem direta de sólido a gasoso?", "Sublimação", ["Fusão", "Vaporização", "Condensação"], null], ["A que temperatura ferve a água (ao nível do mar)?", "100 °C", ["0 °C", "50 °C", "212 °C"], null], ["A que temperatura congela a água?", "0 °C", ["−10 °C", "4 °C", "100 °C"], null], ["O vapor que embacia o espelho da casa de banho é um exemplo de…", "Condensação", ["Fusão", "Sublimação", "Solidificação"], null], ["O gelo a derreter num copo é um exemplo de…", "Fusão", ["Condensação", "Vaporização", "Solidificação"], null], ["A roupa a secar ao sol é um exemplo de…", "Evaporação", ["Condensação", "Fusão", "Solidificação"], null], ["Em que estado as partículas estão mais afastadas e livres?", "Gasoso", ["Sólido", "Líquido", "Todos iguais"], null], ["Em que estado a matéria tem forma e volume próprios?", "Sólido", ["Líquido", "Gasoso", "Nenhum"], null]];
+function gen() { const [q, a, w, e] = K.one(Q); return { q, o: K.shuffle([a, ...w]), a, e: e || ('Resposta: <b>' + a + '</b>.') }; }
+K.quiz(box, { key: 'edmia', gen, n: 10 });
+</script>
+</body>
+</html>

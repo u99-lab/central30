@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plural das palavras · Aprende+</title>
+<meta name="description" content="Cão → cães, mão → mãos, papel → papéis: acerta no plural das palavras difíceis.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Plural das palavras", subject: 'lin', emoji: '📝', key: 'pdpas', intro: "Palavras em <b>-ão</b> podem fazer o plural em -ões (limões), -ães (cães) ou -ãos (mãos). As em <b>-el</b> fazem -éis (papéis) e as em <b>-il</b> tónico fazem -is (funis)." });
+const box = K.el('div'); main.append(box);
+const P = [["cão", "cães"], ["pão", "pães"], ["mão", "mãos"], ["irmão", "irmãos"], ["limão", "limões"], ["coração", "corações"], ["alemão", "alemães"], ["cidadão", "cidadãos"], ["animal", "animais"], ["papel", "papéis"], ["anel", "anéis"], ["funil", "funis"], ["réptil", "répteis"], ["lápis", "lápis"], ["flor", "flores"], ["mês", "meses"], ["país", "países"], ["luz", "luzes"], ["capitão", "capitães"], ["órfão", "órfãos"]];
+function gen() {
+  const [a, b] = K.one(P), rev = false && Math.random() < .5;
+  const pool = P.map(x => rev ? x[0] : x[1]).filter((v, i, s) => s.indexOf(v) === i && v !== (rev ? a : b));
+  const ans = rev ? a : b, o = K.shuffle([ans, ...K.pick(pool, 3)]);
+  return { q: rev ? 'Qual é o plural de <b>' + a + '</b>?' : 'Qual é o plural de <b>' + a + '</b>?', o, a: ans, e: 'O plural de <b>' + a + '</b> é <b>' + b + '</b>.' };
+}
+K.quiz(box, { key: 'pdpas', gen, n: 10 });
+</script>
+</body>
+</html>

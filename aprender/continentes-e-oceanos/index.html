@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Continentes e oceanos · Aprende+</title>
+<meta name="description" content="Quantos continentes há, qual é o maior oceano e onde fica cada país.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Continentes e oceanos", subject: 'geo', emoji: '🌍', key: 'ceoos', intro: "Há <b>6 continentes</b> habitados (Europa, Ásia, África, América, Oceânia, Antártida) e <b>5 oceanos</b> (Pacífico, Atlântico, Índico, Glacial Ártico e Glacial Antártico)." });
+const box = K.el('div'); main.append(box);
+const Q = [["Qual é o maior oceano da Terra?", "Pacífico", ["Atlântico", "Índico", "Ártico"], null], ["Qual é o maior continente?", "Ásia", ["África", "América", "Europa"], null], ["Qual é o continente mais pequeno?", "Oceânia", ["Europa", "Antártida", "África"], null], ["Que oceano banha Portugal?", "Atlântico", ["Pacífico", "Índico", "Ártico"], null], ["Em que continente fica o Egito?", "África", ["Ásia", "Europa", "Oceânia"], null], ["Em que continente fica o Japão?", "Ásia", ["Oceânia", "América", "Europa"], null], ["Em que continente fica a Austrália?", "Oceânia", ["Ásia", "América", "África"], null], ["Que oceano fica entre África e a Austrália?", "Índico", ["Pacífico", "Atlântico", "Ártico"], null], ["Qual é o continente gelado onde não há países?", "Antártida", ["Ártico", "Gronelândia", "Oceânia"], null], ["Que continente atravessa a linha do Equador e o Trópico de Capricórnio e tem o Brasil?", "América do Sul", ["África", "Oceânia", "Ásia"], null], ["Qual é o maior país do mundo em área?", "Rússia", ["Canadá", "China", "Estados Unidos"], null], ["Qual é o deserto quente maior do mundo?", "Sara", ["Gobi", "Atacama", "Kalahari"], null], ["Qual é a montanha mais alta do mundo?", "Evereste", ["K2", "Monte Branco", "Kilimanjaro"], "O <b>Evereste</b> tem 8849 m, nos Himalaias."], ["Qual é o rio mais longo do mundo (com o Amazonas a disputar)?", "Nilo", ["Danúbio", "Mississípi", "Tejo"], null]];
+function gen() { const [q, a, w, e] = K.one(Q); return { q, o: K.shuffle([a, ...w]), a, e: e || ('Resposta: <b>' + a + '</b>.') }; }
+K.quiz(box, { key: 'ceoos', gen, n: 10 });
+</script>
+</body>
+</html>

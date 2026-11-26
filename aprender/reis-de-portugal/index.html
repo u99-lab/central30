@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reis e dinastias · Aprende+</title>
+<meta name="description" content="De D. Afonso Henriques a D. Manuel II: quem foi quem e de que dinastia.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Reis e dinastias", subject: 'his', emoji: '👑', key: 'rdpal', intro: "Portugal teve <b>4 dinastias</b>: Afonsina (1143–1383), de Avis (1385–1580), Filipina (1580–1640) e de Bragança (1640–1910)." });
+const box = K.el('div'); main.append(box);
+const Q = [["Quem foi o primeiro rei de Portugal?", "D. Afonso Henriques", ["D. Dinis", "D. João I", "D. Sancho I"], null], ["Quem foi o último rei de Portugal?", "D. Manuel II", ["D. Carlos I", "D. Luís I", "D. Miguel"], "Reinou até 1910, quando foi implantada a República."], ["Que rei fundou a Universidade (Estudo Geral) em 1290?", "D. Dinis", ["D. Afonso III", "D. João II", "D. Manuel I"], null], ["Que dinastia começou com D. João I, depois de Aljubarrota?", "Dinastia de Avis", ["Dinastia Afonsina", "Dinastia de Bragança", "Dinastia Filipina"], null], ["Que rei foi aclamado na Restauração de 1640?", "D. João IV", ["D. Sebastião", "D. Pedro II", "D. João V"], null], ["Que rei desapareceu na batalha de Alcácer Quibir (1578)?", "D. Sebastião", ["D. Henrique", "D. Manuel I", "D. João III"], null], ["Que rei estava no trono no terramoto de Lisboa de 1755?", "D. José I", ["D. João V", "D. Maria I", "D. Pedro V"], "O Marquês de Pombal era o seu ministro."], ["Que rei foi assassinado no Regicídio de 1908?", "D. Carlos I", ["D. Manuel II", "D. Luís I", "D. Pedro IV"], null], ["De que dinastia eram os reis espanhóis que governaram Portugal entre 1580 e 1640?", "Filipina", ["Avis", "Bragança", "Afonsina"], null], ["Que rei mandou Vasco da Gama à Índia?", "D. Manuel I", ["D. João II", "D. Afonso V", "D. João III"], null], ["Que rainha foi a primeira a reinar sozinha em Portugal?", "D. Maria I", ["D. Maria II", "D. Leonor", "D. Isabel"], null], ["Como ficou conhecido D. Dinis?", "O Lavrador", ["O Conquistador", "O Povoador", "O Africano"], "Mandou plantar o Pinhal de Leiria."]];
+function gen() { const [q, a, w, e] = K.one(Q); return { q, o: K.shuffle([a, ...w]), a, e: e || ('Resposta: <b>' + a + '</b>.') }; }
+K.quiz(box, { key: 'rdpal', gen, n: 10 });
+</script>
+</body>
+</html>

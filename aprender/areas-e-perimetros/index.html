@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Áreas e perímetros · Aprende+</title>
+<meta name="description" content="Quadrados, retângulos, triângulos e círculos: calcula áreas e perímetros.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Áreas e perímetros", subject: 'mat', emoji: '⬛', key: 'aepos', intro: "<b>Retângulo</b>: A = c × l; P = 2c + 2l. <b>Quadrado</b>: A = l²; P = 4l. <b>Triângulo</b>: A = b × h ÷ 2. <b>Círculo</b>: A = π × r² (π ≈ 3,14)." });
+const box = K.el('div'); main.append(box);
+function gen() { const t = K.rand(0, 4);
+  if (t === 0) { const c = K.rand(3, 15), l = K.rand(2, 10), r = c * l; return { q: 'Qual é a <b>área</b> de um retângulo com ' + c + ' cm por ' + l + ' cm?', o: K.shuffle([r + ' cm²', (2 * c + 2 * l) + ' cm²', ...K.near(r, 3, 2, 2).map(v => v + ' cm²')]).filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: r + ' cm²', e: c + ' × ' + l + ' = <b>' + r + ' cm²</b>.' }; }
+  if (t === 1) { const c = K.rand(3, 15), l = K.rand(2, 10), r = 2 * c + 2 * l; return { q: 'Qual é o <b>perímetro</b> de um retângulo com ' + c + ' cm por ' + l + ' cm?', o: K.shuffle([r + ' cm', (c * l) + ' cm', ...K.near(r, 3, 2, 2).map(v => v + ' cm')]).filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: r + ' cm', e: '2 × ' + c + ' + 2 × ' + l + ' = <b>' + r + ' cm</b>.' }; }
+  if (t === 2) { const l = K.rand(2, 12), r = l * l; return { q: 'Um quadrado tem ' + l + ' m de lado. Qual é a sua <b>área</b>?', o: K.shuffle([r + ' m²', (4 * l) + ' m²', ...K.near(r, 3, 2, l).map(v => v + ' m²')]).filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: r + ' m²', e: l + '² = <b>' + r + ' m²</b>.' }; }
+  if (t === 3) { const b = K.rand(2, 10) * 2, h = K.rand(2, 12), r = b * h / 2; return { q: 'Qual é a <b>área</b> de um triângulo com base ' + b + ' cm e altura ' + h + ' cm?', o: K.shuffle([r + ' cm²', (b * h) + ' cm²', ...K.near(r, 3, 2, 2).map(v => v + ' cm²')]).filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: r + ' cm²', e: b + ' × ' + h + ' ÷ 2 = <b>' + r + ' cm²</b>.' }; }
+  const rr = K.rand(1, 10), r = Math.round(3.14 * rr * rr * 100) / 100, f = v => String(v).replace('.', ',') + ' cm²'; return { q: 'Usando π ≈ 3,14, qual é a <b>área</b> de um círculo com raio ' + rr + ' cm?', o: K.shuffle([f(r), f(Math.round(2 * 3.14 * rr * 100) / 100), f(Math.round(3.14 * rr * 100) / 100), f(Math.round(3.14 * rr * rr * 2 * 100) / 100)]).filter((v, i, s) => s.indexOf(v) === i), a: f(r), e: '3,14 × ' + rr + '² = <b>' + f(r) + '</b>.' }; }
+K.quiz(box, { key: 'aepos', gen, n: 10 });
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Potências e raízes · Aprende+</title>
+<meta name="description" content="Quadrados, cubos e raízes quadradas: treina até saberes de cor.">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Potências e raízes", subject: 'mat', emoji: '²', key: 'peres', intro: "<b>Potência</b>: 3² = 3 × 3 = 9; 2³ = 2 × 2 × 2 = 8. <b>Raiz quadrada</b>: √49 = 7 porque 7² = 49." });
+const box = K.el('div'); main.append(box);
+function gen() { const t = K.rand(0, 2);
+  if (t === 0) { const a = K.rand(2, 15), r = a * a; return { q: 'Quanto é <b>' + a + '²</b>?', o: K.shuffle([String(r), String(a * 2), ...K.near(r, 3, 2, a)]).filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: String(r), e: a + '² = ' + a + ' × ' + a + ' = <b>' + r + '</b>.' }; }
+  if (t === 1) { const a = K.rand(2, 6), r = a * a * a; return { q: 'Quanto é <b>' + a + '³</b>?', o: K.shuffle([String(r), String(a * 3), ...K.near(r, 3, 2, a)]).filter((v, i, s) => s.indexOf(v) === i).slice(0, 4), a: String(r), e: a + '³ = ' + a + ' × ' + a + ' × ' + a + ' = <b>' + r + '</b>.' }; }
+  const a = K.rand(2, 15), r = a * a; return { q: 'Quanto é <b>√' + r + '</b>?', o: K.shuffle([String(a), ...K.near(a, 3, 3)]), a: String(a), e: '√' + r + ' = <b>' + a + '</b> porque ' + a + '² = ' + r + '.' }; }
+K.quiz(box, { key: 'peres', gen, n: 10 });
+</script>
+</body>
+</html>

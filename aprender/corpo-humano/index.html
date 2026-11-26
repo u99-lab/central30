@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Corpo humano · Aprende+</title>
+<meta name="description" content="Coração, pulmões, rins, ossos… para que serve cada parte do corpo?">
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../kit.css">
+</head>
+<body>
+<script src="../kit.js"></script>
+<script>
+const main = K.page({ title: "Corpo humano", subject: 'cie', emoji: '🫀', key: 'chno', intro: "O corpo humano adulto tem <b>206 ossos</b>. O maior é o <b>fémur</b> e o mais pequeno é o <b>estribo</b>, dentro do ouvido." });
+const box = K.el('div'); main.append(box);
+const Q = [["Que órgão bombeia o sangue para todo o corpo?", "Coração", ["Pulmões", "Fígado", "Rins"], null], ["Onde acontecem as trocas de oxigénio e dióxido de carbono?", "Pulmões", ["Coração", "Estômago", "Intestino"], null], ["Que órgãos filtram o sangue e produzem a urina?", "Rins", ["Fígado", "Pulmões", "Bexiga"], null], ["Quantos ossos tem o corpo de um adulto?", "206", ["106", "306", "180"], null], ["Qual é o maior osso do corpo humano?", "Fémur", ["Úmero", "Tíbia", "Coluna"], null], ["Qual é o osso mais pequeno do corpo humano?", "Estribo (no ouvido)", ["Falange do dedo mindinho", "Rótula", "Vértebra"], null], ["Que órgão produz a bílis?", "Fígado", ["Pâncreas", "Estômago", "Baço"], null], ["Onde começa a digestão dos alimentos?", "Boca", ["Estômago", "Intestino delgado", "Esófago"], null], ["Que órgão controla todo o corpo?", "Cérebro", ["Coração", "Medula", "Estômago"], null], ["Qual é o maior órgão do corpo humano?", "Pele", ["Fígado", "Intestino", "Pulmões"], null], ["Que vasos sanguíneos levam o sangue do coração para o corpo?", "Artérias", ["Veias", "Capilares", "Nervos"], null], ["Que células do sangue transportam o oxigénio?", "Glóbulos vermelhos", ["Glóbulos brancos", "Plaquetas", "Plasma"], null], ["Quantos dentes tem um adulto (com os sisos)?", "32", ["20", "28", "36"], null]];
+function gen() { const [q, a, w, e] = K.one(Q); return { q, o: K.shuffle([a, ...w]), a, e: e || ('Resposta: <b>' + a + '</b>.') }; }
+K.quiz(box, { key: 'chno', gen, n: 10 });
+</script>
+</body>
+</html>
