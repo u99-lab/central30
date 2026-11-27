@@ -55,7 +55,7 @@ try {
   K.keep = () => { try { return !!JSON.parse(localStorage.getItem('c30.settings') || '{}').keepProgress; } catch (e) { return false; } };
   const volatileBest = new Map();
   K.best = {
-    get(k) { let saved=0; try { if(K.keep()) saved=Number(localStorage.getItem(store(k)))||0; } catch(e) {} return Math.max(0,saved,volatileBest.get(k)||0); },
+    get(k) { let saved=0; try { if(K.keep()) saved=Number(localStorage.getItem(store(k)))||0; } catch(e) {} return Math.max(0,Number.isFinite(saved)?saved:0,volatileBest.get(k)||0); },
     set(k, v) { v=Number(v); if(!Number.isFinite(v)||v<0||v<=K.best.get(k))return; volatileBest.set(k,v); try { if(K.keep()) localStorage.setItem(store(k),String(v)); } catch(e) {} },
   };
 
@@ -191,6 +191,7 @@ try {
     let cards, open, moves, found, lock;
     const start = () => {
       const ps = K.pick(pairs, Math.min(n, pairs.length));
+      if(!ps.length){root.textContent='Ainda não há pares disponíveis.';return;}
       cards = K.shuffle(ps.flatMap((p, id) => [{ id, t: p[0], tag: tags && tags[0] }, { id, t: p[1], tag: tags && tags[1] }]));
       open = []; moves = 0; found = 0; lock = false; draw();
     };
