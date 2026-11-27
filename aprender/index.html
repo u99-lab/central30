@@ -98,13 +98,14 @@ try {
   }
 } catch {}
 try {
-  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+  if (window.__C30_DID_RESET) for (let i = sessionStorage.length - 1; i >= 0; i--) {
     const k = sessionStorage.key(i);
     if (k && k.startsWith('c30aprender_')) sessionStorage.removeItem(k);
   }
 } catch {}
 
-try { C30Aprender.render(document.getElementById('lcGrid'), document.getElementById('lcChips'), '../', ''); } catch (e) {}
+try { C30Aprender.render(document.getElementById('lcGrid'), document.getElementById('lcChips'), '../', ''); } catch (e) { const g=document.getElementById('lcGrid'); g.textContent='Não foi possível carregar as atividades. Atualiza a página para tentar novamente.'; const b=document.createElement('button'); b.textContent='Tentar novamente'; b.onclick=()=>location.reload(); g.append(document.createElement('br'),b); }
+if ('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('../sw.js').catch(()=>{});
 
 </script>
 </body>
