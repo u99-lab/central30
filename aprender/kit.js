@@ -1,13 +1,13 @@
 /* Central 30 · Aprender — motor comum: cabeçalho, perguntas, ordenar, memória e resultado. */
 (function () {
 try {
-  const RESET = '2026-11-27-reset1';
+  const RESET = '2026-11-27-reset2';
   if (localStorage.getItem('c30.reset') !== RESET) {
     const keep = new Set(['c30.reset','c30.settings','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN','c30.gateV','c30max.gateV']);
     const del = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && (k.startsWith('c30.') || k.startsWith('c30aprender_') || k.startsWith('craques3d.') || /^(vfig|patrao|jdc)\./.test(k) || k === 'central30.aviso') && !keep.has(k) && !k.startsWith('c30.gpass.')) del.push(k);
+      if (k && (k.startsWith('c30.') || k.startsWith('c30aprender_') || k.startsWith('craques3d.') || /^(vfig|patrao|jdc)\./.test(k) || k === 'central30.aviso' || k === 'baia-escarlate-save-v1') && !keep.has(k) && !k.startsWith('c30.gpass.')) del.push(k);
     }
     del.forEach(k => localStorage.removeItem(k));
     localStorage.setItem('c30.reset', RESET);
