@@ -335,8 +335,8 @@ const fmtMoney = (v) => Math.floor(v).toLocaleString('pt-PT') + ' €';
 const QUALITY = {
   // A cidade tem muitas malhas; sombras dinâmicas em qualidade alta podem
   // esgotar a memória gráfica em alguns dispositivos e fazer os prédios sumirem.
-  ultra: { name: 'Ultra', pr: 1.25, shadows: false, smap: 512, bloom: true, desc: 'PC potente com placa gráfica' },
-  alta: { name: 'Alta', pr: 1.1, shadows: false, smap: 512, bloom: true, desc: 'PC normal' },
+  ultra: { name: 'Ultra', pr: 1.25, shadows: false, smap: 512, bloom: false, desc: 'PC potente com placa gráfica' },
+  alta: { name: 'Alta', pr: 1.1, shadows: false, smap: 512, bloom: false, desc: 'PC normal' },
   media: { name: 'Média', pr: 1, shadows: false, smap: 512, bloom: false, desc: 'Portátil ou telemóvel bom' },
   baixa: { name: 'Baixa', pr: 1, shadows: false, smap: 512, bloom: false, desc: 'Telemóvel ou PC fraco' },
 };
@@ -1812,15 +1812,12 @@ function buildWorld() {
     const W = WIN[style];
     const mat = new THREE.MeshStandardMaterial({
       map: W.map, emissiveMap: W.em, emissive: new THREE.Color('#ffffff'), emissiveIntensity: 0,
-      roughnessMap: W.rm, metalnessMap: W.rm, roughness: 1, metalness: 1, vertexColors: true, envMapIntensity: style === 'glass' ? 1.2 : 0.9,
+      roughnessMap: W.rm, roughness: 0.85, metalness: 0.15, vertexColors: true, side: THREE.DoubleSide, envMapIntensity: style === 'glass' ? 0.8 : 0.5,
     });
-    mat.onBeforeCompile = (sh) => {
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <project_vertex>', '#include <project_vertex>\nvWY = (modelMatrix * vec4(transformed, 1.0)).y;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\nfloat aoK = mix(0.42, 1.0, smoothstep(0.0, 6.0, vWY));\nreflectedLight.indirectDiffuse *= aoK; reflectedLight.directDiffuse *= mix(0.7, 1.0, aoK);');
-    };
+    // Material padrão: evita a variante GLSL personalizada nas fachadas.
     wallMats[style] = mat; envMats.windows.push(mat);
   }
-  const roofMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85 });
+  const roofMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide });
   for (const c of chunks.values()) {
     for (const style of ['office', 'apt', 'glass']) {
       if (!c.wall[style].p.length) continue;
@@ -2281,16 +2278,21 @@ function renderCars(time) {
   carRender.flashB.color.setRGB(0.05, 0.2, flashOn ? 0.3 : 5);
   carRender.lightMat.color.setScalar(0.55 + world.night * 0.7);
   const night = world.night;
-  for (const car of cars) {
+  // Reserva o primeiro lugar de cada lote para o veículo do jogador.
+  const pcFirst = player.car;
+  const orderedCars = pcFirst ? [pcFirst, ...cars.filter(c => c !== pcFirst)] : cars;
+  for (const car of orderedCars) {
     const R = carRender.types[car.type];
     if (R.n >= MAXC) continue;
     _e.set(car.pitch, car.yaw, car.roll, 'YXZ'); _q.setFromEuler(_e);
     _pos.set(car.x, car.y, car.z); _scl.set(1, 1, 1);
     _cm.compose(_pos, _q, _scl);
-    if (car.hideBody) { _cm.multiply(_tm.makeScale(0.0001, 0.0001, 0.0001)); }
-    R.body.setMatrixAt(R.n, _cm);
+    // Só a cabine opaca é substituída pelo cockpit na primeira pessoa.
+    // Não alterar _cm: as rodas e outros componentes precisam da matriz real.
+    const interior = car === player.car && cockpit && cockpit.g.visible;
+    R.body.setMatrixAt(R.n, interior ? _tm.makeScale(0, 0, 0) : _cm);
     R.body.setColorAt(R.n, car.dead ? _burnt : car.color);
-    R.lights.setMatrixAt(R.n, car.dead || car.hideBody || (!car.driver && !car.siren) ? _tm.makeScale(0, 0, 0) : _cm);
+    R.lights.setMatrixAt(R.n, car.dead || interior || (!car.driver && !car.siren) ? _tm.makeScale(0, 0, 0) : _cm);
     R.n++;
     const t = car.t, s = t.r / 0.36;
     if (sn < MAXC && car.y - groundH(car.x, car.z) < 25) { const gh = groundH(car.x, car.z), up = Math.max(0, car.y - gh); _e.set(0, car.yaw, 0); _q.setFromEuler(_e); _pos.set(car.x, gh + 0.04, car.z); const k = 1 / (1 + up * 0.25); _scl.set(t.W * 1.9 * k, 1, t.L * 1.35 * k); _wm.compose(_pos, _q, _scl); carRender.blob.setMatrixAt(sn++, _wm); _scl.set(1, 1, 1); }
@@ -4884,8 +4886,6 @@ function updateCockpit() {
   const c = player.car;
   const on = c && cam.mode === 3 && game.state === 'play' && !c.t.moto && !c.t.plane && !c.dead;
   cockpit.g.visible = !!on;
-  // Mantém a carroçaria visível também na câmara interior; o cockpit continua ativo.
-  if (c) c.hideBody = false;
   if (!on) return;
   const k = cockpit, t = c.t, base = t.r * 0.55, ct = base + t.H * 0.42, fwd = t.L * (t.cab ? t.cab[1] : 0) + 0.15, h = ct + 0.55, sx = 0.38;
   const W = t.W;
@@ -5952,13 +5952,17 @@ function updateCamera(dt) {
     if (tc < t) t = tc;
   }
   if (t < L) { const k = Math.max(0.35, t - 0.4) / L; cx = px + vx * k; cy = py + vy * k; cz = pz + vz * k; }
+  // Se uma parede aproximar demasiado a câmara, sobe acima do tejadilho.
+  if (c && Math.hypot(cx - c.x, cz - c.z) < c.t.L * 0.6) cy = Math.max(cy, c.y + c.t.H + 2.2);
   cy = Math.max(cy, groundH(cx, cz) + 0.35);
   if (!cam.inited) { cam.x = cx; cam.y = cy; cam.z = cz; cam.inited = true; }
   const k = c ? 14 : 30;
   cam.x = damp(cam.x, cx, k, dt); cam.y = damp(cam.y, cy, k, dt); cam.z = damp(cam.z, cz, k, dt);
   const sh = cam.shake * cam.shake * 0.5;
   camera.position.set(cam.x + rnd(-sh, sh), cam.y + rnd(-sh, sh), cam.z + rnd(-sh, sh));
-  camera.lookAt(px + dx * 20, py + dy * 20, pz + dz * 20);
+  // Nas câmaras exteriores, aponta para o veículo, não para longe dele.
+  if (c) camera.lookAt(c.x, c.y + c.t.H * 0.65, c.z);
+  else camera.lookAt(px + dx * 20, py + dy * 20, pz + dz * 20);
   camera.fov = cam.fov; camera.updateProjectionMatrix();
   cam.shake = Math.max(0, cam.shake - dt * 1.6);
   camFocus.set(tx, 0, tz);
