@@ -6134,6 +6134,8 @@ async function bootInner() {
   world.hour = 17.6;
   game.state = 'title';
   populateInitial();
+  /* prepara os gráficos de todos os objetos já no carregamento (antes o início travava e as coisas apareciam do nada enquanto os shaders eram preparados) */
+  try { $('loading').textContent = 'A preparar os gráficos…'; await sleep(10); const vis = []; scene.traverse((o) => { if (o.isMesh || o.isPoints || o.isLine || o.isSprite) { if (!o.visible) { vis.push(o); o.visible = true; } } }); if (renderer.compileAsync) { await Promise.race([renderer.compileAsync(scene, camera), sleep(8000)]); } else renderer.compile(scene, camera); vis.forEach((o) => { o.visible = false; }); } catch (e) {}
   const qi = $('q-' + settings.q); if (qi) qi.checked = true; $('vol').value = Math.round(settings.volume * 100); $('sens').value = Math.round(settings.sens * 100);
   const btn = $('play'); btn.disabled = false; btn.textContent = progress.done.length || player.money !== 500 ? 'CONTINUAR' : 'JOGAR';
   $('loading').textContent = progress.done.length ? `Progresso guardado: ${progress.done.length}/${MISSIONS.length} missões · ${fmtMoney(player.money)}` : 'Original · feito à mão com three.js';
