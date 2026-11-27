@@ -3192,6 +3192,7 @@ function updatePickups(dt, time) {
     if (d2(p.x, p.z, camera.position.x, camera.position.z) > 200 * 200) continue;
     _e.set(0, p.t * 2, p.type === 'tape' ? 0 : 0); _q.setFromEuler(_e);
     _m4.compose(_v3.set(p.x, p.y + 0.8 + Math.sin(p.t * 3) * 0.15, p.z), _q, _s3.set(1, 1, 1));
+    if (counts[kind] >= M_.instanceMatrix.count) continue;
     M_.setMatrixAt(counts[kind]++, _m4);
     if (gn < 120) { _m4.compose(_v3.set(p.x, p.y + 0.05, p.z), _q.identity(), _s3.set(1, 1, 1)); pickupMeshes.glow.setMatrixAt(gn++, _m4); }
   }
@@ -3207,7 +3208,7 @@ function collectPickup(p) {
     case 'ammo': { const w = player.owned.rifle ? 'rifle' : player.owned.smg ? 'smg' : 'pistol'; player.ammo[w] += p.amount * (w === 'pistol' ? 1 : 2); hud.toast(`+ munições (${WMAP[w].name.toLowerCase()})`); sfx.pickup(); return true; }
     case 'weapon': player.owned[p.weapon] = true; player.ammo[p.weapon] += p.amount; player.wIdx = WEAPONS.findIndex((w) => w.id === p.weapon); hud.toast(`Apanhaste: ${WMAP[p.weapon].name}`); sfx.pickup(); return true;
     case 'tape': collectTape(p); return true;
-    case 'loot': addMoney(p.amount); sfx.cash(); hud.toast(`${rpick(['Jóias', 'Relógio', 'Portátil', 'Dinheiro escondido', 'Consola', 'Talheres de prata', 'Perfume caro'])}: +${fmtMoney(p.amount)}`); return true;
+    case 'loot': if (inside.I && inside.I.kind === 'house' && !inside.called) { inside.called = true; addWanted(2, 'house', true); hud.toast('Alarme da casa ativado!'); } addMoney(p.amount); sfx.cash(); hud.toast(`${rpick(['Jóias', 'Relógio', 'Portátil', 'Dinheiro escondido', 'Consola', 'Talheres de prata', 'Perfume caro'])}: +${fmtMoney(p.amount)}`); return true;
   }
   return false;
 }
@@ -3517,6 +3518,9 @@ function policeSeesPlayer() {
   return false;
 }
 function updateWanted(dt) {
+  // Os interiores existem fora do mapa principal. Não expirar a procura
+  // nem gerar viaturas a partir dessas coordenadas artificiais.
+  if (inside.I) { wanted.evading = false; wanted.seenT = 0; wanted.arrestT = 0; return; }
   if (wanted.level === 0) { wanted.evading = false; wanted.arrestT = 0; }
   else {
     wanted.checkT -= dt;
@@ -3704,6 +3708,8 @@ function gangCarAI(car, dt) {
 let streamT = 0;
 function updateStreaming(dt) {
   streamT -= dt; if (streamT > 0) return; streamT = 0.4;
+  // Não descarregar a cidade quando a personagem entra num interior remoto.
+  if (inside.I) return;
   const px = camFocus.x, pz = camFocus.z;
   // remove carros distantes
   for (let i = cars.length - 1; i >= 0; i--) {
@@ -3827,7 +3833,9 @@ function saveGame() {
 function loadGame() {
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (!s) return false;
-    player.money = s.money ?? player.money; progress.done = s.done || []; progress.tapes = s.tapes || []; progress.jumps = s.jumps || []; progress.props = s.props || [];
+    if (Number.isFinite(s.money) && s.money >= 0) player.money = s.money;
+    if (Number.isFinite(s.hour)) world.hour = ((s.hour % 24) + 24) % 24;
+    progress.done = Array.isArray(s.done) ? [...new Set(s.done)] : []; progress.tapes = Array.isArray(s.tapes) ? [...new Set(s.tapes)] : []; progress.jumps = Array.isArray(s.jumps) ? [...new Set(s.jumps)] : []; progress.props = Array.isArray(s.props) ? [...new Set(s.props)] : [];
     Object.assign(player.owned, s.owned || {}); Object.assign(player.ammo, s.ammo || {}); Object.assign(player.stats, s.stats || {}); if (s.home) progress.home = Object.assign({ safe: 0, maxHp: 100, outfit: 0, trainT: -1e9, showerT: -1e9 }, s.home, { trainT: -1e9, showerT: -1e9 });
     return true;
   } catch (e) { return false; }
@@ -3918,7 +3926,8 @@ function initCollectibles() {
   spawnPickup('armor', b(2, 6).cx - 6, b(2, 6).cz, 0, { respawnTime: 90 });
 }
 function collectTape(p) {
-  if (!progress.tapes.includes(p.tapeId)) progress.tapes.push(p.tapeId);
+  if (progress.tapes.includes(p.tapeId)) return;
+  progress.tapes.push(p.tapeId);
   addMoney(1000); sfx.mission();
   hud.banner('FITA ESCARLATE', `${progress.tapes.length} de ${TAPE_TOTAL} · +${fmtMoney(1000)}`, 2.6, '#ff5a2e');
   if (progress.tapes.length === TAPE_TOTAL) { addMoney(25000); hud.toast('Colecção completa! Bónus de 25 000 €'); }
@@ -4216,7 +4225,7 @@ function openMenu(title, items) {
   const box = $('shop-items'); box.innerHTML = '';
   items.forEach((it, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'item'; b.id = 'shop-' + i;
-    const ok = it.price === undefined || (player.money >= it.price && (!it.can || it.can()));
+    const ok = (it.price === undefined || player.money >= it.price) && (!it.can || it.can());
     if (!ok) b.classList.add('no');
     b.innerHTML = `<kbd>${i + 1}</kbd><span>${it.name}<small>${it.desc || ''}</small></span><span class="price">${it.price === undefined ? (it.tag || '') : fmtMoney(it.price)}</span>`;
     b.addEventListener('click', () => menuChoose(i));
@@ -4251,7 +4260,7 @@ function propMenu(p) {
 
 // ---------- assaltos ----------
 function startRob(kind, spot, id) {
-  if (ms.progress !== null && ms.progress !== undefined) return;
+  if (act.rob || ms.active || (ms.progress !== null && ms.progress !== undefined)) return;
   if (kind === 'store' && WEAPONS[player.wIdx].melee) { if (act.menuCD <= 0) { hud.toast('Precisas de uma arma na mão para assaltar a loja.'); act.menuCD = 3; } return; }
   act.rob = { kind, x: spot.x, z: spot.z, id, p: 0, called: false, time: kind === 'store' ? 6 : 8 };
   $('progress').hidden = false;
@@ -4283,6 +4292,7 @@ function endRob(ok, msg) {
   const items = ['jóias', 'um portátil', 'um relógio', 'dinheiro escondido no colchão', 'uma consola', 'talheres de prata', 'uma coleção de discos'];
   hud.banner(r.kind === 'store' ? 'LOJA ASSALTADA' : 'CASA ASSALTADA', `${r.kind === 'store' ? 'caixa registadora' : rpick(items)} · +${fmtMoney(loot)}`, 3, '#b06cff');
   if (r.kind === 'house' && Math.random() < 0.25) { player.ammo.pistol += 24; hud.toast('Também encontraste munições.'); }
+  saveGame();
 }
 
 // ---------- táxi ----------
@@ -4358,7 +4368,7 @@ function updateWeather(dt) {
 function updateActivities(dt) {
   act.menuCD -= dt;
   updateWeather(dt);
-  if (game.state !== 'play') { if (act.rob) endRob(false); return; }
+  if (game.state !== 'play') { if (act.rob) endRob(false); if (act.taxi) { act.taxi = null; hud.objective(''); } return; }
   // rendimento diário às 08:00
   if (act.lastHour < 8 && world.hour >= 8 && progress.props.length) {
     const inc = PROPS.filter((p) => progress.props.includes(p.id)).reduce((a, p) => a + p.income, 0);
@@ -4541,6 +4551,8 @@ function initInteriors() {
 }
 function enterInterior(I, backX, backZ, opts = {}) {
   hud.fade(); sfx.thud(0.3);
+  if (!I || inside.I) return;
+  act.menuCD = Math.max(act.menuCD, 3);
   inside.I = I; inside.back = { x: backX, z: backZ }; inside.called = false; inside.houseId = opts.houseId || null; inside.storeId = opts.storeId || null; inside.cd = 1.5;
   player.x = I.spawn.x; player.z = I.spawn.z; player.y = 0.1; player.vx = player.vz = 0; player.yaw = 0;
   cam.yaw = 0; cam.pitch = 0.35; cam.inited = false;
@@ -4559,26 +4571,30 @@ function enterInterior(I, backX, backZ, opts = {}) {
 }
 function exitInterior() {
   const b = inside.back, I = inside.I;
+  if (!I || !b) return;
   hud.fade(); sfx.thud(0.3);
   if (inside.staff) { const i = peds.indexOf(inside.staff); if (i >= 0) peds.splice(i, 1); inside.staff = null; }
   if (I.kind === 'house') {
     const left = inside.loot.filter((p) => pickups.includes(p));
     left.forEach((p) => pickups.splice(pickups.indexOf(p), 1));
     const got = inside.loot.length - left.length;
-    if (got > 0) { act.cooldown[inside.houseId] = game.time + 600; player.stats.robs = (player.stats.robs || 0) + 1; hud.banner('CASA ASSALTADA', `${got} objetos de valor`, 2.5, '#b06cff'); saveGame(); }
+    if (got > 0) { addWanted(2, 'house', true); wanted.seenT = 0; wanted.spawnT = 0; act.cooldown[inside.houseId] = game.time + 600; player.stats.robs = (player.stats.robs || 0) + 1; hud.banner('CASA ASSALTADA', `${got} objetos de valor`, 2.5, '#b06cff'); saveGame(); }
     inside.loot = [];
   }
   if (act.rob) endRob(false);
   intLight.intensity = 0; leaveMansion();
-  inside.I = null;
+  inside.I = null; inside.back = null; inside.houseId = null; inside.storeId = null;
+  hud.objective('');
   player.x = b.x; player.z = b.z; player.y = groundH(b.x, b.z); cam.inited = false; act.menuCD = 2.5;
+  if (wanted.level > 0) { wanted.seenT = 0; wanted.spawnT = 0; wanted.checkT = 0; }
 }
 function updateInterior(dt) {
   const I = inside.I; if (!I) return;
   if (d2(player.x, player.z, I.ox, I.oz) > 60 * 60) { // saiu por outro meio: limpa o estado
     if (inside.staff) { const i = peds.indexOf(inside.staff); if (i >= 0) peds.splice(i, 1); inside.staff = null; }
     inside.loot.forEach((p) => { const i = pickups.indexOf(p); if (i >= 0) pickups.splice(i, 1); }); inside.loot = [];
-    intLight.intensity = 0; leaveMansion(); inside.I = null; return;
+    if (act.rob) endRob(false);
+    intLight.intensity = 0; leaveMansion(); inside.I = null; inside.back = null; inside.houseId = null; inside.storeId = null; hud.objective(''); return;
   }
   inside.cd -= dt;
   if (player.car) exitCar(true);
@@ -5749,6 +5765,7 @@ function respawn(kind) {
     for (let i = cars.length - 1; i >= 0; i--) if (cars[i].police && cars[i].ai && cars[i].ai.type === 'police') cars.splice(i, 1);
     for (let i = peds.length - 1; i >= 0; i--) if (peds[i].kind === 'cop' || peds[i].kind === 'gang') peds.splice(i, 1);
     if (heli && !heli.gone) heli.destroy();
+    if (inside.I) { if (act.rob) endRob(false); if (inside.staff) { const i = peds.indexOf(inside.staff); if (i >= 0) peds.splice(i, 1); } inside.loot.forEach(p => { const i = pickups.indexOf(p); if (i >= 0) pickups.splice(i, 1); }); inside.loot = []; inside.staff = null; inside.I = null; inside.back = null; inside.houseId = null; inside.storeId = null; intLight.intensity = 0; leaveMansion(); hud.objective(''); }
     setWanted(0); wanted.seenT = 0; wanted.arrestT = 0;
     if (player.car) exitCar(true);
     const s = kind === 'busted' ? SPOT.police : SPOT.hospital;
@@ -6140,7 +6157,7 @@ async function bootInner() {
   initTrafficLights(); initInteriors(); initCockpit(); initExtras(); initRings(); initDebris();
   buildMapCanvas(); initCollectibles(); initActivities(); initTouch(); initNetMe();
   if (settings.hq) setupComposer();
-  world.hour = 17.6;
+  act.lastHour = world.hour;
   game.state = 'title';
   populateInitial();
   /* prepara os gráficos de todos os objetos já no carregamento (antes o início travava e as coisas apareciam do nada enquanto os shaders eram preparados) */
