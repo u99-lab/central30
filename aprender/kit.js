@@ -67,7 +67,7 @@ try {
     document.title = title + ' · Aprende+';
     const best = key ? K.el('span', { class: 'best', id: 'kbest' }) : null;
     const head = K.el('header', { class: 'kh' },
-      K.el('a', { class: 'back', href: K.backHref() }, '← Aprende+'),
+      K.el('a', { class: 'back', href: K.backHref(), 'aria-label': 'Voltar ao Aprende+' }, 'Aprende+'),
       K.el('div', { class: 'kt' }, K.el('span', { class: 'chip s-' + subject }, SUBJ[subject] || subject), K.el('h1', {}, (emoji ? emoji + ' ' : '') + title)),
       best);
     const main = K.el('main', { class: 'km' });
