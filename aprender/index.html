@@ -79,7 +79,7 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:v
     <a class="sg" href="../max/" style="--sg:var(--max);--sgi:#1b1550"><span class="sg-i" aria-hidden="true">MAX</span><span><b>Central 30 MAX</b><span>41 jogos 3D no browser: ainda mais para jogar.</span></span><i aria-hidden="true">↗</i></a>
   </div>
 
-  <footer><span>Aprende+ · dados geográficos: CAOP, Direção-Geral do Território (CC BY 4.0)</span><span id="mem"></span></footer>
+  <footer><span>Aprende+ · dados geográficos: CAOP, Direção-Geral do Território (CC BY 4.0)</span></footer>
 </div>
 <script src="catalogo.js"></script>
 <script>
@@ -105,10 +105,7 @@ try {
 } catch {}
 
 try { C30Aprender.render(document.getElementById('lcGrid'), document.getElementById('lcChips'), '../', ''); } catch (e) {}
-try {
-  const keep = !!JSON.parse(localStorage.getItem('c30.settings') || '{}').keepProgress;
-  document.getElementById('mem').textContent = keep ? 'Os teus resultados ficam guardados (Definições da Central: Guardar dados = Sim).' : 'Os resultados só contam nesta visita (Definições da Central: Guardar dados = Não).';
-} catch (e) {}
+
 </script>
 </body>
 </html>
