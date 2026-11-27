@@ -5811,6 +5811,7 @@ function tryEnterCar() {
     sfx.thud(0.5);
   }
   player.car = c; c.driver = 'player'; c.ai = null; c.parked = false; c.siren = false; c.stunT = 0;
+  cam.inited = false; cam.cine = null; cam.yaw = c.yaw; cam.autoT = 0;
   player.lastCar = c; player.carT = game.time; player.aiming = false; player.vx = player.vz = 0;
   player.stats.cars++;
   const st = sfx.radioNames[sfx.radioIdx];
@@ -5819,6 +5820,7 @@ function tryEnterCar() {
 function exitCar(force) {
   const c = player.car; if (!c) return;
   c.boost = false;
+  cam.inited = false; cam.cine = null; cam.autoT = 0;
   player.car = null; c.driver = null; c.inp.thr = 0; c.inp.steer = 0; c.inp.hb = true;
   const lx = Math.cos(c.yaw), lz = -Math.sin(c.yaw);
   player.x = c.x + lx * (c.t.W / 2 + 0.75); player.z = c.z + lz * (c.t.W / 2 + 0.75); player.y = c.y; player.yaw = c.yaw;
@@ -5929,6 +5931,13 @@ function updateCamera(dt) {
   cam.autoT -= dt;
   let tx, ty, tz, dist, shoulder = 0, fov = 62;
   const c = player.car;
+  const target = c || player;
+  const changedTarget = cam.target !== target || cam.lastMode !== cam.mode;
+  const jump = cam.target === target && Number.isFinite(cam.targetX) && Math.hypot(target.x - cam.targetX, target.y - cam.targetY, target.z - cam.targetZ) > 25;
+  if (changedTarget || jump) { cam.inited = false; cam.cine = null; cam.fpLook = 0; cam.fpRoll = 0; if (c) { cam.yaw = c.yaw; cam.pitch = 0.17; cam.autoT = 0; } }
+  // Transporta a câmara com o veículo a cada frame; suaviza apenas a órbita.
+  if (c && cam.inited && Number.isFinite(cam.targetX)) { cam.x += c.x - cam.targetX; cam.y += c.y - cam.targetY; cam.z += c.z - cam.targetZ; }
+  cam.target = target; cam.targetX = target.x; cam.targetY = target.y; cam.targetZ = target.z; cam.lastMode = cam.mode;
   if (game.state === 'title') {
     const t = performance.now() * 0.00004;
     const cx = HALF - 30 + Math.cos(t) * 150, cz = Math.sin(t) * 190;
@@ -5942,7 +5951,7 @@ function updateCamera(dt) {
     tx = c.x; ty = c.y + c.t.H + 0.9; tz = c.z;
     dist = c.t.plane ? 17 + c.fspeed * 0.05 : c.t.moto ? 5.6 + c.speed * 0.04 : c.t.L * 1.15 + 3.6 + c.speed * 0.04;
     if (c.t.moto) ty = c.y + 2.0;
-    if (cam.autoT <= 0 && c.speed > 2) {
+    if (cam.autoT <= 0) {
       const fwd = c.fwdSpeed(); const behind = fwd < -4 ? c.yaw + Math.PI : c.yaw;
       cam.yaw = dampAngle(cam.yaw, behind, c.t.plane ? 3.5 : 2.6, dt); cam.pitch = damp(cam.pitch, c.t.plane ? 0.12 + c.pitch * 0.85 : 0.17, c.t.plane ? 3 : 2, dt);
     }
@@ -5972,9 +5981,11 @@ function updateCamera(dt) {
   // Se uma parede aproximar demasiado a câmara, sobe acima do tejadilho.
   if (c && Math.hypot(cx - c.x, cz - c.z) < c.t.L * 0.6) cy = Math.max(cy, c.y + c.t.H + 2.2);
   cy = Math.max(cy, groundH(cx, cz) + 0.35);
-  if (!cam.inited) { cam.x = cx; cam.y = cy; cam.z = cz; cam.inited = true; }
+  if (!cam.inited || !Number.isFinite(cam.x + cam.y + cam.z) || Math.hypot(cam.x - cx, cam.y - cy, cam.z - cz) > Math.max(12, dist * 1.5)) { cam.x = cx; cam.y = cy; cam.z = cz; cam.dist = dist; cam.inited = true; }
   const k = c ? 14 : 30;
   cam.x = damp(cam.x, cx, k, dt); cam.y = damp(cam.y, cy, k, dt); cam.z = damp(cam.z, cz, k, dt);
+  // A posição suavizada também tem de respeitar obstáculos, não apenas o destino.
+  if (c) { const ax = cam.x - px, ay = cam.y - py, az = cam.z - pz, al = Math.hypot(ax, ay, az); if (al > 0.01) { const hit = rayStatic(px, py, pz, ax / al, ay / al, az / al, al); if (hit < al) { cam.x = cx; cam.y = cy; cam.z = cz; } } }
   const sh = cam.shake * cam.shake * 0.5;
   camera.position.set(cam.x + rnd(-sh, sh), cam.y + rnd(-sh, sh), cam.z + rnd(-sh, sh));
   // Nas câmaras exteriores, aponta para o veículo, não para longe dele.
@@ -6013,8 +6024,13 @@ function updateCamera(dt) {
       cam.cine = { x: px, z: pz, y: groundH(px, pz) + rnd(1.2, c ? 6 : 3), t: 0 };
     }
     cam.cine.t += dt;
-    camera.position.set(cam.cine.x, cam.cine.y, cam.cine.z);
-    camera.lookAt(tgt.x, tgt.y + 1.1, tgt.z);
+    // Plano de cinema móvel: conserva o enquadramento relativo ao veículo.
+    if (Number.isFinite(cam.cine.tx)) { cam.cine.x += tgt.x - cam.cine.tx; cam.cine.y += tgt.y - cam.cine.ty; cam.cine.z += tgt.z - cam.cine.tz; }
+    cam.cine.tx = tgt.x; cam.cine.ty = tgt.y; cam.cine.tz = tgt.z;
+    const aimY = tgt.y + (c ? c.t.H * 0.65 : 1.1);
+    const dx = cam.cine.x - tgt.x, dy = cam.cine.y - aimY, dz = cam.cine.z - tgt.z, len = Math.hypot(dx, dy, dz);
+    if (len > 0.01 && rayStatic(tgt.x, aimY, tgt.z, dx / len, dy / len, dz / len, len) >= len - 0.2) { camera.position.set(cam.cine.x, cam.cine.y, cam.cine.z); } else { camera.position.set(cam.x, cam.y, cam.z); }
+    camera.lookAt(tgt.x, aimY, tgt.z);
     camera.fov = 42; camera.updateProjectionMatrix();
   }
 }
@@ -6031,7 +6047,7 @@ function update(dt, rdt) {
     if (consume('KeyE')) nextWeapon(1);
     for (let i = 1; i <= 5; i++) if (consume('Digit' + i)) { if (player.owned[WEAPONS[i - 1].id]) player.wIdx = i - 1; }
     if (consume('KeyR') && player.car) sfx.radioNext();
-    if (consume('KeyV') || consume('KeyC')) { cam.mode = (cam.mode + 1) % CAM_NAMES.length; cam.cine = null; hud.toast(CAM_NAMES[cam.mode], 1.5); }
+    if (consume('KeyV') || consume('KeyC')) { cam.mode = (cam.mode + 1) % CAM_NAMES.length; cam.cine = null; cam.inited = false; hud.toast(CAM_NAMES[cam.mode], 1.5); }
     if (consume('KeyF') || consume('Enter')) { if (mansionTryUse()) {} else if (player.car) exitCar(); else tryEnterCar(); }
     if (player.car) controlCar(dt); else controlFoot(dt);
   } else { player.wantSpeed = 0; player.aiming = false; }
