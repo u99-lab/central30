@@ -15,7 +15,7 @@ try {
   }
 } catch {}
 try {
-  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+  if (window.__C30_DID_RESET) for (let i = sessionStorage.length - 1; i >= 0; i--) {
     const k = sessionStorage.key(i);
     if (k && k.startsWith('c30aprender_')) sessionStorage.removeItem(k);
   }
@@ -53,11 +53,10 @@ try {
      Sim → os melhores resultados ficam guardados; Não → só duram enquanto a página estiver aberta. */
   const store = (k) => 'c30aprender_' + k;
   K.keep = () => { try { return !!JSON.parse(localStorage.getItem('c30.settings') || '{}').keepProgress; } catch (e) { return false; } };
-  const box = () => { try { return K.keep() ? localStorage : sessionStorage; } catch (e) { return null; } };
-  try { if (!K.keep()) Object.keys(localStorage).filter((x) => x.startsWith('c30aprender_')).forEach((x) => localStorage.removeItem(x)); } catch (e) {}
+  const volatileBest = new Map();
   K.best = {
-    get(k) { try { return +box().getItem(store(k)) || 0; } catch (e) { return 0; } },
-    set(k, v) { try { if (v > K.best.get(k)) box().setItem(store(k), v); } catch (e) {} },
+    get(k) { let saved=0; try { if(K.keep()) saved=Number(localStorage.getItem(store(k)))||0; } catch(e) {} return Math.max(0,saved,volatileBest.get(k)||0); },
+    set(k, v) { v=Number(v); if(!Number.isFinite(v)||v<0||v<=K.best.get(k))return; volatileBest.set(k,v); try { if(K.keep()) localStorage.setItem(store(k),String(v)); } catch(e) {} },
   };
 
   /* regressa à página inicial do Aprende+ */
@@ -85,7 +84,7 @@ try {
 
   K.result = (root, { score, total, key, again, note, unit }) => {
     if (key) K.best.set(key, score); K.showBest && K.showBest();
-    const r = total ? score / total : 0;
+    const r = total > 0 ? score / total : unit === 'pontos' ? score / 100 : 0;
     const stars = r >= 0.9 ? 3 : r >= 0.6 ? 2 : r >= 0.3 ? 1 : 0;
     const msg = r >= 0.9 ? 'Excelente! Dominas este tema.' : r >= 0.6 ? 'Muito bem! Mais uma ronda e chegas lá.' : r >= 0.3 ? 'Bom começo. Tenta outra vez.' : 'Continua a praticar, vais melhorar.';
     root.innerHTML = '';
@@ -107,12 +106,12 @@ try {
     let qs, i, score, done;
     const start = () => {
       qs = gen ? Array.from({ length: n }, (_, j) => gen(j)) : K.pick(questions, Math.min(n, questions.length));
-      i = 0; score = 0; show();
+      i = 0; score = 0; if(!qs.length){root.textContent='Ainda não há perguntas disponíveis.';return;} show();
     };
     const show = () => {
       done = false;
       const q = qs[i];
-      const opts = q.keep ? q.o.slice() : K.shuffle(q.o);
+      const choices = [...new Map(q.o.map(o=>[String(o),o])).values()]; if(!choices.some(o=>String(o)===String(q.a)))choices.push(q.a); const opts = q.keep ? choices : K.shuffle(choices);
       root.innerHTML = '';
       const card = K.el('div', { class: 'card' });
       card.append(K.el('div', { class: 'prog' }, K.el('span', {}, (i + 1) + '/' + qs.length), K.el('div', { class: 'bar' }, K.el('i', { style: 'width:' + (i / qs.length) * 100 + '%' })), K.el('span', {}, '✔ ' + score)));
@@ -141,7 +140,7 @@ try {
     };
     root._keys && removeEventListener('keydown', root._keys);
     root._keys = (e) => {
-      if (!root.isConnected || e.target.matches('input,select,textarea')) return;
+      if (!root.isConnected || e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.target?.matches?.('input,select,textarea,[contenteditable=true]')) return;
       const n = +e.key; if (n >= 1 && n <= 9) { const b = root.querySelectorAll('.opt')[n - 1]; if (b && !b.disabled) b.click(); }
     };
     addEventListener('keydown', root._keys);
@@ -150,8 +149,8 @@ try {
 
   /* Ordenar: items [{t, s (subtítulo depois de verificar), v (valor para ordenar)}] */
   K.order = (root, { key, prompt, items, n = 6, hint }) => {
-    let cur, sel, checked;
-    const start = () => { cur = K.shuffle(K.pick(items, Math.min(n, items.length))); sel = -1; checked = false; draw(); };
+    let cur, sel, checked, earned, revealed;
+    const start = () => { cur = K.shuffle(K.pick(items, Math.min(n, items.length))); sel = -1; checked = false; earned=0; revealed=false; draw(); };
     const swap = (a, b) => { if (b < 0 || b >= cur.length) return; [cur[a], cur[b]] = [cur[b], cur[a]]; sel = -1; draw(); };
     const draw = () => {
       root.innerHTML = '';
@@ -161,7 +160,7 @@ try {
       const sorted = cur.slice().sort((a, b) => a.v - b.v);
       const ol = K.el('ol', { class: 'olist' });
       cur.forEach((it, j) => {
-        const st = checked ? (sorted[j] === it ? ' ok' : ' no') : sel === j ? ' sel' : '';
+        const st = checked ? (sorted[j].v === it.v ? ' ok' : ' no') : sel === j ? ' sel' : '';
         ol.append(K.el('li', { class: 'oitem' + st },
           K.el('span', { class: 'pos' }, String(j + 1)),
           K.el('span', { class: 'lab', role: 'button', tabindex: checked ? -1 : 0, 'aria-pressed': sel === j ? 'true' : 'false',
@@ -174,13 +173,12 @@ try {
       });
       card.append(ol);
       const row = K.el('div', { class: 'row', style: 'margin-top:16px' });
-      if (!checked) row.append(K.el('button', { class: 'btn primary', onclick: () => { checked = true; draw(); } }, 'Verificar'), K.el('span', { class: 'muted' }, 'Toca em dois para trocar, ou usa ↑ ↓.'));
+      if (!checked) row.append(K.el('button', { class: 'btn primary', onclick: () => { if(checked)return; earned=cur.filter((it,j)=>sorted[j].v===it.v).length; checked=true; if(key)K.best.set(key,earned); K.showBest&&K.showBest(); draw(); } }, 'Verificar'), K.el('span', { class: 'muted' }, 'Toca em dois para trocar, ou usa ↑ ↓.'));
       else {
-        const sc = cur.filter((it, j) => sorted[j] === it).length;
-        if (key) K.best.set(key, sc); K.showBest && K.showBest();
-        row.append(K.el('b', {}, sc === cur.length ? '🎉 Tudo certo! ' : sc + ' de ' + cur.length + ' no lugar certo. '),
+        const sc = earned;
+        row.append(K.el('b', {}, revealed ? 'Solução · resultado: '+sc+' de '+cur.length+' ' : sc === cur.length ? '🎉 Tudo certo! ' : sc + ' de ' + cur.length + ' no lugar certo. '),
           K.el('button', { class: 'btn primary', onclick: start }, 'Nova ronda'));
-        if (sc < cur.length) row.append(K.el('button', { class: 'btn', onclick: () => { cur = sorted.slice(); draw(); } }, 'Ver a ordem certa'));
+        if (sc < cur.length && !revealed) row.append(K.el('button', { class: 'btn', onclick: () => { cur = sorted.slice(); revealed=true; draw(); } }, 'Ver a ordem certa'));
       }
       card.append(row);
       root.append(card);
