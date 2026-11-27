@@ -80,7 +80,7 @@
   window.C30Aprender = {
     list: A, subjects: S, count: A.length,
     render(grid, chips, base, suffix) {
-      base = base || ''; suffix = suffix || '';
+      if(!grid)return; base = base || ''; suffix = suffix || '';
       if (!document.getElementById('c30lcCss')) { const st = document.createElement('style'); st.id = 'c30lcCss'; st.textContent = css; document.head.append(st); }
       let f = 'all';
       const draw = () => {
