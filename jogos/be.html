@@ -4884,7 +4884,8 @@ function updateCockpit() {
   const c = player.car;
   const on = c && cam.mode === 3 && game.state === 'play' && !c.t.moto && !c.t.plane && !c.dead;
   cockpit.g.visible = !!on;
-  if (c) c.hideBody = !!on;
+  // Mantém a carroçaria visível também na câmara interior; o cockpit continua ativo.
+  if (c) c.hideBody = false;
   if (!on) return;
   const k = cockpit, t = c.t, base = t.r * 0.55, ct = base + t.H * 0.42, fwd = t.L * (t.cab ? t.cab[1] : 0) + 0.15, h = ct + 0.55, sx = 0.38;
   const W = t.W;
