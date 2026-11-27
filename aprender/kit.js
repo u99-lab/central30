@@ -1,5 +1,26 @@
 /* Central 30 · Aprender — motor comum: cabeçalho, perguntas, ordenar, memória e resultado. */
 (function () {
+try {
+  const RESET = '2026-11-27-reset1';
+  if (localStorage.getItem('c30.reset') !== RESET) {
+    const keep = new Set(['c30.reset','c30.settings','c30.ipadFix','c30.pass','c30.pass2','c30.passN','c30.trialN','c30.gateV','c30max.gateV']);
+    const del = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('c30.') || k.startsWith('c30aprender_') || k.startsWith('craques3d.') || /^(vfig|patrao|jdc)\\./.test(k) || k === 'central30.aviso') && !keep.has(k) && !k.startsWith('c30.gpass.')) del.push(k);
+    }
+    del.forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('c30.reset', RESET);
+    window.__C30_DID_RESET = true;
+  }
+} catch {}
+try {
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const k = sessionStorage.key(i);
+    if (k && k.startsWith('c30aprender_')) sessionStorage.removeItem(k);
+  }
+} catch {}
+
   const K = (window.K = {});
   const SUBJ = { geo: 'Geografia', his: 'História', cie: 'Ciências', mat: 'Matemática', lin: 'Línguas' };
 
