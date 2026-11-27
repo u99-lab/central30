@@ -333,9 +333,9 @@ const fmtMoney = (v) => Math.floor(v).toLocaleString('pt-PT') + ' €';
 // ---------- renderer ----------
 // níveis de qualidade, do mais pesado para o mais leve
 const QUALITY = {
-  ultra: { name: 'Ultra', pr: 2, shadows: true, smap: 4096, bloom: true, desc: 'PC potente com placa gráfica' },
-  alta: { name: 'Alta', pr: 1.5, shadows: true, smap: 2048, bloom: true, desc: 'PC normal' },
-  media: { name: 'Média', pr: 1.15, shadows: true, smap: 1024, bloom: false, desc: 'Portátil ou telemóvel bom' },
+  ultra: { name: 'Ultra', pr: 1.5, shadows: true, smap: 2048, bloom: true, desc: 'PC potente com placa gráfica' },
+  alta: { name: 'Alta', pr: 1.25, shadows: true, smap: 1024, bloom: true, desc: 'PC normal' },
+  media: { name: 'Média', pr: 1.1, shadows: true, smap: 768, bloom: false, desc: 'Portátil ou telemóvel bom' },
   baixa: { name: 'Baixa', pr: 1, shadows: false, smap: 512, bloom: false, desc: 'Telemóvel ou PC fraco' },
 };
 const settings = { q: isTouch ? 'media' : 'alta', volume: 0.7, sens: 1 };
@@ -1823,9 +1823,9 @@ function buildWorld() {
     for (const style of ['office', 'apt', 'glass']) {
       if (!c.wall[style].p.length) continue;
       const mesh = new THREE.Mesh(c.wall[style].build(), wallMats[style]);
-      mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+      mesh.castShadow = false; mesh.receiveShadow = true; scene.add(mesh);
     }
-    if (c.roof.p.length) { const mesh = new THREE.Mesh(c.roof.build(), roofMat); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); }
+    if (c.roof.p.length) { const mesh = new THREE.Mesh(c.roof.build(), roofMat); mesh.castShadow = false; mesh.receiveShadow = true; scene.add(mesh); }
   }
   {
     const nm = new THREE.MeshBasicMaterial({ vertexColors: true, color: new THREE.Color(1, 1, 1) });
