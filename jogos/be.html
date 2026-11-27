@@ -253,7 +253,7 @@ body.touch #stars { font-size: 22px; height: 24px; }
     <div class="stats" id="stats"></div>
     <label class="opt" for="vol">Volume <input type="range" id="vol" min="0" max="100" value="70"></label>
     <label class="opt" for="sens">Sensibilidade do rato <input type="range" id="sens" min="20" max="200" value="100"></label>
-    <fieldset class="qual" id="qual"><legend>Qualidade gráfica <small>(da mais pesada para a mais leve · o jogo recarrega para aplicar)</small></legend>
+    <fieldset class="qual" id="qual"><legend>Qualidade gráfica <small>(da mais pesada para a mais leve · muda na hora)</small></legend>
       <label for="q-ultra"><input type="radio" name="q" id="q-ultra" value="ultra"><b>Ultra</b><span>Máximo: ecrã nítido 2×, sombras 4096, brilho · PC potente</span></label>
       <label for="q-alta"><input type="radio" name="q" id="q-alta" value="alta"><b>Alta</b><span>Sombras 2048, brilho · PC normal</span></label>
       <label for="q-media"><input type="radio" name="q" id="q-media" value="media"><b>Média</b><span>Sombras 1024, sem brilho · portátil / telemóvel bom</span></label>
@@ -2566,10 +2566,22 @@ function respawnFromWater(car) {
     hud.toast('O carro foi rebocado do mar e posto na marginal.');
   }, 650);
 }
+function stuckInBuilding(car) {
+  // se o centro do veículo ficou dentro de um prédio (bloco sólido), devolve-o à estrada mais próxima
+  if (car.t.plane || car.y > 3 || car.x > 2500) return;
+  const r = pushCircle(car.x, car.z, 0.2, car.y + 0.4);
+  if (!r.hit || Math.hypot(r.x - car.x, r.z - car.z) < 0.6) return;
+  const inCity = Math.abs(car.x) < HALF + 40 && Math.abs(car.z) < HALF + 40;
+  if (!inCity) return;
+  const rx = roadC(Math.round((car.x + HALF) / CELL)), rz = roadC(Math.round((car.z + HALF) / CELL));
+  if (Math.abs(rx - car.x) < Math.abs(rz - car.z)) car.x = rx + 2.5; else car.z = rz + 2.5;
+  car.vx *= 0.2; car.vz *= 0.2;
+}
 function updateCars(dt) {
   for (const car of cars) {
     car.physics(dt);
     carStatic(car);
+    if (!car.driver || car.driver === 'player') { car.stuckT = (car.stuckT || 0) + dt; if (car.stuckT > 0.5) { car.stuckT = 0; stuckInBuilding(car); } }
     if (!car.t.plane || !car.air) {
       const dep = waterDepth(car.x, car.z, car.y);
       if (dep > 0.25) {
@@ -2850,11 +2862,18 @@ function pedCarCollisions() {
     const test = (p) => {
       if (p.inCar || Math.abs(p.x - car.x) > 4.5 || Math.abs(p.z - car.z) > 4.5) return;
       if (p.y > car.y + car.t.H + 0.3 || p.y + 1.6 < car.y) return;
-      for (const off of car.circ) {
-        const cx = car.x + sy * off, cz = car.z + cy * off;
-        let dx = p.x - cx, dz = p.z - cz; const dd = dx * dx + dz * dz, R = car.rad + 0.3;
-        if (dd >= R * R) continue;
-        const d = Math.sqrt(dd) || 0.01; dx /= d; dz /= d;
+      // caixa do carro (sem folgas entre círculos): coordenadas locais
+      const rx = p.x - car.x, rz = p.z - car.z;
+      const lx = rx * cy - rz * sy, lz = rx * sy + rz * cy; // lx: lado, lz: frente
+      const hw = (car.t.plane ? 1.1 : car.t.W / 2) + 0.3, hl = car.t.L / 2 + 0.3;
+      if (Math.abs(lx) < hw && Math.abs(lz) < hl) {
+        const px = hw - Math.abs(lx), pz = hl - Math.abs(lz);
+        let nlx = 0, nlz = 0, cx, cz;
+        if (px < pz) { nlx = Math.sign(lx) || 1; } else { nlz = Math.sign(lz) || 1; }
+        let dx = nlx * cy + nlz * sy, dz = -nlx * sy + nlz * cy;
+        const blx = nlx ? nlx * hw : lx, blz = nlz ? nlz * hl : lz;
+        cx = car.x + blx * cy + blz * sy; cz = car.z - blx * sy + blz * cy;
+        const R = 0;
         const vn = car.vx * dx + car.vz * dz;
         if (sp > 5 && vn > 3 && !p.down && p.flyT <= 0) {
           const dmg = p.kind === 'player' ? sp * 1.4 : sp * 3.4;
@@ -2864,7 +2883,7 @@ function pedCarCollisions() {
           if (car === player.car) { cam.shake = Math.max(cam.shake, 0.25); }
           sfx.thud(0.6, p.x, p.z);
         } else {
-          p.x = cx + dx * R; p.z = cz + dz * R;
+          p.x = cx; p.z = cz;
           if (p.down && sp > 2 && p.kind !== 'player' && car.driver === 'player') { p.damage(sp * 0.8, player); }
         }
         return;
@@ -3796,14 +3815,14 @@ const SAVE_KEY = 'baia-escarlate-save-v1';
 const progress = { done: [], tapes: [], jumps: [], props: [] };
 function saveGame() {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ money: player.money, done: progress.done, tapes: progress.tapes, jumps: progress.jumps, props: progress.props, owned: player.owned, ammo: player.ammo, stats: player.stats, hour: world.hour }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ money: player.money, done: progress.done, tapes: progress.tapes, jumps: progress.jumps, props: progress.props, owned: player.owned, ammo: player.ammo, stats: player.stats, hour: world.hour, home: progress.home }));
   } catch (e) {}
 }
 function loadGame() {
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (!s) return false;
     player.money = s.money ?? player.money; progress.done = s.done || []; progress.tapes = s.tapes || []; progress.jumps = s.jumps || []; progress.props = s.props || [];
-    Object.assign(player.owned, s.owned || {}); Object.assign(player.ammo, s.ammo || {}); Object.assign(player.stats, s.stats || {});
+    Object.assign(player.owned, s.owned || {}); Object.assign(player.ammo, s.ammo || {}); Object.assign(player.stats, s.stats || {}); if (s.home) progress.home = Object.assign({ safe: 0, maxHp: 100, outfit: 0, trainT: -1e9, showerT: -1e9 }, s.home, { trainT: -1e9, showerT: -1e9 });
     return true;
   } catch (e) { return false; }
 }
@@ -4340,7 +4359,7 @@ function updateActivities(dt) {
     addMoney(inc); hud.toast(`Rendimento das tuas propriedades: +${fmtMoney(inc)}`); saveGame();
   }
   act.lastHour = world.hour;
-  { // entrada e saída de cidades (com margem para não piscar)
+  if (!inside.I && player.x < 2500) { // entrada e saída de cidades (com margem para não piscar; não conta dentro de casas)
     const me = player.car || player;
     const inTown = (T, r) => Math.abs(me.x - T.cx) < r && Math.abs(me.z - T.cz) < r;
     const inCity = (r) => Math.abs(me.x) < HALF + r && Math.abs(me.z) < HALF + r;
@@ -4363,6 +4382,7 @@ function updateActivities(dt) {
   if (inside.I) { updateInterior(dt); updateRob(dt); return; }
   const out = (s) => ({ x: s.x, z: s.z + (s.z > roadC(nearestBlock(s.x, s.z).bj) + CELL / 2 ? -2.6 : 2.6) });
   const door = (s, r = 2) => onFoot && act.menuCD <= 0 && d2(px, pz, s.x, s.z) < r * r;
+  updateHomeDoor(px, pz, onFoot);
   for (const p of PROPS) { const s = p.at(); const own = progress.props.includes(p.id); if (d2(s.x, s.z, camFocus.x, camFocus.z) < 150 * 150) showMarker(s.x, s.z, own ? '#8dff9e' : '#ffffff', 1, 5); if (door(s, 2.2)) { act.menuCD = 3; if (own) { const o = out(s); enterInterior(INT[PROPS.indexOf(p)], o.x, o.z); } else propMenu(p); } }
   STORES.forEach((s0, k) => { const s = s0.at(); if (d2(s.x, s.z, camFocus.x, camFocus.z) < 120 * 120) showMarker(s.x, s.z, '#b06cff', 0.9, 4); if (door(s)) { const o = { x: s.x, z: s.z + 2.6 }; enterInterior(INT[3 + Math.min(k, 2)], o.x, o.z, { storeId: s0.id }); } });
   for (const gs of SPOT.gas || []) { if (d2(gs.x, gs.z, camFocus.x, camFocus.z) < 150 * 150) showMarker(gs.x, gs.z, '#ffd23f', 2.4, 4); const c = player.car; if (c && act.menuCD <= 0 && d2(c.x, c.z, gs.x, gs.z) < 6 * 6 && c.speed < 6) { act.menuCD = 6; if (player.money < 50) { hud.toast('A bomba custa 50 €. Não tens dinheiro.'); } else { addMoney(-50); c.health = Math.max(c.health, 100); player.nitro = 1; sfx.spray(); hud.toast('Depósito cheio: nitro carregado e carro reparado. −50 €'); } } }
@@ -4373,6 +4393,7 @@ function updateActivities(dt) {
   if (act.taxi) { const T = act.taxi; if (T.pass) showMarker(T.dx, T.dz, '#ffc21a', 2.4, 8); else showMarker(T.px, T.pz, '#ffc21a', 1.6, 6); }
 }
 function activityBlips(list) {
+  if (SPOT.home) list.push({ x: SPOT.home.x, z: SPOT.home.z, c: '#8dff9e', s: 'sq', l: 'C', size: 11 });
   for (const p of PROPS) { const s = p.at(); list.push({ x: s.x, z: s.z, c: progress.props.includes(p.id) ? '#8dff9e' : '#ffffff', s: 'sq', l: 'C', size: 9 }); }
   for (const s0 of STORES) { const s = s0.at(); list.push({ x: s.x, z: s.z, c: '#b06cff', s: 'sq', l: '$', size: 8 }); }
   { const s = BAR_DOOR(); list.push({ x: s.x, z: s.z, c: '#ffc847', s: 'sq', l: 'B', size: 8 }); }
@@ -4454,12 +4475,12 @@ function initInteriors() {
   const B = new GeoBuilder();
   intLight = new THREE.PointLight('#ffe0b5', 0, 34, 1.1); scene.add(intLight);
   const C = (c) => new THREE.Color(c);
-  const kinds = ['home', 'home', 'home', 'store', 'store', 'store', 'gunshop', 'bar', 'house'];
+  const kinds = ['home', 'home', 'home', 'store', 'store', 'store', 'gunshop', 'bar', 'house', 'mansion'];
   kinds.forEach((kind, k) => {
-    const ox = 5000 + k * 60, oz = 0, w = kind === 'store' || kind === 'bar' ? 18 : 20, d = 14, H = 4.2;
+    const big = kind === 'mansion', ox = 5000 + k * 60 + (big ? 20 : 0), oz = 0, w = big ? 34 : kind === 'store' || kind === 'bar' ? 18 : 20, d = big ? 24 : 14, H = 4.2;
     const x0 = ox - w / 2, x1 = ox + w / 2, z0 = oz - d / 2, z1 = oz + d / 2;
-    const wall = C(kind === 'home' ? ['#e9dcc7', '#d7e3e0', '#e8d2c8'][k] : kind === 'store' ? '#f2f2ee' : kind === 'gunshop' ? '#4b4640' : kind === 'bar' ? '#5a2e2a' : '#e6dccb');
-    const floor = C(kind === 'store' ? '#cfd3d6' : kind === 'gunshop' ? '#3a3633' : kind === 'bar' ? '#4a3426' : '#a87a52');
+    const wall = C(big ? '#efe6d6' : kind === 'home' ? ['#e9dcc7', '#d7e3e0', '#e8d2c8'][k] : kind === 'store' ? '#f2f2ee' : kind === 'gunshop' ? '#4b4640' : kind === 'bar' ? '#5a2e2a' : '#e6dccb');
+    const floor = C(big ? '#9a6a44' : kind === 'store' ? '#cfd3d6' : kind === 'gunshop' ? '#3a3633' : kind === 'bar' ? '#4a3426' : '#a87a52');
     B.roof(x0, z0, x1, z1, 0.1, floor);
     const q = (A, Bp, n) => B.quad([A[0], 0.1, A[1]], [Bp[0], 0.1, Bp[1]], [Bp[0], H, Bp[1]], [A[0], H, A[1]], n, [[0, 0], [1, 0], [1, 1], [0, 1]], wall);
     q([x0, z0], [x1, z0], [0, 0, 1]); q([x1, z1], [x0, z1], [0, 0, -1]); q([x0, z1], [x0, z0], [1, 0, 0]); q([x1, z0], [x1, z1], [-1, 0, 0]);
@@ -4471,7 +4492,8 @@ function initInteriors() {
     platforms.push({ x0, z0, x1, z1, h: 0.1 });
     const f = (a, y0, b, c2, y1, e, col, solid = true) => { B.box(a, y0, b, c2, y1, e, C(col)); if (solid) addBox(a, b, c2, e, y1 + 0.3); };
     const I = { kind, k, ox, oz, x0, x1, z0, z1, door: { x: ox, z: z0 + 1.2 }, spawn: { x: ox, z: z0 + 2.2 }, spots: {}, lootSpots: [] };
-    if (kind === 'home' || kind === 'house') {
+    if (big) buildMansion(B, f, C, I, H);
+    else if (kind === 'home' || kind === 'house') {
       f(x1 - 4.6, 0.1, z1 - 3.4, x1 - 0.5, 0.65, z1 - 0.5, '#3d5a80'); f(x1 - 4.6, 0.65, z1 - 1.2, x1 - 0.5, 0.85, z1 - 0.5, '#f2f2f2', false);
       f(x1 - 4.9, 0.1, z1 - 0.5, x1 - 0.2, 1.4, z1 - 0.2, '#5a3a22');
       f(x0 + 0.5, 0.1, z1 - 4.5, x0 + 1.5, 0.75, z1 - 0.5, '#7a3b2e'); f(x0 + 0.5, 0.1, z1 - 1.5, x0 + 4, 0.75, z1 - 0.5, '#7a3b2e');
@@ -4527,6 +4549,7 @@ function enterInterior(I, backX, backZ, opts = {}) {
     hud.say('', world.night > 0.5 ? 'A casa está às escuras. Revista as divisões e apanha o que brilha.' : 'Assalto em pleno dia… despacha-te antes que um vizinho repare.', 4);
   }
   if (I.kind === 'home') hud.say('', 'Bem-vindo a casa. A cama guarda o jogo; o armário muda a roupa.', 3);
+  if (I.kind === 'mansion') enterMansion(I);
 }
 function exitInterior() {
   const b = inside.back, I = inside.I;
@@ -4540,7 +4563,7 @@ function exitInterior() {
     inside.loot = [];
   }
   if (act.rob) endRob(false);
-  intLight.intensity = 0;
+  intLight.intensity = 0; leaveMansion();
   inside.I = null;
   player.x = b.x; player.z = b.z; player.y = groundH(b.x, b.z); cam.inited = false; act.menuCD = 2.5;
 }
@@ -4549,14 +4572,15 @@ function updateInterior(dt) {
   if (d2(player.x, player.z, I.ox, I.oz) > 60 * 60) { // saiu por outro meio: limpa o estado
     if (inside.staff) { const i = peds.indexOf(inside.staff); if (i >= 0) peds.splice(i, 1); inside.staff = null; }
     inside.loot.forEach((p) => { const i = pickups.indexOf(p); if (i >= 0) pickups.splice(i, 1); }); inside.loot = [];
-    intLight.intensity = 0; inside.I = null; return;
+    intLight.intensity = 0; leaveMansion(); inside.I = null; return;
   }
   inside.cd -= dt;
   if (player.car) exitCar(true);
   showMarker(I.door.x, I.door.z, '#8dff9e', 0.8, 3);
   const at = (s, r = 1.6) => s && d2(player.x, player.z, s.x, s.z) < r * r;
   if (inside.cd <= 0 && at(I.door, 1.1)) { exitInterior(); return; }
-  if (I.kind === 'home') {
+  if (I.kind === 'mansion') { updateMansion(I, dt); }
+  else if (I.kind === 'home') {
     showMarker(I.spots.bed.x, I.spots.bed.z, '#2be4ff', 0.8, 2.5); showMarker(I.spots.wardrobe.x, I.spots.wardrobe.z, '#ffc847', 0.7, 2.5);
     if (act.menuCD <= 0 && at(I.spots.bed)) { act.menuCD = 3; const p = PROPS[I.k]; propMenu(p); }
     if (act.menuCD <= 0 && at(I.spots.wardrobe)) { act.menuCD = 2; player.cShirt.set(rpick(['#cf3a26', '#1f6feb', '#16a37f', '#f2b84b', '#222222', '#e8e1d0', '#8e44ad', '#ff6f61'])); player.cPants.set(rpick(['#1f2a3a', '#2c2c2c', '#c2b280', '#3d5a80'])); hud.toast('Roupa nova.'); sfx.pickup(); }
@@ -4932,6 +4956,194 @@ function updateNetMe() {
 }
 
 // ============================================================
+// A tua casa: moradia com sala, cozinha, casa de banho, quarto,
+// ginásio e garagem, com coisas para usar (tecla F / botão ENTRAR)
+// ============================================================
+let homeLights = [];
+if (!progress.home) progress.home = { safe: 0, maxHp: 100, outfit: 0, trainT: -1e9, showerT: -1e9 };
+
+function buildMansion(B, f, C, I, H) {
+  const { ox, oz, x0, x1, z0, z1 } = I;
+  const wc = C('#e4d9c6');
+  // paredes interiores com portas (vãos)
+  const wallX = (x, za, zb, gaps = []) => { let s = za; for (const [g0, g1] of gaps.concat([[zb, zb]])) { if (g0 - s > 0.05) { B.box(x - 0.1, 0.1, s, x + 0.1, H, g0, wc); addBox(x - 0.1, s, x + 0.1, g0, 6); } s = g1; } };
+  const wallZ = (z, xa, xb, gaps = []) => { let s = xa; for (const [g0, g1] of gaps.concat([[xb, xb]])) { if (g0 - s > 0.05) { B.box(s, 0.1, z - 0.1, g0, H, z + 0.1, wc); addBox(s, z - 0.1, g0, z + 0.1, 6); } s = g1; } };
+  wallZ(oz + 2, x0, ox + 3, [[x0 + 6, x0 + 7.8], [ox - 2, ox - 0.4]]);
+  wallX(ox - 6, oz + 2, z1);
+  wallX(ox + 3, z0, z1, [[z0 + 3, z0 + 4.6], [oz - 1.2, oz + 0.4]]);
+  wallZ(oz, ox + 3, x1);
+  // pavimentos de cada divisão
+  B.box(x0 + 0.1, 0.105, oz + 2.1, ox - 6.1, 0.115, z1 - 0.1, C('#e8e2d5')); // cozinha (mosaico)
+  B.box(ox - 5.9, 0.105, oz + 2.1, ox + 2.9, 0.115, z1 - 0.1, C('#cfe0e6')); // casa de banho
+  B.box(ox + 3.1, 0.105, z0 + 0.1, x1 - 0.1, 0.115, oz - 0.1, C('#3b3f46')); // ginásio (borracha)
+  B.box(ox - 1.2, 0.106, z0 + 0.3, ox + 1.2, 0.12, z0 + 1.6, C('#5a3a22')); // tapete da entrada
+  // janelas (luz do dia)
+  for (const [a, b] of [[x0 + 8, x0 + 12], [ox + 6, ox + 10]]) B.box(a, 1.2, z0 + 0.02, b, 3.1, z0 + 0.07, C('#a9d2ee'));
+  for (const [a, b] of [[x0 + 2, x0 + 5], [ox + 6, ox + 9.5]]) B.box(a, 1.5, z1 - 0.07, b, 3.0, z1 - 0.02, C('#a9d2ee'));
+  const S = I.spots;
+  // ---- sala ----
+  f(x0 + 0.3, 0.1, z0 + 5, x0 + 0.9, 0.7, z0 + 9, '#2b2b2b');
+  B.box(x0 + 0.55, 0.95, z0 + 5.2, x0 + 0.62, 2.6, z0 + 8.8, C('#0b1626'));
+  B.box(x0 + 1.5, 0.11, z0 + 4, x0 + 6.6, 0.13, z0 + 10, C('#b5523b'));
+  f(x0 + 2.8, 0.1, z0 + 6.2, x0 + 3.9, 0.5, z0 + 7.8, '#6b4423');
+  f(x0 + 5.1, 0.1, z0 + 4.4, x0 + 6.3, 0.72, z0 + 9.6, '#3d5a80'); f(x0 + 5.9, 0.72, z0 + 4.4, x0 + 6.35, 1.35, z0 + 9.6, '#34506f', false);
+  f(x0 + 1, 0.1, z0 + 0.3, x0 + 4.2, 2.5, z0 + 0.8, '#5a3a22');
+  for (let r = 0; r < 4; r++) for (let k = 0; k < 6; k++) B.box(x0 + 1.15 + k * 0.5, 0.35 + r * 0.55, z0 + 0.82, x0 + 1.5 + k * 0.5, 0.75 + r * 0.55, z0 + 0.86, C(['#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad', '#ecf0f1'][(r + k) % 6]));
+  f(x0 + 6, 0.1, z0 + 0.3, x0 + 7.4, 1.0, z0 + 0.9, '#1d1d1d'); f(x0 + 5.5, 0.1, z0 + 0.3, x0 + 5.9, 1.4, z0 + 0.7, '#111111'); f(x0 + 7.5, 0.1, z0 + 0.3, x0 + 7.9, 1.4, z0 + 0.7, '#111111');
+  for (const [px, pz] of [[x0 + 0.8, z0 + 12.6], [ox - 3.6, z0 + 0.8], [ox + 2.4, z0 + 0.8]]) { f(px - 0.3, 0.1, pz - 0.3, px + 0.3, 0.6, pz + 0.3, '#8a5a3a'); B.box(px - 0.45, 0.6, pz - 0.45, px + 0.45, 1.6, pz + 0.45, C('#2f7a3a')); }
+  f(x0 + 0.6, 0.1, z0 + 10.6, x0 + 0.8, 1.9, z0 + 10.8, '#222222'); B.box(x0 + 0.35, 1.9, z0 + 10.35, x0 + 1.05, 2.3, z0 + 11.05, C('#fff2c8'));
+  S.tv = { x: x0 + 4.5, z: z0 + 7, label: 'Ver televisão' };
+  S.radio = { x: x0 + 6.7, z: z0 + 1.8, label: 'Aparelhagem: ligar / mudar de rádio' };
+  // ---- cozinha ----
+  f(x0 + 0.4, 0.1, z1 - 0.9, x0 + 9, 1.0, z1 - 0.3, '#e8e4dc'); f(x0 + 0.4, 1.0, z1 - 0.95, x0 + 9, 1.06, z1 - 0.3, '#3a3a3a', false);
+  B.box(x0 + 0.4, 2.2, z1 - 0.6, x0 + 9, 3.0, z1 - 0.3, C('#d7cfc4'));
+  B.box(x0 + 5, 1.06, z1 - 0.85, x0 + 6.2, 1.09, z1 - 0.35, C('#111111'));
+  B.box(x0 + 2, 1.0, z1 - 0.8, x0 + 3, 1.08, z1 - 0.4, C('#b8c4cc'));
+  f(x0 + 9.3, 0.1, z1 - 1.0, x0 + 10.6, 2.2, z1 - 0.3, '#d9dde2'); B.box(x0 + 9.35, 1.2, z1 - 1.02, x0 + 10.55, 1.24, z1 - 0.98, C('#9aa0a6'));
+  f(x0 + 3, 0.1, oz + 5, x0 + 6.5, 0.78, oz + 7, '#8a5a3a');
+  for (const [cx, cz] of [[x0 + 3.6, oz + 4.5], [x0 + 5.9, oz + 4.5], [x0 + 3.6, oz + 7.5], [x0 + 5.9, oz + 7.5]]) f(cx - 0.25, 0.1, cz - 0.25, cx + 0.25, 0.5, cz + 0.25, '#5a3a22');
+  S.fridge = { x: x0 + 9.95, z: z1 - 1.9, label: 'Frigorífico: comer' };
+  S.stove = { x: x0 + 5.6, z: z1 - 1.8, label: 'Fogão: cozinhar uma refeição' };
+  // ---- casa de banho ----
+  f(ox + 0.8, 0.1, z1 - 2.6, ox + 2.9, 0.18, z1 - 0.1, '#dfe9ee', false);
+  B.box(ox + 0.8, 0.18, z1 - 2.62, ox + 0.86, 2.4, z1 - 0.1, C('#a8d4f0')); B.box(ox + 0.8, 0.18, z1 - 2.62, ox + 2.9, 2.4, z1 - 2.56, C('#a8d4f0'));
+  B.box(ox + 1.7, 2.2, z1 - 0.5, ox + 2.0, 2.3, z1 - 0.2, C('#9aa0a6'));
+  f(ox - 5.7, 0.1, z1 - 1.9, ox - 2.5, 0.65, z1 - 0.3, '#f4f4f4');
+  f(ox - 1.8, 0.1, z1 - 0.9, ox - 1.1, 0.5, z1 - 0.3, '#f4f4f4'); f(ox - 1.8, 0.5, z1 - 0.5, ox - 1.1, 1.0, z1 - 0.25, '#f4f4f4', false);
+  f(ox - 5.9, 0.1, oz + 4, ox - 5.4, 0.9, oz + 5.2, '#f4f4f4'); B.box(ox - 5.92, 1.3, oz + 4, ox - 5.88, 2.3, oz + 5.2, C('#cfe6f5'));
+  S.shower = { x: ox + 1.85, z: z1 - 1.4, label: 'Tomar banho' };
+  // ---- quarto ----
+  f(x1 - 4.2, 0.1, oz + 4, x1 - 0.4, 0.6, oz + 8, '#e9e4da'); B.box(x1 - 3.3, 0.6, oz + 3.95, x1 - 0.4, 0.68, oz + 8.05, C('#b5523b'));
+  B.box(x1 - 1.1, 0.6, oz + 4.3, x1 - 0.5, 0.8, oz + 5.8, C('#ffffff')); B.box(x1 - 1.1, 0.6, oz + 6.2, x1 - 0.5, 0.8, oz + 7.7, C('#ffffff'));
+  f(x1 - 0.45, 0.1, oz + 3.8, x1 - 0.2, 1.5, oz + 8.2, '#5a3a22');
+  for (const nz of [oz + 3.2, oz + 8.8]) { f(x1 - 1, 0.1, nz - 0.4, x1 - 0.3, 0.6, nz + 0.4, '#6b4423'); B.box(x1 - 0.8, 0.6, nz - 0.15, x1 - 0.5, 1.0, nz + 0.15, C('#fff2c8')); }
+  f(ox + 4, 0.1, z1 - 0.9, ox + 8, 2.6, z1 - 0.3, '#6b4423'); B.box(ox + 5.98, 0.3, z1 - 0.92, ox + 6.02, 2.4, z1 - 0.88, C('#3b2a1a'));
+  f(ox + 9, 0.1, z1 - 1, ox + 11.5, 0.78, z1 - 0.3, '#d8d0c4'); B.box(ox + 9.7, 0.8, z1 - 0.62, ox + 10.9, 1.55, z1 - 0.56, C('#14324f'));
+  f(ox + 9.9, 0.1, z1 - 1.9, ox + 10.5, 0.5, z1 - 1.3, '#222222');
+  B.box(ox + 5, 0.11, oz + 3, ox + 9.5, 0.13, oz + 8, C('#6b7b8c'));
+  S.bed = { x: x1 - 5, z: oz + 6, label: 'Cama: dormir / guardar' };
+  S.wardrobe = { x: ox + 6, z: z1 - 1.8, label: 'Armário: mudar de roupa' };
+  S.pc = { x: ox + 10.2, z: z1 - 2.3, label: 'Computador: banco e encomendas' };
+  // ---- ginásio / garagem ----
+  f(ox + 6, 0.1, z0 + 5, ox + 7, 0.55, z0 + 7, '#222222'); B.box(ox + 5.4, 1.1, z0 + 5.9, ox + 7.6, 1.16, z0 + 6.1, C('#9aa0a6'));
+  for (const bx of [ox + 5.4, ox + 7.4]) B.box(bx, 0.8, z0 + 5.6, bx + 0.2, 1.45, z0 + 6.4, C('#111111'));
+  f(ox + 10.6, 0.7, z0 + 3, ox + 11.2, 2.4, z0 + 3.6, '#8a1c1c'); B.box(ox + 10.88, 2.4, z0 + 3.28, ox + 10.92, H, z0 + 3.32, C('#777777'));
+  f(ox + 4, 0.1, z0 + 0.6, ox + 5.2, 0.3, z0 + 3, '#2b2b2b'); f(ox + 4, 0.3, z0 + 0.6, ox + 5.2, 1.3, z0 + 0.8, '#2b2b2b', false);
+  f(x1 - 1.2, 0.1, oz - 2.2, x1 - 0.3, 1.1, oz - 1.2, '#4b4f55'); B.box(x1 - 1.22, 0.5, oz - 1.8, x1 - 1.18, 0.7, oz - 1.6, C('#d4af37'));
+  B.box(x1 - 0.08, 0.1, z0 + 2, x1 - 0.02, 3.2, z0 + 7, C('#9aa0a6'));
+  for (let k = 0; k < 6; k++) B.box(x1 - 0.1, 0.4 + k * 0.5, z0 + 2, x1 - 0.07, 0.44 + k * 0.5, z0 + 7, C('#6b7177'));
+  B.box(ox + 3.12, 0.6, z0 + 6, ox + 3.16, 2.6, z0 + 10, C('#cfe6f5'));
+  S.bench = { x: ox + 7.9, z: z0 + 6, label: 'Supino: treinar (mais saúde)' };
+  S.bag = { x: ox + 10.9, z: z0 + 4.6, label: 'Saco de boxe' };
+  S.safe = { x: x1 - 2, z: oz - 1.7, label: 'Cofre: guardar dinheiro' };
+  S.garage = { x: x1 - 1.3, z: z0 + 4.5, label: 'Garagem: tirar um carro' };
+  I.lightsAt = [[x0 + 7, z0 + 7], [x0 + 5, oz + 7], [ox + 10, oz + 6], [ox + 9, z0 + 6]];
+}
+
+function enterMansion(I) {
+  if (!homeLights.length) for (let k = 0; k < 4; k++) { const l = new THREE.PointLight('#ffe6c4', 0, 22, 1.2); scene.add(l); homeLights.push(l); }
+  I.lightsAt.forEach(([x, z], k) => { homeLights[k].position.set(x, 3.4, z); homeLights[k].intensity = 18; });
+  intLight.intensity = 10;
+  hud.say('', 'Bem-vindo a casa! Anda pelas divisões: <b>F</b> (ou ENTRAR) usa a televisão, o frigorífico, a cama, o cofre, a garagem e muito mais.', 6);
+}
+function leaveMansion() { for (const l of homeLights) l.intensity = 0; window.__homeRadio = false; inside.near = null; }
+
+const OUTFITS = [
+  ['Casual vermelho', '#cf3a26', '#1f2a3a'], ['Fato preto', '#1b1b1f', '#1b1b1f'], ['Desportivo azul', '#1f6feb', '#2c2c2c'],
+  ['Verão', '#f2b84b', '#c2b280'], ['Motociclista', '#3a2a20', '#1d1d1d'], ['Escarlate', '#ff4a2b', '#e8e1d0'], ['Verde tropa', '#4b5320', '#3d4a2a'],
+];
+function applyOutfit() { const o = OUTFITS[progress.home.outfit % OUTFITS.length]; player.cShirt.set(o[1]); player.cPants.set(o[2]); }
+function passHours(h) { world.hour = (world.hour + h) % 24; world.lastEnvHour = -10; hud.fade(); }
+function homeOutside() { const s = SPOT.home, b = nearestBlock(s.x, s.z); return { x: s.x, z: s.z + (s.z > roadC(b.bj) + CELL / 2 ? 3 : -3) }; }
+function homeCarSpot() {
+  const s = SPOT.home, b = nearestBlock(s.x, s.z);
+  const z = Math.abs(s.z - roadC(b.bj)) < Math.abs(s.z - roadC(b.bj + 1)) ? roadC(b.bj) + 5.5 : roadC(b.bj + 1) - 5.5;
+  return { x: s.x + 4, z, yaw: Math.PI / 2 };
+}
+function takeHomeCar(type, color) {
+  for (const c of cars.filter((c) => c.homeCar && !c.dead && c !== player.car)) removeCar(c);
+  const p = homeCarSpot(); const c = new Car(type, p.x, p.z, p.yaw); c.parked = true; c.homeCar = true;
+  if (color) c.color.set(color);
+  if (type !== 'moto') c.mods = { turbo: true, grip: true, armor: true, neon: '#ff4a2b' };
+  return c;
+}
+function homeMenu(title, items) { openMenu(title, items.map((it) => ({ ...it, run() { const r = it.run(); if (r) closeShop(); return false; } }))); }
+function mansionUse(key) {
+  const H = progress.home, done = () => { sfx.pickup(); saveGame(); };
+  switch (key) {
+    case 'tv':
+      homeMenu('TELEVISÃO', [
+        { name: 'Ver as notícias', desc: wanted.level ? `A polícia procura-te (${wanted.level}★).` : 'A cidade está calma hoje.', tag: '', run() { hud.say('Telejornal', `Missões feitas: <b>${progress.done.length}/${MISSIONS.length}</b>. ${wanted.level ? 'A polícia anda à tua procura.' : 'Nenhuma notícia sobre ti… por agora.'} Tempo: ${weather.rain > 0.3 ? 'chuva' : 'sol'}.`, 5); return true; } },
+        { name: 'Ver um jogo de futebol', desc: 'Passa 1 hora · +20 de saúde', tag: '1 h', run() { passHours(1); player.health = Math.min(player.maxHealth, player.health + 20); hud.toast('Golo! Que jogo…'); return true; } },
+        { name: 'Ver um filme', desc: 'Passa 2 horas · saúde cheia', tag: '2 h', run() { passHours(2); player.health = player.maxHealth; hud.toast('Bom filme. Estás descansado.'); return true; } },
+        { name: 'Desligar', desc: '', tag: '', run() { closeShop(); } },
+      ]); break;
+    case 'radio':
+      window.__homeRadio = true; sfx.radioNext(); break;
+    case 'fridge':
+      player.health = player.maxHealth; hud.toast('Comeste qualquer coisa do frigorífico: saúde cheia.'); done(); break;
+    case 'stove':
+      passHours(0.5); player.health = player.maxHealth; player.armor = Math.max(player.armor || 0, 25); hud.toast('Cozinhaste um bacalhau à Brás: saúde cheia e +25 de colete.'); done(); break;
+    case 'shower':
+      if (wanted.level > 0 && wanted.level <= 2 && game.time - H.showerT > 120) { H.showerT = game.time; setWanted(0); hud.toast('Banho tomado e roupa trocada: a polícia perdeu-te o rasto.'); }
+      else if (wanted.level > 2) hud.toast('Com tantas estrelas não chega um banho…');
+      else { player.health = Math.min(player.maxHealth, player.health + 10); hud.toast('Banho quentinho. Fresco como uma alface.'); }
+      done(); break;
+    case 'bed':
+      homeMenu('CAMA', [
+        { name: 'Dormir até de manhã', desc: 'Saúde cheia e jogo guardado', tag: '08:00', can: () => wanted.level === 0, cant: 'Não dá para dormir com a polícia atrás de ti', run() { hud.fade(); world.hour = 8; world.lastEnvHour = -10; player.health = player.maxHealth; saveGame(); hud.toast('Bom dia! Jogo guardado.'); return true; } },
+        { name: 'Dormir uma sesta', desc: 'Passa 2 horas', tag: '2 h', run() { passHours(2); player.health = player.maxHealth; return true; } },
+        { name: 'Dormir até à noite', desc: 'Acorda às 21:00', tag: '21:00', can: () => wanted.level === 0, cant: 'Não dá para dormir com a polícia atrás de ti', run() { hud.fade(); world.hour = 21; world.lastEnvHour = -10; player.health = player.maxHealth; saveGame(); return true; } },
+        { name: 'Guardar o jogo', desc: '', tag: '', run() { saveGame(); hud.toast('Jogo guardado.'); return true; } },
+        { name: 'Sair', desc: '', tag: '', run() { closeShop(); } },
+      ]); break;
+    case 'wardrobe':
+      homeMenu('ARMÁRIO', OUTFITS.map((o, i) => ({ name: o[0], desc: i === H.outfit ? 'A roupa que tens vestida' : '', tag: '', run() { H.outfit = i; applyOutfit(); saveGame(); return true; } })).concat([{ name: 'Sair', desc: '', tag: '', run() { closeShop(); } }])); break;
+    case 'pc': {
+      const inc = PROPS.filter((p) => progress.props.includes(p.id)).reduce((a, p) => a + p.income, 0);
+      homeMenu('COMPUTADOR', [
+        { name: 'Banco', desc: `Na carteira ${fmtMoney(player.money)} · no cofre ${fmtMoney(H.safe)} · rendas ${fmtMoney(inc)} por dia`, tag: '', run() { return true; } },
+        { name: 'Encomendar um desportivo', desc: 'Entregue à porta de casa, já melhorado na oficina', price: 3000, run() { takeHomeCar('sport', '#ff4a2b'); hud.toast('O teu desportivo está à porta.'); return true; } },
+        { name: 'Encomendar uma mota', desc: 'Entregue à porta de casa', price: 1200, run() { takeHomeCar('moto', '#111111'); hud.toast('A tua mota está à porta.'); return true; } },
+        { name: 'Ver estatísticas', desc: `Abates ${player.stats.kills} · assaltos ${player.stats.robs || 0} · táxi ${player.stats.fares || 0} · saltos ${progress.jumps.length}`, tag: '', run() { return true; } },
+        { name: 'Desligar', desc: '', tag: '', run() { closeShop(); } },
+      ]); break;
+    }
+    case 'bench':
+      if (game.time - H.trainT < 300) { hud.toast('Já treinaste há pouco. Descansa um bocado.'); break; }
+      H.trainT = game.time; passHours(1);
+      if (H.maxHp < 160) { H.maxHp += 5; player.maxHealth = H.maxHp; hud.toast(`Treino feito: saúde máxima ${H.maxHp}.`); } else hud.toast('Já estás no máximo da forma!');
+      player.health = player.maxHealth; done(); break;
+    case 'bag':
+      sfx.thud(0.8, player.x, player.z); cam.shake = Math.max(cam.shake, 0.3); hud.toast(rpick(['Pum!', 'Pum! Pum!', 'Direto e gancho!', 'Combinação perfeita!'])); break;
+    case 'safe':
+      homeMenu('COFRE', [
+        { name: 'Guardar 1 000 €', desc: 'O dinheiro do cofre não se perde no hospital nem na esquadra', tag: '', can: () => player.money >= 1000, cant: 'Não tens 1 000 €', run() { addMoney(-1000); H.safe += 1000; saveGame(); return true; } },
+        { name: 'Guardar tudo', desc: `Tens ${fmtMoney(player.money)} na carteira`, tag: '', can: () => player.money > 0, cant: 'A carteira está vazia', run() { H.safe += player.money; addMoney(-player.money); saveGame(); return true; } },
+        { name: 'Tirar tudo', desc: `No cofre: ${fmtMoney(H.safe)}`, tag: '', can: () => H.safe > 0, cant: 'O cofre está vazio', run() { addMoney(H.safe); H.safe = 0; saveGame(); return true; } },
+        { name: 'Fechar', desc: '', tag: '', run() { closeShop(); } },
+      ]); break;
+    case 'garage': {
+      const go = (type, color, name) => ({ name, desc: 'Sai de casa já ao volante', tag: '', run() { closeShop(); const c = takeHomeCar(type, color); exitInterior(); setTimeout(() => { player.x = c.x + 1.5; player.z = c.z; tryEnterCar(); }, 50); return false; } });
+      homeMenu('GARAGEM', [go('sport', '#ff4a2b', 'O teu desportivo escarlate'), go('muscle', '#1b1b1f', 'O muscle car preto'), go('moto', '#111111', 'A mota'), { name: 'Fechar', desc: '', tag: '', run() { closeShop(); } }]); break;
+    }
+  }
+}
+function updateMansion(I, dt) {
+  const S = I.spots; let best = null, bd = 1.7 * 1.7;
+  for (const k in S) { const s = S[k]; if (!s.label) continue; const d = d2(player.x, player.z, s.x, s.z); if (d < 49) showMarker(s.x, s.z, d < bd ? '#8dff9e' : '#2be4ff', 0.32, 0.9); if (d < bd) { bd = d; best = k; } }
+  inside.near = best ? { key: best, label: S[best].label } : null;
+}
+// tecla F / ENTRAR dentro de casa
+function mansionTryUse() { if (!inside.I || inside.I.kind !== 'mansion' || !inside.near || uiBlocking) return false; mansionUse(inside.near.key); return true; }
+// porta da tua casa na rua
+function updateHomeDoor(px, pz, onFoot) {
+  const s = SPOT.home; if (!s) return;
+  if (d2(s.x, s.z, camFocus.x, camFocus.z) < 160 * 160) showMarker(s.x, s.z, '#8dff9e', 1.1, 5);
+  if (onFoot && act.menuCD <= 0 && d2(px, pz, s.x, s.z) < 1.8 * 1.8) { act.menuCD = 3; const o = homeOutside(); enterInterior(INT.find((I) => I.kind === 'mansion'), o.x, o.z); }
+}
+
+// ============================================================
 // Áudio procedural: efeitos, motor, sirene, ambiente e rádio
 // ============================================================
 const sfx = (() => {
@@ -5054,7 +5266,7 @@ const sfx = (() => {
       amb.rg.gain.setTargetAtTime(weather.rain * 0.12, t, 0.5);
       amb.cg.gain.setTargetAtTime(0.04 + (1 - world.night) * 0.02, t, 0.5);
       // rádio só dentro do carro
-      const on = !!c && !c.dead && STATIONS[radio.idx].bpm && game.state === 'play' && !game.paused;
+      const on = ((!!c && !c.dead) || (window.__homeRadio && inside.I)) && STATIONS[radio.idx].bpm && game.state === 'play' && !game.paused;
       if (on && !radio.on) { radio.nextT = t + 0.05; radio.step = 0; }
       radio.on = on;
       radioG.gain.setTargetAtTime(on ? 0.85 : 0, t, 0.25);
@@ -5405,6 +5617,24 @@ const CAM_NAMES = ['CÂMARA NORMAL', 'CÂMARA PERTO', 'CÂMARA LONGE', 'PRIMEIRA
 const cam = { mode: 0, cine: null, yaw: 0, pitch: 0.2, dist: 5, shake: 0, autoT: 0, fov: 62, sh: 0.35, x: 0, y: 10, z: 0, inited: false };
 const camFocus = new THREE.Vector3();
 let composer = null, bloom = null;
+// muda a qualidade gráfica na hora, sem recarregar o jogo
+function setQualityLive(q, manual) {
+  if (!QUALITY[q]) return;
+  const Q = QUALITY[q], prevShadows = renderer.shadowMap.enabled;
+  settings.q = q; if (manual) settings.manualQ = true;
+  renderer.setPixelRatio(Math.max(1, Math.min(window.devicePixelRatio || 1, Q.pr)));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = Q.shadows;
+  if (typeof sunLight !== 'undefined' && sunLight && sunLight.shadow.mapSize.x !== Q.smap) {
+    if (sunLight.shadow.map) { sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
+    sunLight.shadow.mapSize.set(Q.smap, Q.smap);
+  }
+  if (prevShadows !== Q.shadows) scene.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => (m.needsUpdate = true)); });
+  if (Q.bloom && !composer) setupComposer();
+  if (composer && composer.resize) composer.resize();
+  saveSettings();
+  const qi = $('q-' + q); if (qi) qi.checked = true;
+}
 
 const hurtEl = document.createElement('div');
 hurtEl.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(200,0,0,.55) 100%);';
@@ -5776,13 +6006,15 @@ function update(dt, rdt) {
     for (let i = 1; i <= 5; i++) if (consume('Digit' + i)) { if (player.owned[WEAPONS[i - 1].id]) player.wIdx = i - 1; }
     if (consume('KeyR') && player.car) sfx.radioNext();
     if (consume('KeyV') || consume('KeyC')) { cam.mode = (cam.mode + 1) % CAM_NAMES.length; cam.cine = null; hud.toast(CAM_NAMES[cam.mode], 1.5); }
-    if (consume('KeyF') || consume('Enter')) { if (player.car) exitCar(); else tryEnterCar(); }
+    if (consume('KeyF') || consume('Enter')) { if (mansionTryUse()) {} else if (player.car) exitCar(); else tryEnterCar(); }
     if (player.car) controlCar(dt); else controlFoot(dt);
   } else { player.wantSpeed = 0; player.aiming = false; }
   mouse.wheel = 0;
   world.hour = (world.hour + dt / 150) % 24; // 1 hora de jogo = 150 s (um dia inteiro = 1 hora real)
   updateAI(dt);
-  const n = Math.max(1, Math.ceil(dt / 0.0167));
+  // passos mais pequenos a alta velocidade: nada atravessa paredes
+  let vmax = 0; for (const c of cars) if (c.speed > vmax) vmax = c.speed;
+  const n = Math.min(12, Math.max(1, Math.ceil(dt / 0.0167), Math.ceil((vmax * dt) / 0.35)));
   for (let i = 0; i < n; i++) updateCars(dt / n);
   pedCarCollisions();
   updatePeds(dt);
@@ -5797,7 +6029,8 @@ function update(dt, rdt) {
   updateStreaming(dt);
   if (game.state === 'wasted' || game.state === 'busted') { game.endT += rdt; if (game.endT > 3.6 && !game.respawning) { game.respawning = true; respawn(game.state); setTimeout(() => (game.respawning = false), 800); } }
   // dicas
-  if (game.state === 'play' && !player.car) {
+  if (game.state === 'play' && inside.I && inside.near) hud.hint(isTouch ? `Toca em <kbd>ENTRAR</kbd> · ${inside.near.label}` : `<kbd>F</kbd> ${inside.near.label}`);
+  else if (game.state === 'play' && !player.car) {
     const c = nearestEnterableCar();
     hud.hint(c ? (isTouch ? `Toca em <kbd>ENTRAR</kbd> · ${c.t.name}` : `<kbd>F</kbd> ${c.driver ? 'roubar o' : 'entrar no'} ${c.t.name}`) : '');
   } else if (game.state === 'play' && player.car && player.car.t.plane) hud.hint(isTouch ? 'Joystick: inclinar e subir/picar · TRAVÃO: travar na pista' : '<kbd>W</kbd>/<kbd>S</kbd> motor · <kbd>A</kbd>/<kbd>D</kbd> inclinar · <kbd>↑</kbd>/<kbd>↓</kbd> picar/subir · rato também sobe/desce');
@@ -5833,11 +6066,11 @@ function render() {
 function frame(now) {
   requestAnimationFrame(frame);
   game.frameMs = lerp(game.frameMs || 16, now - lastT, 0.05);
-  if (game.state === 'play' && !game.paused && !settings.manualQ) {
-    game.slowT = (game.frameMs > 42) ? (game.slowT || 0) + (now - lastT) / 1000 : Math.max(0, (game.slowT || 0) - 0.02);
-    if (game.slowT > 4) {
+  if (game.state === 'play' && !game.paused && !settings.manualQ && (game.playT = (game.playT || 0) + (now - lastT) / 1000) > 10) {
+    game.slowT = (game.frameMs > 45) ? (game.slowT || 0) + (now - lastT) / 1000 : Math.max(0, (game.slowT || 0) - 0.02);
+    if (game.slowT > 6) {
       game.slowT = 0; const order = ['ultra', 'alta', 'media', 'baixa'], i = order.indexOf(settings.q);
-      if (i < order.length - 1) { settings.q = order[i + 1]; applyQuality(); if (composer && composer.resize) composer.resize(); saveSettings(); const qi = $('q-' + settings.q); if (qi) qi.checked = true; hud.toast(`Qualidade baixada para ${QUALITY[settings.q].name} para o jogo correr mais fluido (podes mudar na pausa).`, 4); }
+      if (i < order.length - 1) { setQualityLive(order[i + 1], false); hud.toast(`Qualidade baixada para ${QUALITY[settings.q].name} para o jogo correr mais fluido (podes mudar na pausa).`, 4); }
     }
   }
   const rdt = Math.min(0.05, Math.max(0.001, (now - lastT) / 1000)); lastT = now;
@@ -5873,7 +6106,7 @@ function startGame() {
   sfx.init();
   $('start').hidden = true; $('hud').hidden = false; if (isTouch) $('touch').hidden = false;
   game.state = 'play';
-  const h = SPOT.home;
+  const h = homeOutside();
   Object.assign(player, { x: h.x, z: h.z, y: 0, yaw: Math.PI / 2, vx: 0, vz: 0 });
   cam.yaw = Math.PI / 2; cam.pitch = 0.22; cam.inited = false;
   // limpa população da tela de título perto do jogador
@@ -5889,7 +6122,7 @@ async function bootInner() {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   try { await Promise.race([Promise.all([document.fonts.load('56px "Bebas Neue"'), document.fonts.load('600 20px Rajdhani')]), sleep(2500)]); } catch (e) {}
   await sleep(30);
-  loadGame();
+  loadGame(); player.maxHealth = progress.home.maxHp || 100; player.health = player.maxHealth; if (progress.home.outfit) applyOutfit();
   buildWorld();
   $('loading').textContent = 'A acender as luzes…';
   await sleep(10);
@@ -5905,7 +6138,7 @@ async function bootInner() {
   const btn = $('play'); btn.disabled = false; btn.textContent = progress.done.length || player.money !== 500 ? 'CONTINUAR' : 'JOGAR';
   $('loading').textContent = progress.done.length ? `Progresso guardado: ${progress.done.length}/${MISSIONS.length} missões · ${fmtMoney(player.money)}` : 'Original · feito à mão com three.js';
   btn.focus();
-  window.__ext = { scene, camera, ROUTES, TOWNS, renderer, sunLight: () => sunLight, applyQuality, sprops, ringMeshes, forceBlock() { blockT = 0; } };
+  window.__ext = { pushCircle, setQualityLive, pedCarCollisions: () => pedCarCollisions(), scene, camera, ROUTES, TOWNS, renderer, sunLight: () => sunLight, applyQuality, sprops, ringMeshes, forceBlock() { blockT = 0; } };
   window.__acts = { HOUSES, STORES, PROPS, act, weather, INT, inside, BAR_DOOR, lightState, tlList };
   window.__game = { get camMode() { return cam.mode; }, game, player, cars, peds, wanted, world, cam, ms, SPOT, startGame, tryEnterCar, exitCar, setWanted, addWanted, explosion, spawnTrafficCar, MISSIONS, progress, settings, pickups, ramps, blockGrid, keys, mouse, pressed, playerShoot, WEAPONS, buyItem, closeShop, roadC, get heli() { return heli; }, get info() { return { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, upd: game.updMs, ren: game.renMs }; }, step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { game.dt = dt; game.time += dt; update(dt, dt); for (const k in pressed) pressed[k] = false; mouse.dx = mouse.dy = 0; mouse.leftPressed = false; } } };
 }
@@ -5926,7 +6159,7 @@ $('shop-close').addEventListener('click', closeShop);
 addEventListener('keydown', (e) => { if (!$('shop').hidden && /^Digit[1-6]$/.test(e.code)) buyItem(+e.code.slice(5) - 1); });
 $('vol').addEventListener('input', (e) => { settings.volume = e.target.value / 100; sfx.setVolume(settings.volume); saveSettings(); });
 $('sens').addEventListener('input', (e) => { settings.sens = e.target.value / 100; saveSettings(); });
-document.querySelectorAll('#qual input').forEach((r) => r.addEventListener('change', (e) => { if (!e.target.checked) return; settings.q = e.target.value; settings.manualQ = true; saveSettings(); saveGame(); $('fps').textContent = 'A aplicar a qualidade… o jogo vai recarregar com o progresso guardado.'; setTimeout(() => location.reload(), 600); }));
+document.querySelectorAll('#qual input').forEach((r) => r.addEventListener('change', (e) => { if (!e.target.checked) return; setQualityLive(e.target.value, true); $('fps').textContent = `Qualidade atual: ${QUALITY[settings.q].name} · aplicada já, sem recarregar`; }));
 $('gohome').addEventListener('click', () => {
   if (wanted.level > 0) { $('stats').textContent = 'Não podes ir para casa com a polícia atrás de ti.'; return; }
   if (inside.I) exitInterior();
