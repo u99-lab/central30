@@ -58,7 +58,7 @@
   <div id="msg"></div>
   <div id="replayBar"><div id="rpTag">⏪ REPETIÇÃO</div><button id="skipBtn">Saltar ⏭ (Espaço / Enter)</button></div>
   <div id="boostWrap"><div id="spd"><span id="sv">0</span> <small>km/h</small></div><div id="boostLbl">TURBO <span id="bv">100</span></div><div id="boostBar"><div id="boostFill"></div></div></div>
-  <div id="help">WASD / setas: conduzir · Espaço: saltar (2.º toque = salto duplo) · Shift: turbo (com velocidade parte os inimigos!) · C: câmara · P: pausa · M: som · R: recomeçar · Enter/Espaço: saltar repetição · Esc: sair</div>
+  <div id="help">WASD / setas: conduzir · Espaço: saltar (2.º toque = salto duplo) · Shift: turbo (com velocidade parte os inimigos!) · contra a parede lateral: sobe (Espaço salta) · C: câmara · P: pausa · M: som · R: recomeçar · Enter/Espaço: saltar repetição · Esc: sair</div>
 </div>
 <div id="toast"></div>
 
@@ -93,7 +93,7 @@
 <script>
 (function(){
 // ================= Constantes =================
-const W=55, L=80, GW=12, GH=8, GD=10, WALLH=34, BR=2.6;
+const W=55, L=80, GW=10.5, GH=7.5, GD=10, WALLH=34, BR=2.6;
 const GRAV=-32;
 let difficulty=0.85, matchTime=180, mode=2, themeName='dia';
 
@@ -404,7 +404,7 @@ function buildCarMenu(){
 
 // ================= Jogo =================
 const FORM={1:[[0,48]],2:[[-14,52],[14,52]],3:[[0,46],[-24,62],[24,62]]};
-function placeCar(c){
+function placeCar(c){c.wall=0;if(c.mesh)c.mesh.quaternion.identity();
   const f=FORM[mode][c.slot];
   if(c.team===0){c.pos.set(f[0],.9,f[1]);c.yaw=0;}
   else{c.pos.set(-f[0],.9,-f[1]);c.yaw=Math.PI;}
@@ -596,7 +596,18 @@ function aiThink(c,dt){
   }else{
     tx=Math.max(-GW*.7,Math.min(GW*.7,bp.x*0.4));tz=ownZ+atk*14;
   }
-  if(c.boost<25&&role!=='attack'){let bq=null,bd=1e9;for(const p of pads){if(p.t<=0){const dd=Math.hypot(p.x-c.pos.x,p.z-c.pos.z);if(dd<bd){bd=dd;bq=p;}}}if(bq&&bd<45){tx=bq.x;tz=bq.z;}}
+  // guarda-redes: se a bola vai para a nossa baliza, o carro mais atrás vai cortá-la (mais vezes no difícil)
+  let save=false;
+  if(c.shotSeen!==ball.shotN){c.shotSeen=ball.shotN;c.willSave=Math.random()<Math.min(.85,.1+difficulty*.5);}
+  const toOwn=-atk;if(c.willSave&&ball.vel.z*toOwn>5){const tg=(ownZ-ball.pos.z)/ball.vel.z,xg=ball.pos.x+ball.vel.x*tg;
+    if(tg>0&&tg<3.2&&Math.abs(xg)<GW+4){
+      const mates=cars.filter(o=>o.team===c.team&&o.dead<=0&&!o.isPlayer&&!P2S.some(x=>x.car===o));
+      const keeper=mates.sort((a,b)=>b.pos.z*toOwn-a.pos.z*toOwn)[0];
+      if(keeper===c&&(c.pos.z-ball.pos.z)*toOwn>-1){
+        let best=null;for(let t=.05;t<=tg;t+=.05){const bx=ball.pos.x+ball.vel.x*t,bz=ball.pos.z+ball.vel.z*t;if(Math.hypot(bx-c.pos.x,bz-c.pos.z)<=4+t*32){best=[bx,bz];break;}}
+        if(!best)best=[Math.max(-GW+1,Math.min(GW-1,xg)),ownZ+atk*2.5];
+        tx=best[0];tz=best[1];save=true;}}}
+  if(!save&&c.boost<25&&role!=='attack'){let bq=null,bd=1e9;for(const p of pads){if(p.t<=0){const dd=Math.hypot(p.x-c.pos.x,p.z-c.pos.z);if(dd<bd){bd=dd;bq=p;}}}if(bq&&bd<45){tx=bq.x;tz=bq.z;}}
   tx=Math.max(-W+4,Math.min(W-4,tx));tz=Math.max(-L+4,Math.min(L-4,tz));
   const dx=tx-c.pos.x,dz=tz-c.pos.z;
   const fwdX=-Math.sin(c.yaw),fwdZ=-Math.cos(c.yaw);
@@ -606,8 +617,9 @@ function aiThink(c,dt){
   i.s=Math.max(-1,Math.min(1,a*2.5));
   i.f=Math.abs(a)>2.3?-1:1;
   if(Math.abs(a)>2.3)i.s=-i.s;
-  if(role==='defend'&&d<5)i.f=0;
-  i.boost=difficulty>0.7&&Math.abs(a)<.25&&d>20&&c.boost>10;
+  if(role==='defend'&&d<5&&!save)i.f=0;
+  i.boost=(difficulty>0.7||save)&&Math.abs(a)<(save?.7:.25)&&d>(save?5:20)&&c.boost>(save?0:10);
+  if(save){i.f=Math.abs(a)>2.3&&d<12?-1:1;}
   i.jump=false;
   if(dBall<10&&ball.pos.y>5&&c.onGround&&Math.random()<0.1*difficulty)i.jump=true;
   if(dBall<8&&!c.onGround&&c.jumps>0&&ball.pos.y>c.pos.y+1&&Math.random()<0.05*difficulty)i.jump=true;
@@ -658,7 +670,8 @@ function demolish(c,by){
   if(c.isPlayer)toast('💥 Foste demolido!',1400);
 }
 function stepCar(c,dt){
-  if(c.dead>0){c.dead-=dt;if(c.dead<=0)placeCar(c);return;}
+  if(c.dead>0){c.wall=0;c.dead-=dt;if(c.dead<=0)placeCar(c);return;}
+  if(c.wall){stepWall(c,dt);return;}
   const i=c.in,sp=c.spec;
   const fx=-Math.sin(c.yaw),fz=-Math.cos(c.yaw);
   const botScale=(c.isPlayer||P2S.some(x=>x.car===c))?1:(0.8+difficulty*0.2);
@@ -703,6 +716,7 @@ function stepCar(c,dt){
   }
   c.pos.addScaledVector(c.vel,dt);
   const mx=W-c.hx-0.2;
+  if(c.isPlayer&&c.onGround&&Math.abs(c.pos.x)>=mx-0.05){const side=Math.sign(c.pos.x),fxx=-Math.sin(c.yaw),fzz=-Math.cos(c.yaw),fv=c.vel.x*fxx+c.vel.z*fzz;if(Math.sign(fxx)===side&&Math.abs(fxx)>0.35&&fv>12&&Math.abs(c.pos.z)<L-c.hz-2){enterWall(c,side,fxx,fzz,fv);return;}}
   if(c.pos.x>mx){c.pos.x=mx;c.vel.x*=-.2;}
   if(c.pos.x<-mx){c.pos.x=-mx;c.vel.x*=-.2;}
   const mz=L-c.hz-0.2;
@@ -723,6 +737,63 @@ function stepCar(c,dt){
   c.mesh.userData.flame.scale.y=0.8+Math.random()*0.6;
   c.ring.position.set(c.pos.x,0.08,c.pos.z);
   if(c.marker)c.marker.position.set(c.pos.x,c.pos.y+3.2+Math.sin(performance.now()/200)*.3,c.pos.z);
+  if(c.touchCd>0)c.touchCd-=dt;
+}
+// ================= Subir às paredes (carro do jogador) =================
+const _wq=new THREE.Quaternion(),_wm=new THREE.Matrix4(),_wu=new THREE.Vector3(),_wb=new THREE.Vector3(),_wr=new THREE.Vector3();
+function enterWall(c,side,fx,fz,fv){
+  c.wall=side;c.onGround=false;c.flip=0;
+  const hy=Math.abs(fx),hz=fz,l=Math.hypot(hy,hz)||1;
+  c.wth=Math.atan2(hy/l,hz/l);
+  c.vel.set(0,Math.sin(c.wth)*fv,Math.cos(c.wth)*fv);
+  c.pos.x=side*(W-0.9);c.pos.y=Math.max(c.pos.y,1.0);
+  if(c.isPlayer)tone(220,.12,'triangle',.06,420);
+}
+function leaveWall(c,jump){
+  const side=c.wall;c.wall=0;
+  c.pos.x=side*(W-0.9-(jump?1.2:0.6));
+  if(jump){c.vel.x=-side*14;c.vel.y+=4;c.jumps=1;c.jumpHeld=true;}else c.vel.x=-side*3;
+  c.onGround=false;c.mesh.quaternion.identity();
+}
+function stepWall(c,dt){
+  const i=c.in,sp=c.spec,side=c.wall;
+  const boosting=i.boost&&c.boost>0;
+  // direção no plano da parede (z,y)
+  c.wth+=side*i.s*2.4*sp.turn*dt;
+  let hz=Math.cos(c.wth),hy=Math.sin(c.wth);
+  let fv=c.vel.z*hz+c.vel.y*hy,lv=c.vel.z*(-hy)+c.vel.y*hz;
+  fv+=i.f*(i.f>0?40:44)*sp.acc*dt;
+  if(boosting)fv+=62*sp.acc*dt;
+  fv=Math.max(-22,Math.min((boosting?48:34)*sp.top,fv));
+  lv*=Math.exp(-6*dt);
+  c.vel.z=hz*fv-hy*lv;c.vel.y=hy*fv+hz*lv;
+  c.vel.y+=GRAV*0.45*dt; // a gravidade puxa para baixo
+  c.vel.x=0;
+  if(boosting){c.boost=Math.max(0,c.boost-33*dt);if(Math.random()<.8)spawnPart(new THREE.Vector3(c.pos.x,c.pos.y-hy*c.hz,c.pos.z-hz*c.hz),new THREE.Vector3(-side*2,-hy*6,-hz*6),Math.random()<.5?0xff8a00:0xffd24d,.7,.35);}
+  c.pos.y+=c.vel.y*dt;c.pos.z+=c.vel.z*dt;
+  const mz=L-c.hz-0.3;
+  if(Math.abs(c.pos.z)>mz){c.pos.z=Math.sign(c.pos.z)*mz;c.vel.z*=-0.2;}
+  if(c.pos.y>WALLH-2){c.pos.y=WALLH-2;c.vel.y=Math.min(0,c.vel.y);}
+  const spd=Math.hypot(c.vel.y,c.vel.z);
+  if(i.jump&&!c.jumpHeld){leaveWall(c,true);}
+  else if(c.pos.y<=0.95&&c.vel.y<=0){ // volta ao chão a seguir em frente
+    c.wall=0;c.pos.y=0.9;c.onGround=true;c.mesh.quaternion.identity();
+    const gx=-side*Math.max(0.25,Math.abs(hy)),gz=hz,gl=Math.hypot(gx,gz);
+    c.yaw=Math.atan2(-gx/gl,-gz/gl);
+    const v=Math.max(spd,0);c.vel.set(gx/gl*v,0,gz/gl*v);c.pos.x=side*(W-c.hx-0.6);
+  }else if(spd<7&&c.pos.y>2.2){leaveWall(c,false);}
+  c.jumpHeld=i.jump;
+  if(!c.wall){c.mesh.position.set(c.pos.x,c.pos.y-0.9,c.pos.z);return;}
+  // câmara segue a direção horizontal
+  if(Math.abs(hz)>0.2){const ty=hz<0?0:Math.PI;let d=ty-c.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));c.yaw+=d*Math.min(1,dt*4);}
+  // orientação do carro deitado na parede
+  _wu.set(-side,0,0);_wb.set(0,-hy,-hz);_wr.crossVectors(_wu,_wb);
+  _wm.makeBasis(_wr,_wu,_wb);c.mesh.quaternion.setFromRotationMatrix(_wm);
+  c.mesh.position.set(c.pos.x+side*0.9,c.pos.y,c.pos.z);
+  c.mesh.userData.flame.visible=boosting;
+  c.ring.position.set(c.pos.x,0.08,c.pos.z);
+  if(c.marker)c.marker.position.set(c.pos.x-side*3,c.pos.y,c.pos.z);
+  for(const p of pads)void p;
   if(c.touchCd>0)c.touchCd-=dt;
 }
 function carCar(){
@@ -747,6 +818,7 @@ function carCar(){
 const _loc=new THREE.Vector3(),_n=new THREE.Vector3();
 function carBall(c){
   if(c.dead>0)return;
+  if(c.wall){_loc.copy(ball.pos).sub(c.pos);const d=_loc.length(),R=BR+1.7;if(d<R&&d>1e-4){_n.copy(_loc).divideScalar(d);ball.pos.addScaledVector(_n,R-d);const vn=(ball.vel.x-c.vel.x)*_n.x+(ball.vel.y-c.vel.y)*_n.y+(ball.vel.z-c.vel.z)*_n.z;if(vn<0){ball.vel.addScaledVector(_n,-(1.9)*vn);ball.vel.addScaledVector(c.vel,0.3);if(-vn>6)tone(140+Math.min(300,-vn*6),.12,'triangle',Math.min(.25,.05+(-vn)*.004),70);}ball.last=c;if(c.isPlayer&&c.touchCd<=0){pTouches++;c.touchCd=0.5;}}return;}
   _loc.copy(ball.pos).sub(c.pos);
   const cy=Math.cos(c.yaw),sy=Math.sin(c.yaw);
   const lx=_loc.x*cy-_loc.z*sy,lz=_loc.x*sy+_loc.z*cy,ly=_loc.y;
@@ -770,7 +842,7 @@ function carBall(c){
       ball.vel.y+=Math.min(6,speed*0.12)+1.5;
       if(-vn>6){tone(140+Math.min(300,-vn*6),.12,'triangle',Math.min(.25,.05+(-vn)*.004),70);if(c.isPlayer)shake=Math.max(shake,Math.min(.5,-vn*.012));}
     }
-    ball.last=c;
+    ball.last=c;ball.shotN=(ball.shotN||0)+1;
     if(c.isPlayer&&c.touchCd<=0){pTouches++;c.touchCd=0.5;}
   }
 }
@@ -984,6 +1056,8 @@ setTheme('dia');
 buildCarMenu();
 setShow(selCar);
 window.C30me=()=>player&&player.mesh&&player.mesh.isObject3D?player.mesh:null; // Central 30 online: este é o teu carro
+window.C30pause=(force)=>{if(state==='menu')return;if(!paused){paused=true;say('PAUSA');}else if(!force){paused=false;$('msg').style.opacity=0;}};
+window.C30isPaused=()=>paused&&state!=='menu';
 requestAnimationFrame(loop);
 })();
 </script>

@@ -98,7 +98,7 @@ h1 .n2{color:var(--orange);text-shadow:0 0 24px rgba(255,122,26,.7)}
 <div id="menu">
   <div class="card">
     <h1><span class="n1">NEON</span> <span class="n2">STRIKERS</span></h1>
-    <p class="tag" id="tagline">Futebol de carros a jato numa arena de néon. Mete a bola na baliza laranja.</p>
+    <p class="tag" id="tagline">Futebol de carros a jato numa arena de neon. Mete a bola na baliza laranja.</p>
     <p id="result" hidden></p>
     <div class="row"><span class="lbl">Equipas</span><div class="seg" id="segMode"><button id="m1" data-v="1" class="on">1 vs 1</button><button id="m2" data-v="2">2 vs 2</button><button id="m3" data-v="3">3 vs 3</button></div></div>
     <div class="row"><span class="lbl">Dificuldade</span><div class="seg" id="segDiff"><button id="d0" data-v="0">Fácil</button><button id="d1" data-v="1" class="on">Normal</button><button id="d2" data-v="2">Difícil</button></div></div>
@@ -111,6 +111,7 @@ h1 .n2{color:var(--orange);text-shadow:0 0 24px rgba(255,122,26,.7)}
       <b>Espaço</b><span>Saltar (2× com direção = mortal)</span>
       <b>Shift</b><span>Turbo</span>
       <b>C</b><span>Câmara bola / livre</span>
+      <b>Parede</b><span>Conduz contra a parede lateral para subir · Espaço salta da parede</span>
       <b>P / Esc</b><span>Pausa</span>
       <b>Comando</b><span>A saltar · B turbo · RT/LT acelerar · Y câmara</span>
     </div>
@@ -124,7 +125,7 @@ const $=id=>document.getElementById(id);
 const V=THREE.Vector3;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 // arena dimensions (half sizes)
-const W=75,L=110,H=32,GW=26,GH=10,GD=10,CUT=20,BR=2.1,GRAV=-30;
+const W=75,L=110,H=32,GW=22,GH=9,GD=10,CUT=20,BR=2.1,GRAV=-30;
 const TEAMCOL=[0x2f8cff,0xff7a1a];
 const isTouch=matchMedia('(pointer:coarse)').matches||('ontouchstart' in window);
 
@@ -305,7 +306,7 @@ function walls(p,v,r,e){
 const HALF={x:1.3,y:.7,z:2.25};
 class Car{
   constructor(team,isPlayer,name){
-    Object.assign(this,{team,isPlayer,name,pos:new V(),vel:new V(),yaw:0,onGround:true,boost:33,jumpT:9,canSecond:false,flip:null,mega:0,stuck:0,rev:0,boosting:false,spawn:null});
+    Object.assign(this,{team,isPlayer,name,pos:new V(),vel:new V(),yaw:0,wall:0,wf:new V(0,1,0),onGround:true,boost:33,jumpT:9,canSecond:false,flip:null,mega:0,stuck:0,rev:0,boosting:false,spawn:null});
     const col=TEAMCOL[team];
     this.group=new THREE.Group();this.fg=new THREE.Group();this.fg.position.y=.8;this.group.add(this.fg);
     const bodyM=new THREE.MeshStandardMaterial({color:col,metalness:.55,roughness:.32,emissive:col,emissiveIntensity:.08});
@@ -338,12 +339,41 @@ class Car{
     }
     scene.add(this.group);
   }
-  fwd(){return new V(Math.sin(this.yaw),0,Math.cos(this.yaw));}
-  right(){return new V(-Math.cos(this.yaw),0,Math.sin(this.yaw));}
+  fwd(){return this.wall?this.wf.clone():new V(Math.sin(this.yaw),0,Math.cos(this.yaw));}
+  up(){return this.wall?new V(-this.wall,0,0):new V(0,1,0);}
+  right(){return this.wall?this.wf.clone().cross(this.up()):new V(-Math.cos(this.yaw),0,Math.sin(this.yaw));}
+  // condução na parede lateral (x = ±W)
+  wallUpdate(dt,inp,boosting){
+    const s=this.wall,n=new V(-s,0,0),f=this.wf.clone();
+    let sp=this.vel.dot(f);
+    if(inp.thr){const braking=inp.thr*sp<0;sp+=inp.thr*(braking?75:32)*dt;}else sp-=Math.sign(sp)*Math.min(Math.abs(sp),8*dt);
+    if(boosting)sp+=48*dt;
+    const maxS=boosting?48:31;if(sp>maxS)sp=Math.max(maxS,sp-22*dt);if(sp<-20)sp=-20;
+    sp+=GRAV*.6*f.y*dt; // a subir perde velocidade, a descer ganha
+    const r=f.clone().cross(n),sr=2.4*Math.min(1,Math.abs(sp)/5);
+    f.addScaledVector(r,inp.steer*sr*dt*(sp<0?-1:1));f.x=0;
+    if(f.lengthSq()<1e-6)f.set(0,1,0);f.normalize();
+    this.wf=f;this.vel.copy(f).multiplyScalar(sp);
+    this.pos.addScaledVector(this.vel,dt);this.pos.x=s*W;
+    if(this.pos.y>H-1.6){this.pos.y=H-1.6;if(f.y>0)sp*=.9;}
+    this.jumpT+=dt;
+    const slow=Math.abs(sp)<7&&this.pos.y>1.2,edge=Math.abs(this.pos.z)>L-CUT-1.5;
+    if(inp.jump||slow||edge){ // descola da parede
+      this.wall=0;this.onGround=false;this.vel.addScaledVector(n,inp.jump?11:3);
+      if(inp.jump){this.jumpT=0;this.canSecond=true;tone(330,.08,'triangle',.06);}
+      const h=new V(this.vel.x,0,this.vel.z);this.yaw=h.lengthSq()>1?Math.atan2(h.x,h.z):(s>0?-Math.PI/2:Math.PI/2);
+      this.pos.x=s*(W-2.1);
+    }else if(this.pos.y<=.25&&f.y<=.05){ // volta ao chão
+      const ff=n.clone().multiplyScalar(Math.max(.35,-f.y)).add(new V(0,0,f.z)).normalize();
+      this.wall=0;this.onGround=true;this.pos.y=0;this.pos.x=s*(W-2.2);this.yaw=Math.atan2(ff.x,ff.z);this.vel.copy(ff).multiplyScalar(Math.abs(sp));
+    }
+    if(this.mega>0)this.mega-=dt;
+  }
   update(dt,inp){
     const fwd=this.fwd();
     const boosting=inp.boost&&this.boost>0;this.boosting=boosting;
     if(boosting)this.boost=Math.max(0,this.boost-33*dt);
+    if(this.wall){this.wallUpdate(dt,inp,boosting);return;}
     if(this.onGround){
       let sp=this.vel.dot(fwd);
       const side=this.vel.clone().addScaledVector(fwd,-sp);side.y=0;
@@ -385,22 +415,30 @@ class Car{
     const cp=new V(this.pos.x,this.pos.y+.8,this.pos.z);
     walls(cp,this.vel,1.9,.25);
     this.pos.set(cp.x,cp.y-.8,cp.z);
+    // sobe à parede lateral quando vai contra ela com velocidade
+    if(this.isPlayer&&this.onGround){
+      const sx=Math.sign(this.pos.x)||1,fw=this.fwd(),spd=Math.hypot(this.vel.x,this.vel.z);
+      if(Math.abs(this.pos.x)>W-2.3&&Math.abs(this.pos.z)<L-CUT-4&&fw.x*sx>.35&&spd>8&&inp.thr>0){
+        this.wall=sx;this.wf=new V(0,fw.x*sx,fw.z).normalize();this.vel.copy(this.wf).multiplyScalar(spd);
+        this.pos.x=sx*W;this.pos.y=.3;this.onGround=false;this.flip=null;tone(260,.1,'triangle',.05);
+      }
+    }
     if(this.flip){this.flip.t+=dt;if(this.flip.t>.6)this.flip=null;}
     if(this.mega>0)this.mega-=dt;
   }
   visual(dt){
-    const ia=window.__nsA==null?1:window.__nsA;if(this.pp&&ia<1&&this.pp.distanceToSquared(this.pos)<9){this.group.position.lerpVectors(this.pp,this.pos,ia);let d=this.yaw-this.pyaw;d=Math.atan2(Math.sin(d),Math.cos(d));this.group.rotation.y=this.pyaw+d*ia;}else{this.group.position.copy(this.pos);this.group.rotation.y=this.yaw;}
+    const ia=window.__nsA==null?1:window.__nsA;if(this.wall||this.wasWall){this.wasWall=!!this.wall;this.group.position.copy(this.pos);if(this.wall){const u=this.up(),f=this.wf,x=u.clone().cross(f);this.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,u,f));}else this.group.rotation.set(0,this.yaw,0);}else if(this.pp&&ia<1&&this.pp.distanceToSquared(this.pos)<9){this.group.position.lerpVectors(this.pp,this.pos,ia);let d=this.yaw-this.pyaw;d=Math.atan2(Math.sin(d),Math.cos(d));this.group.rotation.y=this.pyaw+d*ia;}else{this.group.position.copy(this.pos);this.group.rotation.y=this.yaw;}
     if(this.flip){const a=Math.min(1,this.flip.t/.55)*Math.PI*2;this.fg.rotation.x=a*this.flip.ax;this.fg.rotation.z=a*this.flip.az;}
     else{this.fg.rotation.x*=.8;this.fg.rotation.z*=.8;
-      if(!this.onGround)this.fg.rotation.x=clamp(-this.vel.y*.012,-.25,.25);}
+      if(!this.onGround&&!this.wall)this.fg.rotation.x=clamp(-this.vel.y*.012,-.25,.25);}
     const sp=this.vel.dot(this.fwd());
     for(const w of this.wheels)w.children[0].rotation.x+=0; // keep
     this.wheels.forEach((w,i)=>{w.rotation.x+=sp*dt/.58;});
     this.flame.visible=this.boosting;
     if(this.boosting){this.flame.scale.set(1,.8+Math.random()*.5,1);
-      const back=this.fwd().multiplyScalar(-3.4),p=this.pos.clone().add(back);p.y+=.9;
+      const back=this.fwd().multiplyScalar(-3.4),p=this.pos.clone().add(back).addScaledVector(this.up(),.9);
       emit(p,this.vel.clone().multiplyScalar(.3).addScaledVector(this.fwd(),-8),2,this.mega>0?0xffd23f:0xff8a30,.35,2);}
-    this.glow.visible=this.pos.y<3;
+    this.glow.visible=!this.wall&&this.pos.y<3;
     this.glow.material.color.set(this.mega>0?0xffd23f:TEAMCOL[this.team]);
     this.bodyM.emissiveIntensity=this.mega>0?.5+Math.sin(performance.now()/80)*.2:.08;
     if(this.mega>0)this.bodyM.emissive.set(0xffd23f);else this.bodyM.emissive.set(TEAMCOL[this.team]);
@@ -449,7 +487,7 @@ function kickoff(){
   const sp=SPOTS[S.mode];
   for(const t of[0,1]){const team=cars.filter(c=>c.team===t);
     team.forEach((c,i)=>{const [x,f]=sp[i],s=t===0?1:-1;c.pos.set(x*s,0,s*f*L);c.vel.set(0,0,0);c.yaw=t===0?Math.PI:0;
-      c.boost=33;c.flip=null;c.onGround=true;c.canSecond=false;c.mega=0;});}
+      c.boost=33;c.flip=null;c.onGround=true;c.wall=0;c.canSecond=false;c.mega=0;});}
   pads.forEach(p=>p.t=0);
   S.state='countdown';S.timer=3;S.lastCount=-1;
 }
@@ -473,7 +511,7 @@ const REPLAY_FROM=Date.UTC(2026,10,13,17,50);
 const replayOn=()=>Date.now()>=REPLAY_FROM;
 let rec=[],recT=0,lastReplay=null,rp=null;
 function snap(){return{b:[ball.pos.x,ball.pos.y,ball.pos.z,ballMesh.quaternion.x,ballMesh.quaternion.y,ballMesh.quaternion.z,ballMesh.quaternion.w],
-  c:cars.map(c=>[c.pos.x,c.pos.y,c.pos.z,c.yaw,c.fg.rotation.x,c.fg.rotation.z,c.boosting?1:0])};}
+  c:cars.map(c=>[c.pos.x,c.pos.y,c.pos.z,c.yaw,c.fg.rotation.x,c.fg.rotation.z,c.boosting?1:0,c.group.quaternion.x,c.group.quaternion.y,c.group.quaternion.z,c.group.quaternion.w,c.wall?1:0])};}
 function startReplay(){
   if(!lastReplay||lastReplay.length<10||S.state!=='goal')return;
   S.state='replay';rp={i:0,cam:null};$('replayBtn').hidden=true;$('replayTag').hidden=false;message('');
@@ -549,7 +587,7 @@ addEventListener('pointerdown',e=>{if(S.state==='replay'&&!(e.target.closest&&e.
 $('replayTag').addEventListener('click',()=>{if(S.state==='replay')afterGoal();});
 $('restart').addEventListener('click',()=>{$('restart').hidden=true;$('result').hidden=true;startGame();});
 $('play').addEventListener('click',()=>{if(S.state==='paused')togglePause();else{$('result').hidden=true;startGame();}});
-if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás para travar)</span><b>SALTAR</b><span>Toca 2× com o joystick inclinado = mortal</span><b>TURBO</b><span>Mantém premido</span><b>CÂMARA</b><span>Câmara bola / livre</span>';
+if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás para travar)</span><b>SALTAR</b><span>Toca 2× com o joystick inclinado = mortal</span><b>TURBO</b><span>Mantém premido</span><b>CÂMARA</b><span>Câmara bola / livre</span><b>PAREDE</b><span>Conduz contra a parede lateral para subir · SALTAR salta da parede</span>';
 
 /* ---------- AI ---------- */
 function aiInput(car){
@@ -591,6 +629,17 @@ function aiInput(car){
     target=pb.clone().addScaledVector(toGoal,-off);
     if(dist<9)target=pb.clone().addScaledVector(toGoal,-1.2);
   }
+  // guarda-redes: se a bola vai a caminho da nossa baliza, o carro mais atrás corta-lhe o caminho
+  let save=false;
+  if(car.shotSeen!==ball.shotN){car.shotSeen=ball.shotN;car.willSave=Math.random()<[.12,.45,.8][S.diff|0];}
+  if(car.willSave&&ball.vel.z*s>5){const tg=(ownZ-ball.pos.z)/ball.vel.z,xg=ball.pos.x+ball.vel.x*tg;
+    if(tg>0&&tg<3.2&&Math.abs(xg)<GW/2+5){
+      const keeper=pool.slice().sort((a,b)=>b.pos.z*s-a.pos.z*s)[0];
+      if(keeper===car&&(car.pos.z-ball.pos.z)*s>-1){
+        // ponto onde dá para chegar à bola a tempo (antes da linha de golo)
+        let best=null;for(let t=.05;t<=tg;t+=.05){const bx=ball.pos.x+ball.vel.x*t,bz=ball.pos.z+ball.vel.z*t;if(Math.hypot(bx-car.pos.x,bz-car.pos.z)<=4+t*30*D.thr){best=new V(bx,0,bz);break;}}
+        if(!best)best=new V(clamp(xg,-GW/2+1,GW/2-1),0,ownZ-s*2.5);
+        target=new V(clamp(best.x,-W+3,W-3),0,clamp(best.z,-L+2,L-2));save=true;}}}
   const dx=target.x-car.pos.x,dz=target.z-car.pos.z,c=Math.cos(car.yaw),sn=Math.sin(car.yaw);
   const lx=dx*c-dz*sn,lz=dx*sn+dz*c,ang=Math.atan2(lx,lz),td=Math.hypot(dx,dz);
   inp.steer=clamp(-ang*3,-1,1);
@@ -605,6 +654,7 @@ function aiInput(car){
   if(Math.abs(ang)<.3&&car.boost>D.boostMin&&sp<46&&(td>18||(attacker&&dist<22&&goalSide))&&Math.random()<D.boostP)inp.boost=true;
   if(!goalSide&&dist<16)inp.boost=false;
   if(retreat&&car.boost>0&&Math.abs(ang)<.6&&td>12)inp.boost=true;
+  if(save){inp.thr=1;if(Math.abs(ang)>2.3&&td<12){inp.thr=-1;inp.steer=-inp.steer;}if(car.boost>0&&Math.abs(ang)<.7&&td>5)inp.boost=true;if(car.onGround&&Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z)<9&&ball.pos.y>3&&ball.pos.y<10){inp.jump=true;inp.jumpHeld=true;}}
   if(S.state==='play'&&S.timer>-1.5&&attacker&&dist<80)inp.boost=car.boost>0&&Math.abs(ang)<.4; // kickoff rush
   const bdx=ball.pos.x-car.pos.x,bdz=ball.pos.z-car.pos.z,blz=bdx*sn+bdz*c,blx=bdx*c-bdz*sn,bang=Math.atan2(blx,blz);
   if(attacker&&D.jump&&car.onGround&&dist<10&&ball.pos.y>3.5&&ball.pos.y<11&&Math.abs(bang)<.4&&ball.vel.y<6){inp.jump=true;inp.jumpHeld=true;}
@@ -616,12 +666,13 @@ function aiInput(car){
 
 /* ---------- physics step ---------- */
 function carBall(car){
-  const cx=car.pos.x,cy=car.pos.y+.8,cz=car.pos.z,c=Math.cos(car.yaw),s=Math.sin(car.yaw);
+  const U=car.up(),F=car.fwd(),Rr=car.right();
+  const cx=car.pos.x+U.x*.8,cy=car.pos.y+U.y*.8,cz=car.pos.z+U.z*.8;
   const dx=ball.pos.x-cx,dy=ball.pos.y-cy,dz=ball.pos.z-cz;
-  let lx=dx*c-dz*s,lz=dx*s+dz*c,ly=dy;
+  const lx=dx*Rr.x+dy*Rr.y+dz*Rr.z,ly=dx*U.x+dy*U.y+dz*U.z,lz=dx*F.x+dy*F.y+dz*F.z;
   // in-flip the hitbox is roughly the same; use clamp
   const qx=clamp(lx,-HALF.x,HALF.x),qy=clamp(ly,-HALF.y,HALF.y),qz=clamp(lz,-HALF.z,HALF.z);
-  const wx=qx*c+qz*s+cx,wy=qy+cy,wz=-qx*s+qz*c+cz;
+  const wx=cx+Rr.x*qx+U.x*qy+F.x*qz,wy=cy+Rr.y*qx+U.y*qy+F.y*qz,wz=cz+Rr.z*qx+U.z*qy+F.z*qz;
   const n=new V(ball.pos.x-wx,ball.pos.y-wy,ball.pos.z-wz);let d=n.length();
   if(d>=BR)return;
   if(d<1e-4){n.set(0,1,0);d=0;}else n.multiplyScalar(1/d);
@@ -642,7 +693,7 @@ function carBall(car){
     const v=-rel;hitSfx(v*power);
     if(v>8)emit(ball.pos,new V(),v*.25,car.mega>0?0xffd23f:TEAMCOL[car.team],.4,Math.min(30,v|0));
     if(car.mega>0&&v>10)emit(ball.pos,new V(),18,0xffd23f,.5,25);
-    ball.last=car;
+    ball.last=car;ball.shotN=(ball.shotN||0)+1;
   }
 }
 function carCar(a,b){
@@ -674,7 +725,7 @@ function step(dt,inputs){
   if(S.state==='goal')return;
   // ball
   const b=ball;
-  b.vel.y+=GRAV*.9*dt;b.vel.multiplyScalar(1-.03*dt);
+  b.vel.y+=GRAV*.9*dt;b.vel.multiplyScalar(1-.03*dt);{const bs=b.vel.length();if(bs>58)b.vel.multiplyScalar(58/bs);}
   const bs=b.vel.length();if(bs>120)b.vel.multiplyScalar(120/bs);
   b.pos.addScaledVector(b.vel,dt);
   // online: os carros dos amigos são sólidos para a bola e para o teu carro
@@ -711,7 +762,7 @@ let camPos=new V(0,30,90),camLook=new V(),camInit=true,shake=0,fov=72,menuT=0;
 function updateCam(dt){
   if(S.state==='menu'||(S.state==='over'&&!player)){
     menuT+=dt*.12;camera.position.set(Math.sin(menuT)*170,60,Math.cos(menuT)*195);camera.lookAt(0,0,0);return;}
-  const c0=player,fwd=new V(Math.sin(c0.group.rotation.y),0,Math.cos(c0.group.rotation.y)),c={pos:c0.group.position};let des,look;
+  const c0=player,fwd=c0.wall?(()=>{const h=new V(c0.wf.x-c0.wall*.6,0,c0.wf.z);return h.lengthSq()>.01?h.normalize():new V(-c0.wall,0,0);})():new V(Math.sin(c0.group.rotation.y),0,Math.cos(c0.group.rotation.y)),c={pos:c0.group.position};let des,look;
   if(S.cam==='ball'&&ballMesh.visible){
     const d=new V(c.pos.x-ball.pos.x,0,c.pos.z-ball.pos.z);if(d.lengthSq()<.5)d.copy(fwd).negate();d.normalize();
     des=c.pos.clone().addScaledVector(d,12.5);des.y=c.pos.y+5.2;
@@ -799,7 +850,7 @@ function frame(now){
     if(!rp.qa){rp.qa=new THREE.Quaternion();rp.qb=new THREE.Quaternion();const e=lastReplay[n-1].b;rp.sx=e[0]>0?-1:1;rp.sz=e[2]>0?-1:1;rp.look=null;}
     ballMesh.position.set(L(f.b[0],g.b[0]),L(f.b[1],g.b[1]),L(f.b[2],g.b[2]));rp.qa.set(f.b[3],f.b[4],f.b[5],f.b[6]);rp.qb.set(g.b[3],g.b[4],g.b[5],g.b[6]);ballMesh.quaternion.copy(rp.qa).slerp(rp.qb,t);
     cars.forEach((c,k)=>{const d=f.c[k],e=g.c[k]||d;if(!d)return;const jump=Math.abs(e[0]-d[0])+Math.abs(e[2]-d[2])>25,x=jump?d[0]:L(d[0],e[0]),y=jump?d[1]:L(d[1],e[1]),z=jump?d[2]:L(d[2],e[2]),yaw=jump?d[3]:A(d[3],e[3]);
-      c.group.position.set(x,y,z);c.group.rotation.y=yaw;c.fg.rotation.x=A(d[4],e[4]);c.fg.rotation.z=A(d[5],e[5]);c.flame.visible=!!d[6];
+      c.group.position.set(x,y,z);if(d[11]){c.group.quaternion.set(d[7],d[8],d[9],d[10]);}else c.group.rotation.set(0,yaw,0);c.fg.rotation.x=A(d[4],e[4]);c.fg.rotation.z=A(d[5],e[5]);c.flame.visible=!!d[6];
       if(d[6]&&Math.random()<dt*45)emit(new V(x,y+.9,z).addScaledVector(new V(Math.sin(yaw),0,Math.cos(yaw)),-3.4),new V(),2,0xff8a30,.3,1);});
     // câmara de transmissão: alta e de lado, sempre do mesmo lado, a seguir a bola com suavidade
     const bp=ballMesh.position,des=new V(bp.x+rp.sx*22,bp.y+10,bp.z+rp.sz*14);
