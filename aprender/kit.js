@@ -73,7 +73,7 @@ try {
     const main = K.el('main', { class: 'km' });
     if (intro) main.append(K.el('p', { class: 'intro', html: intro }));
     document.body.prepend(head, main);
-    K.showBest = () => { if (best) { const b = K.best.get(key); best.textContent = b ? 'Melhor: ' + b : ''; best.title = K.keep() ? 'Guardado (Definições: Guardar dados = Sim)' : 'Só nesta visita (Definições: Guardar dados = Não)'; } };
+    K.showBest = () => { if (best) { const b = K.best.get(key); best.textContent = b ? 'Melhor: ' + b : '';  } };
     K.showBest();
     return main;
   };
@@ -94,8 +94,7 @@ try {
       K.el('div', { class: 'stars', 'aria-label': stars + ' estrelas de 3' }, '★'.repeat(stars) + '☆'.repeat(3 - stars)),
       K.el('div', { class: 'big' }, String(score), total ? K.el('small', {}, ' / ' + total) : K.el('small', {}, unit ? ' ' + unit : '')),
       K.el('p', {}, note || msg),
-      key ? K.el('p', {}, 'O teu melhor: ' + best + (K.keep() ? '' : ' · só nesta visita')) : null,
-      key && !K.keep() ? K.el('p', { style: 'font-size:13px' }, 'Os resultados não ficam guardados. Para os guardar, abre as Definições da Central 30 e escolhe "Guardar dados do jogo: Sim".') : null,
+      key ? K.el('p', {}, 'O teu melhor: ' + best) : null,
       K.el('div', { class: 'row', style: 'justify-content:center;margin-top:8px' },
         K.el('button', { class: 'btn primary', onclick: again }, 'Jogar outra vez'),
         K.el('a', { class: 'btn', href: K.backHref() }, 'Outras atividades'))));
