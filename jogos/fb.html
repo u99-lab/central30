@@ -975,7 +975,7 @@ camera.position.set(0, 18, 32);
 camera.lookAt(0, 0, 0);
 
 let camMode = 0; // 0=follow, 1=tactical, 2=TV broadcast, 3=vista exterior do estádio
-const CAM_MODES = 4;
+const CAM_MODES = 5;
 
 // ==========================================
 // AUDIO
@@ -4233,6 +4233,13 @@ function updateCamera(dt) {
     const lookTarget = new THREE.Vector3(bp.x * 0.3, 0.5, bp.z);
     camTarget.lerp(lookTarget, 6 * dt);
     camera.lookAt(camTarget);
+  } else if (camMode === 4) {
+    const yaw = playerObj.rotation.y;
+    const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+    const ideal = pp.clone().addScaledVector(forward, -9); ideal.y += 5.2;
+    const target = pp.clone().addScaledVector(forward, 4); target.y += 1.4;
+    camera.position.lerp(ideal, 1-Math.exp(-9*dt));
+    camTarget.lerp(target, 1-Math.exp(-12*dt)); camera.lookAt(camTarget);
   } else {
     // Vista de fora do estádio - câmara aérea orbital lenta, vendo o estádio completo de fora
     if (!window._outsideCamAngle) window._outsideCamAngle = 0;
