@@ -84,8 +84,8 @@ K.play=v=>{K.inGame=!!v;$('k-pbtn').style.display=v&&K.touch?'block':'none';$('k
 const keys=K.keys={},edge={};
 addEventListener('keydown',e=>{if(e.repeat)return;K.audio();if(!keys[e.code])edge[e.code]=true;keys[e.code]=true;if(/^(Space|Arrow)/.test(e.code))e.preventDefault();if(e.code==='KeyP'||(e.code==='Escape'&&parent===window))K.setPause(!K.paused);});
 addEventListener('keyup',e=>{keys[e.code]=false;});
-addEventListener('blur',()=>{K.clearInput();if(K.inGame)K.setPause(true);});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){K.clearInput();if(K.inGame)K.setPause(true);}});
+addEventListener('blur',()=>{K.clearInput();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){K.clearInput();}});
 K.hit=(...c)=>{let r=false;for(const k of c)if(edge[k]){edge[k]=false;r=true;}return r;};
 K.down=(...c)=>c.some(k=>keys[k]);
 const stick={x:0,y:0,id:null,ox:0,oy:0};K.stick=stick;K.useStick=false;
