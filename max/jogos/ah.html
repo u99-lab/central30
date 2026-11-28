@@ -79,7 +79,7 @@ K.roll=(m,ang)=>{m.rotation.x+=Math.max(-.32,Math.min(.32,ang));};
 K.name=()=>{try{return (window.C30name&&window.C30name())||'Tu';}catch{return 'Tu';}};
 K.unlock=(id,title)=>{try{window.C30&&window.C30.unlock(id,title);}catch{}};
 // ---------- pausa
-K.setPause=v=>{v=!!v;if(v&&!K.inGame)v=false;K.paused=v;$('k-pause').hidden=!v;if(!v)for(const k in keys)keys[k]=false;};
+K.setPause=v=>{v=!!v;if(v&&!K.inGame)v=false;K.paused=v;$('k-pause').hidden=!v;K.clearInput();};
 window.C30pause=f=>K.setPause(f===undefined?!K.paused:f);window.C30isPaused=()=>K.paused;
 $('k-resume').onclick=()=>K.setPause(false);$('k-quit').onclick=()=>{K.setPause(false);K.onQuit&&K.onQuit();};
 $('k-pbtn').onclick=()=>K.setPause(!K.paused);
@@ -88,17 +88,19 @@ K.play=v=>{K.inGame=!!v;$('k-pbtn').style.display=v&&K.touch?'block':'none';$('k
 const keys=K.keys={},edge={};
 addEventListener('keydown',e=>{if(e.repeat)return;K.audio();if(!keys[e.code])edge[e.code]=true;keys[e.code]=true;if(/^(Space|Arrow)/.test(e.code))e.preventDefault();if(e.code==='KeyP'||(e.code==='Escape'&&parent===window))K.setPause(!K.paused);});
 addEventListener('keyup',e=>{keys[e.code]=false;});
-addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
+addEventListener('blur',()=>{K.clearInput();if(K.inGame)K.setPause(true);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){K.clearInput();if(K.inGame)K.setPause(true);}});
 K.hit=(...c)=>{let r=false;for(const k of c)if(edge[k]){edge[k]=false;r=true;}return r;};
 K.down=(...c)=>c.some(k=>keys[k]);
 const stick={x:0,y:0,id:null,ox:0,oy:0};K.stick=stick;K.useStick=false;
 K.axis=()=>{let x=(K.down('KeyD','ArrowRight')?1:0)-(K.down('KeyA','ArrowLeft')?1:0)+stick.x,y=(K.down('KeyW','ArrowUp')?1:0)-(K.down('KeyS','ArrowDown')?1:0)+stick.y;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l;}return{x,y};};
 const sEl=$('k-stick');
+K.clearInput=()=>{for(const k in keys)keys[k]=false;for(const k in edge)edge[k]=false;stick.id=null;stick.x=stick.y=0;sEl.style.display='none';sEl.firstChild.style.transform='';document.querySelectorAll('#k-btns .dn').forEach(b=>b.classList.remove('dn'));};
 addEventListener('touchstart',e=>{K.audio();if(!K.useStick||!K.inGame||K.paused)return;for(const t of e.changedTouches){if(stick.id===null&&t.clientX<innerWidth*.5&&!t.target.closest('button')){stick.id=t.identifier;stick.ox=t.clientX;stick.oy=t.clientY;sEl.style.display='block';sEl.style.left=t.clientX+'px';sEl.style.top=t.clientY+'px';}}},{passive:true});
 addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===stick.id){let dx=(t.clientX-stick.ox)/50,dy=(t.clientY-stick.oy)/50;const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l;}stick.x=dx;stick.y=-dy;sEl.firstChild.style.transform='translate('+dx*38+'px,'+dy*38+'px)';}},{passive:true});
 const tEnd=e=>{for(const t of e.changedTouches)if(t.identifier===stick.id){stick.id=null;stick.x=stick.y=0;sEl.style.display='none';sEl.firstChild.style.transform='';}};
 addEventListener('touchend',tEnd);addEventListener('touchcancel',tEnd);
-K.pad=list=>{const b=$('k-btns');b.innerHTML='';for(const [code,label] of list){const el=document.createElement('button');el.textContent=label;const dn=e=>{e.preventDefault();if(!keys[code])edge[code]=true;keys[code]=true;el.classList.add('dn');},up=e=>{e.preventDefault();keys[code]=false;el.classList.remove('dn');};el.addEventListener('pointerdown',dn);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('pointerleave',up);b.appendChild(el);}};
+K.pad=list=>{K.clearInput();const b=$('k-btns');b.innerHTML='';for(const [code,label] of list){const el=document.createElement('button');el.textContent=label;let pid=null;const dn=e=>{e.preventDefault();if(K.paused||!K.inGame||pid!==null&&el.classList.contains('dn'))return;pid=e.pointerId;try{el.setPointerCapture(pid);}catch{}if(!keys[code])edge[code]=true;keys[code]=true;el.classList.add('dn');},up=e=>{if(pid!==null&&e.pointerId!==pid)return;e.preventDefault();pid=null;keys[code]=false;el.classList.remove('dn');};el.addEventListener('pointerdown',dn);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);el.addEventListener('pointerleave',e=>{if(!el.hasPointerCapture?.(e.pointerId))up(e);});b.appendChild(el);}};
 // ---------- som
 let ac=null,master=null;
 K.audio=()=>{if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createGain();master.gain.value=.55;master.connect(ac.destination);}catch{}}if(ac&&ac.state==='suspended')ac.resume().catch(()=>{});return ac;};
