@@ -1076,14 +1076,17 @@ function routeAI(car, dt) {
     car.inp.thr = 0; car.inp.hb = true; return;
   }
   const look = Math.max(2, Math.round((8 + car.speed * 0.6) / 6));
-  const a = at(ai.k + look), b = at(ai.k + look + 1);
-  const dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz) || 1;
+  const lookIndex=loop?ai.k+look:Math.min(ai.k+look,n-1);
+  const a=at(lookIndex),before=at(lookIndex-1),after=at(lookIndex+1);
+  const dx=after.x-before.x,dz=after.z-before.z,L=Math.hypot(dx,dz)||1;
   const tx = a.x - (dz / L) * ai.off, tz = a.z + (dx / L) * ai.off;
   const st = steerTo(car, tx, tz);
   // abranda em curvas apertadas
   const c0 = at(ai.k), c1 = at(ai.k + 6), c2 = at(ai.k + 12);
   const bend = Math.abs(angDiff(Math.atan2(c1.x - c0.x, c1.z - c0.z), Math.atan2(c2.x - c1.x, c2.z - c1.z)));
   let target = ai.cruise * (bend > 0.35 ? 0.6 : 1);
+  if(!loop)target=Math.min(target,Math.max(4,(n-1-ai.k)*2.5));
+  if(Math.abs(st.ang)>.65)target=Math.min(target,5);
   const vf = car.fwdSpeed(), obs = obstacleAhead(car, 6 + Math.max(0, vf) * 1.1);
   if (obs < Infinity) target = Math.min(target, Math.max(0, (obs - 5) * 0.9));
   car.inp.steer = st.steer; car.inp.thr = clamp((target - vf) * 0.3, -1, 1); car.inp.hb = target < 0.3 && vf < 0.6;
@@ -1564,7 +1567,7 @@ function buildWorld() {
       g.fillStyle = '#414247'; g.fillRect(0,0,24,256); g.fillRect(232,0,24,256);
       g.fillStyle = '#e8e8e2'; for (const x of [24,116,137,229]) g.fillRect(x,0,3,256);
       for(let y=0;y<256;y+=64) for(const x of [70,184])g.fillRect(x,y,3,34);
-      g.fillStyle='#777b7b';g.fillRect(120,0,16,256);
+      g.fillStyle='#777b7b';g.fillRect(120,0,16,256);g.fillStyle='#55595e';g.fillRect(123,0,10,256);
     }, { repeat: true });
     SPOT.hwTex = ht;
   }
@@ -1590,10 +1593,14 @@ function buildWorld() {
     const divider = new GeoBuilder(), steel = new THREE.Color('#a7acb4'), concrete = new THREE.Color('#777b80');
     for (const R of ROUTES) if(!R.loop) {
       const P=R.pts;
-      for(let i=8;i<P.length-9;i++){
+      for(let i=5;i<P.length-6;i++){
         const a=P[i],b=P[i+1],pa=P[i-1],pb=P[i+2];
         const aa=Math.atan2(b.x-pa.x,b.z-pa.z),bb=Math.atan2(pb.x-a.x,pb.z-a.z);
-        for(const [off,h,col,w] of [[0,.5,concrete,.42],[-12.6,.65,steel,.10],[12.6,.65,steel,.10]]){
+        // Colisão do separador em segmentos curtos, sem tapar as vias nas curvas.
+        const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.z-a.z)/1.5));
+        for(let j=0;j<steps;j++){const t0=j/steps,t1=(j+1)/steps,x0=lerp(a.x,b.x,t0),z0=lerp(a.z,b.z,t0),x1=lerp(a.x,b.x,t1),z1=lerp(a.z,b.z,t1);addBox(Math.min(x0,x1)-.5,Math.min(z0,z1)-.5,Math.max(x0,x1)+.5,Math.max(z0,z1)+.5,1.05);}
+        if(i%4===0){const c=new THREE.Color('#f5e9c9');divider.box(a.x-.17,1.05,a.z-.17,a.x+.17,1.18,a.z+.17,c);}
+        for(const [off,h,col,w] of [[0,1.05,concrete,.55],[-12.6,.78,steel,.13],[12.6,.78,steel,.13]]){
           const ax=a.x+Math.cos(aa)*off,az=a.z-Math.sin(aa)*off,bx=b.x+Math.cos(bb)*off,bz=b.z-Math.sin(bb)*off;
           const nx=Math.cos(aa)*w,nz=-Math.sin(aa)*w,mx=Math.cos(bb)*w,mz=-Math.sin(bb)*w;
           divider.quad([ax+nx,h,az+nz],[bx+mx,h,bz+mz],[bx-mx,h,bz-mz],[ax-nx,h,az-nz],[0,1,0],[[0,0],[1,0],[1,1],[0,1]],col);
@@ -2457,6 +2464,8 @@ class Car {
       else if (thr < 0) a = vf > 0.5 ? -30 * -thr : -ACC * 0.55 * -thr * Math.max(0, 1 + vf / (MAXV * 0.32));
       if (this.boost && thr >= 0) { a += 20 * Math.max(0, 1 - vf / (MAXV * 1.45)); if (Math.random() < 0.9) { const bx = this.x - sy * (t.L / 2 + 0.2), bz = this.z - cy * (t.L / 2 + 0.2); for (let q = 0; q < 2; q++) particle(PS_ADD, bx + rnd(-0.2, 0.2), this.y + t.r * 0.9, bz + rnd(-0.2, 0.2), -this.vx * 0.2 - sy * 6 + rnd(-1, 1), rnd(0, 0.6), -this.vz * 0.2 - cy * 6 + rnd(-1, 1), rnd(0.12, 0.25), rnd(0.35, 0.6), 0.5, 1.2, 4, 1, -1, 2); } }
       vf += a * dt;
+      // Travagem da IA civil não deve engatar marcha-atrás. Os comandos do jogador mantêm-se.
+      if(this.driver!=='player'&&this.ai&&['traffic','route','hwy'].includes(this.ai.type)&&thr<=0)vf=Math.max(0,vf);
       const dec = (thr === 0 ? 2.4 : 0.35) + 0.0022 * vf * vf;
       vf = Math.abs(vf) < dec * dt ? 0 : vf - Math.sign(vf) * dec * dt;
       if (hb) { const hd = 11 * dt; vf = Math.abs(vf) < hd ? 0 : vf - Math.sign(vf) * hd; }
@@ -3331,7 +3340,8 @@ function trafficAI(car, dt) {
     if (ai.blockT > 3 && ai.honkT <= 0) { ai.honkT = rnd(2, 5); if (d2(car.x, car.z, player.x, player.z) < 2500) sfx.horn(car.x, car.z, 0.5); }
   } else ai.blockT = Math.max(0, ai.blockT - dt);
   ai.honkT -= dt;
-  if (ai.blockT > 7 && obs < 7) { car.inp.thr = -0.6; car.inp.steer = -st.steer; car.inp.hb = false; if (ai.blockT > 9) ai.blockT = 0; return; }
+  // Trânsito normal espera pela libertação da faixa; não recua para o cruzamento.
+  if (ai.blockT > 7 && obs < 7 && vf < .6) { car.inp.thr = 0; car.inp.steer = 0; car.inp.hb = true; return; }
   const err = target - vf;
   car.inp.thr = clamp(err * 0.35, -1, 1);
   if (target < 0.3 && vf < 0.6) { car.inp.thr = 0; car.inp.hb = true; } else car.inp.hb = false;
@@ -5210,7 +5220,7 @@ function updateHomeDoor(px, pz, onFoot) {
 // ============================================================
 const sfx = (() => {
   let ctx = null, master, fxG, radioG, radioBus, ambG, noiseBuf, delay;
-  const eng = {}, sir = {}, amb = {}, skid = {};
+  const eng = {}, sir = {}, amb = {}, skid = {}, roadAudio={};
   const radio = { idx: 0, on: false, nextT: 0, step: 0, bar: 0, seed: 1 };
   const STATIONS = [
     { name: 'ONDA 88.1', sub: 'synthwave ao entardecer', bpm: 100 },
@@ -5234,12 +5244,14 @@ const sfx = (() => {
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     // motor
-    eng.o1 = ctx.createOscillator(); eng.o1.type = 'sawtooth'; eng.o2 = ctx.createOscillator(); eng.o2.type = 'square';
-    eng.f = ctx.createBiquadFilter(); eng.f.type = 'lowpass'; eng.f.frequency.value = 400; eng.f.Q.value = 4;
+    eng.o1 = ctx.createOscillator(); eng.o1.type = 'sawtooth'; eng.o2 = ctx.createOscillator(); eng.o2.type = 'triangle';
+    eng.sub=ctx.createOscillator();eng.sub.type='sine';eng.subG=ctx.createGain();eng.subG.gain.value=.65;eng.sub.connect(eng.subG);
+    eng.f = ctx.createBiquadFilter(); eng.f.type = 'lowpass'; eng.f.frequency.value = 400; eng.f.Q.value = 1.15;
     eng.g = ctx.createGain(); eng.g.gain.value = 0;
     const g2 = ctx.createGain(); g2.gain.value = 0.5;
-    eng.o1.connect(eng.f); eng.o2.connect(g2); g2.connect(eng.f); eng.f.connect(eng.g); eng.g.connect(fxG);
-    eng.o1.start(); eng.o2.start();
+    eng.o1.connect(eng.f); eng.o2.connect(g2); g2.connect(eng.f);eng.subG.connect(eng.f); eng.f.connect(eng.g); eng.g.connect(fxG);
+    eng.o1.start(); eng.o2.start();eng.sub.start();
+    roadAudio.src=loopNoise();roadAudio.f=ctx.createBiquadFilter();roadAudio.f.type='bandpass';roadAudio.f.Q.value=.7;roadAudio.g=ctx.createGain();roadAudio.g.gain.value=0;roadAudio.src.connect(roadAudio.f);roadAudio.f.connect(roadAudio.g);roadAudio.g.connect(fxG);
     // pneu cantando
     skid.src = loopNoise(); skid.f = ctx.createBiquadFilter(); skid.f.type = 'bandpass'; skid.f.frequency.value = 1300; skid.f.Q.value = 3;
     skid.g = ctx.createGain(); skid.g.gain.value = 0; skid.src.connect(skid.f); skid.f.connect(skid.g); skid.g.connect(fxG);
@@ -5276,7 +5288,8 @@ const sfx = (() => {
   const now = () => ctx.currentTime;
   const api = {
     init,
-    setVolume(v) { if (master) master.gain.value = v; },
+    setVolume(v) { if (master) master.gain.setTargetAtTime(game.paused?0:clamp(v,0,1),now(),.05); },
+    pause(v){if(master)master.gain.setTargetAtTime(v?0:settings.volume,now(),.06);},
     gun(w, x, z) {
       if (!ctx) return; const a = att(x, z, 200); if (a <= 0) return; const t = now();
       if (w === 'shotgun') { nz(t, 0.45, 2500, 120, 0.6, 0.9 * a, 'lowpass'); tone(t, 110, 35, 0.3, 'sine', 0.8 * a); }
@@ -5307,14 +5320,18 @@ const sfx = (() => {
       const t = now();
       const c = player.car;
       if (c && !c.dead && game.state === 'play') {
-        const sp = c.t.plane ? c.throttle * c.t.maxV * 0.6 + c.fspeed * 0.3 : Math.abs(c.fwdSpeed()), gearSpan = c.t.maxV / 5, gear = Math.min(4, Math.floor(sp / gearSpan)), rpm = (sp - gear * gearSpan) / gearSpan;
-        const base = c.type === 'van' ? 38 : c.type === 'sport' ? 62 : c.type === 'muscle' ? 44 : c.type === 'moto' ? 78 : c.type === 'plane' ? 70 : 52;
-        const f = base + rpm * base * 1.4 + gear * 6 + Math.abs(c.inp.thr) * 8;
-        eng.o1.frequency.setTargetAtTime(f, t, 0.05); eng.o2.frequency.setTargetAtTime(f * 0.5, t, 0.05);
-        eng.f.frequency.setTargetAtTime(280 + rpm * 900 + Math.abs(c.inp.thr) * 500, t, 0.08);
-        eng.g.gain.setTargetAtTime(0.05 + Math.abs(c.inp.thr) * 0.05, t, 0.1);
-        skid.g.gain.setTargetAtTime(c.skidding && !c.air ? 0.12 : 0, t, 0.05);
-      } else { eng.g.gain.setTargetAtTime(0, t, 0.15); skid.g.gain.setTargetAtTime(0, t, 0.05); }
+        const kmh=Math.abs(c.fwdSpeed())*3.6,gas=clamp(c.t.plane?c.throttle:Math.max(0,c.inp.thr),0,1),bands=[0,22,45,72,102,138,220];
+        const gear=Math.max(0,Math.min(5,bands.findIndex((v,i)=>i<6&&kmh<bands[i+1])<0?5:bands.findIndex((v,i)=>i<6&&kmh<bands[i+1])));
+        const rpm=c.t.plane?clamp(c.throttle*.8+c.fspeed/c.t.maxV*.2,0,1):c.fwdSpeed()<-.5?clamp(.24+kmh/55,0,1):clamp(.15+.73*(kmh-bands[gear])/(bands[gear+1]-bands[gear])+gas*.12,0,1);
+        const base=c.type==='bus'?34:c.type==='van'?39:c.type==='muscle'||c.type==='gang'?43:c.type==='sport'?66:c.type==='moto'?80:c.t.plane?70:52;
+        const f=base*(1+rpm*2.15);
+        eng.o1.frequency.setTargetAtTime(f,t,.065);eng.o2.frequency.setTargetAtTime(f*1.5,t,.065);eng.sub.frequency.setTargetAtTime(f*.5,t,.065);
+        eng.f.frequency.setTargetAtTime(240+rpm*1100+gas*650,t,.08);
+        eng.g.gain.setTargetAtTime(.105+gas*.13+rpm*.045,t,.09);
+        roadAudio.f.frequency.setTargetAtTime(260+Math.min(kmh,220)*5,t,.12);
+        roadAudio.g.gain.setTargetAtTime(c.air||c.t.plane?0:Math.min(.075,kmh*.00045)*(1+weather.rain*.25),t,.12);
+        skid.g.gain.setTargetAtTime(c.skidding&&!c.air?.17:0,t,.05);
+      } else { eng.g.gain.setTargetAtTime(0,t,.15);skid.g.gain.setTargetAtTime(0,t,.05);roadAudio.g.gain.setTargetAtTime(0,t,.12); }
       // sirene mais próxima
       let best = Infinity;
       for (const car of cars) if (car.siren && !car.dead) best = Math.min(best, d2(car.x, car.z, camera.position.x, camera.position.z));
@@ -5331,7 +5348,7 @@ const sfx = (() => {
       const on = ((!!c && !c.dead) || (window.__homeRadio && inside.I)) && STATIONS[radio.idx].bpm && game.state === 'play' && !game.paused;
       if (on && !radio.on) { radio.nextT = t + 0.05; radio.step = 0; }
       radio.on = on;
-      radioG.gain.setTargetAtTime(on ? 0.85 : 0, t, 0.25);
+      radioG.gain.setTargetAtTime(on ? (c ? .48 : .75) : 0, t, 0.25);
     },
   };
   // ---------- instrumentos do rádio ----------
@@ -5767,7 +5784,7 @@ function setupComposer() {
 function setPause(on) {
   if (game.state === 'title' || game.state === 'boot') return;
   if (!$('shop').hidden) return;
-  game.paused = on; uiBlocking = on;
+  game.paused = on; uiBlocking = on;sfx.pause(on);
   if (on) { touch.release?.(); for (const k in keys) keys[k] = false; }
   $('pause').hidden = !on;
   $('reset-confirm').hidden = true; resetArmed = false;
