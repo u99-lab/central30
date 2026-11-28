@@ -254,10 +254,10 @@ body.touch #stars { font-size: 22px; height: 24px; }
     <label class="opt" for="vol">Volume <input type="range" id="vol" min="0" max="100" value="70"></label>
     <label class="opt" for="sens">Sensibilidade do rato <input type="range" id="sens" min="20" max="200" value="100"></label>
     <fieldset class="qual" id="qual"><legend>Qualidade gráfica <small>(da mais pesada para a mais leve · muda na hora)</small></legend>
-      <label for="q-ultra"><input type="radio" name="q" id="q-ultra" value="ultra"><b>Ultra</b><span>Máximo: ecrã nítido 2×, sombras 4096, brilho · PC potente</span></label>
-      <label for="q-alta"><input type="radio" name="q" id="q-alta" value="alta"><b>Alta</b><span>Sombras 2048, brilho · PC normal</span></label>
-      <label for="q-media"><input type="radio" name="q" id="q-media" value="media"><b>Média</b><span>Sombras 1024, sem brilho · portátil / telemóvel bom</span></label>
-      <label for="q-baixa"><input type="radio" name="q" id="q-baixa" value="baixa"><b>Baixa</b><span>Sem sombras nem brilho · telemóvel / PC fraco</span></label>
+      <label for="q-ultra"><input type="radio" name="q" id="q-ultra" value="ultra"><b>Ultra</b><span>Máxima nitidez, horizonte longo, texturas e água detalhadas</span></label>
+      <label for="q-alta"><input type="radio" name="q" id="q-alta" value="alta"><b>Alta</b><span>Alta nitidez, texturas e água detalhadas</span></label>
+      <label for="q-media"><input type="radio" name="q" id="q-media" value="media"><b>Média</b><span>Equilíbrio: nitidez e distância médias</span></label>
+      <label for="q-baixa"><input type="radio" name="q" id="q-baixa" value="baixa"><b>Baixa</b><span>Resolução reduzida, água simples e horizonte curto</span></label>
     </fieldset>
     <p class="stats" id="fps"></p>
     <div class="row">
@@ -335,10 +335,10 @@ const fmtMoney = (v) => Math.floor(v).toLocaleString('pt-PT') + ' €';
 const QUALITY = {
   // A cidade tem muitas malhas; sombras dinâmicas em qualidade alta podem
   // esgotar a memória gráfica em alguns dispositivos e fazer os prédios sumirem.
-  ultra: { name: 'Ultra', pr: 1.25, shadows: false, smap: 512, bloom: false, desc: 'PC potente com placa gráfica' },
-  alta: { name: 'Alta', pr: 1.1, shadows: false, smap: 512, bloom: false, desc: 'PC normal' },
-  media: { name: 'Média', pr: 1, shadows: false, smap: 512, bloom: false, desc: 'Portátil ou telemóvel bom' },
-  baixa: { name: 'Baixa', pr: 1, shadows: false, smap: 512, bloom: false, desc: 'Telemóvel ou PC fraco' },
+  ultra: { name: 'Ultra', pr: 1.0, aniso: 8, fogScale: 1.35, water: 3, clouds: true, shadows: false, smap: 512, bloom: false },
+  alta: { name: 'Alta', pr: 0.82, aniso: 4, fogScale: 1.0, water: 2, clouds: true, shadows: false, smap: 512, bloom: false },
+  media: { name: 'Média', pr: 0.64, aniso: 2, fogScale: 0.8, water: 1, clouds: true, shadows: false, smap: 512, bloom: false },
+  baixa: { name: 'Baixa', pr: 0.45, aniso: 1, fogScale: 0.58, water: 0, clouds: false, shadows: false, smap: 512, bloom: false },
 };
 const settings = { q: isTouch ? 'media' : 'alta', volume: 0.7, sens: 1 };
 try { const s = JSON.parse(localStorage.getItem('baia-escarlate-settings') || 'null'); if (s) Object.assign(settings, s); } catch (e) {}
@@ -351,9 +351,15 @@ const renderer = new THREE.WebGLRenderer({ antialias: !isTouch, powerPreference:
 let glLost = false;
 renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); glLost = true; }, false);
 renderer.domElement.addEventListener('webglcontextrestored', () => { try { location.reload(); } catch (e) { glLost = false; } }, false);
+// Quatro escalas distintas, com teto de pixels para não esgotar a GPU do iPad.
+function qualityPixelRatio(Q) {
+  const budget = isTouch ? 2800000 : 4000000;
+  const max = Math.min(1.7, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)));
+  return max * Q.pr;
+}
 function applyQuality() {
   const Q = QUALITY[settings.q];
-  renderer.setPixelRatio(Math.max(1, Math.min(window.devicePixelRatio || 1, Q.pr)));
+  renderer.setPixelRatio(qualityPixelRatio(Q));
   renderer.shadowMap.enabled = Q.shadows;
   renderer.setSize(innerWidth, innerHeight);
   scene && scene.traverse((o) => { if (o.material && o.material.needsUpdate !== undefined) { const m = Array.isArray(o.material) ? o.material : [o.material]; m.forEach((mm) => (mm.needsUpdate = true)); } });
@@ -366,8 +372,9 @@ $('game').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 applyQuality();
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.2, 5000);
-addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
-const MAX_ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(qualityPixelRatio(QUALITY[settings.q])); renderer.setSize(innerWidth, innerHeight); });
+const MAX_ANISO = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+const qualityTextures = new Set();
 
 // ---------- input ----------
 const keys = {};
@@ -647,7 +654,8 @@ function canvasTex(w, h, draw, opts = {}) {
   const g = c.getContext('2d'); draw(g, w, h);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = opts.linear ? THREE.NoColorSpace : THREE.SRGBColorSpace;
-  t.anisotropy = MAX_ANISO;
+  t.anisotropy = Math.min(MAX_ANISO, QUALITY[settings.q].aniso);
+  qualityTextures.add(t);
   if (opts.repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
   t.needsUpdate = true;
   return t;
@@ -1933,15 +1941,15 @@ function buildWater() {
     uniforms: {
       time: { value: 0 }, sunDir: { value: sunDir }, sunCol: { value: new THREE.Color(1, 0.9, 0.7) },
       deep: { value: new THREE.Color('#0a3d52') }, shallow: { value: new THREE.Color('#1aa3a0') }, skyCol: { value: new THREE.Color('#8fc0e8') },
-      fogCol: { value: new THREE.Color() }, fogNear: { value: 100 }, fogFar: { value: 1000 }, shore: { value: SHORE_X }, night: { value: 0 },
+      fogCol: { value: new THREE.Color() }, fogNear: { value: 100 }, fogFar: { value: 1000 }, shore: { value: SHORE_X }, night: { value: 0 }, detail: { value: QUALITY[settings.q].water },
     },
     vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
     fragmentShader: `
-      uniform float time, fogNear, fogFar, shore, night; uniform vec3 sunDir, sunCol, deep, shallow, skyCol, fogCol; varying vec3 vW;
+      uniform float time, fogNear, fogFar, shore, night, detail; uniform vec3 sunDir, sunCol, deep, shallow, skyCol, fogCol; varying vec3 vW;
       vec2 hash2(vec2 p){ p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453)*2.0-1.0; }
       float noise(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);
         return mix(mix(dot(hash2(i),f), dot(hash2(i+vec2(1,0)),f-vec2(1,0)),u.x), mix(dot(hash2(i+vec2(0,1)),f-vec2(0,1)), dot(hash2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y); }
-      float h(vec2 p){ float t=time; return noise(p*0.08+vec2(t*0.05,t*0.03))*1.0 + noise(p*0.21-vec2(t*0.07,-t*0.04))*0.5 + noise(p*0.55+vec2(t*0.11,t*0.09))*0.22 + noise(p*1.4-vec2(t*0.2,t*0.13))*0.08; }
+      float h(vec2 p){ float t=time; float v=noise(p*0.08+vec2(t*0.05,t*0.03)); if(detail>0.5) v+=noise(p*0.21-vec2(t*0.07,-t*0.04))*0.5; if(detail>1.5) v+=noise(p*0.55+vec2(t*0.11,t*0.09))*0.22; if(detail>2.5) v+=noise(p*1.4-vec2(t*0.2,t*0.13))*0.08; return v; }
       void main(){
         vec2 p = vW.xz; float e = 0.6;
         float hc = h(p); vec3 n = normalize(vec3(-(h(p+vec2(e,0.0))-hc)/e*2.2, 1.0, -(h(p+vec2(0.0,e))-hc)/e*2.2));
@@ -2080,7 +2088,9 @@ function updateEnvironment(dt, focus) {
   hemiLight.color.copy(_skyc); hemiLight.groundColor.copy(_grd);
   hemiLight.intensity = 0.5 + 0.45 * day + night * 0.35;
   scene.fog.color.copy(_fog);
-  scene.fog.near = lerp(140, 70, night); scene.fog.far = lerp(1500, 900, night);
+  const visualQ = QUALITY[settings.q];
+  scene.fog.near = lerp(140, 70, night) * visualQ.fogScale; scene.fog.far = lerp(1500, 900, night) * visualQ.fogScale;
+  cloudMesh.visible = visualQ.clouds;
   renderer.toneMappingExposure = lerp(0.88 + gold * 0.08, 1.25, night);
   // emissivos
   for (const m of envMats.windows) m.emissiveIntensity = 0.08 + night * 1.5;
@@ -2089,7 +2099,7 @@ function updateEnvironment(dt, focus) {
   envMats.lampHead.color.set('#fff0c8').multiplyScalar(0.6 + night * 2.5);
   envMats.pools.opacity = night * 0.6;
   const wu = envMats.water.uniforms;
-  wu.time.value += dt; wu.night.value = night;
+  wu.time.value += dt; wu.night.value = night; wu.detail.value = visualQ.water;
   wu.sunCol.value.copy(sunLight.color).multiplyScalar(night > 0.5 ? 0.25 : 1);
   wu.skyCol.value.copy(_fog).lerp(_skyc, 0.5);
   wu.fogCol.value.copy(_fog); wu.fogNear.value = scene.fog.near; wu.fogFar.value = scene.fog.far;
@@ -5674,7 +5684,10 @@ function setQualityLive(q, manual) {
   if (!QUALITY[q]) return;
   const Q = QUALITY[q], prevShadows = renderer.shadowMap.enabled;
   settings.q = q; if (manual) settings.manualQ = true;
-  renderer.setPixelRatio(Math.max(1, Math.min(window.devicePixelRatio || 1, Q.pr)));
+  for (const t of qualityTextures) { const a = Math.min(MAX_ANISO, Q.aniso); if (t.anisotropy !== a) { t.anisotropy = a; t.needsUpdate = true; } }
+  if (envMats.water) envMats.water.uniforms.detail.value = Q.water;
+  if (cloudMesh) cloudMesh.visible = Q.clouds;
+  renderer.setPixelRatio(qualityPixelRatio(Q));
   renderer.setSize(innerWidth, innerHeight);
   renderer.shadowMap.enabled = Q.shadows;
   if (typeof sunLight !== 'undefined' && sunLight && sunLight.shadow.mapSize.x !== Q.smap) {
