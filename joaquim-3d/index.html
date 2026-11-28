@@ -915,12 +915,13 @@ addEventListener('keydown',e=>{
   if(QZ&&!QZ.lock&&['1','2','3','4'].includes(k))answer(+k-1);
 });
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();keys[k]=false;if(k==='e'||k===' '||k==='enter'||k==='k')release('A')});
-addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
+function clearCMInput(){for(const k in keys)keys[k]=false;joy.on=false;joy.id=null;joy.x=joy.y=0;btnA=btnB=false;release('A');}
+addEventListener('blur',clearCMInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearCMInput();});
 cv.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*(e.deltaY>0?1.08:.93),.55,1.6)},{passive:false});
 function bindBtn(el,name){
   el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);if(name==='A')btnA=true;else btnB=true;press(name)});
   const up=()=>{if(name==='A'){btnA=false;release('A')}else btnB=false};
-  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);
 }
 bindBtn($('tbA'),'A');bindBtn($('tbB'),'B');
 cv.addEventListener('pointerdown',e=>{
@@ -928,8 +929,8 @@ cv.addEventListener('pointerdown',e=>{
   if(e.clientX<W*0.6&&!joy.on){joy.on=true;joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;joy.x=0;joy.y=0;cv.setPointerCapture(e.pointerId)}
 });
 cv.addEventListener('pointermove',e=>{if(joy.on&&e.pointerId===joy.id){let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const l=Math.hypot(dx,dy),Rr=50;if(l>Rr){dx*=Rr/l;dy*=Rr/l}joy.x=dx/Rr;joy.y=dy/Rr}});
-const joyEnd=e=>{if(e.pointerId===joy.id){joy.on=false;joy.x=joy.y=0}};
-cv.addEventListener('pointerup',joyEnd);cv.addEventListener('pointercancel',joyEnd);
+const joyEnd=e=>{if(e.pointerId===joy.id){joy.on=false;joy.id=null;joy.x=joy.y=0}};
+cv.addEventListener('pointerup',joyEnd);cv.addEventListener('pointercancel',joyEnd);cv.addEventListener('lostpointercapture',joyEnd);
 function inputVec(){
   let x=0,y=0;
   if(keys['a']||keys['arrowleft'])x--; if(keys['d']||keys['arrowright'])x++;
