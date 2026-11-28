@@ -4104,10 +4104,11 @@ function showGoalBanner(team) {
   const msg = celebracoes[Math.floor(Math.random() * celebracoes.length)];
   const longShot=ballState.shotOrigin.distanceTo(ball.position)>28;
   const bankShot=game.time-ballState.lastPostTime<90;
-  goalBanner.textContent = bankShot ? '✦ MADEIRA & MAGIA' : longShot ? '🚀 FORA DA ÁREA!' : msg;
+  const scoringClub=team===0?PLAYER_CLUB_NAME:(getCurrentOpponent()?.name||'ADVERSÁRIO');
+  goalBanner.textContent = (bankShot ? '✦ MADEIRA & MAGIA' : longShot ? '🚀 FORA DA ÁREA!' : msg)+' · '+scoringClub;
   goalNets.forEach(n=>{if(n.userData.side===Math.sign(ball.position.z))n.userData.ripple=1;});
   goalBanner.className = 'show';
-  setTimeout(() => { goalBanner.className = 'hide'; }, 2500);
+  // A celebração termina com o relógio da partida, não com um temporizador externo.
 }
 
 // ==========================================
@@ -4178,8 +4179,8 @@ function updateMinimap() {
     mctx.beginPath(); mctx.arc(mx, mz, 2.5, 0, Math.PI*2);
     mctx.fillStyle = color; mctx.fill();
   }
-  homePlayers.forEach(p => drawDot(p.position.x, p.position.z, p.userData.isPlayer ? '#ffd700' : '#c8102e'));
-  awayPlayers.forEach(p => drawDot(p.position.x, p.position.z, '#00ccff'));
+  homePlayers.filter(p=>!p.userData.sentOff).forEach(p => drawDot(p.position.x, p.position.z, p.userData.isPlayer ? '#ffd700' : '#c8102e'));
+  awayPlayers.filter(p=>!p.userData.sentOff).forEach(p => drawDot(p.position.x, p.position.z, '#00ccff'));
   // Ball
   drawDot(ball.position.x, ball.position.z, '#ffffff');
 }
@@ -4318,7 +4319,7 @@ function gameLoop(timestamp) {
     updateAI(awayPlayers, false, dt);
     updateBall(dt);
     updateParticles(dt);
-    checkFouls(dt); // árbitro
+    // Partidas sem faltas automáticas; treino de penáltis continua independente.
     checkOffside(dt); // fora de jogo
     updateAutoSubstitutions(dt); // substituições automáticas (modo AUTOMÁTICO)
 
@@ -4362,18 +4363,12 @@ function gameLoop(timestamp) {
         spawnGoalParticles(ball.position.clone());
         showGoalBanner(g);
         playSound('goal');
-        setTimeout(() => {
-          game.phase = 'playing';
-          ballState.inGoal = false;
-          // Quem sofreu o golo reinicia com a bola (regra real do pontapé de saída)
-          const concededTeam = g === 0 ? 'away' : 'home';
-          resetPositions(concededTeam);
-        }, 3000);
+        // O relógio de celebração avança apenas enquanto a partida está ativa.
       }
     }
 
     // INTERVALO aos 45 minutos
-    if (!game.halftimeDone && game.time >= game.maxTime / 2) {
+    if (game.phase === 'playing' && !game.halftimeDone && game.time >= game.maxTime / 2) {
       game.halftimeDone = true;
       game.phase = 'halftime';
       playSound('whistle');
@@ -4381,7 +4376,7 @@ function gameLoop(timestamp) {
     }
 
     // Time end
-    if (game.time >= game.maxTime) {
+    if (game.phase === 'playing' && game.time >= game.maxTime) {
       game.phase = 'end';
       playSound('whistle');
       showEndOfMatch();
@@ -4396,7 +4391,7 @@ function gameLoop(timestamp) {
     updateCamera(dt);
   }
 
-  if(game.phase==='goal'){updateBall(dt);updateParticles(dt);updateCamera(dt);}
+  if(game.phase==='goal'){updateBall(dt);updateParticles(dt);updateCamera(dt);game.goalTimer-=dt;if(game.goalTimer<=0){ballState.inGoal=false;resetPositions(game.lastGoalTeam===0?'away':'home');game.phase='playing';goalBanner.className='hide';updateHUD();}}
   updateMatchPresentation(dt);
   // Ball shadow
   ballShadow.position.x = ball.position.x;
@@ -4479,7 +4474,8 @@ function updatePlayerFor(playerObj, keys, camera, game, dt) {
     }
   }
   
-  const isSprinting = keys['ShiftLeft'] || keys['ShiftRight'];
+  const movingKeys=!!(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD||keys.ArrowUp||keys.ArrowDown||keys.ArrowLeft||keys.ArrowRight);
+  const isSprinting = movingKeys && (keys['ShiftLeft'] || keys['ShiftRight']);
   // Drible (tecla R ou botão DRIBLAR, mantida premida): bola fica mais colada aos pés
   // (mais controlo, mais fácil de driblar o defesa) e ligeiro impulso extra de velocidade.
   const isDribbling = !!keys['KeyR'];
@@ -4769,7 +4765,7 @@ function checkOutOfPlay() {
   // Linha de baliza (fora, sem ser golo) — canto ou pontapé de baliza.
   // Só conta como golo se passar DENTRO da largura/altura da baliza (isso é tratado pelo checkGoal);
   // se sair fora dos postes ou por cima da barra, é sempre canto/baliza.
-  const withinGoalMouth = Math.abs(bp.x) < 3.66-.12-.35 && bp.y < 2.44-.12-.35;
+  const withinGoalMouth = Math.abs(bp.x) <= 3.66-.12-.35 && bp.y <= 2.44-.12-.35;
   if (Math.abs(bp.z) > FIELD_L/2 + 0.35 && !withinGoalMouth) {
     // A equipa que DEFENDE essa linha é a dona da baliza desse lado
     // z negativo = baliza defendida pela equipa "away" (SLB ataca para -Z); z positivo = baliza da "home"
@@ -6808,8 +6804,10 @@ let foundWoodwork=false,fbExternalPaused=false,fbOverlayPaused=false;
 window.C30pause=force=>{fbExternalPaused=typeof force==='boolean'?force:!fbExternalPaused;for(const key in keys)keys[key]=false;game.isChargingKick=false;game.kickPower=0;return fbExternalPaused;};
 window.C30isPaused=()=>fbExternalPaused;
 (function(){const ids=['standings-overlay','market-overlay','gift-overlay','missions-overlay','friendly-overlay','nation-overlay','ucl-overlay','mundial-overlay'];const _cm=document.getElementById('club-menu');if(_cm){_cm.addEventListener('click',e=>{if(e.target.closest('#top-actions button'))setTimeout(()=>{_cm.open=false;},0);});document.addEventListener('mousedown',e=>{if(_cm.open&&!_cm.contains(e.target))_cm.open=false;});}const vis=id=>{const e=document.getElementById(id);return !!e&&getComputedStyle(e).display!=='none';};setInterval(()=>{const cm=document.getElementById('club-menu');const any=ids.some(vis)||!!(cm&&cm.open);if(any!==fbOverlayPaused){fbOverlayPaused=any;if(any){for(const k in keys)keys[k]=false;game.isChargingKick=false;game.kickPower=0;}}},100);})();
+let telemetryT=0;
 function updateMatchPresentation(dt){
   goalNets.forEach(net=>{
+    if(net.userData.ripple<.0005){if(net.userData.ripple===0)return;net.userData.ripple=0;}
     net.userData.ripple*=Math.exp(-2.1*dt);const a=net.geometry.attributes.position,r=net.userData.rest;
     for(let i=0;i<a.count;i++){const j=i*3,weight=Math.sin(Math.PI*(r[j]+3.66)/7.32)*Math.sin(Math.PI*r[j+1]/2.44);a.setZ(i,r[j+2]+net.userData.side*weight*net.userData.ripple*.6*Math.sin(performance.now()*.018+r[j]*2));}
     a.needsUpdate=true;
@@ -6824,7 +6822,7 @@ function updateMatchPresentation(dt){
     for(let i=0;i<pos.count;i++){const t=i*.035;pos.setXYZ(i,ball.position.x+dir.x*power*t+curve*dir.z*t*t,Math.max(.37,ball.position.y+vy*t-4.905*t*t),ball.position.z+dir.z*power*t-curve*dir.x*t*t);}
     pos.needsUpdate=true;aimPreview.computeLineDistances();
   }
-  matchTelemetry.innerHTML='<span style="color:#81d9b0;font-size:9px;letter-spacing:2px">DADOS DO JOGO</span><br>'+Math.round(ballState.vel.length()*3.6)+' <span style="opacity:.55">km/h</span> · '+(ballState.onGround?'RELVA':'EM VOO')+'<br><span style="opacity:.62">Z / X · efeito no remate</span>';
+  telemetryT-=dt;if(telemetryT<=0){telemetryT=.12;matchTelemetry.innerHTML='<span style="color:#81d9b0;font-size:9px;letter-spacing:2px">DADOS DO JOGO</span><br>'+Math.round(ballState.vel.length()*3.6)+' <span style="opacity:.55">km/h</span> · '+(ballState.onGround?'RELVA':'EM VOO')+'<br><span style="opacity:.62">Z / X · efeito no remate</span>';}
   if(ballState.woodwork>=3&&!foundWoodwork){foundWoodwork=true;window.C30?.unlock?.('fb-woodwork','Sinfonia dos postes');showRestartBanner('✦ SEGREDO: SINFONIA DOS POSTES');}
 }
 
@@ -6988,8 +6986,7 @@ const trainState={mode:null,phase:'idle',wait:0,shotAt:0,kicked:false,goals:0,tr
   #train-hint.on{display:block}`;
   document.head.appendChild(css);
   const box=document.getElementById('top-actions');
-  if(box){const a=document.createElement('button');a.id='train-fk-btn';a.textContent='🎯 TREINO DE LIVRES';a.onclick=()=>startTraining('fk');
-    const b=document.createElement('button');b.id='train-pen-btn';b.textContent='🥅 PENÁLTIS';b.onclick=()=>startTraining('pen');box.appendChild(a);box.appendChild(b);}
+  if(box){const b=document.createElement('button');b.id='train-pen-btn';b.textContent='🥅 PENÁLTIS';b.onclick=()=>startTraining('pen');box.appendChild(b);}
   const h=document.createElement('div');h.id='train-hud';h.innerHTML='<span id="train-text"></span><button type="button" id="train-again" class="again" hidden>Outra vez</button><button type="button" id="train-exit">Sair do treino</button>';document.body.appendChild(h);
   const t=document.createElement('div');t.id='train-hint';document.body.appendChild(t);
   document.getElementById('train-exit').onclick=()=>stopTraining();
@@ -7003,6 +7000,7 @@ function trainFreeze(p,on){
 }
 function trainUnfreezeAll(){for(const [p,v] of trainState.saved)p.userData.speed=v;trainState.saved.clear();}
 function startTraining(mode){
+  if(mode!=='pen')return;
   const club=(typeof ALL_CLUBS!=='undefined'?ALL_CLUBS:[]).filter(c=>c.id!==PLAYER_CLUB_ID).sort((a,b)=>b.skill-a.skill)[3]||(typeof UCL_CLUBS!=='undefined'?UCL_CLUBS[0]:null);
   if(!club)return;
   try{const d=document.getElementById('club-menu');if(d)d.open=false;}catch(e){}
