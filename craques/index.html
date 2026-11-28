@@ -1164,7 +1164,7 @@ function leaveMatch(){
 }
 $('endOk').onclick=()=>{if(M&&M.champion&&M.state!=='ceremony'){startCeremony();return;}leaveMatch();};$('endAgain').onclick=()=>{$('mEnd').hidden=true;startMatch(M.ci);};
 $('pauseBtn').onclick=()=>pause(true);$('resume').onclick=()=>pause(false);$('quit').onclick=()=>{S.l++;if(M&&M.tour&&S.tour&&!S.tour.done){if(S.tour.phase==='groups')finishJornada(0,3);else advanceTour(false);}save();leaveMatch();};
-function pause(v){if(!M||M.state==='end'||M.state==='off'||M.state==='ceremony')return;M.paused=v;$('mPause').hidden=!v;}
+function pause(v){if(!M||M.state==='end'||M.state==='off'||M.state==='ceremony')return;M.paused=v;if(v)clearCQInput();$('mPause').hidden=!v;}
 window.C30pause=f=>{if(!M||M.state==='off')return;pause(typeof f==='boolean'?f:!M.paused);};window.C30isPaused=()=>!!(M&&M.paused);
 
 // ----- ciclo -----
@@ -1224,8 +1224,10 @@ addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(e.code==='Space')shootDown();if(e.code==='KeyF'||e.code==='KeyJ')input.passPress=true;if(e.code==='KeyE'||e.code==='KeyK')input.throughPress=true;});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space')shootUp();});
-addEventListener('blur',()=>{for(const k in keys)keys[k]=false;if(input.shootHeld)shootUp();});
-let touchMove={x:0,z:0},touchSprint=false;
+addEventListener('blur',()=>{clearCQInput();if(M&&!M.paused)pause(true);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){clearCQInput();if(M&&!M.paused)pause(true);}});
+let touchMove={x:0,z:0},touchSprint=false;let resetCQStick=()=>{};
+function clearCQInput(){for(const k in keys)keys[k]=false;touchMove={x:0,z:0};touchSprint=false;input.shootHeld=false;input.pressOwner=false;input.power=0;clearEdges();resetCQStick();for(const id of ['tShoot','tPass','tThrough','tSprint'])$(id)?.classList.remove('on');}
 function readKeys(){
   let x=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),z=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);
   if(touchMove.x||touchMove.z){x=touchMove.x;z=touchMove.z;}
@@ -1245,9 +1247,9 @@ function clearEdges(){input.shootPress=input.shootRelease=input.passPress=input.
   jb.addEventListener('click',()=>{JOYVIS=!JOYVIS;try{localStorage.setItem('cq.joyVis',JOYVIS?'1':'0')}catch(e){}paintJ();if(id===null)home();});
   {const row=document.querySelector('#mPause .row');if(row)row.appendChild(jb);}
   window.__cqHome=()=>{if(id===null)home()};setTimeout(home,0);addEventListener('resize',()=>{if(id===null)home()});
-  z.addEventListener('pointerdown',e=>{e.preventDefault();id=e.pointerId;z.setPointerCapture(id);const r=z.getBoundingClientRect();ox=e.clientX;oy=e.clientY;base.style.left=(ox-r.left)+'px';base.style.top=(oy-r.top)+'px';base.hidden=false;});
+  z.addEventListener('pointerdown',e=>{e.preventDefault();if(id!==null)return;id=e.pointerId;try{z.setPointerCapture(id);}catch{}const r=z.getBoundingClientRect();ox=e.clientX;oy=e.clientY;base.style.left=(ox-r.left)+'px';base.style.top=(oy-r.top)+'px';base.hidden=false;});
   z.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;let dx=e.clientX-ox,dy=e.clientY-oy;const l=Math.hypot(dx,dy),m=55;if(l>m){dx=dx/l*m;dy=dy/l*m;}knob.style.transform=`translate(${dx}px,${dy}px)`;touchMove={x:dx/m,z:dy/m};});
-  const end=e=>{if(e.pointerId!==id)return;id=null;base.hidden=true;knob.style.transform='';touchMove={x:0,z:0};home();};
+  resetCQStick=()=>{id=null;knob.style.transform='';touchMove={x:0,z:0};home();};const end=e=>{if(e.pointerId===id)resetCQStick();};
   z.addEventListener('pointerup',end);z.addEventListener('pointercancel',end);z.addEventListener('lostpointercapture',end);
   const hold=(el,down,up)=>{el.addEventListener('pointerdown',e=>{e.preventDefault();try{el.setPointerCapture(e.pointerId);}catch{}el.classList.add('on');down();});
     const u=()=>{if(!el.classList.contains('on'))return;el.classList.remove('on');up&&up();};el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u);el.addEventListener('lostpointercapture',u);};
