@@ -5271,7 +5271,7 @@ addEventListener('keydown', e => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'Tab'].includes(e.code)) e.preventDefault();
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouse.l = mouse.r = false; });
+addEventListener('blur', () => clearPNInput());
 canvas.addEventListener('mousedown', e => {
   /* só dispara/dá socos com o rato preso (o 1.º clique serve só para prender o rato; no iPad tocar no ecrã para olhar à volta não é um soco — dispara-se no botão) */
   if ((mouse.locked || (typeof lockFailed !== "undefined" && lockFailed)) && !TOUCH.used) { if (e.button === 0) mouse.l = true; if (e.button === 2) mouse.r = true; }
@@ -5281,7 +5281,7 @@ addEventListener('mouseup', e => { if (e.button === 0) mouse.l = false; if (e.bu
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('mousemove', e => { if (!TOUCH.used) { if (!(e.buttons & 1)) mouse.l = false; if (!(e.buttons & 2)) mouse.r = false; } if (mouse.locked) { mouse.dx += e.movementX; mouse.dy += e.movementY; } });
 document.addEventListener('mouseleave', () => { mouse.l = mouse.r = false; });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { mouse.l = mouse.r = false; for (const k in keys) keys[k] = false; } });
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearPNInput(); });
 addEventListener('wheel', e => { mouse.wheel += Math.sign(e.deltaY); }, { passive: true });
 document.addEventListener('pointerlockchange', () => {
   mouse.locked = document.pointerLockElement === canvas;
@@ -5633,6 +5633,8 @@ function fxExplosion(p) {
 
 // ============================================================ TOUCH CONTROLS (iPad / phone)
 const TOUCH = { on: false, used: false, mx: 0, my: 0, mag: 0, stickId: null, camId: null, sx: 0, sy: 0, lx: 0, ly: 0 };
+let clearPNStick=()=>{};
+function clearPNInput(){for(const k in keys)keys[k]=false;for(const k in pressed)pressed[k]=false;mouse.l=mouse.r=false;mouse.dx=mouse.dy=mouse.wheel=0;TOUCH.stickId=TOUCH.camId=null;TOUCH.mx=TOUCH.my=TOUCH.mag=0;clearPNStick();document.querySelectorAll('.tbtn.down').forEach(b=>b.classList.remove('down'));}
 const IS_TOUCH = navigator.maxTouchPoints > 0 && ('ontouchstart' in window || matchMedia('(pointer: coarse)').matches);
 if (IS_TOUCH) {
   TOUCH.on = true; document.body.classList.add('touch');
@@ -5685,7 +5687,8 @@ if (IS_TOUCH) {
     if (e.pointerId === TOUCH.stickId) { TOUCH.stickId = null; TOUCH.mx = TOUCH.my = TOUCH.mag = 0; base.hidden = true; knob.style.transform = ''; stickKeys(0, 0); showHome(); }
     if (e.pointerId === TOUCH.camId) TOUCH.camId = null;
   };
-  layer.addEventListener('pointerup', end); layer.addEventListener('pointercancel', end);
+  clearPNStick=()=>{stickKeys(0,0);base.hidden=true;knob.style.transform='';};
+  layer.addEventListener('pointerup', end); layer.addEventListener('pointercancel', end); layer.addEventListener('lostpointercapture', end);
   // buttons: data-key maps to a keyboard code, data-act to special actions
   for (const b of document.querySelectorAll('.tbtn')) {
     const code = b.dataset.key, act = b.dataset.act;
@@ -8337,7 +8340,7 @@ function setPR(pr) { PIXEL_RATIO = pr; renderer.setPixelRatio(pr); composer.setP
 let lastPauseAt = 0;
 function pauseGame(p) {
   if (GAME.state === 'menu') return;
-  if (p) lastPauseAt = performance.now();
+  if (p) { lastPauseAt = performance.now(); clearPNInput(); }
   if (p) { GAME.state = 'pause'; $('pause').hidden = false; if (AU.ctx) AU.ctx.suspend(); }
   else { GAME.state = 'play'; $('pause').hidden = true; if (AU.ctx) AU.ctx.resume(); if (!TOUCH.used) requestLock(); last = performance.now(); }
 }
@@ -8345,7 +8348,7 @@ let lockFailed = false;
 document.addEventListener('pointerlockerror', () => { lockFailed = true; });
 addEventListener('mousemove', e => { if (lockFailed && !mouse.locked && GAME.state === 'play' && (e.buttons & 1 || e.buttons & 2 || true)) { mouse.dx += e.movementX; mouse.dy += e.movementY; } });
 addEventListener('keydown', e => {
-  if (e.code === 'KeyP' || (e.code === 'Escape' && lockFailed)) { if (GAME.state === 'play') pauseGame(true); else if (GAME.state === 'pause') pauseGame(false); }
+  if (!e.repeat && (e.code === 'KeyP' || (e.code === 'Escape' && lockFailed))) { if (GAME.state === 'play') pauseGame(true); else if (GAME.state === 'pause') pauseGame(false); }
 });
 $('pause').addEventListener('click', () => pauseGame(false));
 // hooks for the Central 30 collection (its pause button and Esc key call these)
