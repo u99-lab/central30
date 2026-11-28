@@ -4569,7 +4569,7 @@ function initInteriors() {
     for (const [a, b, c2, e] of [[x0 - 0.4, z0 - 0.4, x1 + 0.4, z0], [x0 - 0.4, z1, x1 + 0.4, z1 + 0.4], [x0 - 0.4, z0, x0, z1], [x1, z0, x1 + 0.4, z1]]) addBox(a, b, c2, e, 6);
     platforms.push({ x0, z0, x1, z1, h: 0.1 });
     const f = (a, y0, b, c2, y1, e, col, solid = true) => { B.box(a, y0, b, c2, y1, e, C(col)); if (solid) addBox(a, b, c2, e, y1 + 0.3); };
-    const I = { kind, k, ox, oz, x0, x1, z0, z1, door: { x: ox, z: z0 + 1.2 }, spawn: { x: ox, z: z0 + 2.2 }, spots: {}, lootSpots: [] };
+    const I = { kind, k, ox, oz, x0, x1, z0, z1, door: { x: ox, z: z0 + 1.2 }, spawn: { x: ox, z: z0 + 3.4 }, spots: {}, lootSpots: [] };
     if (big) buildMansion(B, f, C, I, H);
     else if (kind === 'home' || kind === 'house') {
       f(x1 - 4.6, 0.1, z1 - 3.4, x1 - 0.5, 0.65, z1 - 0.5, '#3d5a80'); f(x1 - 4.6, 0.65, z1 - 1.2, x1 - 0.5, 0.85, z1 - 0.5, '#f2f2f2', false);
@@ -4616,7 +4616,7 @@ function enterInterior(I, backX, backZ, opts = {}) {
   if (!I || inside.I) return;
   act.menuCD = Math.max(act.menuCD, 3);
   inside.I = I; inside.back = { x: backX, z: backZ }; inside.called = false; inside.houseId = opts.houseId || null; inside.storeId = opts.storeId || null; inside.cd = 1.5;
-  player.x = I.spawn.x; player.z = I.spawn.z; player.y = 0.1; player.vx = player.vz = 0; player.yaw = 0;
+  player.x = I.spawn.x; player.z = I.spawn.z; player.y = 0.1; player.vx = player.vz = player.vy = 0; player.wantSpeed = 0; player.speed = 0; player.yaw = 0;
   cam.yaw = 0; cam.pitch = 0.35; cam.inited = false;
   intLight.position.set(I.ox, 3.5, I.oz + 1); intLight.intensity = 28;
   if (I.spots.staff) {
@@ -4647,7 +4647,7 @@ function exitInterior() {
   intLight.intensity = 0; leaveMansion();
   inside.I = null; inside.back = null; inside.houseId = null; inside.storeId = null;
   hud.objective('');
-  player.x = b.x; player.z = b.z; player.y = groundH(b.x, b.z); cam.inited = false; act.menuCD = 2.5;
+  player.x = b.x; player.z = b.z; player.y = groundH(b.x, b.z); player.vx = player.vz = player.vy = 0; player.wantSpeed = 0; cam.inited = false; act.menuCD = 2.5;
   if (wanted.level > 0) { wanted.seenT = 0; wanted.spawnT = 0; wanted.checkT = 0; }
 }
 function updateInterior(dt) {
@@ -4662,7 +4662,7 @@ function updateInterior(dt) {
   if (player.car) exitCar(true);
   showMarker(I.door.x, I.door.z, '#8dff9e', 0.8, 3);
   const at = (s, r = 1.6) => s && d2(player.x, player.z, s.x, s.z) < r * r;
-  if (inside.cd <= 0 && at(I.door, 1.1)) { exitInterior(); return; }
+  // A saída exige uma ação explícita; estar junto à porta não teletransporta o jogador.
   if (I.kind === 'mansion') { updateMansion(I, dt); }
   else if (I.kind === 'home') {
     showMarker(I.spots.bed.x, I.spots.bed.z, '#2be4ff', 0.8, 2.5); showMarker(I.spots.wardrobe.x, I.spots.wardrobe.z, '#ffc847', 0.7, 2.5);
@@ -4908,9 +4908,24 @@ function initCockpit() {
   // grelhas de ventilação
   const vents = [];
   for (const x of [-0.6, -0.16, 0.16, 0.6]) { const v = new THREE.Mesh(roundBox(0.12, 0.045, 0.02, 0.01), trim); v.userData.x = x; g.add(v); vents.push(v); }
+  const shell = new THREE.Group(); g.add(shell);
+  const cabinPart = (x,y,z,w,h,d,mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),mat); m.position.set(x,y,z); m.scale.set(w,h,d); shell.add(m); };
+  cabinPart(0,-.8,-.25,1.9,.13,2.7,dark); // piso
+  cabinPart(0,.35,-.3,1.95,.10,2.15,soft); // teto
+  for(const side of [-1,1]) {
+    cabinPart(side*.91,-.45,-.25,.13,.65,2.45,soft); // portas
+    for(const z of [.74,-.45,-1.27]) cabinPart(side*.88,-.03,z,.11,.73,.11,dark); // pilares
+    cabinPart(side*.90,-.21,-.18,.08,.08,2.15,trim); // molduras
+    cabinPart(side*.46,-.62,-.15,.62,.18,.65,leather); // assentos dianteiros
+    cabinPart(side*.46,-.32,-.57,.62,.70,.16,leather); // encostos
+    cabinPart(side*.46,.08,-.57,.26,.23,.17,leather); // apoios de cabeça
+  }
+  cabinPart(0,-.60,-1.02,1.65,.20,.55,leather); // banco traseiro
+  cabinPart(0,-.31,-1.31,1.65,.65,.16,leather);
+  cabinPart(0,-.34,-1.42,1.9,.61,.12,soft); // traseira interior
   g.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; o.frustumCulled = false; } });
   g.visible = false; scene.add(g);
-  cockpit = { g, dash, hood, brow, console_, wheel, wheelPivot, hands, sleeves, cluster, clusterCv, clusterTex, screen, screenCv, screenTex, vents, paint, drawT: 0 };
+  cockpit = { g, shell, dash, hood, brow, console_, wheel, wheelPivot, hands, sleeves, cluster, clusterCv, clusterTex, screen, screenCv, screenTex, vents, paint, drawT: 0 };
 }
 // desenha os instrumentos (10 vezes por segundo chega)
 function drawCockpitPanels(c) {
@@ -4969,6 +4984,7 @@ function updateCockpit() {
   const W = t.W;
   k.g.position.set(c.x, c.y, c.z);
   k.g.rotation.set(c.pitch, c.yaw, c.roll, 'YXZ');
+  k.shell.position.set(0,h,fwd); k.shell.scale.set(W/1.9,1,Math.max(.75,Math.min(1.35,t.L/4.5)));
   k.dash.position.set(0, h - 0.5, fwd + 1.0); k.dash.scale.set(W / 1.9, 1, 1);
   k.hood.position.set(0, h - 0.5, fwd + 1.25 + t.L * 0.18); k.hood.scale.set(W / 1.9, 1, (t.L * 0.36) / 1.7);
   k.paint.color.copy(c.color);
@@ -5265,7 +5281,7 @@ function updateMansion(I, dt) {
   inside.near = best ? { key: best, label: S[best].label } : null;
 }
 // tecla F / ENTRAR dentro de casa
-function mansionTryUse() { if (!inside.I || inside.I.kind !== 'mansion' || !inside.near || uiBlocking) return false; mansionUse(inside.near.key); return true; }
+function mansionTryUse() { if (!inside.I || uiBlocking) return false; if (inside.cd <= 0 && d2(player.x, player.z, inside.I.door.x, inside.I.door.z) < 1.8 * 1.8) { exitInterior(); return true; } if (inside.I.kind === 'mansion' && inside.near) mansionUse(inside.near.key); return true; }
 // porta da tua casa na rua
 function updateHomeDoor(px, pz, onFoot) {
   const s = SPOT.home; if (!s) return;
@@ -5708,7 +5724,7 @@ const hud = (() => {
       if (c) { el.kmh.textContent = Math.round(Math.abs(c.t.plane ? c.fspeed : c.fwdSpeed()) * 3.6); el.carname.textContent = c.t.plane ? `ALT ${Math.round(c.y)} m · MOTOR ${Math.round(c.throttle * 100)}%` : c.t.name.toUpperCase(); el.carhp.style.width = clamp(c.health, 0, 100) + '%'; $('nitroi').style.width = clamp((player.nitro ?? 1) * 100, 0, 100) + '%'; }
       if (isTouch) {
         const inCar = !!c, lab = (id, t) => { const b = $(id); if (b.textContent !== t) b.textContent = t; };
-        lab('tb-jump', inCar ? 'TRAVÃO' : 'SALTAR'); lab('tb-weapon', inCar ? 'NITRO' : 'ARMA'); lab('tb-radio', inCar ? 'RÁDIO' : 'MAPA'); lab('tb-run', inCar ? 'BUZINA' : touch.run ? 'ANDAR' : 'CORRER'); lab('tb-enter', inCar ? 'SAIR' : inside.I && inside.near ? 'USAR' : 'ENTRAR');
+        lab('tb-jump', inCar ? 'TRAVÃO' : 'SALTAR'); lab('tb-weapon', inCar ? 'NITRO' : 'ARMA'); lab('tb-radio', inCar ? 'RÁDIO' : 'MAPA'); lab('tb-run', inCar ? 'BUZINA' : touch.run ? 'ANDAR' : 'CORRER'); lab('tb-enter', inCar || (inside.I && d2(player.x, player.z, inside.I.door.x, inside.I.door.z) < 1.8 * 1.8) ? 'SAIR' : inside.I ? 'USAR' : 'ENTRAR');
         $('tb-run').classList.toggle('on', !inCar && touch.run);
       }
       el.cross.classList.toggle('on', !w.melee && game.state === 'play' && !(c && c.t.plane) && cam.mode !== 4); el.cross.classList.toggle('aim', !c && player.aiming);
@@ -6194,7 +6210,8 @@ function update(dt, rdt) {
   updateStreaming(dt);
   if (game.state === 'wasted' || game.state === 'busted') { game.endT += rdt; if (game.endT > 3.6 && !game.respawning) { game.respawning = true; respawn(game.state); setTimeout(() => (game.respawning = false), 800); } }
   // dicas
-  if (game.state === 'play' && inside.I && inside.near) hud.hint(isTouch ? `Toca em <kbd>USAR</kbd> · ${inside.near.label}` : `<kbd>F</kbd> ${inside.near.label}`);
+  if (game.state === 'play' && inside.I && d2(player.x, player.z, inside.I.door.x, inside.I.door.z) < 1.8 * 1.8) hud.hint(isTouch ? 'Toca em <kbd>SAIR</kbd> para sair' : '<kbd>F</kbd> Sair pela porta');
+  else if (game.state === 'play' && inside.I && inside.near) hud.hint(isTouch ? `Toca em <kbd>USAR</kbd> · ${inside.near.label}` : `<kbd>F</kbd> ${inside.near.label}`);
   else if (game.state === 'play' && !player.car) {
     const c = nearestEnterableCar();
     hud.hint(c ? (isTouch ? `Toca em <kbd>ENTRAR</kbd> · ${c.t.name}` : `<kbd>F</kbd> ${c.driver ? 'roubar o' : 'entrar no'} ${c.t.name}`) : '');
