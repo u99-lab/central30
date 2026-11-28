@@ -1020,6 +1020,9 @@ const TOWNS = [
   { name: 'MONTEVERDE', cx: -5500, cz: -400, entry: 'E', n: 4, country: true },
 ];
 const ROUTES = [];
+const MAIN_CITY_GRID={id:'main',x0:-HALF,z0:-HALF,n:N};
+function cityGridAt(x,z){for(let k=0;k<TOWNS.length;k++){const t=TOWNS[k],n=t.n||3,h=n*CELL/2;if(Math.abs(x-t.cx)<=h+RH+8&&Math.abs(z-t.cz)<=h+RH+8)return {id:'town'+k,x0:t.cx-h,z0:t.cz-h,n};}if(Math.abs(x)<=HALF+RH+8&&Math.abs(z)<=HALF+RH+8)return MAIN_CITY_GRID;return null;}
+function gridNode(grid,x,z){return {i:clamp(Math.round((x-grid.x0)/CELL),0,grid.n),j:clamp(Math.round((z-grid.z0)/CELL),0,grid.n)};}
 function buildRoutes() {
   const E = (N * CELL) / 2 + RH;
   const defs = [
@@ -1071,15 +1074,17 @@ function routeAI(car, dt) {
   // avança o índice
   for (let g = 0; g < 4; g++) { const a = at(ai.k), b = at(ai.k + 1); const dx = b.x - a.x, dz = b.z - a.z; if ((car.x - a.x) * dx + (car.z - a.z) * dz > dx * dx + dz * dz) ai.k++; else break; }
   if (loop && ai.k >= n) ai.k -= n;
-  if (!loop && ai.k >= n - 2) { // chegou ao fim: volta ao início longe da vista
-    if (!inView(car.x, 1, car.z) || d2(car.x, car.z, camFocus.x, camFocus.z) > 250 * 250) { car.routeDone = true; }
-    car.inp.thr = 0; car.inp.hb = true; return;
+  if(!loop&&ai.k>=n-2){
+    const end=at(n-1),prev=at(n-4),grid=cityGridAt(end.x,end.z);
+    if(grid){const node=gridNode(grid,end.x,end.z),dx=end.x-prev.x,dz=end.z-prev.z,ex=Math.abs(dx)>Math.abs(dz)?Math.sign(dx):0,ez=ex?0:Math.sign(dz);if(node.i+ex>=0&&node.i+ex<=grid.n&&node.j+ez>=0&&node.j+ez<=grid.n){car.ai=makeTrafficAI(node.i,node.j,ex,ez);car.ai.grid=grid;car.inp.hb=false;return;}}
+    car.routeDone=true;car.inp.thr=0;car.inp.hb=true;return;
   }
   const look = Math.max(2, Math.round((8 + car.speed * 0.6) / 6));
   const lookIndex=loop?ai.k+look:Math.min(ai.k+look,n-1);
   const a=at(lookIndex),before=at(lookIndex-1),after=at(lookIndex+1);
   const dx=after.x-before.x,dz=after.z-before.z,L=Math.hypot(dx,dz)||1;
-  const tx = a.x - (dz / L) * ai.off, tz = a.z + (dx / L) * ai.off;
+  const off=loop?ai.off:lerp(4,ai.off,clamp(Math.min(lookIndex,n-1-lookIndex)/10,0,1));
+  const tx=a.x-dz/L*off,tz=a.z+dx/L*off;
   const st = steerTo(car, tx, tz);
   // abranda em curvas apertadas
   const c0 = at(ai.k), c1 = at(ai.k + 6), c2 = at(ai.k + 12);
@@ -1582,18 +1587,19 @@ function buildWorld() {
       for (let i = 0; i < P.length - 1; i++) {
         const a = P[i], b = P[i + 1], pa = P[Math.max(0, i - 1)], pb = P[Math.min(P.length - 1, i + 2)];
         const ta = Math.atan2(b.x - pa.x, b.z - pa.z), tb = Math.atan2(pb.x - a.x, pb.z - a.z);
-        const na = [Math.cos(ta) * hwW, -Math.sin(ta) * hwW], nb = [Math.cos(tb) * hwW, -Math.sin(tb) * hwW];
+        const width=k=>lerp(RH,hwW,clamp(Math.min(k,P.length-1-k)/7,0,1));
+        const wa=width(i),wb=width(i+1),na=[Math.cos(ta)*wa,-Math.sin(ta)*wa],nb=[Math.cos(tb)*wb,-Math.sin(tb)*wb];
         const L = Math.hypot(b.x - a.x, b.z - a.z) / 22, y = 0.075;
         rb.quad([a.x + na[0], y, a.z + na[1]], [b.x + nb[0], y, b.z + nb[1]], [b.x - nb[0], y, b.z - nb[1]], [a.x - na[0], y, a.z - na[1]], [0, 1, 0], [[0, v], [0, v + L], [1, v + L], [1, v]], white);
         v += L;
-        if (i % 8 === 0) for (const s of [1, -1]) propParts.push({ geo: new THREE.BoxGeometry(0.15, 0.8, 0.15), color: '#c9ccd2', mat: M.t(a.x + na[0] * 1.1 * s, 0.4, a.z + na[1] * 1.1 * s) });
+        if (i % 8 === 0&&i>=8&&i<P.length-8) for (const s of [1, -1]) propParts.push({ geo: new THREE.BoxGeometry(0.15, 0.8, 0.15), color: '#c9ccd2', mat: M.t(a.x + na[0] * 1.1 * s, 0.4, a.z + na[1] * 1.1 * s) });
       }
     }
     // Separador central e guardas laterais, em geometria agrupada para não pesar no iPad.
     const divider = new GeoBuilder(), steel = new THREE.Color('#a7acb4'), concrete = new THREE.Color('#777b80');
     for (const R of ROUTES) if(!R.loop) {
       const P=R.pts;
-      for(let i=5;i<P.length-6;i++){
+      for(let i=8;i<P.length-9;i++){
         const a=P[i],b=P[i+1],pa=P[i-1],pb=P[i+2];
         const aa=Math.atan2(b.x-pa.x,b.z-pa.z),bb=Math.atan2(pb.x-a.x,pb.z-a.z);
         // Colisão do separador em segmentos curtos, sem tapar as vias nas curvas.
@@ -3267,19 +3273,19 @@ const PED_TARGET = isTouch ? 26 : 44;
 const nodeIdx = (v) => clamp(Math.round((v + HALF) / CELL), 0, N);
 
 // ---------- trânsito ----------
-function validDirs(i, j, dx, dz) {
+function validDirs(i, j, dx, dz, limit=N) {
   const out = [];
   for (const [ex, ez] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     if (ex === -dx && ez === -dz) continue;
     const ni = i + ex, nj = j + ez;
-    if (ni < 0 || nj < 0 || ni > N || nj > N) continue;
+    if (ni < 0 || nj < 0 || ni > limit || nj > limit) continue;
     out.push({ x: ex, z: ez, w: ex === dx && ez === dz ? 2.2 : 1 });
   }
   if (!out.length) out.push({ x: -dx, z: -dz, w: 1 });
   return out;
 }
-function chooseDir(i, j, dx, dz) {
-  const opts = validDirs(i, j, dx, dz);
+function chooseDir(i,j,dx,dz,limit=N) {
+  const opts=validDirs(i,j,dx,dz,limit);
   let tot = opts.reduce((a, o) => a + o.w, 0), r = Math.random() * tot;
   for (const o of opts) { r -= o.w; if (r <= 0) return { x: o.x, z: o.z }; }
   return opts[0];
@@ -3307,11 +3313,11 @@ function obstacleAhead(car, range) {
 function trafficAI(car, dt) {
   const ai = car.ai;
   if (car.stunT > 0) { car.stunT -= dt; car.inp.thr = 0; car.inp.hb = true; car.inp.steer = 0; return; }
-  const Ax = roadC(ai.i), Az = roadC(ai.j);
+  const grid=ai.grid||MAIN_CITY_GRID,Ax=grid.x0+ai.i*CELL,Az=grid.z0+ai.j*CELL;
   const s = (car.x - Ax) * ai.dx + (car.z - Az) * ai.dz;
   const look = 7 + car.speed * 0.55, sEnd = CELL - 8;
   const rx = -ai.dz, rz = ai.dx;
-  if (!ai.nd && CELL - s < 34) ai.nd = chooseDir(ai.i + ai.dx, ai.j + ai.dz, ai.dx, ai.dz);
+  if (!ai.nd && CELL - s < 34) ai.nd = chooseDir(ai.i+ai.dx,ai.j+ai.dz,ai.dx,ai.dz,grid.n);
   let tx, tz;
   if (s + look <= sEnd || !ai.nd) { const ts = Math.min(s + look, CELL + 10); tx = Ax + ai.dx * ts + rx * 4; tz = Az + ai.dz * ts + rz * 4; }
   else {
@@ -3319,7 +3325,7 @@ function trafficAI(car, dt) {
     tx = Bx + ai.nd.x * k + nrx * 4; tz = Bz + ai.nd.z * k + nrz * 4;
   }
   if (s >= sEnd) {
-    if (!ai.nd) ai.nd = chooseDir(ai.i + ai.dx, ai.j + ai.dz, ai.dx, ai.dz);
+    if (!ai.nd) ai.nd = chooseDir(ai.i+ai.dx,ai.j+ai.dz,ai.dx,ai.dz,grid.n);
     ai.i += ai.dx; ai.j += ai.dz; ai.dx = ai.nd.x; ai.dz = ai.nd.z; ai.nd = null;
   }
   // se perdido longe da faixa, vira "estacionado"
@@ -3332,7 +3338,7 @@ function trafficAI(car, dt) {
   ai.panic = Math.max(0, ai.panic - dt);
   const vf = car.fwdSpeed();
   { const Bi = ai.i + ai.dx, Bj = ai.j + ai.dz, rem = CELL - 12.5 - s;
-    if (Bi > 0 && Bi < N && Bj > 0 && Bj < N && rem > -0.5 && rem < 16) { const ls = lightState(Bi, Bj, ai.dx !== 0); if (ls === 'r' || (ls === 'y' && rem > 7)) target = Math.min(target, Math.max(0, (rem - 0.5) * 0.7)); } }
+    if (grid.id==='main'&&Bi > 0 && Bi < N && Bj > 0 && Bj < N && rem > -0.5 && rem < 16) { const ls = lightState(Bi, Bj, ai.dx !== 0); if (ls === 'r' || (ls === 'y' && rem > 7)) target = Math.min(target, Math.max(0, (rem - 0.5) * 0.7)); } }
   const obs = obstacleAhead(car, 5 + Math.max(0, vf) * 1.0);
   if (obs < Infinity) {
     target = Math.min(target, Math.max(0, (obs - 4.5) * 0.9));
@@ -3582,7 +3588,7 @@ function updateWanted(dt) {
     if (wanted.spawnT <= 0) {
       wanted.spawnT = 2.2;
       const want = [0, 1, 2, 3, 4, 5][wanted.level];
-      const active = cars.filter((c) => c.police && !c.dead && c.ai && c.ai.type === 'police').length;
+      const tgt=player.car||player;const active=cars.filter(c=>c.police&&!c.dead&&c.ai?.type==='police'&&d2(c.x,c.z,tgt.x,tgt.z)<320*320).length;
       if (active < want) spawnPoliceCar();
       if (wanted.level >= 4 && (!heli || heli.gone)) spawnHeli();
     }
@@ -3592,10 +3598,11 @@ function updateWanted(dt) {
 
 // ---------- viaturas ----------
 function spawnPoliceCar() {
-  const tgt = player.car || player;
+  const tgt=player.car||player,grid=cityGridAt(tgt.x,tgt.z);if(!grid)return null;
+  const node=gridNode(grid,tgt.x,tgt.z);
   for (let tries = 0; tries < 40; tries++) {
-    const i = clamp(nodeIdx(tgt.x) + ri(-3, 3), 0, N), j = clamp(nodeIdx(tgt.z) + ri(-3, 3), 0, N);
-    const x = roadC(i), z = roadC(j);
+    const i=clamp(node.i+ri(-3,3),0,grid.n),j=clamp(node.j+ri(-3,3),0,grid.n);
+    const x=grid.x0+i*CELL,z=grid.z0+j*CELL;
     const dd = Math.sqrt(d2(x, z, tgt.x, tgt.z));
     if (dd < 85 || dd > 190) continue;
     if (dd < 140 && inView(x, 1, z)) continue;
@@ -3608,8 +3615,9 @@ function spawnPoliceCar() {
   }
   return null;
 }
-function policeWaypoint(car, gi, gj) {
-  const fi = (car.x + HALF) / CELL, fj = (car.z + HALF) / CELL;
+function policeWaypoint(car,gi,gj,grid=MAIN_CITY_GRID) {
+  const N=grid.n,rx=i=>grid.x0+i*CELL,rz=j=>grid.z0+j*CELL;
+  const fi=(car.x-grid.x0)/CELL,fj=(car.z-grid.z0)/CELL;
   const ni = clamp(Math.round(fi), 0, N), nj = clamp(Math.round(fj), 0, N);
   const offX = Math.abs(fi - ni) * CELL, offZ = Math.abs(fj - nj) * CELL;
   const sy = Math.sin(car.yaw), cy = Math.cos(car.yaw);
@@ -3624,7 +3632,7 @@ function policeWaypoint(car, gi, gj) {
   else cand = [[ni, nj]];
   if (!cand.length) return null;
   let best = null, bs = Infinity;
-  for (const [a, b] of cand) { const x = roadC(a), z = roadC(b); const s = score(a, b) * 10 - align(x, z) * 6 + Math.sqrt(d2(x, z, car.x, car.z)) * 0.02; if (s < bs) { bs = s; best = { x, z }; } }
+  for (const [a,b] of cand) { const x=rx(a),z=rz(b); const s = score(a, b) * 10 - align(x, z) * 6 + Math.sqrt(d2(x, z, car.x, car.z)) * 0.02; if (s < bs) { bs = s; best = { x, z }; } }
   return best;
 }
 function policeAI(car, dt) {
@@ -3632,6 +3640,8 @@ function policeAI(car, dt) {
   if (wanted.level === 0) {
     car.siren = false;
     if (ai.crew <= 0 && peds.some((p) => p.homeCar === car && !p.dead)) { car.inp.thr = 0; car.inp.hb = true; return; }
+    // Não reutilizar coordenadas da cidade principal em localidades remotas.
+    const grid=cityGridAt(car.x,car.z);if(grid?.id!=='main'){car.ai=null;car.inp.thr=0;car.inp.hb=true;car.inp.steer=0;return;}
     // vira trânsito normal
     const i = nodeIdx(car.x), j = nodeIdx(car.z);
     const dirs = validDirs(i, j, 0, 0), d = rpick(dirs);
@@ -3658,8 +3668,8 @@ function policeAI(car, dt) {
   let ax, az;
   if (ai.los && d < 50) { ax = tx; az = tz; }
   else {
-    const gi = nodeIdx(tgt.x), gj = nodeIdx(tgt.z);
-    const wp = policeWaypoint(car, gi, gj);
+    const grid=cityGridAt(car.x,car.z),targetGrid=cityGridAt(tgt.x,tgt.z),node=grid&&gridNode(grid,tgt.x,tgt.z);
+    const wp=grid&&targetGrid&&grid.id===targetGrid.id?policeWaypoint(car,node.i,node.j,grid):null;
     if (wp) { ax = wp.x; az = wp.z; } else { ax = tx; az = tz; }
   }
   const st = steerTo(car, ax, az);
@@ -3696,7 +3706,7 @@ function removeCar(car) {
   if (car === player.lastCar) player.lastCar = null;
 }
 function updateAI(dt) {
-  for (const car of cars) {
+  for(let i=cars.length-1;i>=0;i--){const car=cars[i];
     if (car === player.car) continue;
     if (car.dead) { car.inp.thr = 0; car.inp.hb = true; continue; }
     if (!car.ai) { car.inp.thr = 0; car.inp.steer = 0; car.inp.hb = true; continue; }
@@ -3763,7 +3773,7 @@ function updateStreaming(dt) {
     const c = cars[i]; if (c === player.car || c.mission || c.parked) continue;
     const dd = d2(c.x, c.z, px, pz);
     if (c.routeDone || (c.ai && c.ai.type === 'route' && dd > 850 * 850) || (c.ai && c.ai.type === 'traffic' && dd > 290 * 290) || (!c.ai && dd > 330 * 330) || (c.dead && dd > 160 * 160 && !inView(c.x, 1, c.z))) {
-      if (!inView(c.x, 1, c.z) || dd > 400 * 400) cars.splice(i, 1);
+      if (!inView(c.x, 1, c.z) || dd > 400 * 400) removeCar(c);
     }
   }
   if (game.state !== 'title' && cars.filter(c=>c.ai?.type==='route'&&d2(c.x,c.z,px,pz)<850*850).length < 12) {
