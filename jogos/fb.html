@@ -729,7 +729,7 @@ body:has(#intro-overlay:not(.hidden)):has(#career-overlay.hidden) :is(#standings
  <div class="intro-title">FUTEBOL / MATCHDAY</div><div class="intro-subtitle">O TEU CLUBE. A TUA ÉPOCA.</div>
  <div class="intro-item"><div class="intro-item-icon">01</div><div><div class="intro-item-title">Controla o primeiro toque</div><div class="intro-item-desc">Move-te com <b>WASD</b>. Mantém <b>R</b> para conduzir a bola de perto e <b>Shift</b> para acelerar. Dois toques em R fazem uma roleta.</div></div></div>
  <div class="intro-item"><div class="intro-item-icon">02</div><div><div class="intro-item-title">Desenha o teu remate</div><div class="intro-item-desc">Carrega e solta <b>Espaço</b>. A linha indica a trajetória inicial. <b>Z / X</b> dão efeito; <b>Ctrl</b> mantém a bola rasteira.</div></div></div>
- <div class="intro-item"><div class="intro-item-icon">03</div><div><div class="intro-item-title">Encontra o espaço</div><div class="intro-item-desc"><b>F</b> passa ao colega disponível. <b>Tab / Q</b> trocam de jogador; <b>E</b> faz o desarme. <b>C</b> alterna as quatro câmaras.</div></div></div>
+ <div class="intro-item"><div class="intro-item-icon">03</div><div><div class="intro-item-title">Encontra o espaço</div><div class="intro-item-desc"><b>F</b> passa ao colega disponível. <b>Tab / Q</b> trocam de jogador; <b>E</b> faz o desarme. <b>C</b> alterna as cinco câmaras.</div></div></div>
  <div class="intro-item"><div class="intro-item-icon">04</div><div><div class="intro-item-title">Constrói a época</div><div class="intro-item-desc">O <b>Centro do clube</b> reúne o mercado, as competições, os presentes e as missões. Ouve os postes: guardam um pequeno segredo.</div></div></div>
  <button id="intro-play-btn" onclick="closeIntro()">ENTRAR EM CAMPO →</button>
 </div></div>
@@ -976,6 +976,7 @@ camera.lookAt(0, 0, 0);
 
 let camMode = 0; // 0=follow, 1=tactical, 2=TV broadcast, 3=vista exterior do estádio
 const CAM_MODES = 5;
+const mainViewCamera = camera;
 
 // ==========================================
 // AUDIO
@@ -4500,7 +4501,7 @@ function updatePlayerFor(playerObj, keys, camera, game, dt) {
 
   // Camera-relative movement
   const camDir = new THREE.Vector3();
-  camera.getWorldDirection(camDir);
+  if (camera === mainViewCamera && camMode === 4) camDir.set(0,0,-1); else camera.getWorldDirection(camDir);
   camDir.y = 0; camDir.normalize();
   const camRight = new THREE.Vector3();
   camRight.crossVectors(camDir, new THREE.Vector3(0,1,0)).normalize();
