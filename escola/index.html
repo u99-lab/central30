@@ -1899,13 +1899,15 @@ function cycleTracked() {
 function togglePause() {
   if (!G.started || G.over) return;
   G.paused = !G.paused; $('pause').style.display = G.paused ? 'flex' : 'none';
-  if (G.paused) { $('optCam').value = G.cam; $('optSens').value = G.sens; $('optQual').value = G.quality; }
+  if (G.paused) { clearSchoolInput(); $('optCam').value = G.cam; $('optSens').value = G.sens; $('optQual').value = G.quality; }
   if (G.paused) document.exitPointerLock && document.exitPointerLock();
 }
 
 // touch controls
 const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 const touch = { mx: 0, my: 0, joyId: null, lookId: null, lx: 0, ly: 0, jx: 0, jy: 0 };
+function clearSchoolInput(){for(const k in keys)keys[k]=false;holdE=false;holdT=0;holdTarget=null;touch.mx=touch.my=0;touch.joyId=touch.lookId=null;const j=$('joy'),n=$('knob');if(j)j.style.display='none';if(n)n.style.transform='';document.querySelectorAll('.tbtn.press').forEach(b=>b.classList.remove('press'));$('tR')?.classList.remove('on');}
+addEventListener('blur',clearSchoolInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearSchoolInput();});
 if (isTouch) {
   document.body.classList.add('touchdev');
   // sem zoom por gestos (pinça / duplo toque) durante o jogo
@@ -1949,6 +1951,7 @@ if (isTouch) {
   // tocar no aviso "E ..." também serve para interagir
   $('prompt').addEventListener('touchstart', e => { e.preventDefault(); if (dlg) nextLine(); else { holdE = true; tryInteract(); } });
   $('prompt').addEventListener('touchend', e => { e.preventDefault(); holdE = false; });
+  $('prompt').addEventListener('touchcancel', () => { holdE = false; });
   tb('tC', () => setCam((G.cam + 1) % 4));
   tb('tM', () => $('bigmap').style.display = $('bigmap').style.display === 'block' ? 'none' : 'block');
 }
