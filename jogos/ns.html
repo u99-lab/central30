@@ -651,17 +651,30 @@ function aiInput(car){
     target=pb.clone().addScaledVector(toGoal,-off);
     if(dist<9)target=pb.clone().addScaledVector(toGoal,-1.2);
   }
-  // guarda-redes: se a bola vai a caminho da nossa baliza, o carro mais atrás corta-lhe o caminho
-  let save=false;
-  if(car.shotSeen!==ball.shotN){car.shotSeen=ball.shotN;car.willSave=Math.random()<[.45,.82,1][S.diff|0];}
-  if(car.willSave&&ball.vel.z*s>2){const tg=(ownZ-ball.pos.z)/ball.vel.z,xg=ball.pos.x+ball.vel.x*tg;
-    if(tg>0&&tg<3.2&&Math.abs(xg)<GW/2+5){
-      const keeper=pool.slice().sort((a,b)=>b.pos.z*s-a.pos.z*s)[0];
-      if(keeper===car&&(car.pos.z-ball.pos.z)*s>-1){
-        // ponto onde dá para chegar à bola a tempo (antes da linha de golo)
-        let best=null;for(let t=.05;t<=tg;t+=.05){const bx=ball.pos.x+ball.vel.x*t,bz=ball.pos.z+ball.vel.z*t;if(Math.hypot(bx-car.pos.x,bz-car.pos.z)<=4+t*30*D.thr){best=new V(bx,0,bz);break;}}
-        if(!best)best=new V(clamp(xg,-GW/2+1,GW/2-1),0,ownZ-s*2.5);
-        target=new V(clamp(best.x,-W+3,W-3),0,clamp(best.z,-L+2,L-2));save=true;}}}
+  // Defend the goal before the ball is already past the last defender.
+  let save=false,guard=false;
+  const keeper=pool.slice().sort((a,b)=>b.pos.z*s-a.pos.z*s)[0];
+  const toward=ball.vel.z*s,remaining=L-ball.pos.z*s;
+  const drag=ball.pos.y<BR+.4?.94:.12;
+  const ratio=toward>0?remaining*drag/toward:Infinity;
+  const tg=ratio>0&&ratio<1?-Math.log(1-ratio)/drag:Infinity;
+  const xg=Number.isFinite(tg)?ball.pos.x+ball.vel.x*(1-Math.exp(-drag*tg))/drag:ball.pos.x;
+  const shot=tg<6&&Math.abs(xg)<GW/2+6;
+  const pressure=ball.pos.z*s>L*.12&&(car.pos.z-ball.pos.z)*s<12;
+  if(keeper===car&&(shot||pressure||(!attacker&&ball.pos.z*s>0))){
+    const guardZ=ownZ-s*(shot?7:13);
+    const guardX=clamp((shot?xg:ball.pos.x*.5),-GW/2+1.5,GW/2-1.5);
+    target=new V(guardX,0,guardZ);guard=true;
+    if(shot&&tg<3.6){
+      for(let tt=.12;tt<tg;tt+=.12){
+        const travel=(1-Math.exp(-drag*tt))/drag,bx=ball.pos.x+ball.vel.x*travel,bz=ball.pos.z+ball.vel.z*travel;
+        if(bz*s>ball.pos.z*s&&bz*s<L-3&&Math.hypot(bx-car.pos.x,bz-car.pos.z)<2+tt*27*D.thr){
+          target=new V(bx,0,bz);guard=false;break;
+        }
+      }
+    }
+    save=true;
+  }
   // Só o carro que disputa a bola sobe quando ela está alta junto à parede.
   const wallChase=attacker&&!save&&!plOn&&Math.abs(ball.pos.x)>W-10&&ball.pos.y>4&&Math.abs(ball.pos.z)<L-CUT-9&&Math.abs(ball.pos.z-car.pos.z)<35;
   if(wallChase){const side=Math.sign(ball.pos.x);target=new V(side*(W+7),0,clamp(pb.z+s*2,-L+CUT+5,L-CUT-5));}
@@ -679,7 +692,7 @@ function aiInput(car){
   if(Math.abs(ang)<.3&&car.boost>D.boostMin&&sp<46&&(td>18||(attacker&&dist<22&&goalSide))&&Math.random()<D.boostP)inp.boost=true;
   if(!goalSide&&dist<16)inp.boost=false;
   if(retreat&&car.boost>0&&Math.abs(ang)<.6&&td>12)inp.boost=true;
-  if(save){inp.thr=1;if(Math.abs(ang)>2.3&&td<12){inp.thr=-1;inp.steer=-inp.steer;}if(car.boost>0&&Math.abs(ang)<.7&&td>5)inp.boost=true;if(car.onGround&&Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z)<9&&ball.pos.y>3&&ball.pos.y<10){inp.jump=true;inp.jumpHeld=true;}}
+  if(save){inp.thr=1;if(Math.abs(ang)>2.1){inp.thr=-1;inp.steer=-inp.steer;}if(guard&&td<4){inp.thr=0;inp.boost=false;}else if(car.boost>0&&Math.abs(ang)<.65&&td>12)inp.boost=true;if(car.onGround&&Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z)<9&&ball.pos.y>3&&ball.pos.y<10){inp.jump=true;inp.jumpHeld=true;}}
   if(S.state==='play'&&S.timer>-1.0&&attacker&&dist<80&&!save)inp.boost=car.boost>0&&Math.abs(ang)<.35; // kickoff rush
   const bdx=ball.pos.x-car.pos.x,bdz=ball.pos.z-car.pos.z,blz=bdx*sn+bdz*c,blx=bdx*c-bdz*sn,bang=Math.atan2(blx,blz);
   if(attacker&&D.jump&&car.onGround&&dist<10&&ball.pos.y>3.5&&ball.pos.y<11&&Math.abs(bang)<.4&&ball.vel.y<6){inp.jump=true;inp.jumpHeld=true;}
@@ -706,7 +719,9 @@ function carBall(car){
   const n=new V(ball.pos.x-wx,ball.pos.y-wy,ball.pos.z-wz);let d=n.length();
   if(d>=BR)return;
   if(d<1e-4){n.set(0,1,0);d=0;}else n.multiplyScalar(1/d);
-  ball.pos.set(wx,wy,wz).addScaledVector(n,BR+.01);
+  // Separate overlapping hitboxes gradually; do not teleport the ball across the goal line.
+  const push=Math.min(.35,BR+.01-d);
+  ball.pos.addScaledVector(n,push);
   const rel=ball.vel.clone().sub(car.vel).dot(n);
   if(rel<0){
     const power=(car.mega>0?1.3:1)*(car.flip?1.15:1);
@@ -716,9 +731,12 @@ function carBall(car){
     const mv=new V(car.vel.x,0,car.vel.z),ms=mv.length();
     if(ms>6){mv.multiplyScalar(1/ms);const al=mv.dot(n);if(al>0)hitDir.addScaledVector(mv,.45*al);}
     hitDir.y+=.06;hitDir.normalize();
-    const soft=clamp((-rel-5)/30,0,1); // impulso proporcional, sem impulso extra num toque leve
-    ball.vel.addScaledVector(n,-rel*.28);
-    ball.vel.addScaledVector(hitDir,-rel*(.18+.36*soft)*power);
+    const impact=-rel;
+    const soft=clamp((impact-8)/28,0,1);
+    // Low-speed contacts are soft dribbles. Only a fast, direct impact produces a shot.
+    const impulse=Math.min(35,impact*(.22+.48*soft)*power);
+    ball.vel.addScaledVector(n,impulse*.8);
+    ball.vel.addScaledVector(hitDir,impulse*.2);
     car.vel.addScaledVector(n,rel*.2);
     const v=-rel;hitSfx(v*power);
     if(v>8)emit(ball.pos,new V(),v*.25,car.mega>0?0xffd23f:TEAMCOL[car.team],.4,Math.min(30,v|0));
@@ -777,16 +795,22 @@ function step(dt,inputs){
   if(S.state==='goal')return;
   // ball
   const b=ball;
+  const prevZ=b.pos.z;
   b.vel.y+=GRAV*.9*dt;b.vel.multiplyScalar(Math.exp(-.12*dt));{const bs=b.vel.length();if(bs>50)b.vel.multiplyScalar(50/bs);}
   b.pos.addScaledVector(b.vel,dt);
+  const goalLine=L+BR-.01;
+  // Only movement of the ball can cross the scoring plane; overlap correction cannot create a goal.
+  const crossed=Math.abs(prevZ)<goalLine&&Math.abs(b.pos.z)>=goalLine;
+  if(crossed&&goalTeam(b.pos)!==-1&&registerGoal(b))return;
   // online: os carros dos amigos são sólidos para a bola e para o teu carro
   try{const ps=window.C30peers?window.C30peers():[];for(const q of ps){let dx=b.pos.x-q.x,dy=b.pos.y-(q.y+1.2),dz=b.pos.z-q.z,d=Math.hypot(dx,dy,dz);if(d<4.4&&d>.01){dx/=d;dy/=d;dz/=d;const vn=b.vel.x*dx+b.vel.y*dy+b.vel.z*dz;b.pos.set(q.x+dx*4.4,q.y+1.2+dy*4.4,q.z+dz*4.4);if(vn<0){b.vel.x-=1.7*vn*dx;b.vel.y-=1.7*vn*dy;b.vel.z-=1.7*vn*dz;}}
     if(player){const ex=player.pos.x-q.x,ez=player.pos.z-q.z,e=Math.hypot(ex,ez);if(e<4.2&&e>.01&&Math.abs(player.pos.y-q.y)<3){player.pos.x=q.x+ex/e*4.2;player.pos.z=q.z+ez/e*4.2;const pv=player.vel.x*ex/e+player.vel.z*ez/e;if(pv<0){player.vel.x-=1.3*pv*ex/e;player.vel.z-=1.3*pv*ez/e;}}}}}catch(e){}
   if(b.pos.y<BR){b.pos.y=BR;if(b.vel.y<0){const vy=-b.vel.y;b.vel.y=vy*.62;if(b.vel.y<1.5)b.vel.y=0;if(vy>6)hitSfx(vy*.4);}
-    const f=Math.exp(-.65*dt);b.vel.x*=f;b.vel.z*=f;if(Math.hypot(b.vel.x,b.vel.z)<.25){b.vel.x=0;b.vel.z=0;}}
+    const f=Math.exp(-.82*dt);b.vel.x*=f;b.vel.z*=f;if(Math.hypot(b.vel.x,b.vel.z)<.45){b.vel.x=0;b.vel.z=0;}}
   const imp=walls(b.pos,b.vel,BR,.75);if(imp>8)hitSfx(imp*.5);
-  if(registerGoal(b))return;
-  for(const car of cars){carBall(car);walls(b.pos,b.vel,BR,.75);if(registerGoal(b))return;}
+  for(const car of cars){carBall(car);walls(b.pos,b.vel,BR,.75);}
+  // Keep numerical separation on the playable side until real velocity crosses the line.
+  if(Math.abs(b.pos.z)>=goalLine)b.pos.z=Math.sign(b.pos.z)*(goalLine-.025);
 
 }
 
