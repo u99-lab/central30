@@ -53,6 +53,7 @@ try {
   const store = (k) => 'c30aprender_' + k;
   K.keep = () => { try { return !!JSON.parse(localStorage.getItem('c30.settings') || '{}').keepProgress; } catch (e) { return false; } };
   const volatileBest = new Map();
+  addEventListener('storage', e => { if (e.key === 'c30.reset' || e.key === 'c30.progressWipe' || (e.key === 'c30.settings' && !K.keep())) { volatileBest.clear(); const badge = document.getElementById('kbest'); if (badge) badge.textContent = ''; } });
   K.best = {
     get(k) { let saved=0; try { if(K.keep()) saved=Number(localStorage.getItem(store(k)))||0; } catch(e) {} return Math.max(0,Number.isFinite(saved)?saved:0,volatileBest.get(k)||0); },
     set(k, v) { v=Number(v); if(!Number.isFinite(v)||v<0||v<=K.best.get(k))return; volatileBest.set(k,v); try { if(K.keep()) localStorage.setItem(store(k),String(v)); } catch(e) {} },
