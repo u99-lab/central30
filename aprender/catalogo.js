@@ -5,7 +5,7 @@
     geo: ['Geografia', '#7cc8f4'], his: ['História', '#f4c27c'], cie: ['Ciências', '#9ef47c'], mat: ['Matemática', '#f47cc8'], lin: ['Línguas', '#c7a6ff'],
   };
   const A = [
-    { p: 'distritos/', s: 'geo', e: '🇵🇹', t: 'Distritos de Portugal Continental', k: 'Animação · mapa interativo', d: 'Do país à freguesia: 18 distritos, 278 concelhos e 2882 freguesias, com zoom, setas e visita guiada.', by: 'Isaac Cardoso · N.º 15 · 7.º B',
+    { p: 'distritos/', s: 'geo', e: '🇵🇹', t: 'Distritos de Portugal Continental', k: 'Animação · mapa interativo', d: 'Do país à freguesia: 18 distritos, 278 concelhos e 2882 freguesias, com zoom, setas e visita guiada.',
       extra: [['PDF', 'distritos/downloads/Distritos_de_Portugal_Continental_completo.pdf'], ['Vídeo', 'distritos/downloads/Animacao_Distritos_de_Portugal_Isaac_Cardoso.mp4']] },
     { p: 'aprender/onde-fica-distrito/', s: 'geo', e: '📍', t: 'Onde fica o distrito?', k: 'Jogo de mapa', d: 'Aparece um distrito: encontra-o no mapa de Portugal. Consegues os 18 à primeira?' },
     { p: 'aprender/onde-fica-concelho/', s: 'geo', e: '🗺️', t: 'Onde fica o concelho?', k: 'Jogo de mapa', d: 'Escolhe um distrito e encontra todos os seus concelhos no mapa.' },
