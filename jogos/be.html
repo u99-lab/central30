@@ -5642,13 +5642,13 @@ const hud = (() => {
 })();
 
 // ---------- toque ----------
-const touch = { jx: 0, jy: 0, fire: false, jump: false, run: false, active: false, stickId: null, camId: null, lx: 0, ly: 0 };
+const touch = { jx: 0, jy: 0, fire: false, jump: false, run: false, active: false, stickId: null, camId: null, lx: 0, ly: 0, releases: [] };
 function initTouch() {
   if (!isTouch) return;
   $('controls-desk').hidden = true;
   const stick = $('stick'), knob = $('knob');
   const setKnob = (x, y) => { knob.style.transform = `translate(${x}px, ${y}px)`; };
-  stick.addEventListener('touchstart', (e) => { e.preventDefault(); const t = e.changedTouches[0]; touch.stickId = t.identifier; moveStick(t); }, { passive: false });
+  stick.addEventListener('touchstart', (e) => { e.preventDefault(); if (touch.stickId !== null) return; const t = e.changedTouches[0]; if (!t) return; touch.stickId = t.identifier; moveStick(t); }, { passive: false });
   const moveStick = (t) => { const r = stick.getBoundingClientRect(); let x = t.clientX - (r.left + r.width / 2), y = t.clientY - (r.top + r.height / 2); const L = Math.hypot(x, y), M = 55; if (L > M) { x *= M / L; y *= M / L; } touch.jx = x / M; touch.jy = y / M; setKnob(x, y); };
   addEventListener('touchmove', (e) => {
     for (const t of e.changedTouches) {
@@ -5659,7 +5659,7 @@ function initTouch() {
   const end = (e) => { for (const t of e.changedTouches) { if (t.identifier === touch.stickId) { touch.stickId = null; touch.jx = touch.jy = 0; setKnob(0, 0); } if (t.identifier === touch.camId) touch.camId = null; } };
   addEventListener('touchend', end); addEventListener('touchcancel', end);
   canvasEl.addEventListener('touchstart', (e) => { const t = e.changedTouches[0]; if (touch.camId === null) { touch.camId = t.identifier; touch.lx = t.clientX; touch.ly = t.clientY; } }, { passive: true });
-  const hold = (id, on, off) => { const b = $(id); b.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); on(); b.classList.add('on'); }, { passive: false }); b.addEventListener('touchend', (e) => { e.preventDefault(); off && off(); if (id !== 'tb-run' || !touch.run) b.classList.remove('on'); }, { passive: false }); };
+  const hold = (id, on, off) => { const b = $(id); let finger = null; b.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); if (finger !== null || !e.changedTouches.length) return; finger = e.changedTouches[0].identifier; on(); b.classList.toggle('on', id !== 'tb-run' || touch.run); }, { passive: false }); const release = (e) => { if (!Array.from(e.changedTouches).some(t => t.identifier === finger)) return; e.preventDefault(); finger = null; off && off(); b.classList.toggle('on', id === 'tb-run' && touch.run); }; b.addEventListener('touchend', release, { passive: false }); b.addEventListener('touchcancel', release, { passive: false }); touch.releases.push(() => { finger = null; off && off(); b.classList.toggle('on', id === 'tb-run' && touch.run); }); };
   hold('tb-fire', () => { touch.fire = true; mouse.leftPressed = true; }, () => (touch.fire = false));
   hold('tb-jump', () => { touch.jump = true; pressed.Space = true; }, () => (touch.jump = false));
   hold('tb-enter', () => { pressed.KeyF = true; });
@@ -5667,6 +5667,9 @@ function initTouch() {
   hold('tb-radio', () => { if (player.car) pressed.KeyR = true; else pressed.KeyM = true; });
   hold('tb-cam', () => { pressed.KeyV = true; });
   hold('tb-run', () => { if (player.car) { pressed.KeyH = true; return; } touch.run = !touch.run; $('tb-run').classList.toggle('on', touch.run); });
+  touch.release = () => { touch.stickId = touch.camId = null; touch.jx = touch.jy = 0; setKnob(0, 0); for (const release of touch.releases) release(); mouse.dx = mouse.dy = 0; mouse.leftPressed = false; for (const k in pressed) pressed[k] = false; };
+  addEventListener('blur', touch.release);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) touch.release(); });
   $('tpause').addEventListener('click', () => setPause(true));
 }
 
@@ -5765,6 +5768,7 @@ function setPause(on) {
   if (game.state === 'title' || game.state === 'boot') return;
   if (!$('shop').hidden) return;
   game.paused = on; uiBlocking = on;
+  if (on) { touch.release?.(); for (const k in keys) keys[k] = false; }
   $('pause').hidden = !on;
   $('reset-confirm').hidden = true; resetArmed = false;
   if (on) {
