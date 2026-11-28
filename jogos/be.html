@@ -1963,7 +1963,8 @@ function buildWater() {
       }`,
   });
   const mesh = new THREE.Mesh(g, mat);
-  mesh.position.set(SHORE_X + 3000 - 2, 0.06, 0);
+  // A margem oeste do plano fica na costa, nunca por cima da cidade.
+  mesh.position.set(SHORE_X - 1 + 14500 / 2, 0.06, 0);
   scene.add(mesh);
   envMats.water = mat;
 }
@@ -5622,7 +5623,7 @@ const hud = (() => {
       if (c) { el.kmh.textContent = Math.round(Math.abs(c.t.plane ? c.fspeed : c.fwdSpeed()) * 3.6); el.carname.textContent = c.t.plane ? `ALT ${Math.round(c.y)} m · MOTOR ${Math.round(c.throttle * 100)}%` : c.t.name.toUpperCase(); el.carhp.style.width = clamp(c.health, 0, 100) + '%'; $('nitroi').style.width = clamp((player.nitro ?? 1) * 100, 0, 100) + '%'; }
       if (isTouch) {
         const inCar = !!c, lab = (id, t) => { const b = $(id); if (b.textContent !== t) b.textContent = t; };
-        lab('tb-jump', inCar ? 'TRAVÃO' : 'SALTAR'); lab('tb-weapon', inCar ? 'NITRO' : 'ARMA'); lab('tb-radio', inCar ? 'RÁDIO' : 'MAPA'); lab('tb-run', inCar ? 'BUZINA' : 'CORRER'); lab('tb-enter', inCar ? 'SAIR' : 'ENTRAR');
+        lab('tb-jump', inCar ? 'TRAVÃO' : 'SALTAR'); lab('tb-weapon', inCar ? 'NITRO' : 'ARMA'); lab('tb-radio', inCar ? 'RÁDIO' : 'MAPA'); lab('tb-run', inCar ? 'BUZINA' : touch.run ? 'ANDAR' : 'CORRER'); lab('tb-enter', inCar ? 'SAIR' : 'ENTRAR');
         $('tb-run').classList.toggle('on', !inCar && touch.run);
       }
       el.cross.classList.toggle('on', !w.melee && game.state === 'play' && !(c && c.t.plane) && cam.mode !== 4); el.cross.classList.toggle('aim', !c && player.aiming);
@@ -5920,7 +5921,7 @@ function controlFoot(dt) {
   const aiming = !w.melee && (mouse.right || firing);
   player.aiming = aiming; player.aimingHard = mouse.right;
   player.weapon = w.melee ? null : w.id;
-  const run = keys.ShiftLeft || keys.ShiftRight || touch.run || (isTouch && L > 0.92);
+  const run = keys.ShiftLeft || keys.ShiftRight || (isTouch && touch.run);
   const speed = player.swim ? (run ? 2.6 : 1.8) : aiming ? 2.6 : run ? 7.4 : 3.4;
   player.wantX = wl > 0.01 ? wx / wl : 0; player.wantZ = wl > 0.01 ? wz / wl : 0;
   player.wantSpeed = wl > 0.01 ? speed * Math.min(1, wl) : 0;
