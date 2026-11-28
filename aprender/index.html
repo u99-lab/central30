@@ -83,24 +83,7 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:v
 </div>
 <script src="catalogo.js"></script>
 <script>
-// Reinício único dos dados da Central 30, MAX e Aprende+.
-try {
-  const RESET = '2026-11-28-reset4';
-  const owned = k => typeof k === 'string' && (/^(?:c30(?:[._]|max[._]|aprender_|dev[._]|sec)|craques3d[._]|vfig[._]|patrao[._]|jdc[._]|aeronaut[._]|baia-escarlate-|rotadosol[._]|cq[._]|lr[-._]|central30[._])/i.test(k));
-  if (localStorage.getItem('c30.reset') !== RESET) {
-    const del = [];
-    for (let i=0;i<localStorage.length;i++) { const k=localStorage.key(i); if(owned(k)) del.push(k); }
-    del.forEach(k=>localStorage.removeItem(k));
-    localStorage.setItem('c30.reset', RESET);
-    window.__C30_DID_RESET=true;
-  }
-  if (sessionStorage.getItem('c30.reset') !== RESET) {
-    const del=[];
-    for (let i=0;i<sessionStorage.length;i++) { const k=sessionStorage.key(i); if(owned(k)) del.push(k); }
-    del.forEach(k=>sessionStorage.removeItem(k));
-    sessionStorage.setItem('c30.reset',RESET);
-  }
-} catch(e) {}
+// Reinício anterior concluído: não apagar dados ou autorizações das centrais ao entrar.
 
 
 try { C30Aprender.render(document.getElementById('lcGrid'), document.getElementById('lcChips'), '../', ''); } catch (e) { const g=document.getElementById('lcGrid'); g.textContent='Não foi possível carregar as atividades. Atualiza a página para tentar novamente.'; const b=document.createElement('button'); b.textContent='Tentar novamente'; b.onclick=()=>location.reload(); g.append(document.createElement('br'),b); }
