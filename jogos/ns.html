@@ -130,7 +130,7 @@ const TEAMCOL=[0x2f8cff,0xff7a1a];
 const isTouch=matchMedia('(pointer:coarse)').matches||('ontouchstart' in window);
 
 /* ---------- renderer ---------- */
-const renderer=new THREE.WebGLRenderer({antialias:true});
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,isTouch?1.5:2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -144,7 +144,7 @@ addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.a
 
 scene.add(new THREE.HemisphereLight(0xa8c0ff,0x1a2a20,0.6));
 const sun=new THREE.DirectionalLight(0xffffff,0.85);
-sun.position.set(30,70,20);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+sun.position.set(30,70,20);sun.castShadow=true;sun.shadow.mapSize.set(isTouch?768:1024,isTouch?768:1024);
 Object.assign(sun.shadow.camera,{left:-125,right:125,top:140,bottom:-140,near:1,far:300});
 scene.add(sun);
 [[0,1],[1,-1]].forEach(([t,s])=>{const p=new THREE.PointLight(TEAMCOL[t],1.3,130);p.position.set(0,16,s*L);scene.add(p);});
@@ -238,7 +238,7 @@ const ballMark=new THREE.Mesh(new THREE.RingGeometry(1.4,2,32),new THREE.MeshBas
 ballMark.rotation.x=-Math.PI/2;scene.add(ballMark);
 
 /* ---------- particles ---------- */
-const PN=900,pPos=new Float32Array(PN*3),pCol=new Float32Array(PN*3),parts=[];
+const PN=isTouch?360:600,pPos=new Float32Array(PN*3),pCol=new Float32Array(PN*3),parts=[];
 for(let i=0;i<PN;i++){parts.push({life:0,max:1,p:new V(),v:new V(),c:new THREE.Color(),g:0});pPos[i*3+1]=-999;}
 const pGeo=new THREE.BufferGeometry();
 pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));pGeo.setAttribute('color',new THREE.BufferAttribute(pCol,3));
@@ -288,7 +288,7 @@ function walls(p,v,r,e){
   let imp=0;const az=Math.abs(p.z),sz=Math.sign(p.z)||1;
   const bounce=(ax,s)=>{if(v[ax]*s>0){imp=Math.max(imp,Math.abs(v[ax]));v[ax]=-v[ax]*e;}};
   if(p.y>H-r){p.y=H-r;bounce('y',1);}
-  if(az>L&&(Math.abs(p.x)<=GW/2-r+.01&&p.y<=GH-r+.01||az>L+r)){
+  if(az>L&&Math.abs(p.x)<=GW/2-r+.01&&p.y<=GH-r+.01){
     if(Math.abs(p.x)>GW/2-r){const s=Math.sign(p.x);p.x=s*(GW/2-r);bounce('x',s);}
     if(p.y>GH-r){p.y=GH-r;bounce('y',1);}
     if(az>L+GD-r){p.z=sz*(L+GD-r);bounce('z',sz);}
@@ -484,7 +484,7 @@ function setup(){
 }
 const SPOTS={1:[[0,.42]],2:[[-14,.42],[22,.6]],3:[[0,.42],[-30,.55],[30,.55]]};
 function kickoff(){
-  ball.pos.set(0,BR,0);ball.vel.set(0,0,0);ball.last=null;ballMesh.visible=true;rec=[];
+  ball.pos.set(0,BR,0);if(ball.pp)ball.pp.copy(ball.pos);ball.vel.set(0,0,0);ball.last=null;ball.shotN=(ball.shotN||0)+1;ballMesh.visible=true;rec=[];
   const sp=SPOTS[S.mode];
   for(const t of[0,1]){const team=cars.filter(c=>c.team===t);
     team.forEach((c,i)=>{const [x,f]=sp[i],s=t===0?1:-1;c.pos.set(x*s,0,s*f*L);c.vel.set(0,0,0);c.yaw=t===0?Math.PI:0;
@@ -649,8 +649,8 @@ function aiInput(car){
   }
   // guarda-redes: se a bola vai a caminho da nossa baliza, o carro mais atrás corta-lhe o caminho
   let save=false;
-  if(car.shotSeen!==ball.shotN){car.shotSeen=ball.shotN;car.willSave=Math.random()<[.12,.45,.8][S.diff|0];}
-  if(car.willSave&&ball.vel.z*s>5){const tg=(ownZ-ball.pos.z)/ball.vel.z,xg=ball.pos.x+ball.vel.x*tg;
+  if(car.shotSeen!==ball.shotN){car.shotSeen=ball.shotN;car.willSave=Math.random()<[.45,.82,1][S.diff|0];}
+  if(car.willSave&&ball.vel.z*s>2){const tg=(ownZ-ball.pos.z)/ball.vel.z,xg=ball.pos.x+ball.vel.x*tg;
     if(tg>0&&tg<3.2&&Math.abs(xg)<GW/2+5){
       const keeper=pool.slice().sort((a,b)=>b.pos.z*s-a.pos.z*s)[0];
       if(keeper===car&&(car.pos.z-ball.pos.z)*s>-1){
@@ -676,7 +676,7 @@ function aiInput(car){
   if(!goalSide&&dist<16)inp.boost=false;
   if(retreat&&car.boost>0&&Math.abs(ang)<.6&&td>12)inp.boost=true;
   if(save){inp.thr=1;if(Math.abs(ang)>2.3&&td<12){inp.thr=-1;inp.steer=-inp.steer;}if(car.boost>0&&Math.abs(ang)<.7&&td>5)inp.boost=true;if(car.onGround&&Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z)<9&&ball.pos.y>3&&ball.pos.y<10){inp.jump=true;inp.jumpHeld=true;}}
-  if(S.state==='play'&&S.timer>-1.5&&attacker&&dist<80)inp.boost=car.boost>0&&Math.abs(ang)<.4; // kickoff rush
+  if(S.state==='play'&&S.timer>-1.0&&attacker&&dist<80&&!save)inp.boost=car.boost>0&&Math.abs(ang)<.35; // kickoff rush
   const bdx=ball.pos.x-car.pos.x,bdz=ball.pos.z-car.pos.z,blz=bdx*sn+bdz*c,blx=bdx*c-bdz*sn,bang=Math.atan2(blx,blz);
   if(attacker&&D.jump&&car.onGround&&dist<10&&ball.pos.y>3.5&&ball.pos.y<11&&Math.abs(bang)<.4&&ball.vel.y<6){inp.jump=true;inp.jumpHeld=true;}
   if(!car.onGround)inp.jumpHeld=car.jumpT<.22;
@@ -701,16 +701,16 @@ function carBall(car){
   ball.pos.set(wx,wy,wz).addScaledVector(n,BR+.01);
   const rel=ball.vel.clone().sub(car.vel).dot(n);
   if(rel<0){
-    const power=(car.mega>0?1.7:1)*(car.flip?1.25:1);
+    const power=(car.mega>0?1.3:1)*(car.flip?1.15:1);
     // push direction biased slightly upward and along the car's travel
     // the ball follows where the car is driving, blended with the contact normal
     const hitDir=n.clone();
     const mv=new V(car.vel.x,0,car.vel.z),ms=mv.length();
     if(ms>6){mv.multiplyScalar(1/ms);const al=mv.dot(n);if(al>0)hitDir.addScaledVector(mv,.45*al);}
-    hitDir.y+=.2;hitDir.normalize();
-    const soft=clamp((-rel-4)/26,0,1); // toque leve (pouca velocidade) = bola devagar
-    ball.vel.addScaledVector(n,-rel*.4);
-    ball.vel.addScaledVector(hitDir,-rel*(.35+.45*soft)*power+1.5);
+    hitDir.y+=.06;hitDir.normalize();
+    const soft=clamp((-rel-5)/30,0,1); // impulso proporcional, sem impulso extra num toque leve
+    ball.vel.addScaledVector(n,-rel*.28);
+    ball.vel.addScaledVector(hitDir,-rel*(.18+.36*soft)*power);
     car.vel.addScaledVector(n,rel*.2);
     const v=-rel;hitSfx(v*power);
     if(v>8)emit(ball.pos,new V(),v*.25,car.mega>0?0xffd23f:TEAMCOL[car.team],.4,Math.min(30,v|0));
@@ -739,7 +739,7 @@ function registerGoal(b){
     if(replayOn()&&lastReplay.length>=10)$('replayBtn').hidden=false;
     if(scorer&&scorer.isPlayer&&!own)S.goals++;
     S.state='goal';S.timer=replayOn()?4.5:3.2;ballMesh.visible=false;ballMark.visible=false;
-    for(let k=0;k<4;k++)emit(b.pos,new V(0,6,0),45,TEAMCOL[team],1.6,90,-12);
+    for(let k=0;k<3;k++)emit(b.pos,new V(0,6,0),45,TEAMCOL[team],1.6,isTouch?35:60,-12);
     emit(b.pos,new V(),25,0xffffff,1,80);
     horn();shake=1.2;
     message('GOLO!',team===0?'#5aaaff':'#ff9a4a',team===0?'EQUIPA AZUL':'EQUIPA LARANJA');
@@ -769,18 +769,16 @@ function step(dt,inputs){
   if(S.state==='goal')return;
   // ball
   const b=ball;
-  b.vel.y+=GRAV*.9*dt;b.vel.multiplyScalar(1-.03*dt);{const bs=b.vel.length();if(bs>58)b.vel.multiplyScalar(58/bs);}
-  const bs=b.vel.length();if(bs>120)b.vel.multiplyScalar(120/bs);
+  b.vel.y+=GRAV*.9*dt;b.vel.multiplyScalar(Math.exp(-.12*dt));{const bs=b.vel.length();if(bs>50)b.vel.multiplyScalar(50/bs);}
   b.pos.addScaledVector(b.vel,dt);
   // online: os carros dos amigos são sólidos para a bola e para o teu carro
   try{const ps=window.C30peers?window.C30peers():[];for(const q of ps){let dx=b.pos.x-q.x,dy=b.pos.y-(q.y+1.2),dz=b.pos.z-q.z,d=Math.hypot(dx,dy,dz);if(d<4.4&&d>.01){dx/=d;dy/=d;dz/=d;const vn=b.vel.x*dx+b.vel.y*dy+b.vel.z*dz;b.pos.set(q.x+dx*4.4,q.y+1.2+dy*4.4,q.z+dz*4.4);if(vn<0){b.vel.x-=1.7*vn*dx;b.vel.y-=1.7*vn*dy;b.vel.z-=1.7*vn*dz;}}
     if(player){const ex=player.pos.x-q.x,ez=player.pos.z-q.z,e=Math.hypot(ex,ez);if(e<4.2&&e>.01&&Math.abs(player.pos.y-q.y)<3){player.pos.x=q.x+ex/e*4.2;player.pos.z=q.z+ez/e*4.2;const pv=player.vel.x*ex/e+player.vel.z*ez/e;if(pv<0){player.vel.x-=1.3*pv*ex/e;player.vel.z-=1.3*pv*ez/e;}}}}}catch(e){}
   if(b.pos.y<BR){b.pos.y=BR;if(b.vel.y<0){const vy=-b.vel.y;b.vel.y=vy*.62;if(b.vel.y<1.5)b.vel.y=0;if(vy>6)hitSfx(vy*.4);}
-    const f=Math.exp(-.35*dt);b.vel.x*=f;b.vel.z*=f;}
-  if(registerGoal(b))return;
+    const f=Math.exp(-.65*dt);b.vel.x*=f;b.vel.z*=f;if(Math.hypot(b.vel.x,b.vel.z)<.25){b.vel.x=0;b.vel.z=0;}}
   const imp=walls(b.pos,b.vel,BR,.75);if(imp>8)hitSfx(imp*.5);
   if(registerGoal(b))return;
-  for(const car of cars){carBall(car);if(registerGoal(b))return;}
+  for(const car of cars){carBall(car);walls(b.pos,b.vel,BR,.75);if(registerGoal(b))return;}
 
 }
 
