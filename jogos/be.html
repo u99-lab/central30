@@ -3604,7 +3604,8 @@ function spawnPoliceCar() {
     const i=clamp(node.i+ri(-3,3),0,grid.n),j=clamp(node.j+ri(-3,3),0,grid.n);
     const x=grid.x0+i*CELL,z=grid.z0+j*CELL;
     const dd = Math.sqrt(d2(x, z, tgt.x, tgt.z));
-    if (dd < 85 || dd > 190) continue;
+    const localTown = grid.id !== MAIN_CITY_GRID.id;
+    if (dd < (localTown ? 45 : 85) || dd > 190) continue;
     if (dd < 140 && inView(x, 1, z)) continue;
     if (cars.some((c) => d2(c.x, c.z, x, z) < 120)) continue;
     const yaw = Math.abs(tgt.x - x) > Math.abs(tgt.z - z) ? (tgt.x > x ? Math.PI / 2 : -Math.PI / 2) : (tgt.z > z ? 0 : Math.PI);
@@ -3744,7 +3745,7 @@ function hwyAI(car, dt) {
   if (s + look < L) { tx = a[0] + dx * (s + look) - dz * off; tz = a[1] + dz * (s + look) + dx * off; }
   else { const c2 = P[(ai.k + 2) % 4], L2 = Math.hypot(c2[0] - b[0], c2[1] - b[1]), ex = (c2[0] - b[0]) / L2, ez = (c2[1] - b[1]) / L2, k = s + look - L; tx = b[0] + ex * k - ez * off; tz = b[1] + ez * k + ex * off; }
   const lat = Math.abs((car.x - a[0]) * -dz + (car.z - a[1]) * dx - off);
-  if (lat > 40) { car.ai = null; return; }
+  if (lat > 40) { car.inp.thr = -1; car.inp.hb = car.speed < 1; car.inp.steer = steerTo(car, tx, tz).steer; return; }
   const st = steerTo(car, tx, tz);
   let target = onCity ? 14 : ai.cruise;
   if (L - s < 45) target = Math.min(target, 13);
@@ -5075,6 +5076,8 @@ function buildMansion(B, f, C, I, H) {
   for (const [px, pz] of [[x0 + 0.8, z0 + 12.6], [ox - 3.6, z0 + 0.8], [ox + 2.4, z0 + 0.8]]) { f(px - 0.3, 0.1, pz - 0.3, px + 0.3, 0.6, pz + 0.3, '#8a5a3a'); B.box(px - 0.45, 0.6, pz - 0.45, px + 0.45, 1.6, pz + 0.45, C('#2f7a3a')); }
   f(x0 + 0.6, 0.1, z0 + 10.6, x0 + 0.8, 1.9, z0 + 10.8, '#222222'); B.box(x0 + 0.35, 1.9, z0 + 10.35, x0 + 1.05, 2.3, z0 + 11.05, C('#fff2c8'));
   S.tv = { x: x0 + 4.5, z: z0 + 7, label: 'Ver televisão' };
+  S.sofa = { x: x0 + 4.7, z: z0 + 9.2, label: 'Descansar no sofá' };
+  S.lights = { x: x0 + 1.5, z: z0 + 10.7, label: 'Ligar / desligar luzes' };
   S.radio = { x: x0 + 6.7, z: z0 + 1.8, label: 'Aparelhagem: ligar / mudar de rádio' };
   // ---- cozinha ----
   f(x0 + 0.4, 0.1, z1 - 0.9, x0 + 9, 1.0, z1 - 0.3, '#e8e4dc'); f(x0 + 0.4, 1.0, z1 - 0.95, x0 + 9, 1.06, z1 - 0.3, '#3a3a3a', false);
@@ -5153,6 +5156,13 @@ function homeMenu(title, items) { openMenu(title, items.map((it) => ({ ...it, ru
 function mansionUse(key) {
   const H = progress.home, done = () => { sfx.pickup(); saveGame(); };
   switch (key) {
+    case 'sofa':
+      passHours(0.25); hud.toast('Descansaste no sofá.'); done(); break;
+    case 'lights': {
+      const on = intLight.intensity < 1; intLight.intensity = on ? 10 : 0;
+      for (const l of homeLights) l.intensity = on ? 12 : 0;
+      hud.toast(on ? 'Luzes ligadas' : 'Luzes desligadas'); break;
+    }
     case 'tv':
       homeMenu('TELEVISÃO', [
         { name: 'Ver as notícias', desc: wanted.level ? `A polícia procura-te (${wanted.level}★).` : 'A cidade está calma hoje.', tag: '', run() { hud.say('Telejornal', `Missões feitas: <b>${progress.done.length}/${MISSIONS.length}</b>. ${wanted.level ? 'A polícia anda à tua procura.' : 'Nenhuma notícia sobre ti… por agora.'} Tempo: ${weather.rain > 0.3 ? 'chuva' : 'sol'}.`, 5); return true; } },
@@ -5660,7 +5670,7 @@ const hud = (() => {
       if (c) { el.kmh.textContent = Math.round(Math.abs(c.t.plane ? c.fspeed : c.fwdSpeed()) * 3.6); el.carname.textContent = c.t.plane ? `ALT ${Math.round(c.y)} m · MOTOR ${Math.round(c.throttle * 100)}%` : c.t.name.toUpperCase(); el.carhp.style.width = clamp(c.health, 0, 100) + '%'; $('nitroi').style.width = clamp((player.nitro ?? 1) * 100, 0, 100) + '%'; }
       if (isTouch) {
         const inCar = !!c, lab = (id, t) => { const b = $(id); if (b.textContent !== t) b.textContent = t; };
-        lab('tb-jump', inCar ? 'TRAVÃO' : 'SALTAR'); lab('tb-weapon', inCar ? 'NITRO' : 'ARMA'); lab('tb-radio', inCar ? 'RÁDIO' : 'MAPA'); lab('tb-run', inCar ? 'BUZINA' : touch.run ? 'ANDAR' : 'CORRER'); lab('tb-enter', inCar ? 'SAIR' : 'ENTRAR');
+        lab('tb-jump', inCar ? 'TRAVÃO' : 'SALTAR'); lab('tb-weapon', inCar ? 'NITRO' : 'ARMA'); lab('tb-radio', inCar ? 'RÁDIO' : 'MAPA'); lab('tb-run', inCar ? 'BUZINA' : touch.run ? 'ANDAR' : 'CORRER'); lab('tb-enter', inCar ? 'SAIR' : inside.I && inside.near ? 'USAR' : 'ENTRAR');
         $('tb-run').classList.toggle('on', !inCar && touch.run);
       }
       el.cross.classList.toggle('on', !w.melee && game.state === 'play' && !(c && c.t.plane) && cam.mode !== 4); el.cross.classList.toggle('aim', !c && player.aiming);
@@ -6146,7 +6156,7 @@ function update(dt, rdt) {
   updateStreaming(dt);
   if (game.state === 'wasted' || game.state === 'busted') { game.endT += rdt; if (game.endT > 3.6 && !game.respawning) { game.respawning = true; respawn(game.state); setTimeout(() => (game.respawning = false), 800); } }
   // dicas
-  if (game.state === 'play' && inside.I && inside.near) hud.hint(isTouch ? `Toca em <kbd>ENTRAR</kbd> · ${inside.near.label}` : `<kbd>F</kbd> ${inside.near.label}`);
+  if (game.state === 'play' && inside.I && inside.near) hud.hint(isTouch ? `Toca em <kbd>USAR</kbd> · ${inside.near.label}` : `<kbd>F</kbd> ${inside.near.label}`);
   else if (game.state === 'play' && !player.car) {
     const c = nearestEnterableCar();
     hud.hint(c ? (isTouch ? `Toca em <kbd>ENTRAR</kbd> · ${c.t.name}` : `<kbd>F</kbd> ${c.driver ? 'roubar o' : 'entrar no'} ${c.t.name}`) : '');
