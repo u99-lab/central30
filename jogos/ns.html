@@ -109,7 +109,7 @@ h1 .n2{color:var(--orange);text-shadow:0 0 24px rgba(255,122,26,.7)}
       <b>W / S</b><span>Acelerar / travar</span>
       <b>A / D</b><span>Virar</span>
       <b>Espaço</b><span>Saltar (2× com direção = mortal)</span>
-      <b>Shift</b><span>Turbo</span>
+      <b>Shift</b><span>Turbo · Espaço + Shift para voar</span><b>No ar</b><span>S sobe o nariz · W baixa · A/D vira</span>
       <b>C</b><span>Câmara bola / livre</span>
       <b>Parede</b><span>Conduz contra a parede lateral para subir · Espaço salta da parede</span>
       <b>P / Esc</b><span>Pausa</span>
@@ -306,7 +306,7 @@ function walls(p,v,r,e){
 const HALF={x:1.3,y:.7,z:2.25};
 class Car{
   constructor(team,isPlayer,name){
-    Object.assign(this,{team,isPlayer,name,pos:new V(),vel:new V(),yaw:0,wall:0,wf:new V(0,1,0),onGround:true,boost:33,jumpT:9,canSecond:false,flip:null,mega:0,stuck:0,rev:0,boosting:false,spawn:null});
+    Object.assign(this,{team,isPlayer,name,pos:new V(),vel:new V(),yaw:0,pitch:0,wall:0,wf:new V(0,1,0),onGround:true,boost:33,jumpT:9,canSecond:false,flip:null,mega:0,stuck:0,rev:0,boosting:false,spawn:null});
     const col=TEAMCOL[team];
     this.group=new THREE.Group();this.fg=new THREE.Group();this.fg.position.y=.8;this.group.add(this.fg);
     const bodyM=new THREE.MeshStandardMaterial({color:col,metalness:.55,roughness:.32,emissive:col,emissiveIntensity:.08});
@@ -339,8 +339,8 @@ class Car{
     }
     scene.add(this.group);
   }
-  fwd(){return this.wall?this.wf.clone():new V(Math.sin(this.yaw),0,Math.cos(this.yaw));}
-  up(){return this.wall?new V(-this.wall,0,0):new V(0,1,0);}
+  fwd(){if(this.wall)return this.wf.clone();const p=this.onGround?0:this.pitch;return new V(Math.sin(this.yaw)*Math.cos(p),Math.sin(p),Math.cos(this.yaw)*Math.cos(p));}
+  up(){if(this.wall)return new V(-this.wall,0,0);const p=this.onGround?0:this.pitch;return new V(-Math.sin(this.yaw)*Math.sin(p),Math.cos(p),-Math.cos(this.yaw)*Math.sin(p));}
   right(){return this.wall?this.wf.clone().cross(this.up()):new V(-Math.cos(this.yaw),0,Math.sin(this.yaw));}
   // condução na parede lateral (x = ±W)
   wallUpdate(dt,inp,boosting){
@@ -359,13 +359,13 @@ class Car{
     this.jumpT+=dt;
     const slow=Math.abs(sp)<7&&this.pos.y>1.2,edge=Math.abs(this.pos.z)>L-CUT-1.5;
     if(inp.jump||slow||edge){ // descola da parede
-      this.wall=0;this.onGround=false;this.vel.addScaledVector(n,inp.jump?11:3);
+      this.wall=0;this.onGround=false;this.pitch=clamp(Math.asin(clamp(f.y,-1,1)),-.8,1.15);this.vel.addScaledVector(n,inp.jump?11:3);
       if(inp.jump){this.jumpT=0;this.canSecond=true;tone(330,.08,'triangle',.06);}
       const h=new V(this.vel.x,0,this.vel.z);this.yaw=h.lengthSq()>1?Math.atan2(h.x,h.z):(s>0?-Math.PI/2:Math.PI/2);
       this.pos.x=s*(W-2.1);
     }else if(this.pos.y<=.25&&f.y<=.05){ // volta ao chão
       const ff=n.clone().multiplyScalar(Math.max(.35,-f.y)).add(new V(0,0,f.z)).normalize();
-      this.wall=0;this.onGround=true;this.pos.y=0;this.pos.x=s*(W-2.2);this.yaw=Math.atan2(ff.x,ff.z);this.vel.copy(ff).multiplyScalar(Math.abs(sp));
+      this.wall=0;this.onGround=true;this.pitch=0;this.pos.y=0;this.pos.x=s*(W-2.2);this.yaw=Math.atan2(ff.x,ff.z);this.vel.copy(ff).multiplyScalar(Math.abs(sp));
     }
     if(this.mega>0)this.mega-=dt;
   }
@@ -375,6 +375,7 @@ class Car{
     if(boosting)this.boost=Math.max(0,this.boost-33*dt);
     if(this.wall){this.wallUpdate(dt,inp,boosting);return;}
     if(this.onGround){
+      this.pitch=0;
       let sp=this.vel.dot(fwd);
       const side=this.vel.clone().addScaledVector(fwd,-sp);side.y=0;
       if(inp.thr){const braking=inp.thr*sp<0;sp+=inp.thr*(braking?75:32)*dt;}
@@ -389,14 +390,18 @@ class Car{
       side.multiplyScalar(Math.exp(-(inp.drift?1.5:10)*dt));
       this.vel.set(nf.x*sp+side.x,this.vel.y,nf.z*sp+side.z);
     }else{
-      this.yaw-=inp.steer*2.6*dt;
-      if(boosting){this.vel.addScaledVector(fwd,30*dt);this.vel.y+=inp.jumpHeld?16*dt:4*dt;}
-      this.vel.addScaledVector(fwd,inp.thr*5*dt);
+      this.yaw-=inp.steer*2.2*dt;
+      // Flight: holding jump + turbo raises the nose. Pull back to climb, push forward to level out or descend.
+      const targetPitch=Number.isFinite(inp.airPitch)?clamp(inp.airPitch,-.6,1.25):inp.jumpHeld?1.12:inp.thr<-.15?1.16:inp.thr>.15?-.28:boosting?.82:0;
+      this.pitch+=clamp(targetPitch-this.pitch,-3.6*dt,3.6*dt);
+      const airForward=this.fwd();
+      if(boosting&&!this.flip)this.vel.addScaledVector(airForward,58*dt);
       if(inp.jumpHeld&&this.jumpT<.22&&!this.flip)this.vel.y+=22*dt;
+      this.vel.y=clamp(this.vel.y,-32,23);
     }
     this.vel.y+=GRAV*dt;this.jumpT+=dt;
     if(inp.jump){
-      if(this.onGround){this.vel.y=10.5;this.onGround=false;this.jumpT=0;this.canSecond=true;tone(330,.08,'triangle',.06);}
+      if(this.onGround){this.vel.y=10.5;this.onGround=false;this.pitch=boosting||inp.jumpHeld?.24:0;this.jumpT=0;this.canSecond=true;tone(330,.08,'triangle',.06);}
       else if(this.canSecond&&this.jumpT>.08&&this.jumpT<1.6){
         this.canSecond=false;
         if(Math.abs(inp.thr)>.3||Math.abs(inp.steer)>.3){
@@ -409,7 +414,7 @@ class Car{
     }
     const hs=Math.hypot(this.vel.x,this.vel.z);if(hs>56){this.vel.x*=56/hs;this.vel.z*=56/hs;}
     this.pos.addScaledVector(this.vel,dt);
-    if(this.pos.y<=0){this.pos.y=0;if(this.vel.y<0)this.vel.y=0;if(!this.onGround){this.onGround=true;this.canSecond=false;this.flip=null;}}
+    if(this.pos.y<=0){this.pos.y=0;if(this.vel.y<0)this.vel.y=0;if(!this.onGround){this.onGround=true;this.pitch=0;this.canSecond=false;this.flip=null;}}
     else if(this.pos.y>.02)this.onGround=false;
     // walls (treat car as circle of radius ~1.8)
     const cp=new V(this.pos.x,this.pos.y+.8,this.pos.z);
@@ -420,7 +425,7 @@ class Car{
     if(this.onGround){
       const sx=Math.sign(this.pos.x)||1,fw=this.fwd(),spd=approachSpeed;
       if(Math.abs(this.pos.x)>W-2.3&&Math.abs(this.pos.z)<L-CUT-4&&fw.x*sx>.35&&spd>8&&inp.thr>0){
-        this.wall=sx;this.wf=new V(0,fw.x*sx,fw.z).normalize();this.vel.copy(this.wf).multiplyScalar(spd);
+        this.pitch=0;this.wall=sx;this.wf=new V(0,fw.x*sx,fw.z).normalize();this.vel.copy(this.wf).multiplyScalar(spd);
         this.pos.x=sx*W;this.pos.y=.3;this.onGround=false;this.flip=null;tone(260,.1,'triangle',.05);
       }
     }
@@ -430,8 +435,7 @@ class Car{
   visual(dt){
     const ia=window.__nsA==null?1:window.__nsA;if(this.wall||this.wasWall){this.wasWall=!!this.wall;this.group.position.copy(this.pos);if(this.wall){const u=this.up(),f=this.wf,x=u.clone().cross(f);this.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,u,f));}else this.group.rotation.set(0,this.yaw,0);}else if(this.pp&&ia<1&&this.pp.distanceToSquared(this.pos)<9){this.group.position.lerpVectors(this.pp,this.pos,ia);let d=this.yaw-this.pyaw;d=Math.atan2(Math.sin(d),Math.cos(d));this.group.rotation.y=this.pyaw+d*ia;}else{this.group.position.copy(this.pos);this.group.rotation.y=this.yaw;}
     if(this.flip){const a=Math.min(1,this.flip.t/.55)*Math.PI*2;this.fg.rotation.x=a*this.flip.ax;this.fg.rotation.z=a*this.flip.az;}
-    else{this.fg.rotation.x*=.8;this.fg.rotation.z*=.8;
-      if(!this.onGround&&!this.wall)this.fg.rotation.x=clamp(-this.vel.y*.012,-.25,.25);}
+    else{this.fg.rotation.x+=((this.onGround||this.wall?0:-this.pitch)-this.fg.rotation.x)*(1-Math.exp(-18*dt));this.fg.rotation.z*=Math.exp(-14*dt);}
     const sp=this.vel.dot(this.fwd());
     for(const w of this.wheels)w.children[0].rotation.x+=0; // keep
     this.wheels.forEach((w,i)=>{w.rotation.x+=sp*dt/.58;});
@@ -488,7 +492,7 @@ function kickoff(){
   const sp=SPOTS[S.mode];
   for(const t of[0,1]){const team=cars.filter(c=>c.team===t);
     team.forEach((c,i)=>{const [x,f]=sp[i],s=t===0?1:-1;c.pos.set(x*s,0,s*f*L);c.vel.set(0,0,0);c.yaw=t===0?Math.PI:0;
-      c.boost=33;c.flip=null;c.onGround=true;c.wall=0;c.canSecond=false;c.mega=0;});}
+      c.boost=33;c.flip=null;c.pitch=0;c.onGround=true;c.wall=0;c.canSecond=false;c.mega=0;});}
   pads.forEach(p=>p.t=0);
   S.state='countdown';S.timer=3;S.lastCount=-1;
 }
@@ -547,7 +551,7 @@ function readPad(){
   const gp=navigator.getGamepads?[...navigator.getGamepads()].find(g=>g):null;if(!gp)return null;
   const b=i=>gp.buttons[i]&&gp.buttons[i].pressed,bv=i=>gp.buttons[i]?gp.buttons[i].value:0;
   const dz=v=>Math.abs(v)<.15?0:v;
-  const r={thr:bv(7)-bv(6)||(-dz(gp.axes[1])*0),steer:dz(gp.axes[0]),boost:b(1)||b(2),jumpHeld:b(0),jump:b(0)&&!padPrev.a,drift:b(4)||b(5)};
+  const r={thr:bv(7)-bv(6)||-dz(gp.axes[1]||0),steer:dz(gp.axes[0]),boost:b(1)||b(2),jumpHeld:b(0),jump:b(0)&&!padPrev.a,drift:b(4)||b(5)};
   if(b(3)&&!padPrev.y)camQ=true;if(b(9)&&!padPrev.st)togglePause();
   padPrev={a:b(0),y:b(3),st:b(9)};
   if(r.jump)initAudio();
@@ -592,7 +596,7 @@ addEventListener('pointerdown',e=>{if(S.state==='replay'&&!(e.target.closest&&e.
 $('replayTag').addEventListener('click',()=>{if(S.state==='replay')afterGoal();});
 $('restart').addEventListener('click',()=>{$('restart').hidden=true;$('result').hidden=true;startGame();});
 $('play').addEventListener('click',()=>{if(S.state==='paused')togglePause();else{$('result').hidden=true;startGame();}});
-if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás para travar)</span><b>SALTAR</b><span>Toca 2× com o joystick inclinado = mortal</span><b>TURBO</b><span>Mantém premido</span><b>CÂMARA</b><span>Câmara bola / livre</span><b>PAREDE</b><span>Conduz contra a parede lateral para subir · SALTAR salta da parede</span>';
+if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás para travar)</span><b>SALTAR</b><span>Toca 2× com o joystick inclinado = mortal</span><b>TURBO</b><span>Mantém SALTAR + TURBO para voar; joystick para trás sobe, para a frente baixa</span><b>CÂMARA</b><span>Câmara bola / livre</span><b>PAREDE</b><span>Conduz contra a parede lateral para subir · SALTAR salta da parede</span>';
 
 /* ---------- AI ---------- */
 function aiInput(car){
@@ -680,6 +684,10 @@ function aiInput(car){
   const bdx=ball.pos.x-car.pos.x,bdz=ball.pos.z-car.pos.z,blz=bdx*sn+bdz*c,blx=bdx*c-bdz*sn,bang=Math.atan2(blx,blz);
   if(attacker&&D.jump&&car.onGround&&dist<10&&ball.pos.y>3.5&&ball.pos.y<11&&Math.abs(bang)<.4&&ball.vel.y<6){inp.jump=true;inp.jumpHeld=true;}
   if(!car.onGround)inp.jumpHeld=car.jumpT<.22;
+  if(D.jump&&attacker&&!car.wall&&!save&&dist<30&&ball.pos.y>5&&car.boost>8&&Math.abs(bang)<.65){
+    if(car.onGround){inp.jump=true;inp.jumpHeld=true;}
+    else{inp.airPitch=clamp(Math.atan2(ball.pos.y-car.pos.y-1,Math.max(3,dist))+.2,.12,1.2);inp.boost=ball.pos.y>car.pos.y-.5;inp.jumpHeld=car.jumpT<.25;}
+  }
   if(attacker&&D.dodge&&!car.onGround&&car.canSecond&&car.jumpT>.15&&Math.hypot(bdx,bdz,ball.pos.y-car.pos.y-1)<6&&goalSide){inp.jump=true;inp.thr=1;inp.steer=clamp(-bang*2,-1,1)*.6;}
   if(attacker&&D.dodge&&car.onGround&&dist<7.5&&ball.pos.y<3.5&&Math.abs(bang)<.25&&sp>22&&goalSide&&Math.random()<.04)inp.jump=true;
   if(wallChase){inp.thr=Math.max(.85,inp.thr);inp.jump=false;inp.jumpHeld=false;if(Math.abs(ang)<.45&&car.boost>12&&sp<22)inp.boost=true;}
@@ -822,7 +830,7 @@ function hud(){
 }
 
 /* ---------- main loop ---------- */
-let last=performance.now(),acc=0;const STEP=1/120;
+let last=performance.now(),acc=0,pendingPlayerJump=false;const STEP=1/120;
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -831,6 +839,7 @@ function frame(now){
   let inputs=null;
   if(running){
     inputs=cars.map(c=>c.isPlayer?playerInput():aiInput(c));
+    if(S.state==='play'&&inputs[0]){pendingPlayerJump=pendingPlayerJump||inputs[0].jump;inputs[0].jump=pendingPlayerJump;}else pendingPlayerJump=false;
     // timers
     if(S.state==='countdown'){
       S.timer-=dt;const n=Math.ceil(S.timer);
@@ -851,9 +860,9 @@ function frame(now){
       if(rp.i>=lastReplay.length-1)afterGoal();
     }
   }
-  if(S.state==='paused'||S.state==='menu'||S.state==='over'){acc=0;}
+  if(S.state==='paused'||S.state==='menu'||S.state==='over'){acc=0;pendingPlayerJump=false;}
   else{acc+=dt;let first=true;
-    while(acc>=STEP){/* guarda a posição antes de cada passo para desenhar o meio-termo (sem tremer) */for(const c of cars){(c.pp||(c.pp=new V())).copy(c.pos);c.pyaw=c.yaw;}(ball.pp||(ball.pp=new V())).copy(ball.pos);step(STEP,inputs);if(first&&inputs){inputs.forEach(i=>i.jump=false);first=false;}acc-=STEP;}
+    while(acc>=STEP){/* guarda a posição antes de cada passo para desenhar o meio-termo (sem tremer) */for(const c of cars){(c.pp||(c.pp=new V())).copy(c.pos);c.pyaw=c.yaw;}(ball.pp||(ball.pp=new V())).copy(ball.pos);step(STEP,inputs);if(first&&inputs){pendingPlayerJump=false;inputs.forEach(i=>i.jump=false);first=false;}acc-=STEP;}
   }
   // visuals
   window.__nsA=(S.state==='play'||S.state==='kickoff'||S.state==='goal'||S.state==='countdown')?Math.max(0,Math.min(1,acc/STEP)):1;
