@@ -2699,7 +2699,9 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 // Evita teclas "presas" (ex: alt-tab, perder foco da janela a meio de um sprint) —
 // isto é a causa mais comum de a energia parecer que "não recarrega".
-window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+function clearFBInput(){for(const k in keys)keys[k]=false;game.isChargingKick=false;game.kickPower=0;}
+window.addEventListener('blur',clearFBInput);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearFBInput();});
 
 // Botões de ação no ecrã (PASSAR / DRIBLAR) — funcionam por clique/toque, tal como as teclas F/R
 function wireActionButton(btnId, keyCode) {
@@ -2728,6 +2730,7 @@ function wireActionButton(btnId, keyCode) {
   btn.addEventListener('pointerup', release);
   btn.addEventListener('pointerleave', release);
   btn.addEventListener('pointercancel', release);
+  btn.addEventListener('lostpointercapture', release);
 }
 wireActionButton('btn-pass', 'KeyF');
 wireActionButton('btn-dribble', 'KeyR');
