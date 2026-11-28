@@ -5769,7 +5769,7 @@ function initTouch() {
 // ============================================================
 
 const game = { state: 'boot', paused: false, time: 0, dt: 0.016, timeScale: 1, endT: 0, freezeCar: false, noCops: false, mapOpen: false };
-const CAM_NAMES = ['CÂMARA NORMAL', 'CÂMARA PERTO', 'CÂMARA LONGE', 'PRIMEIRA PESSOA', 'CÂMARA CINEMA'];
+const CAM_NAMES = ['CÂMARA NORMAL', 'CÂMARA PERTO', 'CÂMARA LONGE', 'PRIMEIRA PESSOA', 'CÂMARA CINEMA', 'CÂMARA FIXA'];
 const cam = { mode: 0, cine: null, yaw: 0, pitch: 0.2, dist: 5, shake: 0, autoT: 0, fov: 62, sh: 0.35, x: 0, y: 10, z: 0, inited: false };
 const camFocus = new THREE.Vector3();
 let composer = null, bloom = null;
@@ -6024,6 +6024,7 @@ function controlFoot(dt) {
   let mz = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
   if (isTouch) { mx += touch.jx; mz -= touch.jy; }
   const L = Math.hypot(mx, mz); if (L > 1) { mx /= L; mz /= L; }
+  if (cam.mode === 5) { cam.yaw -= mx * dt * 2.7; mx = 0; }
   const fx = Math.sin(cam.yaw), fz = Math.cos(cam.yaw), rx = -Math.cos(cam.yaw), rz = Math.sin(cam.yaw);
   const wx = fx * mz + rx * mx, wz = fz * mz + rz * mx, wl = Math.hypot(wx, wz);
   const firing = mouse.left || touch.fire;
@@ -6034,7 +6035,7 @@ function controlFoot(dt) {
   const speed = player.swim ? (run ? 2.6 : 1.8) : aiming ? 2.6 : run ? 7.4 : 3.4;
   player.wantX = wl > 0.01 ? wx / wl : 0; player.wantZ = wl > 0.01 ? wz / wl : 0;
   player.wantSpeed = wl > 0.01 ? speed * Math.min(1, wl) : 0;
-  player.aimYaw = aiming || cam.mode === 3 ? cam.yaw : null;
+  player.aimYaw = aiming || cam.mode === 3 || cam.mode === 5 ? cam.yaw : null;
   if (consume('Space') && player.grounded && !player.down && player.flyT <= 0) { player.vy = 6.4; player.grounded = false; }
   player.fireCd -= dt;
   if (player.down || player.flyT > 0) return;
@@ -6066,7 +6067,7 @@ function controlCar(dt) {
 // ---------- câmera ----------
 function updateCamera(dt) {
   const sens = 0.0024 * settings.sens;
-  cam.yaw -= mouse.dx * sens; cam.pitch = clamp(cam.pitch + mouse.dy * sens, -0.65, 1.25);
+  if (cam.mode !== 5) { cam.yaw -= mouse.dx * sens; cam.pitch = clamp(cam.pitch + mouse.dy * sens, -0.65, 1.25); }
   if (mouse.dx || mouse.dy) cam.autoT = 1.8;
   cam.autoT -= dt;
   let tx, ty, tz, dist, shoulder = 0, fov = 62;
@@ -6104,6 +6105,7 @@ function updateCamera(dt) {
     if (inside.I) { dist = Math.min(dist, 3.4); }
   }
   if (cam.mode === 1) dist *= 0.6; else if (cam.mode === 2) { dist *= 1.65; }
+  if (cam.mode === 5) { if (c) cam.yaw = c.yaw; cam.pitch = c ? 0.22 : 0.28; cam.autoT = 0; shoulder = 0; }
   cam.dist = damp(cam.dist, dist, 6, dt); cam.fov = damp(cam.fov, fov, 6, dt); cam.sh = damp(cam.sh, shoulder, 8, dt);
   const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
   const dx = Math.sin(cam.yaw) * cp, dy = -sp, dz = Math.cos(cam.yaw) * cp;
@@ -6187,7 +6189,7 @@ function update(dt, rdt) {
     if (consume('KeyE')) nextWeapon(1);
     for (let i = 1; i <= 5; i++) if (consume('Digit' + i)) { if (player.owned[WEAPONS[i - 1].id]) player.wIdx = i - 1; }
     if (consume('KeyR') && player.car) sfx.radioNext();
-    if (consume('KeyV') || consume('KeyC')) { cam.mode = (cam.mode + 1) % CAM_NAMES.length; cam.cine = null; cam.inited = false; hud.toast(CAM_NAMES[cam.mode], 1.5); }
+    if (consume('KeyV') || consume('KeyC')) { cam.mode = (cam.mode + 1) % CAM_NAMES.length; if (cam.mode === 5) cam.yaw = (player.car || player).yaw; cam.cine = null; cam.inited = false; hud.toast(CAM_NAMES[cam.mode], 1.5); }
     if (consume('KeyF') || consume('Enter')) { if (mansionTryUse()) {} else if (player.car) exitCar(); else tryEnterCar(); }
     if (player.car) controlCar(dt); else controlFoot(dt);
   } else { player.wantSpeed = 0; player.aiming = false; }
