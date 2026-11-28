@@ -1488,14 +1488,14 @@ function drawHUD(){
 /* ---------- entradas ---------- */
 function setPause(v){
   if(!G||G.over)return;
-  paused=v;$('#pause').hidden=!v;
+  paused=v;$('#pause').hidden=!v;if(v)clearABInput();
 }
 addEventListener('keydown',e=>{
   if(!G)return;
   keys[e.code]=true;
   if(['KeyE','KeyQ','KeyK','ShiftLeft','ShiftRight'].includes(e.code)&&!e.repeat)superReq=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
-  if(e.code==='Escape'||e.code==='KeyP')setPause(!paused);
+  if(!e.repeat&&(e.code==='Escape'||e.code==='KeyP'))setPause(!paused);
 });
 addEventListener('keyup',e=>{keys[e.code]=false});
 glc.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
@@ -1506,6 +1506,10 @@ glc.addEventListener('mousedown',e=>{
 addEventListener('mouseup',()=>{mouse.down=false});
 glc.addEventListener('contextmenu',e=>e.preventDefault());
 // toque
+const stickResets=[];
+function clearABInput(){for(const k in keys)keys[k]=false;mouse.down=false;superReq=false;for(const reset of stickResets)reset();}
+addEventListener('blur',()=>{clearABInput();if(G&&!G.over)setPause(true);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){clearABInput();if(G&&!G.over)setPause(true);}});
 function stick(zone,knob,onMove,onEnd){
   let id=null,ox=0,oy=0;
   zone.addEventListener('pointerdown',e=>{
@@ -1518,8 +1522,9 @@ function stick(zone,knob,onMove,onEnd){
     const k=m>R?R/m:1;knob.style.setProperty('--kx',dx*k+'px');knob.style.setProperty('--ky',dy*k+'px');
     onMove(dx/R,dy/R,Math.min(1,m/R));
   });
-  const end=e=>{if(e.pointerId!==id)return;id=null;knob.style.display='none';onEnd()};
-  zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
+  const reset=()=>{id=null;knob.style.display='none';onEnd();};stickResets.push(reset);
+  const end=e=>{if(e.pointerId!==id)return;reset();};
+  zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);zone.addEventListener('lostpointercapture',end);
 }
 stick($('#zl'),$('#kl'),(x,y)=>{const m=Math.hypot(x,y);if(m>1){x/=m;y/=m}touch.mv.x=x;touch.mv.y=y},()=>{touch.mv.x=touch.mv.y=0});
 stick($('#zr'),$('#kr'),(x,y,m)=>{touch.aim.on=m>.05;touch.aim.a=Math.atan2(y,x);touch.aim.m=m},()=>{touch.aim.on=false});
