@@ -3573,7 +3573,7 @@ function policeSeesPlayer() {
 function updateWanted(dt) {
   // Os interiores existem fora do mapa principal. Não expirar a procura
   // nem gerar viaturas a partir dessas coordenadas artificiais.
-  if (inside.I) { wanted.evading = false; wanted.seenT = 0; wanted.arrestT = 0; return; }
+  if (inside.I) { wanted.evading = false; wanted.seenT = 0; wanted.arrestT = 0; if (inside.I.kind === 'house' && inside.called && wanted.level > 0) bustPlayer(); return; }
   if (wanted.level === 0) { wanted.evading = false; wanted.arrestT = 0; }
   else {
     wanted.checkT -= dt;
@@ -4582,7 +4582,7 @@ function initInteriors() {
       f(x0 + 0.5, 0.1, z0 + 0.6, x0 + 6, 1.0, z0 + 1.4, '#d8d0c4'); f(x0 + 0.5, 1.0, z0 + 0.6, x0 + 6, 1.05, z0 + 1.4, '#7a7f87', false);
       f(x0 + 0.5, 0.1, z0 + 1.6, x0 + 1.3, 2.1, z0 + 2.6, '#e8e8e8');
       f(x1 - 2.2, 0.1, z0 + 0.5, x1 - 0.5, 2.3, z0 + 1.3, '#6b4423');
-      f(x1 - 1.2, 0.1, ox - 2, x1 - 0.6, 1.2, ox - 1.4, '#2f6b2a');
+      f(x1 - 1.2, 0.1, oz - 2, x1 - 0.6, 1.2, oz - 1.4, '#2f6b2a');
       I.spots.bed = { x: x1 - 2.6, z: z1 - 4.2 }; I.spots.wardrobe = { x: x1 - 1.4, z: z0 + 2.2 };
       I.lootSpots = [[x1 - 3.5, z1 - 4], [x0 + 2.5, z1 - 5.2], [ox, z1 - 1.4], [x0 + 3, z0 + 2.2], [x1 - 1.4, z0 + 2.2], [x0 + 6.5, z1 - 1.5], [x1 - 6, ox]];
     } else if (kind === 'store') {
@@ -4612,10 +4612,10 @@ function initInteriors() {
   scene.add(new THREE.Mesh(nb.build(), new THREE.MeshBasicMaterial({ vertexColors: true, color: new THREE.Color(2.4, 2.4, 2.4) })));
 }
 function enterInterior(I, backX, backZ, opts = {}) {
-  hud.fade(); sfx.thud(0.3);
   if (!I || inside.I) return;
+  hud.fade(); sfx.thud(0.3);
   act.menuCD = Math.max(act.menuCD, 3);
-  inside.I = I; inside.back = { x: backX, z: backZ }; inside.called = false; inside.houseId = opts.houseId || null; inside.storeId = opts.storeId || null; inside.cd = 1.5;
+  inside.near = null; inside.I = I; inside.back = { x: backX, z: backZ }; inside.called = false; inside.houseId = opts.houseId || null; inside.storeId = opts.storeId || null; inside.cd = 1.5;
   player.x = I.spawn.x; player.z = I.spawn.z; player.y = 0.1; player.vx = player.vz = player.vy = 0; player.wantSpeed = 0; player.speed = 0; player.yaw = 0;
   cam.yaw = 0; cam.pitch = 0.35; cam.inited = false;
   intLight.position.set(I.ox, 3.5, I.oz + 1); intLight.intensity = 28;
@@ -5940,6 +5940,7 @@ function nearestEnterableCar() {
   return best;
 }
 function tryEnterCar() {
+  if (inside.I) return;
   const c = nearestEnterableCar(); if (!c) return;
   if (c.burning > 0) { hud.toast('Está a arder!'); return; }
   if (c.driver && c.driver.isPed) {
@@ -6179,7 +6180,7 @@ let lastT = performance.now(), hudT = 0, radarT = 0;
 function update(dt, rdt) {
   if (consume('KeyM') && game.state !== 'title') toggleMap();
   if (consume('Escape')) { if (!$('shop').hidden) closeShop(); else if (game.mapOpen) toggleMap(); }
-  if (consume('KeyP')) setPause(true);
+  if (consume('KeyP') && !uiBlocking) setPause(true);
   if (game.state === 'play' && !player.dead) {
     if (mouse.wheel) { nextWeapon(mouse.wheel > 0 ? 1 : -1); mouse.wheel = 0; }
     if (consume('KeyQ')) nextWeapon(-1);
