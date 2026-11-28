@@ -413,11 +413,12 @@ class Car{
     else if(this.pos.y>.02)this.onGround=false;
     // walls (treat car as circle of radius ~1.8)
     const cp=new V(this.pos.x,this.pos.y+.8,this.pos.z);
+    const approachSpeed=Math.hypot(this.vel.x,this.vel.z);
     walls(cp,this.vel,1.9,.25);
     this.pos.set(cp.x,cp.y-.8,cp.z);
     // sobe à parede lateral quando vai contra ela com velocidade
-    if(this.isPlayer&&this.onGround){
-      const sx=Math.sign(this.pos.x)||1,fw=this.fwd(),spd=Math.hypot(this.vel.x,this.vel.z);
+    if(this.onGround){
+      const sx=Math.sign(this.pos.x)||1,fw=this.fwd(),spd=approachSpeed;
       if(Math.abs(this.pos.x)>W-2.3&&Math.abs(this.pos.z)<L-CUT-4&&fw.x*sx>.35&&spd>8&&inp.thr>0){
         this.wall=sx;this.wf=new V(0,fw.x*sx,fw.z).normalize();this.vel.copy(this.wf).multiplyScalar(spd);
         this.pos.x=sx*W;this.pos.y=.3;this.onGround=false;this.flip=null;tone(260,.1,'triangle',.05);
@@ -519,8 +520,7 @@ function startReplay(){
 }
 function afterGoal(){
   message('');ballMark.visible=true;$('replayBtn').hidden=true;$('replayTag').hidden=true;rp=null;
-  const ng=S.noGoal;S.noGoal=false;
-  if(S.ot&&!ng)endGame();else if(S.time<=0&&S.score[0]!==S.score[1])endGame();else kickoff();
+  if(S.ot)endGame();else if(S.time<=0&&S.score[0]!==S.score[1])endGame();else kickoff();
 }
 function togglePause(){
   if(S.state==='paused'){S.state=S.prev;$('menu').hidden=true;$('restart').hidden=true;$('touch').hidden=!isTouch;}
@@ -593,6 +593,19 @@ if(isTouch)$('keys').innerHTML='<b>Joystick</b><span>Conduzir (puxa para trás p
 function aiInput(car){
   const mate=car.team===0&&!car.isPlayer,lead=S.score[0]-S.score[1],D=DIFF[mate?Math.max(1,S.diff):Math.min(2,S.diff+(car.team===1?(lead>=2?1:0)+(lead>=4?1:0):0))];if(car.team===1&&lead>=3)car.boost=Math.max(car.boost,35);let retreat=false;const inp={thr:1,steer:0,boost:false,jump:false,jumpHeld:false};
   const s=car.team===0?1:-1,ownZ=s*L,attZ=-s*L;
+  // Na parede a IA usa o plano vertical Y/Z, em vez da direção no chão.
+  if(car.wall){
+    const side=car.wall, nearBall=ball.pos.x*side>W-12&&Math.abs(ball.pos.z)<L-CUT-4&&ball.pos.y>2.5;
+    const dz=nearBall?clamp(ball.pos.z+ball.vel.z*.18,-L+CUT+5,L-CUT-5)-car.pos.z:clamp(ball.pos.z-car.pos.z,-5,5);
+    const dy=(nearBall?clamp(ball.pos.y+ball.vel.y*.15-0.8,1,H-3):0)-car.pos.y;
+    const desired=new V(0,dy,dz);if(desired.lengthSq()<.2)desired.set(0,-1,0);desired.normalize();
+    const f=car.wf, right=f.clone().cross(car.up());
+    const ang=Math.atan2(desired.dot(right),desired.dot(f));
+    inp.steer=clamp(ang*2.7,-1,1);inp.thr=1;
+    inp.boost=nearBall&&car.boost>12&&Math.abs(ang)<.5&&car.vel.length()<31&&dy>2;
+    if(!nearBall&&car.pos.y>2&&Math.abs(ang)>2.6){inp.jump=true;inp.jumpHeld=true;}
+    return inp;
+  }
   const dist=Math.hypot(ball.pos.x-car.pos.x,ball.pos.z-car.pos.z);
   const t=Math.min(dist/40,1.2)*D.lead;
   const pb=new V(clamp(ball.pos.x+ball.vel.x*t,-W+3,W-3),0,clamp(ball.pos.z+ball.vel.z*t,-L+3,L-3));
@@ -640,6 +653,9 @@ function aiInput(car){
         let best=null;for(let t=.05;t<=tg;t+=.05){const bx=ball.pos.x+ball.vel.x*t,bz=ball.pos.z+ball.vel.z*t;if(Math.hypot(bx-car.pos.x,bz-car.pos.z)<=4+t*30*D.thr){best=new V(bx,0,bz);break;}}
         if(!best)best=new V(clamp(xg,-GW/2+1,GW/2-1),0,ownZ-s*2.5);
         target=new V(clamp(best.x,-W+3,W-3),0,clamp(best.z,-L+2,L-2));save=true;}}}
+  // Só o carro que disputa a bola sobe quando ela está alta junto à parede.
+  const wallChase=attacker&&!save&&!plOn&&Math.abs(ball.pos.x)>W-10&&ball.pos.y>4&&Math.abs(ball.pos.z)<L-CUT-9&&Math.abs(ball.pos.z-car.pos.z)<35;
+  if(wallChase){const side=Math.sign(ball.pos.x);target=new V(side*(W+7),0,clamp(pb.z+s*2,-L+CUT+5,L-CUT-5));}
   const dx=target.x-car.pos.x,dz=target.z-car.pos.z,c=Math.cos(car.yaw),sn=Math.sin(car.yaw);
   const lx=dx*c-dz*sn,lz=dx*sn+dz*c,ang=Math.atan2(lx,lz),td=Math.hypot(dx,dz);
   inp.steer=clamp(-ang*3,-1,1);
@@ -661,6 +677,7 @@ function aiInput(car){
   if(!car.onGround)inp.jumpHeld=car.jumpT<.22;
   if(attacker&&D.dodge&&!car.onGround&&car.canSecond&&car.jumpT>.15&&Math.hypot(bdx,bdz,ball.pos.y-car.pos.y-1)<6&&goalSide){inp.jump=true;inp.thr=1;inp.steer=clamp(-bang*2,-1,1)*.6;}
   if(attacker&&D.dodge&&car.onGround&&dist<7.5&&ball.pos.y<3.5&&Math.abs(bang)<.25&&sp>22&&goalSide&&Math.random()<.04)inp.jump=true;
+  if(wallChase){inp.thr=Math.max(.85,inp.thr);inp.jump=false;inp.jumpHeld=false;if(Math.abs(ang)<.45&&car.boost>12&&sp<22)inp.boost=true;}
   return inp;
 }
 
@@ -739,8 +756,7 @@ function step(dt,inputs){
   if(Math.abs(b.pos.z)>L+BR*.9){
     const team=b.pos.z<0?0:1;
     const scorer=b.last,own=scorer&&scorer.team!==team;
-    // own goals by the human player don't count and show nothing: just a quiet restart
-    if(own&&scorer.isPlayer){S.state='goal';S.timer=1.2;S.noGoal=true;ballMesh.visible=false;ballMark.visible=false;return;}
+    // Autogolos contam para a equipa adversária, seja o autor humano ou IA.
     S.score[team]++;
     lastReplay=rec.slice();rec=[];
     if(replayOn()&&lastReplay.length>=10)$('replayBtn').hidden=false;
@@ -749,7 +765,7 @@ function step(dt,inputs){
     for(let k=0;k<4;k++)emit(b.pos,new V(0,6,0),45,TEAMCOL[team],1.6,90,-12);
     emit(b.pos,new V(),25,0xffffff,1,80);
     horn();shake=1.2;
-    message('GOLO!',team===0?'#5aaaff':'#ff9a4a',team===0?'EQUIPA AZUL':'EQUIPA LARANJA');
+    message(own?'AUTOGOLO!':'GOLO!',team===0?'#5aaaff':'#ff9a4a',team===0?'EQUIPA AZUL':'EQUIPA LARANJA');
     // push cars away from explosion
     cars.forEach(c=>{const d=c.pos.clone().sub(b.pos);const m=d.length();if(m<25){d.y=0;d.normalize();c.vel.addScaledVector(d,(25-m)*1.6);c.vel.y+=(25-m)*.6;}});
   }
