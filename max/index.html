@@ -501,12 +501,12 @@ function setSpot(id,hold){const g=byId(id);if(!g)return;if(hold)holdUntil=Date.n
  h.innerHTML=`<div class="spot-txt"><div class="badges">${NEW.has(g.id)?'<span class="b new">🕹️ Arcade</span>':''}<span class="b acc">${esc(g.genre)}</span><span class="b">${esc(g.feature)}</span>${s.plays?`<span class="b">Jogaste ${ago(s.last)} · ${fmt(s.secs)}</span>`:''}</div>
  <h1>${esc(g.name)}</h1><p class="kick">${esc(g.kicker)}</p><p class="desc">${esc(shortDesc(g))}</p>
  <div class="keys">${g.controls.slice(0,3).map(c=>`<span><kbd>${c[0]}</kbd>${c[1].split(/[·(]/)[0].trim()}</span>`).join('')}</div>
- <div class="acts"><button class="cta cc" data-hero="${g.id}">▶ ${s.plays?'Continuar':'Jogar'}</button><button class="pill" data-info="${g.id}">Ver mais · Controlos</button><button class="pill${on?' on':''}" data-favh="${g.id}" aria-pressed="${on}" aria-label="Favorito">${on?'★ Favorito':'☆ Favorito'}</button><button class="pill" data-rand="1">🎲 Surpresa</button></div>
+ <div class="acts"><button class="cta cc" data-hero="${g.id}">▶ ${s.plays?'Continuar':'Jogar'}</button><button type="button" class="pill" data-info="${g.id}">Ver mais · Controlos</button><button class="pill${on?' on':''}" data-favh="${g.id}" aria-pressed="${on}" aria-label="Favorito">${on?'★ Favorito':'☆ Favorito'}</button><button class="pill" data-rand="1">🎲 Surpresa</button></div>
  <div class="dots">${feat.map(f=>`<button class="${f===id?'on':''}" data-dot="${f}" aria-label="${esc(byId(f).name)}"></button>`).join('')}</div></div>
  <div class="spot-art cc" data-hero="${g.id}" style="--acc:${g.accent}"><img src="${art[g.id]||''}" alt="Cena de ${esc(g.name)}"><span class="num">${two(GAMES.indexOf(g)+1)} / ${GAMES.length}</span><span class="playbig">▶</span></div>`;
  const L=$('bd').children;bdN^=1;L[bdN].style.backgroundImage='url("'+(thumb(art[g.id])||'')+'")';L[bdN].classList.add('on');L[bdN^1].classList.remove('on');
  document.querySelectorAll('.tile.sel').forEach(t=>t.classList.remove('sel'));}
-setInterval(()=>{if(active||$('dialog').open||document.hidden||Date.now()<holdUntil||!feat.length||scrollY>innerHeight*.6)return;const i=feat.indexOf(spotId);setSpot(feat[(i+1)%feat.length]);},8000);
+setInterval(()=>{if(active||$('dialog').open||$('hero').matches(':focus-within')||$('hero').querySelector('[data-info]:hover')||document.hidden||Date.now()<holdUntil||!feat.length||scrollY>innerHeight*.6)return;const i=feat.indexOf(spotId);setSpot(feat[(i+1)%feat.length]);},8000);
 function renderHero(){featured();const last=read('c30.lastGame',null);spotId=null;setSpot(byId(last)?last:feat[0]);}
 function renderChips(){const gs=['Todos','Arcade',...GROUPS.map(g=>g[0])];$('chips').innerHTML=gs.map(x=>`<button class="chip${F.genre===x?' on':''}" data-genre="${x}">${x==='Arcade'?'🕹️ Arcade':x==='Volante'?'Ao volante':x}</button>`).join('');}
 // sem «Guardar dados», ao voltar de um jogo tudo volta a zero
@@ -518,11 +518,11 @@ function toggleFav(id){if(settings.keepProgress){const latest=read('c30.favs',[]
 function randomGame(){const last=read('c30.lastGame',null),p=GAMES.filter(g=>g.id!==last);launch(p[Math.floor(Math.random()*p.length)].id);}
 function setFav(v){F.fav=v;$('tabAll').classList.toggle('active',!v);$('tabFav').classList.toggle('active',v);renderCards();if(v)$('gameGrid').scrollIntoView({behavior:settings.reduceMotion?'auto':'smooth',block:'start'});}
 const G=$('gameGrid');let hov=0;
-G.addEventListener('click',e=>{const info=e.target.closest('[data-details]');if(info){e.stopPropagation();showGameDetails(info.dataset.details);return;}const b=e.target.closest('[data-fav]');if(b){e.stopPropagation();toggleFav(b.dataset.fav);return;}const sb=e.target.closest('.sh-btn');if(sb){const r=sb.parentNode.querySelector('.row');r.scrollBy({left:sb.dataset.dir*r.clientWidth*.8,behavior:'smooth'});return;}const c=e.target.closest('.tile');if(c)launch(c.dataset.id);});
-G.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const c=e.target.closest('.tile');if(!c)return;clearTimeout(hov);hov=setTimeout(()=>setSpot(c.dataset.id,true),140);});
+G.addEventListener('click',e=>{const info=e.target.closest('[data-details]');if(info){e.preventDefault();e.stopImmediatePropagation();showGameDetails(info.dataset.details);return;}const b=e.target.closest('[data-fav]');if(b){e.stopPropagation();toggleFav(b.dataset.fav);return;}const sb=e.target.closest('.sh-btn');if(sb){const r=sb.parentNode.querySelector('.row');r.scrollBy({left:sb.dataset.dir*r.clientWidth*.8,behavior:'smooth'});return;}const c=e.target.closest('.tile');if(c)launch(c.dataset.id);});
+G.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse'||e.target.closest('[data-details],[data-fav]')||$('dialog').open)return;const c=e.target.closest('.tile');if(!c)return;clearTimeout(hov);hov=setTimeout(()=>setSpot(c.dataset.id,true),140);});
 G.addEventListener('pointerout',()=>clearTimeout(hov));
 G.addEventListener('focusin',e=>{const c=e.target.closest('.tile');if(c&&c.matches(':focus-visible'))setSpot(c.dataset.id,true);});
-$('hero').onclick=e=>{const b=e.target.closest('[data-hero],[data-info],[data-favh],[data-rand],[data-dot]');if(!b)return;const d=b.dataset;if(d.hero)launch(d.hero);else if(d.info)help(byId(d.info));else if(d.favh)toggleFav(d.favh);else if(d.rand)randomGame();else if(d.dot)setSpot(d.dot,true);};
+$('hero').onclick=e=>{const b=e.target.closest('[data-hero],[data-info],[data-favh],[data-rand],[data-dot]');if(!b)return;const d=b.dataset;if(d.hero)launch(d.hero);else if(d.info){e.preventDefault();e.stopImmediatePropagation();clearTimeout(hov);holdUntil=Date.now()+10000;showGameDetails(d.info);}else if(d.favh)toggleFav(d.favh);else if(d.rand)randomGame();else if(d.dot)setSpot(d.dot,true);};
 $('chips').onclick=e=>{const b=e.target.closest('[data-genre]');if(!b)return;F.genre=b.dataset.genre;renderChips();renderCards();};
 $('search').oninput=e=>{F.q=e.target.value.trim().toLowerCase();renderCards();};
 $('sort').onchange=e=>{F.sort=e.target.value;renderCards();};
@@ -1296,7 +1296,7 @@ window.C30online={host,join,leave,publicPlay,state:()=>({role,code,isPublic,room
  tg.addEventListener('click',e=>{e.stopPropagation();if(pv.classList.contains('c30bar')){pv.classList.remove('c30bar');clearTimeout(t)}else show()});
  pv.querySelector('.play-bar').addEventListener('pointerdown',()=>{if(pv.classList.contains('c30bar'))show()});
  const small=()=>matchMedia('(pointer:coarse)').matches&&Math.min(innerWidth,innerHeight)<820;
- let mine=false;document.addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('.cc,#c30mOff,#c30mOn');if(!c||!small()||document.fullscreenElement)return;const el=document.documentElement;const f=el.requestFullscreen||el.webkitRequestFullscreen;if(!f)return;try{const r=f.call(el,{navigationUI:'hide'});mine=true;if(r&&r.catch)r.catch(()=>{mine=false})}catch(_){mine=false}},true);
+ let mine=false;document.addEventListener('click',e=>{if(e.target.closest?.('[data-details],[data-info],[data-fav],[data-favh]')||e.defaultPrevented||document.getElementById('dialog')?.open)return;const c=e.target.closest&&e.target.closest('.cc,#c30mOff,#c30mOn');if(!c||!small()||document.fullscreenElement)return;const el=document.documentElement;const f=el.requestFullscreen||el.webkitRequestFullscreen;if(!f)return;try{const r=f.call(el,{navigationUI:'hide'});mine=true;if(r&&r.catch)r.catch(()=>{mine=false})}catch(_){mine=false}},true);
  document.getElementById('backButton').addEventListener('click',()=>{if(mine&&document.fullscreenElement){try{document.exitFullscreen()}catch(_){}}mine=false});
  new MutationObserver(()=>{if(!pv.hidden){pv.classList.remove('c30bar')}}).observe(pv,{attributes:true,attributeFilter:['hidden']});})();
 </script>
