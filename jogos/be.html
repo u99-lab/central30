@@ -254,10 +254,10 @@ body.touch #stars { font-size: 22px; height: 24px; }
     <label class="opt" for="vol">Volume <input type="range" id="vol" min="0" max="100" value="70"></label>
     <label class="opt" for="sens">Sensibilidade do rato <input type="range" id="sens" min="20" max="200" value="100"></label>
     <fieldset class="qual" id="qual"><legend>Qualidade gráfica <small>(da mais pesada para a mais leve · muda na hora)</small></legend>
-      <label for="q-ultra"><input type="radio" name="q" id="q-ultra" value="ultra"><b>Ultra</b><span>Máxima nitidez, horizonte longo, texturas e água detalhadas</span></label>
-      <label for="q-alta"><input type="radio" name="q" id="q-alta" value="alta"><b>Alta</b><span>Alta nitidez, texturas e água detalhadas</span></label>
-      <label for="q-media"><input type="radio" name="q" id="q-media" value="media"><b>Média</b><span>Equilíbrio: nitidez e distância médias</span></label>
-      <label for="q-baixa"><input type="radio" name="q" id="q-baixa" value="baixa"><b>Baixa</b><span>Resolução reduzida, água simples e horizonte curto</span></label>
+      <label for="q-ultra"><input type="radio" name="q" id="q-ultra" value="ultra"><b>Ultra</b><span>Máxima nitidez, reflexos, sombras de contacto e espuma do mar</span></label>
+      <label for="q-alta"><input type="radio" name="q" id="q-alta" value="alta"><b>Alta</b><span>Alta nitidez, reflexos e sombras de contacto</span></label>
+      <label for="q-media"><input type="radio" name="q" id="q-media" value="media"><b>Média</b><span>Equilíbrio: iluminação e sombras de contacto simplificadas</span></label>
+      <label for="q-baixa"><input type="radio" name="q" id="q-baixa" value="baixa"><b>Baixa</b><span>Resolução reduzida, água simples, sem sombras de contacto</span></label>
     </fieldset>
     <p class="stats" id="fps"></p>
     <div class="row">
@@ -335,10 +335,10 @@ const fmtMoney = (v) => Math.floor(v).toLocaleString('pt-PT') + ' €';
 const QUALITY = {
   // A cidade tem muitas malhas; sombras dinâmicas em qualidade alta podem
   // esgotar a memória gráfica em alguns dispositivos e fazer os prédios sumirem.
-  ultra: { name: 'Ultra', pr: 1.0, aniso: 16, fogScale: 1.7, water: 3, clouds: true, shadows: false, smap: 512, bloom: false },
-  alta: { name: 'Alta', pr: 0.78, aniso: 4, fogScale: 1.0, water: 2, clouds: true, shadows: false, smap: 512, bloom: false },
-  media: { name: 'Média', pr: 0.60, aniso: 2, fogScale: 0.72, water: 1, clouds: true, shadows: false, smap: 512, bloom: false },
-  baixa: { name: 'Baixa', pr: 0.45, aniso: 1, fogScale: 0.58, water: 0, clouds: false, shadows: false, smap: 512, bloom: false },
+  ultra: { name: 'Ultra', pr: 1.0, aniso: 16, fogScale: 1.7, ao: 1, lighting: 1, water: 3, clouds: true, shadows: false, smap: 512, bloom: false },
+  alta: { name: 'Alta', pr: 0.78, aniso: 4, fogScale: 1.0, ao: .72, lighting: .8, water: 2, clouds: true, shadows: false, smap: 512, bloom: false },
+  media: { name: 'Média', pr: 0.60, aniso: 2, fogScale: 0.72, ao: .38, lighting: .5, water: 1, clouds: true, shadows: false, smap: 512, bloom: false },
+  baixa: { name: 'Baixa', pr: 0.45, aniso: 1, fogScale: 0.58, ao: 0, lighting: .2, water: 0, clouds: false, shadows: false, smap: 512, bloom: false },
 };
 const settings = { q: isTouch ? 'media' : 'alta', volume: 0.7, sens: 1 };
 try { const s = JSON.parse(localStorage.getItem('baia-escarlate-settings') || 'null'); if (s) Object.assign(settings, s); } catch (e) {}
@@ -1886,7 +1886,7 @@ function buildWorld() {
     const pg = mergeParts(propParts);
     const aoTex = canvasTex(8, 64, (g) => { const gr = g.createLinearGradient(0, 64, 0, 0); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(0.5, 'rgba(0,0,0,0.18)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 8, 64); });
     const aoMesh = new THREE.Mesh(aoB.build(), new THREE.MeshBasicMaterial({ map: aoTex, color: '#000000', transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1 }));
-    aoMesh.renderOrder = 1; scene.add(aoMesh);
+    aoMesh.renderOrder = 1; scene.add(aoMesh); envMats.ao = aoMesh;
     const pm = new THREE.Mesh(pg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }));
     pm.castShadow = true; pm.receiveShadow = true; scene.add(pm);
   }
@@ -1976,8 +1976,10 @@ function buildWater() {
         vec3 col = mix(base*(0.35+0.65*(1.0-night)), skyCol, 0.15 + 0.75*fres);
         vec3 R = reflect(-V, n);
         float sp = pow(max(dot(R, normalize(sunDir)), 0.0), 380.0) * 6.0 + pow(max(dot(R, normalize(sunDir)), 0.0), 40.0)*0.25;
-        col += sunCol * sp * step(0.0, sunDir.y + 0.03);
+        col += sunCol * sp * step(0.0, sunDir.y + 0.03) * (0.4 + detail * 0.2);
+        if(detail>2.5){float shimmer=pow(max(0.0,noise(p*2.7+vec2(time*.23,-time*.17))),7.0);col+=sunCol*shimmer*fres*.6*(1.0-night);}
         float foam = smoothstep(7.0, 0.0, distShore + noise(p*0.3+time*0.4)*3.0 + sin(time*1.2 + p.y*0.05)*1.5);
+        if(detail>1.5){foam=max(foam,smoothstep(.57,.84,noise(p*.7+vec2(time*.12,-time*.1)))*exp(-abs(distShore-4.0)*.10)*.65);}
         col = mix(col, vec3(0.92,0.95,0.95)*(0.4+0.6*(1.0-night)), foam*0.8);
         float d = length(cameraPosition - vW);
         col = mix(col, fogCol, smoothstep(fogNear, fogFar, d));
@@ -2107,6 +2109,10 @@ function updateEnvironment(dt, focus) {
   const visualQ = QUALITY[settings.q];
   scene.fog.near = lerp(140, 70, night) * visualQ.fogScale; scene.fog.far = lerp(1500, 900, night) * visualQ.fogScale;
   cloudMesh.visible = visualQ.clouds;
+  if (envMats.ao) { envMats.ao.visible = visualQ.ao > 0; envMats.ao.material.opacity = visualQ.ao; }
+  if (envMats.road) envMats.road.envMapIntensity = (1 + weather.rain * 1.5) * (.5 + visualQ.lighting * .5);
+  hemiLight.intensity *= 1.08 - visualQ.lighting * .08;
+  sunLight.intensity *= .85 + visualQ.lighting * .15;
   renderer.toneMappingExposure = lerp(0.88 + gold * 0.08, 1.25, night);
   // emissivos
   for (const m of envMats.windows) m.emissiveIntensity = 0.08 + night * 1.5;
@@ -4416,7 +4422,7 @@ function updateWeather(dt) {
     rainMesh.geometry.attributes.position.needsUpdate = true;
   }
   // estrada molhada
-  if (envMats.road) { envMats.road.roughness = lerp(0.92, 0.32, R); envMats.road.color.setScalar(1 - R * 0.38); envMats.road.envMapIntensity = 1 + R * 1.5; }
+  if (envMats.road) { envMats.road.roughness = lerp(0.92, 0.32, R); envMats.road.color.setScalar(1 - R * 0.38); envMats.road.envMapIntensity = (1 + R * 1.5) * (.5 + QUALITY[settings.q].lighting * .5); }
   // céu fechado
   sunLight.intensity *= 1 - R * 0.75;
   hemiLight.intensity *= 1 - R * 0.25;
