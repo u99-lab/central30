@@ -5043,6 +5043,7 @@ function updateNetMe() {
 // ginásio e garagem, com coisas para usar (tecla F / botão ENTRAR)
 // ============================================================
 let homeLights = [];
+let homeTV = null, homeTVChannel = 'off', homeTVTick = -1;
 if (!progress.home) progress.home = { safe: 0, maxHp: 100, outfit: 0, trainT: -1e9, showerT: -1e9 };
 
 function buildMansion(B, f, C, I, H) {
@@ -5125,13 +5126,49 @@ function buildMansion(B, f, C, I, H) {
   I.lightsAt = [[x0 + 7, z0 + 7], [x0 + 5, oz + 7], [ox + 10, oz + 6], [ox + 9, z0 + 6]];
 }
 
+function drawHomeTV(t) {
+  if (!homeTV || homeTVChannel === 'off') return;
+  const tick = Math.floor(t * 12); if (tick === homeTVTick) return; homeTVTick = tick;
+  const g = homeTV.canvas.getContext('2d'), w = 512, h = 256;
+  const txt = (v,x,y,size=20,color='#ffffff') => { g.fillStyle=color; g.font='bold '+size+'px Arial'; g.fillText(v,x,y); };
+  if (homeTVChannel === 'football') {
+    g.fillStyle='#174c29';g.fillRect(0,0,w,h);
+    for(let i=0;i<8;i++){g.fillStyle=i%2?'#378849':'#2e7941';g.fillRect(20+i*59,35,59,201);}
+    g.strokeStyle='#ffffff';g.lineWidth=2;g.strokeRect(20,35,472,201);g.beginPath();g.moveTo(256,35);g.lineTo(256,236);g.stroke();g.beginPath();g.arc(256,135,33,0,Math.PI*2);g.stroke();g.strokeRect(20,85,58,100);g.strokeRect(434,85,58,100);
+    const bx=256+180*Math.sin(t*.7),by=135+65*Math.sin(t*1.1);
+    for(let team=0;team<2;team++)for(let i=0;i<11;i++){const x=team?300+(i%3)*58:60+(i%3)*58,y=54+Math.floor(i/3)*49;g.fillStyle=team?'#e7edf7':'#e52e41';g.beginPath();g.arc(x+18*Math.sin(t*1.4+i+team),y+9*Math.cos(t+i),6,0,7);g.fill();g.strokeStyle='#182a26';g.stroke();}
+    g.fillStyle='#fff';g.beginPath();g.arc(bx,by,4,0,7);g.fill();
+    g.fillStyle='#111b2d';g.fillRect(0,0,w,30);txt('BE  '+Math.floor(t/24)%4+' : '+Math.floor(t/37)%3+'  AZ',16,22,18);txt('DIRETO  '+String(Math.floor(t*2)%90).padStart(2,'0')+"'",365,22,16);
+  } else if (homeTVChannel === 'news') {
+    g.fillStyle='#112d51';g.fillRect(0,0,w,h);g.fillStyle='#2f5880';g.fillRect(16,35,480,156);
+    for(let i=0;i<12;i++){let bh=28+(i*37)%85;g.fillStyle=i%2?'#537da0':'#20496d';g.fillRect(20+i*40,185-bh,31,bh);}
+    g.fillStyle='#19283c';g.fillRect(0,187,w,69);txt('BAÍA NOTÍCIAS',14,25,24);txt('DIRETO',423,25,15,'#ffb1b1');
+    g.fillStyle='#334155';g.beginPath();g.ellipse(255,172,49,60,0,0,7);g.fill();g.fillStyle='#dca887';g.beginPath();g.ellipse(255,91+Math.sin(t*2),25,34,0,0,7);g.fill();g.fillStyle='#172033';g.fillRect(232,64,46,12);g.fillStyle='#572f29';g.fillRect(246,108,18,2+Math.abs(Math.sin(t*7))*4);
+    txt(weather.rain>0.3?'Previsão: chuva na região':'Previsão: céu pouco nublado',14,215,19);txt('Missões concluídas: '+progress.done.length,14,240,16,'#b5d8ff');
+  } else {
+    g.fillStyle='#1b2944';g.fillRect(0,0,w,h);g.fillStyle='#ffc777';g.beginPath();g.arc(375,87,35,0,7);g.fill();g.fillStyle='#40516d';g.beginPath();g.moveTo(0,190);g.lineTo(130,70);g.lineTo(255,190);g.lineTo(340,110);g.lineTo(512,200);g.lineTo(512,256);g.lineTo(0,256);g.fill();g.fillStyle='#7898a3';g.fillRect(0,202,w,54);for(let i=0;i<5;i++){g.fillStyle='#e2d7ad';g.fillRect((i*110+t*20)%w,215+i*5,35,2);}txt('CINEMA • Uma viagem pela costa',15,27,20);
+  }
+  homeTV.texture.needsUpdate = true;
+}
+function setHomeTV(channel) {
+  homeTVChannel=channel;homeTVTick=-1;
+  if(homeTV){homeTV.mesh.visible=channel!=='off';drawHomeTV(game.time);}
+}
 function enterMansion(I) {
+  if(!homeTV){
+    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
+    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(3.55,1.58),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,toneMapped:false}));
+    mesh.rotation.y=Math.PI/2;scene.add(mesh);homeTV={canvas,texture,mesh};
+  }
+  homeTV.mesh.position.set(I.x0+.635,1.775,I.z0+7);
+  setHomeTV('off');
   if (!homeLights.length) for (let k = 0; k < 4; k++) { const l = new THREE.PointLight('#ffe6c4', 0, 22, 1.2); scene.add(l); homeLights.push(l); }
   I.lightsAt.forEach(([x, z], k) => { homeLights[k].position.set(x, 3.4, z); homeLights[k].intensity = 18; });
   intLight.intensity = 10;
   hud.say('', 'Bem-vindo a casa! Anda pelas divisões: <b>F</b> (ou ENTRAR) usa a televisão, o frigorífico, a cama, o cofre, a garagem e muito mais.', 6);
 }
-function leaveMansion() { for (const l of homeLights) l.intensity = 0; window.__homeRadio = false; inside.near = null; }
+function leaveMansion() { setHomeTV('off'); for (const l of homeLights) l.intensity = 0; window.__homeRadio = false; inside.near = null; }
 
 const OUTFITS = [
   ['Casual vermelho', '#cf3a26', '#1f2a3a'], ['Fato preto', '#1b1b1f', '#1b1b1f'], ['Desportivo azul', '#1f6feb', '#2c2c2c'],
@@ -5165,10 +5202,10 @@ function mansionUse(key) {
     }
     case 'tv':
       homeMenu('TELEVISÃO', [
-        { name: 'Ver as notícias', desc: wanted.level ? `A polícia procura-te (${wanted.level}★).` : 'A cidade está calma hoje.', tag: '', run() { hud.say('Telejornal', `Missões feitas: <b>${progress.done.length}/${MISSIONS.length}</b>. ${wanted.level ? 'A polícia anda à tua procura.' : 'Nenhuma notícia sobre ti… por agora.'} Tempo: ${weather.rain > 0.3 ? 'chuva' : 'sol'}.`, 5); return true; } },
-        { name: 'Ver um jogo de futebol', desc: 'Passa 1 hora · +20 de saúde', tag: '1 h', run() { passHours(1); player.health = Math.min(player.maxHealth, player.health + 20); hud.toast('Golo! Que jogo…'); return true; } },
-        { name: 'Ver um filme', desc: 'Passa 2 horas · saúde cheia', tag: '2 h', run() { passHours(2); player.health = player.maxHealth; hud.toast('Bom filme. Estás descansado.'); return true; } },
-        { name: 'Desligar', desc: '', tag: '', run() { closeShop(); } },
+        { name: 'Ver as notícias', desc: 'Telejornal animado da cidade', tag: 'Canal 1', run() { setHomeTV('news'); return true; } },
+        { name: 'Ver um jogo de futebol', desc: 'Partida animada no ecrã', tag: 'Canal 2', run() { setHomeTV('football'); return true; } },
+        { name: 'Ver um filme', desc: 'Cena animada da costa', tag: 'Canal 3', run() { setHomeTV('film'); return true; } },
+        { name: 'Desligar', desc: '', tag: '', run() { setHomeTV('off'); return true; } },
       ]); break;
     case 'radio':
       window.__homeRadio = true; sfx.radioNext(); break;
@@ -5222,6 +5259,7 @@ function mansionUse(key) {
   }
 }
 function updateMansion(I, dt) {
+  drawHomeTV(game.time);
   const S = I.spots; let best = null, bd = 1.7 * 1.7;
   for (const k in S) { const s = S[k]; if (!s.label) continue; const d = d2(player.x, player.z, s.x, s.z); if (d < 49) showMarker(s.x, s.z, d < bd ? '#8dff9e' : '#2be4ff', 0.32, 0.9); if (d < bd) { bd = d; best = k; } }
   inside.near = best ? { key: best, label: S[best].label } : null;
