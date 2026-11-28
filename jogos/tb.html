@@ -496,6 +496,8 @@ function updateCage(dt){
 // ================= Input =================
 const keys={};
 addEventListener('keydown',e=>{keys[e.code]=true;
+  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+  if(e.repeat)return;
   if(e.code==='KeyM'){muted=!muted;toast(muted?'🔇 Som desligado':'🔊 Som ligado',1200);}
   if(state==='menu'||state==='results')return;
   if(e.code==='KeyC')ballCam=!ballCam;
@@ -505,6 +507,10 @@ addEventListener('keydown',e=>{keys[e.code]=true;
   if(state==='replay'&&(e.code==='Space'||e.code==='Enter')&&rpAge>0.6)endReplay();
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();});
 addEventListener('keyup',e=>keys[e.code]=false);
+function clearTBInput(){for(const k in keys)keys[k]=false;}
+function suspendTB(){clearTBInput();if(state!=='menu'&&state!=='results'&&!paused){paused=true;say('PAUSA');}}
+addEventListener('blur',suspendTB);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)suspendTB();});
 function makeP2(P){
 P.hud=()=>'🔵 '+scoreB+'  –  '+scoreO+' 🟠   ⏱ '+(overtime?'Golo de ouro':fmt(timeLeft));
 const DEF_SIDE='vs';let p2Side=null,p2Car=null,p2View=null,p2BallCam=true;const cam2Pos=new THREE.Vector3();
@@ -1056,7 +1062,7 @@ setTheme('dia');
 buildCarMenu();
 setShow(selCar);
 window.C30me=()=>player&&player.mesh&&player.mesh.isObject3D?player.mesh:null; // Central 30 online: este é o teu carro
-window.C30pause=(force)=>{if(state==='menu')return;if(!paused){paused=true;say('PAUSA');}else if(!force){paused=false;$('msg').style.opacity=0;}};
+window.C30pause=(force)=>{clearTBInput();if(state==='menu'||state==='results')return;if(!paused){paused=true;say('PAUSA');}else if(!force){paused=false;$('msg').style.opacity=0;}};
 window.C30isPaused=()=>paused&&state!=='menu';
 requestAnimationFrame(loop);
 })();
