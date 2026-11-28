@@ -1523,8 +1523,9 @@ addEventListener('keydown', e => {
   if (e.code === 'Escape' || e.code === 'KeyP') { if (state === 'race' || state === 'countdown') pauseGame(); else if (state === 'paused') resumeGame(); }
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+addEventListener('blur', () => { clearPRInput(); if(state==='race'||state==='countdown')pauseGame(); });
 const touch = { steer: 0, gas: 0, brake: 0, hb: 0, sid: null, sx: 0 };
+function clearPRInput(){for(const k in keys)keys[k]=false;Object.assign(touch,{steer:0,gas:0,brake:0,hb:0,sid:null});for(const id of ['tbGas','tbBrake','tbHb'])$(id)?.classList.remove('on');const knob=$('steerKnob');if(knob){knob.style.display='none';knob.style.transform='';}}
 function bindHold(el, key) {
   const on = e => { e.preventDefault(); touch[key] = 1; el.classList.add('on'); try { el.setPointerCapture(e.pointerId); } catch (_) { } };
   const off = e => { touch[key] = 0; el.classList.remove('on'); };
@@ -1533,10 +1534,10 @@ function bindHold(el, key) {
 bindHold($('tbGas'), 'gas'); bindHold($('tbBrake'), 'brake'); bindHold($('tbHb'), 'hb');
 (() => {
   const z = $('steerZone'), knob = $('steerKnob');
-  z.addEventListener('pointerdown', e => { e.preventDefault(); touch.sid = e.pointerId; touch.sx = e.clientX; try { z.setPointerCapture(e.pointerId); } catch (_) { } const rc = z.getBoundingClientRect(); knob.style.left = (e.clientX - rc.left) + 'px'; knob.style.top = (e.clientY - rc.top) + 'px'; knob.style.display = 'block'; $('steerHint').hidden = true; });
+  z.addEventListener('pointerdown', e => { e.preventDefault(); if(touch.sid!==null)return; touch.sid = e.pointerId; touch.sx = e.clientX; try { z.setPointerCapture(e.pointerId); } catch (_) { } const rc = z.getBoundingClientRect(); knob.style.left = (e.clientX - rc.left) + 'px'; knob.style.top = (e.clientY - rc.top) + 'px'; knob.style.display = 'block'; $('steerHint').hidden = true; });
   z.addEventListener('pointermove', e => { if (e.pointerId !== touch.sid) return; touch.steer = clamp((e.clientX - touch.sx) / 70, -1, 1); knob.style.transform = `translateX(${touch.steer * 40}px)`; });
   const end = e => { if (e.pointerId !== touch.sid) return; touch.sid = null; touch.steer = 0; knob.style.display = 'none'; knob.style.transform = ''; };
-  z.addEventListener('pointerup', end); z.addEventListener('pointercancel', end);
+  z.addEventListener('pointerup', end); z.addEventListener('pointercancel', end); z.addEventListener('lostpointercapture', end);
 })();
 let padPrevCam = false, padPrevStart = false;
 function readInput() {
@@ -1670,7 +1671,7 @@ function manualReset() {
 }
 function pauseGame() {
   if (state !== 'race' && state !== 'countdown') return;
-  race.prevState = state; state = 'paused'; $('pause').hidden = false; Snd.setOn(false); Voice.stop();
+  clearPRInput(); race.prevState = state; state = 'paused'; $('pause').hidden = false; Snd.setOn(false); Voice.stop();
   $('pRetry').hidden = session.mode === 'career';
   $('pQuit').textContent = session.mode === 'career' ? 'Desistir da PEC' : 'Menu';
 }
