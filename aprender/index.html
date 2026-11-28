@@ -85,8 +85,8 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:v
 <script>
 // Reinício único dos dados da Central 30, MAX e Aprende+.
 try {
-  const RESET = '2026-11-27-reset3';
-  const owned = k => typeof k === 'string' && (/^(?:c30(?:[._]|max[._]|aprender_|dev[._]|sec)|craques3d[._]|vfig[._]|patrao[._]|jdc[._]|aeronaut[._]|baia-escarlate-|rotadosol[._]|cq[._]|central30[._])/i.test(k));
+  const RESET = '2026-11-28-reset4';
+  const owned = k => typeof k === 'string' && (/^(?:c30(?:[._]|max[._]|aprender_|dev[._]|sec)|craques3d[._]|vfig[._]|patrao[._]|jdc[._]|aeronaut[._]|baia-escarlate-|rotadosol[._]|cq[._]|lr[-._]|central30[._])/i.test(k));
   if (localStorage.getItem('c30.reset') !== RESET) {
     const del = [];
     for (let i=0;i<localStorage.length;i++) { const k=localStorage.key(i); if(owned(k)) del.push(k); }
