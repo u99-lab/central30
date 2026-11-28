@@ -964,7 +964,7 @@ function startDemo(ui){
 }
 function togglePause(){
   if(!G)return;
-  if(G.mode==='play'){G.mode='pause';$('quitNote').textContent=G.tour?'Sair de um jogo da Copa conta como derrota por 3–0.':'';showUI('pause');}
+  if(G.mode==='play'){clearLRInput();G.mode='pause';$('quitNote').textContent=G.tour?'Sair de um jogo da Copa conta como derrota por 3–0.':'';showUI('pause');}
   else if(G.mode==='pause'){G.mode='play';showUI('play');}
 }
 $('playBtn').onclick=()=>{
@@ -1092,7 +1092,9 @@ addEventListener('keydown',e=>{
   if(k==='p'||k==='escape')togglePause();
 });
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();keys.delete(k);if(k==='k'||k===' ')input.shootReleased=true;});
-addEventListener('blur',()=>{keys.clear();touch.x=touch.y=0;touch.sprint=touch.shoot=false;if(G&&G.mode==='play')togglePause();});
+function clearLRInput(){keys.clear();stickReset();touch.sprint=touch.shoot=false;Object.assign(input,{x:0,y:0,sprint:false,shootDown:false,passPressed:false,shootPressed:false,shootReleased:false});for(const id of ['bShoot','bPass','bSprint'])$(id)?.classList.remove('on');}
+addEventListener('blur',()=>{clearLRInput();if(G&&G.mode==='play')togglePause();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){clearLRInput();if(G&&G.mode==='play')togglePause();}});
 
 /* Touch */
 const zone=$('stickZone'),stick=$('stick'),knob=$('knob');let stickId=null,sx=0,sy=0;
@@ -1108,11 +1110,11 @@ zone.addEventListener('pointermove',e=>{
   let mx=dx/R,my=dy/R;if(Math.hypot(mx,my)<.18)mx=my=0;touch.x=mx;touch.y=my;
 });
 const zEnd=e=>{if(e.pointerId===stickId)stickReset();};
-zone.addEventListener('pointerup',zEnd);zone.addEventListener('pointercancel',zEnd);
+zone.addEventListener('pointerup',zEnd);zone.addEventListener('pointercancel',zEnd);zone.addEventListener('lostpointercapture',zEnd);
 function bindBtn(el,down,up){
   el.addEventListener('pointerdown',e=>{e.preventDefault();try{el.setPointerCapture(e.pointerId);}catch(_){}el.classList.add('on');initAudio();down();});
   const u=()=>{if(!el.classList.contains('on'))return;el.classList.remove('on');up&&up();};
-  el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u);
+  el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u);el.addEventListener('lostpointercapture',u);
   el.addEventListener('contextmenu',e=>e.preventDefault());
 }
 bindBtn($('bShoot'),()=>{touch.shoot=true;input.shootPressed=true;},()=>{touch.shoot=false;input.shootReleased=true;});
