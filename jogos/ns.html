@@ -744,14 +744,12 @@ function step(dt,inputs){
     S.score[team]++;
     lastReplay=rec.slice();rec=[];
     if(replayOn()&&lastReplay.length>=10)$('replayBtn').hidden=false;
-    const kmh=Math.round(b.vel.length()*3.2);
     if(scorer&&scorer.isPlayer&&!own)S.goals++;
     S.state='goal';S.timer=replayOn()?4.5:3.2;ballMesh.visible=false;ballMark.visible=false;
     for(let k=0;k<4;k++)emit(b.pos,new V(0,6,0),45,TEAMCOL[team],1.6,90,-12);
     emit(b.pos,new V(),25,0xffffff,1,80);
     horn();shake=1.2;
-    const who=scorer&&!own&&!scorer.isPlayer?`Golo de ${scorer.name}`:'';
-    message('GOLO!',team===0?'#5aaaff':'#ff9a4a',who?`${who} · ${kmh} km/h`:`${kmh} km/h`);
+    message('GOLO!',team===0?'#5aaaff':'#ff9a4a',team===0?'EQUIPA AZUL':'EQUIPA LARANJA');
     // push cars away from explosion
     cars.forEach(c=>{const d=c.pos.clone().sub(b.pos);const m=d.length();if(m<25){d.y=0;d.normalize();c.vel.addScaledVector(d,(25-m)*1.6);c.vel.y+=(25-m)*.6;}});
   }
