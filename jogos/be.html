@@ -388,7 +388,10 @@ addEventListener('keydown', (e) => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
 });
 addEventListener('keyup', (e) => { keys[e.code] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouse.left = mouse.right = false; });
+function clearBEInput() { for (const k in keys) keys[k] = false; for (const k in pressed) pressed[k] = false; mouse.left = mouse.right = mouse.leftPressed = false; mouse.dx = mouse.dy = mouse.wheel = 0; touch.release?.(); }
+window.C30releaseInput = clearBEInput;
+addEventListener('blur', clearBEInput);
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearBEInput(); });
 const consume = (code) => { if (pressed[code]) { pressed[code] = false; return true; } return false; };
 const canvasEl = renderer.domElement;
 canvasEl.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -409,7 +412,7 @@ function requestLock() {
 document.addEventListener('pointerlockchange', () => {
   const was = pointerLocked;
   pointerLocked = document.pointerLockElement === canvasEl;
-  if (was && !pointerLocked) { for (const k in keys) keys[k] = false; mouse.left = mouse.right = false; }
+  if (was && !pointerLocked) clearBEInput();
 });
 
 // ---------- cidade: constantes ----------
@@ -5859,7 +5862,7 @@ function setPause(on) {
   if (game.state === 'title' || game.state === 'boot') return;
   if (!$('shop').hidden) return;
   game.paused = on; uiBlocking = on;sfx.pause(on);
-  if (on) { touch.release?.(); for (const k in keys) keys[k] = false; }
+  if (on) clearBEInput();
   $('pause').hidden = !on;
   $('reset-confirm').hidden = true; resetArmed = false;
   if (on) {
@@ -6190,7 +6193,8 @@ function update(dt, rdt) {
     for (let i = 1; i <= 5; i++) if (consume('Digit' + i)) { if (player.owned[WEAPONS[i - 1].id]) player.wIdx = i - 1; }
     if (consume('KeyR') && player.car) sfx.radioNext();
     if (consume('KeyV') || consume('KeyC')) { cam.mode = (cam.mode + 1) % CAM_NAMES.length; if (cam.mode === 5) cam.yaw = (player.car || player).yaw; cam.cine = null; cam.inited = false; hud.toast(CAM_NAMES[cam.mode], 1.5); }
-    if (consume('KeyF') || consume('Enter')) { if (mansionTryUse()) {} else if (player.car) exitCar(); else tryEnterCar(); }
+    const useF = consume('KeyF'), useEnter = consume('Enter');
+    if (useF || useEnter) { if (mansionTryUse()) {} else if (player.car) exitCar(); else tryEnterCar(); }
     if (player.car) controlCar(dt); else controlFoot(dt);
   } else { player.wantSpeed = 0; player.aiming = false; }
   mouse.wheel = 0;
