@@ -5146,7 +5146,7 @@ function buildMansion(B, f, C, I, H) {
   B.box(ox + 3.12, 0.6, z0 + 6, ox + 3.16, 2.6, z0 + 10, C('#cfe6f5'));
   S.bench = { x: ox + 7.9, z: z0 + 6, label: 'Supino: treinar (mais saúde)' };
   S.bag = { x: ox + 10.9, z: z0 + 4.6, label: 'Saco de boxe' };
-  S.safe = { x: x1 - 2, z: oz - 1.7, label: 'Cofre: guardar dinheiro' };
+  S.safe = { x: x1 - 2, z: oz - 1.7, label: 'Cofre: guardar ou levantar dinheiro' };
   S.garage = { x: x1 - 1.3, z: z0 + 4.5, label: 'Garagem: tirar um carro' };
   I.lightsAt = [[x0 + 7, z0 + 7], [x0 + 5, oz + 7], [ox + 10, oz + 6], [ox + 9, z0 + 6]];
 }
@@ -5215,6 +5215,47 @@ function takeHomeCar(type, color) {
   return c;
 }
 function homeMenu(title, items) { openMenu(title, items.map((it) => ({ ...it, run() { const r = it.run(); if (r) closeShop(); return false; } }))); }
+function openHomeSafe(message = '') {
+  const H = progress.home;
+  function transfer(deposit, all = false) {
+    const balance = deposit ? player.money : H.safe;
+    const raw = $('safe-amount').value.trim();
+    const amount = all ? balance : (/^\d+$/.test(raw) ? Number(raw) : NaN);
+    const status = $('safe-status');
+    if (!Number.isFinite(amount) || amount <= 0 || (!all && !Number.isSafeInteger(amount))) {
+      status.textContent = 'Introduz um valor inteiro superior a zero.'; return false;
+    }
+    if (!Number.isFinite(balance) || amount > balance) {
+      status.textContent = deposit ? 'Não tens esse valor na carteira.' : 'Não tens esse valor no cofre.';
+      return false;
+    }
+    const nextSafe = H.safe + (deposit ? amount : -amount);
+    const nextWallet = player.money + (deposit ? -amount : amount);
+    if (!Number.isFinite(nextSafe) || !Number.isFinite(nextWallet) || nextSafe < 0 || nextWallet < 0 || nextSafe > Number.MAX_SAFE_INTEGER || nextWallet > Number.MAX_SAFE_INTEGER) {
+      status.textContent = 'Valor inválido.'; return false;
+    }
+    H.safe = nextSafe;
+    addMoney(deposit ? -amount : amount);
+    openHomeSafe((deposit ? 'Guardaste ' : 'Levantaste ') + fmtMoney(amount) + '.');
+    return false;
+  }
+  openMenu('COFRE', [
+    { name: 'Guardar valor', desc: 'Deposita o montante indicado.', run() { return transfer(true); } },
+    { name: 'Levantar valor', desc: 'Retira apenas o montante indicado.', run() { return transfer(false); } },
+    { name: 'Guardar tudo', desc: 'Transfere todo o saldo da carteira.', run() { return transfer(true, true); } },
+    { name: 'Levantar tudo', desc: 'Transfere todo o saldo do cofre.', run() { return transfer(false, true); } },
+  ]);
+  const box = $('shop-items');
+  const panel = document.createElement('div');
+  panel.style.cssText = 'padding:12px;border:1px solid #ffffff35;border-radius:10px;display:grid;gap:8px;text-align:left;';
+  panel.innerHTML = '<strong>Carteira: ' + fmtMoney(player.money) + ' · Cofre: ' + fmtMoney(H.safe) + '</strong><label for="safe-amount">Montante em euros (€)</label><input id="safe-amount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Ex.: 250" style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;background:#151d26;color:white;border:1px solid #ffffff55;font-size:16px"><div id="safe-status" role="status" aria-live="polite" style="min-height:1.4em;color:#ffdb8d"></div>';
+  box.prepend(panel);
+  $('safe-status').textContent = message;
+  const input = $('safe-amount');
+  input.addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); });
+  input.addEventListener('keyup', e => { if (e.key !== 'Escape') e.stopPropagation(); });
+  input.addEventListener('focus', clearBEInput);
+}
 function mansionUse(key) {
   const H = progress.home, done = () => { sfx.pickup(); saveGame(); };
   switch (key) {
@@ -5271,12 +5312,7 @@ function mansionUse(key) {
     case 'bag':
       sfx.thud(0.8, player.x, player.z); cam.shake = Math.max(cam.shake, 0.3); hud.toast(rpick(['Pum!', 'Pum! Pum!', 'Direto e gancho!', 'Combinação perfeita!'])); break;
     case 'safe':
-      homeMenu('COFRE', [
-        { name: 'Guardar 1 000 €', desc: 'O dinheiro do cofre não se perde no hospital nem na esquadra', tag: '', can: () => player.money >= 1000, cant: 'Não tens 1 000 €', run() { addMoney(-1000); H.safe += 1000; saveGame(); return true; } },
-        { name: 'Guardar tudo', desc: `Tens ${fmtMoney(player.money)} na carteira`, tag: '', can: () => player.money > 0, cant: 'A carteira está vazia', run() { H.safe += player.money; addMoney(-player.money); saveGame(); return true; } },
-        { name: 'Tirar tudo', desc: `No cofre: ${fmtMoney(H.safe)}`, tag: '', can: () => H.safe > 0, cant: 'O cofre está vazio', run() { addMoney(H.safe); H.safe = 0; saveGame(); return true; } },
-        { name: 'Fechar', desc: '', tag: '', run() { closeShop(); } },
-      ]); break;
+      openHomeSafe(); break;
     case 'garage': {
       const go = (type, color, name) => ({ name, desc: 'Sai de casa já ao volante', tag: '', run() { closeShop(); const c = takeHomeCar(type, color); exitInterior(); setTimeout(() => { player.x = c.x + 1.5; player.z = c.z; tryEnterCar(); }, 50); return false; } });
       homeMenu('GARAGEM', [go('sport', '#ff4a2b', 'O teu desportivo escarlate'), go('muscle', '#1b1b1f', 'O muscle car preto'), go('moto', '#111111', 'A mota'), { name: 'Fechar', desc: '', tag: '', run() { closeShop(); } }]); break;
@@ -6353,7 +6389,7 @@ window.C30startGame = () => { if (game.state === 'title' && !$('play').disabled)
 
 $('resume').addEventListener('click', () => setPause(false));
 $('shop-close').addEventListener('click', closeShop);
-addEventListener('keydown', (e) => { if (!$('shop').hidden && /^Digit[1-6]$/.test(e.code)) buyItem(+e.code.slice(5) - 1); });
+addEventListener('keydown', (e) => { if (!$('shop').hidden && e.target?.id !== 'safe-amount' && /^Digit[1-6]$/.test(e.code)) buyItem(+e.code.slice(5) - 1); });
 $('vol').addEventListener('input', (e) => { settings.volume = e.target.value / 100; sfx.setVolume(settings.volume); saveSettings(); });
 $('sens').addEventListener('input', (e) => { settings.sens = e.target.value / 100; saveSettings(); });
 document.querySelectorAll('#qual input').forEach((r) => r.addEventListener('change', (e) => { if (!e.target.checked) return; setQualityLive(e.target.value, true); $('fps').textContent = `Qualidade atual: ${QUALITY[settings.q].name} · aplicada já, sem recarregar`; }));
