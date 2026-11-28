@@ -335,9 +335,9 @@ const fmtMoney = (v) => Math.floor(v).toLocaleString('pt-PT') + ' €';
 const QUALITY = {
   // A cidade tem muitas malhas; sombras dinâmicas em qualidade alta podem
   // esgotar a memória gráfica em alguns dispositivos e fazer os prédios sumirem.
-  ultra: { name: 'Ultra', pr: 1.0, aniso: 8, fogScale: 1.35, water: 3, clouds: true, shadows: false, smap: 512, bloom: false },
-  alta: { name: 'Alta', pr: 0.82, aniso: 4, fogScale: 1.0, water: 2, clouds: true, shadows: false, smap: 512, bloom: false },
-  media: { name: 'Média', pr: 0.64, aniso: 2, fogScale: 0.8, water: 1, clouds: true, shadows: false, smap: 512, bloom: false },
+  ultra: { name: 'Ultra', pr: 1.0, aniso: 16, fogScale: 1.7, water: 3, clouds: true, shadows: false, smap: 512, bloom: false },
+  alta: { name: 'Alta', pr: 0.78, aniso: 4, fogScale: 1.0, water: 2, clouds: true, shadows: false, smap: 512, bloom: false },
+  media: { name: 'Média', pr: 0.60, aniso: 2, fogScale: 0.72, water: 1, clouds: true, shadows: false, smap: 512, bloom: false },
   baixa: { name: 'Baixa', pr: 0.45, aniso: 1, fogScale: 0.58, water: 0, clouds: false, shadows: false, smap: 512, bloom: false },
 };
 const settings = { q: isTouch ? 'media' : 'alta', volume: 0.7, sens: 1 };
@@ -373,7 +373,7 @@ const scene = new THREE.Scene();
 applyQuality();
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.2, 5000);
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(qualityPixelRatio(QUALITY[settings.q])); renderer.setSize(innerWidth, innerHeight); });
-const MAX_ANISO = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+const MAX_ANISO = Math.max(1, Math.min(16, renderer.capabilities.getMaxAnisotropy()));
 const qualityTextures = new Set();
 
 // ---------- input ----------
