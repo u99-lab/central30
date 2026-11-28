@@ -1040,13 +1040,14 @@ function nearRoute(x, z, r) {
   return false;
 }
 // trânsito nas estradas intermunicipais
-function spawnRouteCar(ri0, dir, t0) {
+function spawnRouteCar(ri0, dir, t0, nearPlayer = false) {
   const R = ROUTES[ri0]; if (!R) return null;
   const P = R.pts, n = P.length;
   const k = clamp(Math.floor(t0 * (n - 2)), 1, n - 3), off0 = R.loop ? 4 : null;
   const a = dir > 0 ? P[k] : P[n - 1 - k], b = dir > 0 ? P[k + 1] : P[n - 2 - k];
   const dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz) || 1, off = off0 ?? rpick([3.5, 8.1]);
   const x = a.x - (dz / L) * off, z = a.z + (dx / L) * off;
+  if (nearPlayer && (d2(x,z,camFocus.x,camFocus.z)<100*100 || d2(x,z,camFocus.x,camFocus.z)>500*500 || inView(x,1,z)&&d2(x,z,camFocus.x,camFocus.z)<180*180)) return null;
   if (cars.some((c) => d2(c.x, c.z, x, z) < 100)) return null;
   const car = new Car(rpick(R.loop ? ['sedan', 'compact', 'taxi', 'van', 'moto'] : ['sedan', 'sport', 'muscle', 'van', 'compact', 'bus', 'moto']), x, z, Math.atan2(dx, dz));
   const drv = new Ped('civ', x, z, { noList: true }); drv.inCar = car; car.driver = drv;
@@ -1063,7 +1064,7 @@ function routeAI(car, dt) {
   for (let g = 0; g < 4; g++) { const a = at(ai.k), b = at(ai.k + 1); const dx = b.x - a.x, dz = b.z - a.z; if ((car.x - a.x) * dx + (car.z - a.z) * dz > dx * dx + dz * dz) ai.k++; else break; }
   if (loop && ai.k >= n) ai.k -= n;
   if (!loop && ai.k >= n - 2) { // chegou ao fim: volta ao início longe da vista
-    if (!inView(car.x, 1, car.z) || d2(car.x, car.z, camFocus.x, camFocus.z) > 250 * 250) { const s = at(1), s2 = at(2); car.x = s.x; car.z = s.z; car.yaw = Math.atan2(s2.x - s.x, s2.z - s.z); car.vx = car.vz = 0; ai.k = 1; }
+    if (!inView(car.x, 1, car.z) || d2(car.x, car.z, camFocus.x, camFocus.z) > 250 * 250) { car.routeDone = true; }
     car.inp.thr = 0; car.inp.hb = true; return;
   }
   const look = Math.max(2, Math.round((8 + car.speed * 0.6) / 6));
@@ -1648,6 +1649,8 @@ function buildWorld() {
         const bx = p.x + nx * 18 * s2, bz = p.z + nz * 18 * s2;
         roofB.box(bx - 2, 0, bz - 2, bx + 2, 3.2, bz + 2, new THREE.Color('#e8e4da')); roofB.box(bx - 2.4, 3.2, bz - 2.4, bx + 2.4, 3.5, bz + 2.4, new THREE.Color('#c0392b'));
         addBox(bx - 2, bz - 2, bx + 2, bz + 2, 4);
+        addSign('BILHETEIRA','N',bx-2,bz-2,bx+2,bz+2,2.4,.52,'#ffffff');
+        addSign('BILHETEIRA','S',bx-2,bz-2,bx+2,bz+2,2.4,.52,'#ffffff');
         roofB.box(p.x + nx * 11.5 * s2 - 0.15, 0, p.z + nz * 11.5 * s2 - 0.15, p.x + nx * 11.5 * s2 + 0.15, 1.2, p.z + nz * 11.5 * s2 + 0.15, new THREE.Color('#333'));
       }
       // pórtico com placa
@@ -3738,14 +3741,18 @@ function updateStreaming(dt) {
   for (let i = cars.length - 1; i >= 0; i--) {
     const c = cars[i]; if (c === player.car || c.mission || c.parked) continue;
     const dd = d2(c.x, c.z, px, pz);
-    if ((c.ai && c.ai.type === 'traffic' && dd > 290 * 290) || (!c.ai && dd > 330 * 330) || (c.dead && dd > 160 * 160 && !inView(c.x, 1, c.z))) {
+    if (c.routeDone || (c.ai && c.ai.type === 'route' && dd > 850 * 850) || (c.ai && c.ai.type === 'traffic' && dd > 290 * 290) || (!c.ai && dd > 330 * 330) || (c.dead && dd > 160 * 160 && !inView(c.x, 1, c.z))) {
       if (!inView(c.x, 1, c.z) || dd > 400 * 400) cars.splice(i, 1);
     }
   }
-  if (game.state !== 'title' && cars.filter((c) => c.ai && c.ai.type === 'route').length < 18) spawnRouteCar(ri(0, ROUTES.length - 1), Math.random() < 0.5 ? 1 : -1, Math.random());
+  if (game.state !== 'title' && cars.filter(c=>c.ai?.type==='route'&&d2(c.x,c.z,px,pz)<850*850).length < 12) {
+    const candidates=[];
+    for(let ri0=0;ri0<ROUTES.length;ri0++){const P=ROUTES[ri0].pts;for(let k=2;k<P.length-3;k+=5){const d=d2(P[k].x,P[k].z,px,pz);if(d>130*130&&d<480*480)candidates.push([ri0,k]);}}
+    for(let j=0;j<3&&candidates.length;j++){const [ri0,k]=rpick(candidates),n=ROUTES[ri0].pts.length,dir=Math.random()<.5?1:-1; if(spawnRouteCar(ri0,dir,(dir>0?k:n-1-k)/(n-2),true))break;}
+  }
   const traffic = cars.reduce((a, c) => a + (c.ai && c.ai.type === 'traffic' ? 1 : 0), 0);
-  if (traffic < TRAFFIC_TARGET) spawnTrafficCar(game.state === 'title' ? 20 : 70, 230);
-  if (traffic < TRAFFIC_TARGET - 6) spawnTrafficCar(70, 230);
+  if (Math.abs(px)<HALF+240 && Math.abs(pz)<HALF+240 && traffic < TRAFFIC_TARGET) spawnTrafficCar(game.state === 'title' ? 20 : 70, 230);
+  if (Math.abs(px)<HALF+240 && Math.abs(pz)<HALF+240 && traffic < TRAFFIC_TARGET - 6) spawnTrafficCar(70, 230);
   for (let i = peds.length - 1; i >= 0; i--) {
     const p = peds[i]; if (p.mission) continue;
     const dd = d2(p.x, p.z, px, pz);
@@ -3758,7 +3765,7 @@ function updateStreaming(dt) {
     const dd = Math.sqrt(d2(s.x, s.z, px, pz)); if (dd < 35 || (dd < 90 && inView(s.x, 1, s.z))) continue;
     const p = new Ped('civ', s.x, s.z); p.ai.mode = 'town'; p.ai.town = nearT;
   }
-  if (civs < PED_TARGET) { spawnPedNear(game.state === 'title' ? 10 : 45, 150); spawnPedNear(45, 150); }
+  if (Math.abs(px)<HALF+180 && Math.abs(pz)<HALF+180 && civs < PED_TARGET) { spawnPedNear(game.state === 'title' ? 10 : 45, 150); spawnPedNear(45, 150); }
 }
 
 // ---------- helicóptero ----------
@@ -5501,7 +5508,7 @@ function drawRadar() {
   if (mapCanvas) g.drawImage(mapCanvas, -(px - MAPX0), -(pz - MAPZ0));
   // estradas intermunicipais e vilas (fora do mapa base)
   g.save(); g.translate(-px, -pz);
-  g.strokeStyle = '#c9b06a'; g.lineWidth = 22; g.lineJoin = 'round';
+  g.strokeStyle = '#c9b06a'; g.lineWidth = 26; g.lineJoin = 'round';
   for (const Rt of ROUTES) { if (Rt.loop) continue; g.beginPath(); Rt.pts.forEach((p, i) => (i ? g.lineTo(p.x, p.z) : g.moveTo(p.x, p.z))); g.stroke(); }
   for (const T of TOWNS) { const n = T.n || 3, E = (n / 2) * CELL + RH; g.fillStyle = '#41454d'; g.fillRect(T.cx - E, T.cz - E, 2 * E, 2 * E); g.fillStyle = '#a7adb7'; for (let k = 0; k <= n; k++) { g.fillRect(T.cx - (n / 2) * CELL + k * CELL - RH, T.cz - E, 2 * RH, 2 * E); g.fillRect(T.cx - E, T.cz - (n / 2) * CELL + k * CELL - RH, 2 * E, 2 * RH); } }
   g.restore();
@@ -5537,12 +5544,12 @@ function initMapControls() {
   const cv = $('bigmap-c');
   cv.addEventListener('wheel', (e) => { e.preventDefault(); mapZoom(e.deltaY < 0 ? 1.25 : 0.8); }, { passive: false });
   let drag = null;
-  const down = (x, y) => { drag = { x, y, cx: mapView.cx ?? (MAPX0 + MAPX1) / 2, cz: mapView.cz ?? 0 }; };
+  const down = (x, y) => { drag = { x, y, cx: mapView.cx ?? (-BOUND + MAPX1) / 2, cz: mapView.cz ?? 0 }; };
   const move = (x, y) => { if (!drag) return; const r = cv.getBoundingClientRect(), k = cv.width / r.width; mapView.cx = drag.cx - ((x - drag.x) * k) / mapView.sc; mapView.cz = drag.cz - ((y - drag.y) * k) / mapView.sc; drawBigMap(); };
   cv.addEventListener('mousedown', (e) => down(e.clientX, e.clientY)); addEventListener('mousemove', (e) => move(e.clientX, e.clientY)); addEventListener('mouseup', () => (drag = null));
   cv.addEventListener('touchstart', (e) => { const t = e.touches[0]; down(t.clientX, t.clientY); }, { passive: true });
-  cv.addEventListener('touchmove', (e) => { const t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
-  cv.addEventListener('touchend', () => (drag = null));
+  cv.addEventListener('touchmove', (e) => { const t = e.touches[0]; if(t)move(t.clientX, t.clientY); }, { passive: true });
+  cv.addEventListener('touchend', () => (drag = null));cv.addEventListener('touchcancel', () => (drag = null));
   $('map-in').addEventListener('click', (e) => { e.stopPropagation(); mapZoom(1.5); });
   $('map-out').addEventListener('click', (e) => { e.stopPropagation(); mapZoom(1 / 1.5); });
   $('map-me').addEventListener('click', (e) => { e.stopPropagation(); const t = player.car || player; mapView.cx = t.x; mapView.cz = t.z; mapView.zoom = Math.max(mapView.zoom, 4); drawBigMap(); });
